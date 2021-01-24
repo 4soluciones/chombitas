@@ -1,0 +1,186 @@
+
+
+{% if products %}
+
+    <!-- <h2 class='mb-3'>Basic example</h2> -->
+
+    <div class="card">
+
+        <div class="card-header">
+            <h5 class="card-title">Productos</h5>
+            <h6 class="card-subtitle text-muted">Edición - Inventario inicial - kardex - Presentaciones.</h6>
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-responsive dataTables_wrapper ">
+
+                <table id="product-data-grid" class="table table-bordered table-striped" cellspacing="0" width="100%">
+                    <thead>
+                    <tr class="text-center">
+                        <th>#</th>
+                        <th class="th-sm">Nombre</th>
+                        <th class="th-sm">Detalles</th>
+                        <th class="th-sm">Stock en sedes</th>
+                        <th class="th-sm">Unidades</th>
+                        <th class="th-sm">Insumos/Receta</th>
+                        <th class="th-sm">Imagen</th>
+                        <th class="th-sm">UPDATE</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    {% for product in products %}
+                        <tr class="text-center">
+                            <td class="align-middle">{{ product.id }}</td>
+                            <td class="align-middle font-weight-bolder">{{ product.name }}</td>
+                            <td class="align-middle">
+
+                                <address class="text-left">
+                                    <strong>Codigo: {{ product.code }}</strong><br>
+                                    Stock Minimo: <i>{{ product.stock_min }}</i><br>
+                                    Stock Maximo: <i>{{ product.stock_max }}</i><br>
+                                    Familia, {{ product.product_family.name }}<br>
+                                    Marca, {{ product.product_brand.name }}<br>
+                                </address>
+
+                            </td>
+                            <td class="p-0">
+                                {% if product.productstore_set.all.count > 0 %}
+                                    <table class="table table-sm text-uppercase small">
+                                        <thead>
+                                        <th>Sede</th>
+                                        <th>Almacen</th>
+                                        <th>Stock</th>
+                                        </thead>
+                                        <tbody>
+                                        {% for product_store in product.productstore_set.all %}
+                                            <tr class="{% if product_store.subsidiary_store.subsidiary.id == subsidiary.id %}text-danger font-weight-bolder{% endif %}">
+                                                <td>{{ product_store.subsidiary_store.subsidiary.name }}</td>
+                                                <td>{{ product_store.subsidiary_store.name }}</td>
+                                                <td>{{ product_store.get_stock_with_dot }}{% if product.id == 9 %} ({{product_store.conversion_mml_g_stock|floatformat:2}} gl){% else %}{% endif %}</td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                {% endif %}
+
+                            </td>
+                            <td class="p-0">
+                                {% if product.productdetail_set.all.count > 0 %}
+                                    <table class="table table-sm text-uppercase small">
+                                        <thead>
+                                        <th>Unidad (Abrev.)</th>
+                                        <th>Unidad</th>
+                                        <th>P.U</th>
+                                        <th>Cant. Min</th>
+                                        </thead>
+                                        <tbody>
+                                        {% for product_detail in product.productdetail_set.all %}
+                                            <tr>
+                                                <td class="text-primary font-weight-bolder">{{ product_detail.unit.name }}</td>
+                                                <td>{{ product_detail.unit.description }}</td>
+                                                <td>{{ product_detail.get_price_sale_with_dot }}</td>
+                                                <td>{{ product_detail.get_quantity_minimum_with_dot }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                {% endif %}
+                            </td>
+
+                            <td class="p-0">
+                                {% if product.recipes.all.count > 0 %}
+                                    <table class="table table-sm text-uppercase small">
+                                        <thead>
+                                        <th>Insumo (Prod.)</th>
+                                        <th>Cant.</th>
+                                        <th>Unidad</th>
+                                        <th>P.U</th>
+                                        </thead>
+                                        <tbody>
+                                        {% for product_recipe in product.recipes.all %}
+                                            <tr>
+                                                <td class="text-primary font-weight-bolder">{{ product_recipe.product_input.name }}</td>
+                                                <td>{{ product_recipe.get_quantity_with_dot }}</td>
+                                                <td>{{ product_recipe.unit.description }}</td>
+                                                <td>{{ product_recipe.get_price_with_dot }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+                                <img src="{{ product.photo.url }}" width="100px">
+                            </td>
+
+                            <td>
+
+
+                                <!-- Example single danger button -->
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-danger dropdown-toggle" data-toggle="dropdown"
+                                            aria-haspopup="true" aria-expanded="false">
+                                        Action
+                                    </button>
+                                    <div class="dropdown-menu bg-danger text-light">
+
+
+                                        <a class="dropdown-item"
+                                           onclick="showModalEdition('{% url 'sales:json_product_edit' product.id %}')">
+                                            <i class="fas fa-edit"></i> Editar</a>
+                                        <a class="dropdown-item quantity-on-hand" pk="{{ product.id }}">
+                                            <i class="fas fa-sync-alt"></i> Inventario inicial (Cantidad a la mano)</a>
+                                        <a class="dropdown-item get-kardex" pk="{{ product.id }}">
+                                            <i class="fas fa-sync-alt"></i> Ver kardex</a>
+                                        <a class="dropdown-item get-product-detail" pk="{{ product.id }}">
+                                            <i class="fas fa-sync-alt"></i> Ver presentaciones</a>
+                                        <a href="{% url 'sales:product_print_one' product.id %}" target="print"
+                                           class="dropdown-item text-light"><span class="fa fa-print"></span> print</a>
+                                        <a class="dropdown-item btn-product-recipe" pk="{{ product.id }}">
+                                            <i class="fas fa-adjust"></i> Recetas</a>
+                                    </div>
+                                </div>
+
+
+                            </td>
+
+                        </tr>
+                    {% endfor %}
+
+
+                    </tbody>
+                    <tfoot>
+                    <tr class="text-center">
+                        <th>#</th>
+                        <th class="th-sm">Nombre</th>
+                        <th class="th-sm">Detalles</th>
+                        <th class="th-sm">Stock en sedes</th>
+                        <th class="th-sm">Unidades</th>
+                        <th class="th-sm">Insumos/Receta</th>
+                        <th class="th-sm">Imagen</th>
+                        <th class="th-sm">UPDATE</th>
+                    </tr>
+                    </tfoot>
+                </table>
+
+            </div>
+
+        </div>
+
+        <!-- Card -->
+    </div>
+
+
+
+{% else %}
+    <h1>No existen productos registrados</h1>
+{% endif %}
+
+<script type="text/javascript">
+
+
+</script>

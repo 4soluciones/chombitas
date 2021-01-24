@@ -1,0 +1,375 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>{% block title %}BIENVENIDO A V&J GAS {% endblock title %}</title>
+
+    <link rel="icon" href="{% static 'assets/icons/images_mYC_1.ico' %}" type="image/ico"/>
+
+    <!-- Normalize V8.0.1 -->
+    <!-- <link rel="stylesheet" href="{% static 'css/normalize.css' %}"> -->
+
+    <!-- Bootstrap V4.3 -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+
+    <!-- Simple javascript toast notifications -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" rel="stylesheet">
+    <!-- Bootstrap Material Design V4.0 -->
+    <!-- <link rel="stylesheet" href="{% static 'css/bootstrap-material-design.min.css' %}"> -->
+
+    <!-- Font Awesome V5.9.0 -->
+    <link rel="stylesheet" href="{% static 'css/all.css' %}">
+
+    <!-- Sweet Alerts V8.13.0 CSS file -->
+    <link rel="stylesheet" href="{% static 'css/sweetalert2.min.css' %}">
+
+    <!-- Sweet Alert V8.13.0 JS file-->
+    <script src="{% static 'js/sweetalert2.min.js' %}"></script>
+
+    <!-- jQuery Custom Content Scroller V3.1.5 -->
+    <link rel="stylesheet" href="{% static 'css/jquery.mCustomScrollbar.css' %}">
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="{% static 'assets/datatables/datatables.min.css' %}">
+
+    <!-- General Styles -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <!-- Mega Menu Styles -->
+    <link rel="stylesheet" href="{% static 'css/megamenu2.css' %}">
+    <link rel="stylesheet" href="{% static 'css/loader.css' %}">
+
+    <!-- Select2 - customizable select box -->
+    <link rel="stylesheet" href="{% static 'css/select2.min.css' %}">
+    <!-- select2-bootstrap4-theme -->
+    <link rel="stylesheet" href="{% static 'css/select2-bootstrap4.css' %}">
+    <!-- DataTables Select CSS <link href="css/addons/datatables-select2.min.css" rel="stylesheet">-->
+
+    <link rel="stylesheet" href="{% static 'css/sweetalert.css' %}">
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Aldrich">
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Open+Sans">
+    <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo&display=swap" rel="stylesheet">
+
+    <style>
+
+
+    </style>
+
+
+</head>
+<body>
+
+<!-- Main container -->
+<main class="full-box main-container">
+
+
+    <!-- Nav lateral -->
+    <section class="full-box nav-lateral active">
+        <div class="full-box nav-lateral-bg show-nav-lateral"></div>
+        <div class="full-box nav-lateral-content">
+            <figure class="full-box nav-lateral-avatar">
+                <i class="far fa-times-circle show-nav-lateral"></i>
+                <img src="{% static 'assets/avatar/Avatar.png' %}" class="img-fluid" alt="Avatar">
+                <figcaption class="text-center">
+                    {{ user.username | lower }} <br>
+                    <h4 class="font-weight-normal display-4 text-uppercase"
+                        style="font-size: medium;">{{ user.worker_set.last.establishment_set.last.subsidiary.name }}</h4>
+                </figcaption>
+            </figure>
+            <!-- Barra Lateral -->
+            <div class="full-box nav-lateral-bar"></div>
+
+            <nav class="full-box nav-lateral-menu">
+                <ul>
+
+                    <li class="sidebar-header">
+                        <h6>INFORME DE PROCESOS</h6>
+                    </li>
+                    {##}
+                    {#                    <li>#}
+                    {#                        <a href="{% url 'dashboard' %}" class="nav-btn-submenu active"><i#}
+                    {#                                class="fab fa-dashcube fa-fw"></i> &nbsp; Inicio <i class="fas fa-chevron-right"></i></a>#}
+                    {#                    </li>#}
+
+                    <li>
+                        <a href="#" class="nav-btn-submenu"><i class="fas fa-calendar-check fa-1x"></i>
+                            <strong>Compras</strong>
+                            <i class="fas fa-chevron-right"></i></a>
+                        <ul>
+                            <li><a href="{% url 'buys:get_requirements_buys_list_approved' %}"> Compras GLP</a></li>
+                            <li><a href="{% url 'sales:stock_glp' %}"> Stock GLP</a></li>
+                            <li><a href="{% url 'buys:get_requirement_balance' %}"> Saldos Pluspetrol</a></li>
+                            <li><a href="{% url 'buys:get_report_kardex_glp' %}"> Movimientos de GLP</a></li>
+                            <li><a href="{% url 'accounting:get_purchases_list' %}"> Compras Mercaderia</a></li>
+                        </ul>
+                    </li>
+
+                    {#                    <li class="sidebar-header">#}
+                    {#                        Main nav-btn-submenu active#}
+                    {#                    </li>#}
+
+                    <li>
+                        <a href="#" class="nav-btn-submenu"><i class="fas fa-cart-plus fa-1x"></i>
+                            <strong>Ventas</strong> <i
+                                    class="fas fa-chevron-right"></i></a>
+                        <ul>
+                            <li><a href="{% url 'sales:get_sales_all_subsidiaries' %}"> Ventas General</a></li>
+                            <li><a href="{% url 'sales:get_sales_by_subsidiary_store' %}"> Ventas Sucursal</a></li>
+                            <li><a href="{% url 'sales:purchases_of_clients' %}"> Ventas Cliente</a></li>
+                        </ul>
+                    </li>
+
+                    <li>
+                        <a href="#" class="nav-btn-submenu"><i class="fas fa-comment-dollar fa-1x"></i>
+                            <strong>Finanzas</strong>
+                            <i class="fas fa-chevron-right"></i></a>
+                        <ul>
+                            <li><a href="{% url 'accounting:get_bank_control_list' %}"> Cuentas Bancarias</a></li>
+                            <li><a href="{% url 'accounting:get_cash_report' %}"> Efectivo Cajas</a></li>
+                            <li><a href="{% url 'sales:order_list' %}"> Cuentas por Cobrar</a></li>
+                            <li><a href="{% url 'accounting:get_purchases_list' %}"> Ceuntas por Pagar</a></li>
+                        </ul>
+                    </li>
+
+                    <li>
+                        <a href="#" class="nav-btn-submenu"><i class="fas fa-truck-moving fa-1x"></i>
+                            <strong>Vehiculos</strong>
+                            <i class="fas fa-chevron-right"></i></a>
+                        <ul>
+                            <li><a href="{% url 'buys:get_programming_by_truck_and_dates' %}"> Entradas GLP</a></li>
+                            <li><a href="{% url 'comercial:report_guide_by_plate' %}"> Salida Guias</a></li>
+                            <li><a href="{% url 'comercial:get_distribution_query' %}"> Ventas Reparto</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-btn-submenu"><i class="fas fa-box-open fa-1x"></i> <strong>Stock</strong>
+                            <i class="fas fa-chevron-right"></i></a>
+                        <ul>
+                            <li><a href="{% url 'sales:get_supplies_view' %}">Stock Insumos</a></li>
+                            <li><a href="{% url 'sales:stock_product_all' %}"> Stock General</a></li>
+                            <li><a href="{% url 'sales:stock_product' %}"> Stock Balones en Sede</a></li>
+                        </ul>
+                    </li>
+
+                </ul>
+            </nav>
+        </div>
+    </section>
+
+    <!-- Page content -->
+    <section class="full-box page-content active" style="height: 100%; overflow-y: scroll;">
+
+        <nav class="full-box navbar-info text-white" style="background: #6e6e6e">
+            <label class="text-white">BIENVENIDO: </label>
+            <form class="form-inline d-none d-sm-inline-block">
+                {{ user.worker_set.last.employee.full_name | upper }}
+            </form>
+            <a href="#" class="float-left show-nav-lateral"><i class="hamburger fas fa-align-justify fa-lg"></i></a>
+            <form class="form-inline d-none d-sm-inline-block">
+                <input class="form-control form-control-lite" type="text" placeholder="Buscar...">
+            </form>
+            <a href="#" data-toggle="modal" data-target="#ModalHelp"><i class="far fa-question-circle fa-lg"></i></a>
+            <a href="#"><i class="fas fa-user-cog fa-lg"></i></a>
+            <a href="{% url 'logout' %}"><i class="fas fa-power-off fa-lg"></i></a>
+        </nav>
+
+        {% include "megamenu.html" %}
+
+
+        <!-- Content here-->
+
+        {% block body %}
+
+            <!-- Grid row -->
+            <div class="row">
+
+                <div class="col-lg-12 col-md-12">
+
+                    <div class="card card-cascade wider">
+
+                        <div class="card-body card-body-cascade">
+                            <h5 class="card-title text-uppercase">Resumen</h5>
+
+                            <table class="table m-0">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Module</th>
+                                    <th scope="col">Model</th>
+                                    <th scope="col">Count</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr class="align-middle bg-white text-black-50">
+                                    <th scope="row" rowspan="2"
+                                        class="align-middle text-uppercase small font-weight-bolder border-right-0">
+                                        Recursos humanos & gestión del talento humano (HRM)
+                                    </th>
+                                    <td>subsidiaries</td>
+                                    <td>{{ subsidiaries.count }}</td>
+                                    <td>{% for s in subsidiaries %}{{ s.name }},&nbsp;{% endfor %}</td>
+                                </tr>
+                                <tr class="align-middle bg-white text-black-50">
+
+                                    <td>employees</td>
+                                    <td>{{ employees.count }}</td>
+                                    <td>{% for e in employees %}{{ e.document_number }},&nbsp;{% endfor %}</td>
+                                </tr>
+                                <tr class="align-middle bg-white text-black-50">
+                                    <th scope="row" class="align-middle text-uppercase small font-weight-bolder">Ventas
+                                        (SALES)
+                                    </th>
+                                    <td>products</td>
+                                    <td>{{ products.count }}</td>
+                                    <td>{% for p in products %}{{ p.name }},&nbsp;{% endfor %}</td>
+                                </tr>
+                                <tr class="align-middle bg-white text-black-50">
+                                    <th scope="row" class=" text-uppercase small font-weight-bold ">Guias &
+                                        Programaciones (COMERCIAL)
+                                    </th>
+                                    <td class="font-weight-normal">towings</td>
+                                    <td>{{ towings.count }}</td>
+                                    <td>{% for t in towings %}{{ t.id }},&nbsp;{% endfor %}</td>
+                                </tr>
+                                <tr class="align-middle bg-white text-black-50">
+                                    <th scope="row" class=" text-uppercase small font-weight-bold ">Django (USERS)</th>
+                                    <td class="font-weight-normal">user</td>
+                                    <td>{{ users.count }}</td>
+                                    <td>{% for u in users %}{{ u.username }},&nbsp;{% endfor %}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="col-lg-12 col-md-12">
+
+
+                </div><!-- Grid column -->
+
+            </div><!-- Grid row -->
+
+
+        {% endblock body %}
+
+    </section>
+
+
+    <!-- Help Modal -->
+
+    <div class="modal fade" id="ModalHelp" tabindex="-1" role="dialog" aria-labelledby="ModalHelpTitle"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-center" id="exampleModalLongTitle">Modal title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Suscipit sunt perferendis magni expedita
+                    possimus quidem, ex, culpa totam, sapiente, laboriosam iste fugit accusamus odio! Impedit beatae
+                    eveniet asperiores distinctio sunt?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-dismiss="modal">Close</button>
+                    &nbsp;
+                    <button type="button" class="btn btn-light">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</main>
+
+
+<!--=============================================
+=            Include JavaScript files           =
+==============================================-->
+<!-- jQuery V3.4.1 -->
+<script src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
+
+<!-- popper -->
+<script src="{% static 'js/popper.min.js' %}"></script>
+
+<!-- Bootstrap V4.3 -->
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+<!-- jQuery Custom Content Scroller V3.1.5 -->
+<script src="{% static 'js/jquery.mCustomScrollbar.concat.min.js' %}"></script>
+
+<!-- Bootstrap Material Design V4.0 -->
+<!-- <script src="{% static 'js/bootstrap-material-design.min.js' %}" ></script> -->
+<!-- <script>$(document).ready(function() { $('body').bootstrapMaterialDesign(); });</script> -->
+
+<!-- Simple javascript toast notifications -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+
+<script src="{% static 'js/main.js' %}"></script>
+
+<!-- DataTables JS -->
+<script src="{% static 'assets/datatables/datatables.min.js' %}"></script>
+<!-- DataTables Select JS <script src="js/addons/datatables-select2.min.js" type="text/javascript"></script>-->
+
+<!-- Select2 - customizable select box -->
+<script src="{% static 'js/select2.min.js' %}"></script>
+
+<!-- Chained - select depend -->
+<script src="{% static 'js/jquery.chained.min.js' %}"></script>
+
+<!-- ISOTOPE CDN -->
+<script src="https://unpkg.com/isotope-layout@3/dist/isotope.pkgd.min.js"></script>
+
+<!-- TABLE2EXCEL CDN -->
+
+<script src="{% static 'js/jquery.table2excel.min.js' %}"></script>
+
+<!-- GRIDVIEW SCROLL - Freeze column and fixed header in Table or GridView -->
+<script src="{% static 'js/gridviewscroll.js' %}"></script>
+
+<script src="{% static 'js/sweetalert-dev.js' %}"></script>
+{% block extrajs %}
+
+    <script>
+
+        $(document).ready(function () {
+            // jQuery code
+
+            //////////////////////// Prevent closing from click inside dropdown
+            $(document).on('click', '.dropdown-menu', function (e) {
+                e.stopPropagation();
+            });
+
+            // make it as accordion for smaller screens
+            if ($(window).width() < 992) {
+                $('.dropdown-menu a').click(function (e) {
+                    e.preventDefault();
+                    if ($(this).next('.submenu').length) {
+                        $(this).next('.submenu').toggle();
+                    }
+                    $('.dropdown').on('hide.bs.dropdown', function () {
+                        $(this).find('.submenu').hide();
+                    })
+                });
+            }
+
+        }); // jquery end
+
+
+    </script>
+
+{% endblock extrajs %}
+
+</body>
+</html>

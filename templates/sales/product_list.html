@@ -1,0 +1,150 @@
+{% extends 'home.html' %}
+
+{% block title %}
+coronasoft.dev | Productos
+{% endblock title %}
+
+{% block body %}
+
+
+<!-- Content -->
+<div class="container-fluid">
+
+    <!-- Provides extra visual weight and identifies the primary action in a set of buttons -->
+    <button type="button" onclick="showModalCreation('{% url 'sales:json_product_create' %}')" class="btn btn-outline-success"><i class="fas fa-user-plus"></i> &nbsp; NUEVO PRODUCTO</button>
+    <a href="{% url 'sales:product_print' %}" class="btn btn-outline-warning" target="print"><span class="fa fa-print"></span> Imprimir</a>
+
+    <div id="product-grid-list" >{% include "sales/product_grid_list.html" %}</div>
+
+</div>
+
+
+<div class="modal fade bd-example-modal-lg" id="creation" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true"></div>
+<div class="modal fade" id="edition" tabindex="-1" role="dialog" aria-labelledby="ModalHelpTitle" aria-hidden="true"></div>
+<div class="modal fade" id="set-quantity-on-hand" tabindex="-1" role="dialog" aria-labelledby="ModalHelpTitle" aria-hidden="true"></div>
+<div class="modal fade" id="show-kardex" tabindex="-1" role="dialog" aria-labelledby="ModalHelpTitle" aria-hidden="true"></div>
+<div class="modal fade" id="set-product-detail" tabindex="-1" role="dialog" aria-labelledby="ModalHelpTitle" aria-hidden="true"></div>
+<div class="modal fade" id="edition-recipe" tabindex="-1" role="dialog" aria-labelledby="ModalHelpTitle" aria-hidden="true"></div>
+
+
+{% endblock body %}
+
+
+{% block extrajs %}
+<script type="text/javascript">
+
+    let $ = jQuery.noConflict();
+
+    $('#product-data-grid').dataTable();
+
+    function refreshTable() {
+        $('#product-data-grid').DataTable().draw();
+    }
+    $(document).on('click', '.btn-product-recipe', function () {
+        let id = $(this).attr('pk');
+        $.ajax({
+            url: '/sales/product_recipe_edit/',
+            dataType: 'json',
+            type: 'GET',
+            data: {'pk': id},
+             success: function (response) {
+                $('#edition-recipe').html(response.form);
+                $('#edition-recipe').modal('show');
+             },
+             fail: function (response) {
+                toastr.error('Formulario con problemas', '¡Mensaje!');
+             }
+        });
+    });
+    $(document).on('click', '.quantity-on-hand', function () {
+        var search = $(this).attr('pk');
+        $.ajax({
+            url: '/sales/get_product/',
+            dataType: 'json',
+            type: 'GET',
+            data: {'pk': search},
+            success: function (response) {
+                console.log(response);
+                if(response.success){
+                    $('#set-quantity-on-hand').html(response.form);
+                    $('#set-quantity-on-hand').modal('show');
+                }
+            },
+            fail: function (response) {
+                console.log(response);
+            }
+        });
+    });
+    $(document).on('click', '.get-kardex', function () {
+        var search = $(this).attr('pk');
+        $.ajax({
+            url: '/sales/get_kardex_by_product/',
+            dataType: 'json',
+            type: 'GET',
+            data: {'pk': search},
+            success: function (response) {
+                console.log(response);
+                if(response.success){
+                    $('#show-kardex').html(response.form);
+                    $('#show-kardex').modal('show');
+                }
+            },
+            fail: function (response) {
+                console.log(response);
+            }
+        });
+    });
+    $(document).on('click', '.get-product-detail', function () {
+        var search = $(this).attr('pk');
+        $.ajax({
+            url: '/sales/set_product_detail/',
+            dataType: 'json',
+            type: 'GET',
+            data: {'pk': search},
+            success: function (response) {
+                if(response.success){
+                    console.log(response.serialized_data);
+                    $('#set-product-detail').html(response.form);
+                    $('#product-detail-grid').html(response.grid);
+                    $('#set-product-detail').modal('show');
+                }
+            },
+            fail: function (response) {
+                console.log(response);
+            }
+        });
+    });
+
+    function showModalEdition(url) {
+        $('#edition').load(url, function () {
+            $(this).modal('show');
+        });
+    };
+
+    function showModalCreation(url) {
+        $('#creation').load(url, function () {
+            $(this).modal('show');
+        });
+    };
+
+
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                $('#blah').attr('src', e.target.result);
+                var file = $('#id_photo')[0].files[0]
+                if (file){
+                  $('.custom-file-label').text(file.name);
+                }
+
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+
+
+</script>
+{% endblock extrajs %}
