@@ -405,26 +405,38 @@ window.onload = function () {
 var chart = new CanvasJS.Chart("chartContainer", {
 	animationEnabled: true,
 	zoomEnabled: true,
-	{#theme: "dark2",#}
+	theme: "light2", //"light1", "light2", "dark1", "dark2"
 	title:{
 		text: "Distribución de balones"
 	},
 	axisX:{
 		title: "Año actual",
 		valueFormatString: "MMM, DD",
-		interval: 2
+		interval: 1,
 	},
 	axisY:{
 		logarithmic: true, //change it to false
-		title: "SALIDAS (BALON DE 10KG)",
+		title: "SALIDAS DE REPARTO",
 		titleFontColor: "#6D78AD",
 		lineColor: "#6D78AD",
-		gridThickness: 0,
+		gridThickness: 1,
 		lineThickness: 1,
 		includeZero: false,
 		labelFormatter: addSymbols
 	},
-	axisY2:{
+    /*toolTip: {
+        shared: true,
+        contentFormatter: function (e) {
+            let a = "";
+            for (let b of e.chart.options.data) {
+                for (let c of b.dataPoints) {
+                    a += b.name + ">" + c.x + ":" + c.y + "<br/>";
+                }
+            }
+            return a;
+        }
+    },*/
+	/*axisY2:{
 		title: "SALIDAS (BALON DE 5KG)",
 		titleFontColor: "#51CDA0",
 		logarithmic: false, //change it to false
@@ -432,7 +444,7 @@ var chart = new CanvasJS.Chart("chartContainer", {
 		gridThickness: 0,
 		lineThickness: 1,
 		labelFormatter: addSymbols
-	},
+	},*/
 	legend:{
 		verticalAlign: "top",
 		fontSize: 16,
@@ -443,14 +455,20 @@ var chart = new CanvasJS.Chart("chartContainer", {
 		xValueFormatString: "MMM, YYYY",
 		showInLegend: true,
 		name: "Balon de 10KG",
+        indexLabel: "{y}",
+        indexLabelPlacement: "outside",
+        indexLabelOrientation: "horizontal",
 		dataPoints: _10Points
 	},
 	{
 		type: "line",
 		xValueFormatString: "MMM, YYYY",
-		axisYType: "secondary",
+		//axisYType: "secondary",
 		showInLegend: true,
 		name: "Balon de 5KG",
+        indexLabel: "{y}",
+        indexLabelPlacement: "outside",
+        indexLabelOrientation: "horizontal",
 		dataPoints: _5Points
 	}]
 });
