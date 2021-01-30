@@ -30,6 +30,8 @@ class Home(TemplateView):
             'products': Product.objects.all(),
             'sales': Product.objects.all(),
             'towings': Towing.objects.all(),
+            'dist_10bg_set': get_distribution_10kg(),
+            'dist_5bg_set': get_distribution_5kg(),
             'users': User.objects.all(),
             'pass': password
         }
@@ -37,6 +39,34 @@ class Home(TemplateView):
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name, self.get_context_data())
+
+
+def get_distribution_10kg():
+    my_date = datetime.now()
+    dist_10bg_set = DistributionDetail.objects.filter(
+        product__id=1,
+        unit__name='BG',
+        distribution_mobil__date_distribution__year=my_date.year
+    ).values(
+        'unit__name',
+        'distribution_mobil__date_distribution'
+    ).annotate(Sum('quantity')).order_by('distribution_mobil__date_distribution')
+    return dist_10bg_set
+
+
+def get_distribution_5kg():
+    my_date = datetime.now()
+    formatdate = my_date.strftime("%Y-%m-%d")
+    dist_5bg_set = DistributionDetail.objects.filter(
+        product__id=2,
+        unit__name='BG',
+        distribution_mobil__date_distribution__year=my_date.year
+    ).values(
+        'unit__name',
+        'distribution_mobil__date_distribution'
+    ).annotate(Sum('quantity')).order_by('distribution_mobil__date_distribution')
+    return dist_5bg_set
+
 
 # FUNCION PARA RECUPERAR EL USUARIO DE UNA SUCURSAL
 

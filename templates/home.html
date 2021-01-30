@@ -339,7 +339,11 @@
 <script src="{% static 'js/gridviewscroll.js' %}"></script>
 
 <script src="{% static 'js/sweetalert-dev.js' %}"></script>
+<!-- Graphs -->
+<script src="{% static 'js/canvasjs.min.js' %}"></script>
+
 {% block extrajs %}
+
 
     <script>
 
@@ -365,6 +369,106 @@
             }
 
         }); // jquery end
+
+window.onload = function () {
+
+    let _10Points = [
+        {% for dist_10bg in dist_10bg_set %}
+            {
+                x: new Date(
+                    {{dist_10bg.distribution_mobil__date_distribution|date:"Y"}},
+                    {{dist_10bg.distribution_mobil__date_distribution|date:"n"}} - 1,
+                    {{dist_10bg.distribution_mobil__date_distribution|date:"d"}}
+                ),
+                y: {{dist_10bg.quantity__sum|floatformat:0}}
+            },
+        {% endfor %}
+
+    ];
+
+    let _5Points = [
+        {% for dist_5bg in dist_5bg_set %}
+            {
+                x: new Date(
+                    {{dist_5bg.distribution_mobil__date_distribution|date:"Y"}},
+                    {{dist_5bg.distribution_mobil__date_distribution|date:"n"}} - 1,
+                    {{dist_5bg.distribution_mobil__date_distribution|date:"d"}}
+                ),
+                y: {{dist_5bg.quantity__sum|floatformat:0}}
+            },
+        {% endfor %}
+
+    ];
+
+var chart = new CanvasJS.Chart("chartContainer", {
+	animationEnabled: true,
+	zoomEnabled: true,
+	{#theme: "dark2",#}
+	title:{
+		text: "Distribución de balones"
+	},
+	axisX:{
+		title: "Año actual",
+		valueFormatString: "MMM, DD",
+		interval: 2
+	},
+	axisY:{
+		logarithmic: true, //change it to false
+		title: "SALIDAS (BALON DE 10KG)",
+		titleFontColor: "#6D78AD",
+		lineColor: "#6D78AD",
+		gridThickness: 0,
+		lineThickness: 1,
+		includeZero: false,
+		labelFormatter: addSymbols
+	},
+	axisY2:{
+		title: "SALIDAS (BALON DE 5KG)",
+		titleFontColor: "#51CDA0",
+		logarithmic: false, //change it to false
+		lineColor: "#51CDA0",
+		gridThickness: 0,
+		lineThickness: 1,
+		labelFormatter: addSymbols
+	},
+	legend:{
+		verticalAlign: "top",
+		fontSize: 16,
+		dockInsidePlotArea: true
+	},
+	data: [{
+		type: "line",
+		xValueFormatString: "MMM, YYYY",
+		showInLegend: true,
+		name: "Balon de 10KG",
+		dataPoints: _10Points
+	},
+	{
+		type: "line",
+		xValueFormatString: "MMM, YYYY",
+		axisYType: "secondary",
+		showInLegend: true,
+		name: "Balon de 5KG",
+		dataPoints: _5Points
+	}]
+});
+chart.render();
+
+}
+
+function addSymbols(e){
+	var suffixes = ["", "K", "M", "B"];
+
+	var order = Math.max(Math.floor(Math.log(e.value) / Math.log(1000)), 0);
+	if(order > suffixes.length - 1)
+		order = suffixes.length - 1;
+
+	var suffix = suffixes[order];
+	return CanvasJS.formatNumber(e.value / Math.pow(1000, order)) + suffix;
+}
+
+
+
 
 
     </script>
