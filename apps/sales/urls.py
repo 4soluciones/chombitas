@@ -124,6 +124,8 @@ urlpatterns = [
     path('stock_glp/', get_stock_glp, name='stock_glp'),
     # debtors
     path('get_summary_debtors/', login_required(get_summary_debtors), name='get_summary_debtors'),
+    # report graphic
+    path('get_report_sales_subsidiary/', login_required(get_report_sales_subsidiary), name='get_report_sales_subsidiary'),
 
 ]
 

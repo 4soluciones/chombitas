@@ -1,3 +1,4 @@
+from django.db.models.functions import Coalesce
 from django.shortcuts import render
 from django.views.generic import TemplateView, View, CreateView, UpdateView
 from django.views.decorators.csrf import csrf_exempt
@@ -3638,11 +3639,15 @@ def get_summary_debtors(request):
                         }
                         arr_date.get('orders').append(arr_order)
 
-                    arr_date['total_repay_loan_in_orders'] = str(round((arr_date['total_repay_loan_in_orders'] + _rpl_in_orders), 2))
-                    arr_date['total_return_loan_in_orders'] = str(round(arr_date['total_return_loan_in_orders'] + _rtl_in_orders))
+                    arr_date['total_repay_loan_in_orders'] = str(
+                        round((arr_date['total_repay_loan_in_orders'] + _rpl_in_orders), 2))
+                    arr_date['total_return_loan_in_orders'] = str(
+                        round(arr_date['total_return_loan_in_orders'] + _rtl_in_orders))
 
-                    arr_client['cumulative_remaining_repay_loan'] = arr_client['cumulative_remaining_repay_loan'] + _rpl_in_orders
-                    arr_client['cumulative_remaining_return_loan'] = arr_client['cumulative_remaining_return_loan'] + _rtl_in_orders
+                    arr_client['cumulative_remaining_repay_loan'] = arr_client[
+                                                                        'cumulative_remaining_repay_loan'] + _rpl_in_orders
+                    arr_client['cumulative_remaining_return_loan'] = arr_client[
+                                                                         'cumulative_remaining_return_loan'] + _rtl_in_orders
 
                     _summary_repay_loan = _summary_repay_loan + _rpl_in_orders
                     _summary_return_loan = _summary_return_loan + _rtl_in_orders
@@ -3652,8 +3657,10 @@ def get_summary_debtors(request):
                         _day = date_dict[_search_value]
                         _rpl = _day.get('rpl')
                         _rl = _day.get('rl')
-                        date_dict[_search_value]['rpl'] = _rpl + _rpl_in_orders + decimal.Decimal(arr_date['total_repay_loan_in_orders'])
-                        date_dict[_search_value]['rl'] = _rl + _rtl_in_orders + decimal.Decimal(arr_date['total_return_loan_in_orders'])
+                        date_dict[_search_value]['rpl'] = _rpl + _rpl_in_orders + decimal.Decimal(
+                            arr_date['total_repay_loan_in_orders'])
+                        date_dict[_search_value]['rl'] = _rl + _rtl_in_orders + decimal.Decimal(
+                            arr_date['total_return_loan_in_orders'])
                     else:
                         date_dict[_search_value] = {'rpl': 0, 'rl': 0}
 
@@ -3675,8 +3682,106 @@ def get_summary_debtors(request):
         tpl = loader.get_template('sales/summary_of_debtors_grid_list.html')
 
         context = (
-            {'date_generated': date_generated, 'all_orders': all_orders,})
+            {'date_generated': date_generated, 'all_orders': all_orders, })
 
         return JsonResponse({
             'grid': tpl.render(context, request),
         }, status=HTTPStatus.OK)
+
+
+def get_report_sales_subsidiary(request):
+    if request.method == 'GET':
+        pk = request.GET.get('pk', '')
+        if pk != '':
+            dates_request = request.GET.get('dates', '')
+            data_dates = json.loads(dates_request)
+            date_initial = (data_dates["date_initial"])
+            date_final = (data_dates["date_final"])
+            dictionary = {}
+            Subsidiary_1 = get_order_sales(1, date_initial, date_final)
+            Subsidiary_2 = get_order_sales(2, date_initial, date_final)
+            Subsidiary_3 = get_order_sales(3, date_initial, date_final)
+            Subsidiary_4 = get_order_sales(4, date_initial, date_final)
+            Subsidiary_5 = get_order_sales(5, date_initial, date_final)
+            Subsidiary_6 = get_order_sales(6, date_initial, date_final)
+
+            cash_subsidiary1 = get_cash_payment(1, date_initial, date_final)
+            cash_subsidiary2 = get_cash_payment(2, date_initial, date_final)
+            cash_subsidiary3 = get_cash_payment(3, date_initial, date_final)
+            cash_subsidiary4 = get_cash_payment(4, date_initial, date_final)
+            cash_subsidiary5 = get_cash_payment(5, date_initial, date_final)
+            cash_subsidiary6 = get_cash_payment(6, date_initial, date_final)
+            array1 = []
+            array2 = []
+            v1 = "label"
+            v2 = "y"
+            for s in Subsidiary.objects.all():
+                t = Order.objects.filter(subsidiary_store__subsidiary_id=s.id,
+                                         create_at__range=(
+                                             date_initial, date_final)).exclude(type='E').aggregate(
+                    r=Coalesce(Sum('total'), 0))
+                sales_dict = {
+                    v1: s.name,
+                    v2: float(t['r'])
+                }
+                array1.append(sales_dict)
+                c = CashFlow.objects.filter(cash__subsidiary_id=s.id, type='E',
+                                            transaction_date__range=(
+                                                date_initial, date_final)).aggregate(
+                    r=Coalesce(Sum('total'), 0))
+                cash_dict = {
+                    v1: s.name,
+                    v2: float(c['r'])
+                }
+                array2.append(cash_dict)
+
+            tpl = loader.get_template('sales/report_graphic_sales_by_dates.html')
+            context = ({
+                'subsidiary1': Subsidiary_1,
+                'cash_subsidiary1': cash_subsidiary1,
+                'subsidiary2': Subsidiary_2,
+                'cash_subsidiary2': cash_subsidiary2,
+                'subsidiary3': Subsidiary_3,
+                'cash_subsidiary3': cash_subsidiary3,
+                'subsidiary4': Subsidiary_4,
+                'cash_subsidiary4': cash_subsidiary4,
+                'subsidiary5': Subsidiary_5,
+                'cash_subsidiary5': cash_subsidiary5,
+                'subsidiary6': Subsidiary_6,
+                'cash_subsidiary6': cash_subsidiary6,
+                'sales_total': array1,
+                'cash_total': array2,
+            })
+            return JsonResponse({
+                'success': True,
+                'form': tpl.render(context, request),
+            })
+        else:
+            my_date = datetime.now()
+            date_now = my_date.strftime("%Y-%m-%d")
+            return render(request, 'sales/report_graphic_sales.html', {
+                'date_now': date_now,
+            })
+
+
+def get_order_sales(pk, date_initial, date_final):
+    order_set = Order.objects.filter(subsidiary_store__subsidiary_id=pk,
+                                     create_at__range=(
+                                         date_initial, date_final)).exclude(type='E').values('create_at').annotate(
+        totales=Sum('total'))
+    return order_set
+
+
+def get_cash_payment(pk, date_initial, date_final):
+    cash_set = CashFlow.objects.filter(cash__subsidiary_id=pk, type='E',
+                                       transaction_date__range=(
+                                           date_initial, date_final)).values('transaction_date').annotate(
+        totales=Sum('total'))
+    return cash_set
+
+
+def get_order_sales_total(pk, date_initial, date_final):
+    totales = Order.objects.filter(subsidiary_store__subsidiary_id=pk,
+                                   create_at__range=(
+                                       date_initial, date_final)).exclude(type='E').aggregate(Sum('total'))
+    return totales['total__sum']
