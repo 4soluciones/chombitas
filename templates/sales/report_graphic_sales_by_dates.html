@@ -1,3 +1,4 @@
+{% load operations %}
 <div class="card p-0  m-0" style="border-color: #2b579a">
     <div class="card-header text-center pb-1" style="background: #2b579a">
         <h6 class="card-title text-white">VENTAS REALIZADAS</h6>
@@ -30,409 +31,11 @@
 </div>
 
 <script type="text/javascript">
-    let _s1 = [
-        {% for s in subsidiary1 %}
-            {
-                x: new Date(
-                    {{s.create_at|date:"Y"}},
-                    {{s.create_at|date:"n"}} -1,
-                    {{s.create_at|date:"d"}}
-                ),
-                y: {{s.totales|floatformat:0}}
-            },
-        {% endfor %}
-
-    ];
-    let _cf = [
-        {% for s in cash_subsidiary1 %}
-            {
-                x: new Date(
-                    {{s.transaction_date|date:"Y"}},
-                    {{s.transaction_date|date:"n"}} -1,
-                    {{s.transaction_date|date:"d"}}
-                ),
-                y: {{s.totales|floatformat:0}}
-            },
-        {% endfor %}
-
-    ];
-    let _s2 = [
-        {% for s in subsidiary2 %}
-            {
-                x: new Date(
-                    {{s.create_at|date:"Y"}},
-                    {{s.create_at|date:"n"}} -1,
-                    {{s.create_at|date:"d"}}
-                ),
-                y: {{s.totales|floatformat:0}}
-            },
-        {% endfor %}
-
-    ];
-
-    let _cf2 = [
-        {% for s in cash_subsidiary2 %}
-            {
-                x: new Date(
-                    {{s.transaction_date|date:"Y"}},
-                    {{s.transaction_date|date:"n"}} -1,
-                    {{s.transaction_date|date:"d"}}
-                ),
-                y: {{s.totales|floatformat:0}}
-            },
-        {% endfor %}
-
-    ];
-
-    let _s3 = [
-        {% for s in subsidiary3 %}
-            {
-                x: new Date(
-                    {{s.create_at|date:"Y"}},
-                    {{s.create_at|date:"n"}} -1,
-                    {{s.create_at|date:"d"}}
-                ),
-                y: {{s.totales|floatformat:0}}
-            },
-        {% endfor %}
-
-
-    ];
-    let _cf3 = [
-        {% for s in cash_subsidiary3 %}
-            {
-                x: new Date(
-                    {{s.transaction_date|date:"Y"}},
-                    {{s.transaction_date|date:"n"}} -1,
-                    {{s.transaction_date|date:"d"}}
-                ),
-                y: {{s.totales|floatformat:0}}
-            },
-        {% endfor %}
-
-    ];
-    let _s4 = [
-        {% for s in subsidiary4 %}
-            {
-                x: new Date(
-                    {{s.create_at|date:"Y"}},
-                    {{s.create_at|date:"n"}} -1,
-                    {{s.create_at|date:"d"}}
-                ),
-                y: {{s.totales|floatformat:0}}
-            },
-        {% endfor %}
-
-    ];
-    let _cf4 = [
-        {% for s in cash_subsidiary4 %}
-            {
-                x: new Date(
-                    {{s.transaction_date|date:"Y"}},
-                    {{s.transaction_date|date:"n"}} -1,
-                    {{s.transaction_date|date:"d"}}
-                ),
-                y: {{s.totales|floatformat:0}}
-            },
-        {% endfor %}
-
-    ];
-    let _s5 = [
-        {% for s in subsidiary5 %}
-            {
-                x: new Date(
-                    {{s.create_at|date:"Y"}},
-                    {{s.create_at|date:"n"}} -1,
-                    {{s.create_at|date:"d"}}
-                ),
-                y: {{s.totales|floatformat:0}}
-            },
-        {% endfor %}
-
-    ];
-    let _cf5 = [
-        {% for s in cash_subsidiary5 %}
-            {
-                x: new Date(
-                    {{s.transaction_date|date:"Y"}},
-                    {{s.transaction_date|date:"n"}} -1,
-                    {{s.transaction_date|date:"d"}}
-                ),
-                y: {{s.totales|floatformat:0}}
-            },
-        {% endfor %}
-
-    ];
-    let _s6 = [
-        {% for s in subsidiary6 %}
-            {
-                x: new Date(
-                    {{s.create_at|date:"Y"}},
-                    {{s.create_at|date:"n"}} -1,
-                    {{s.create_at|date:"d"}}
-                ),
-                y: {{s.totales|floatformat:0}}
-            },
-        {% endfor %}
-
-    ];
-    let _cf6 = [
-        {% for s in cash_subsidiary6 %}
-            {
-                x: new Date(
-                    {{s.transaction_date|date:"Y"}},
-                    {{s.transaction_date|date:"n"}} -1,
-                    {{s.transaction_date|date:"d"}}
-                ),
-                y: {{s.totales|floatformat:0}}
-            },
-        {% endfor %}
-
-    ];
-    let chart = new CanvasJS.Chart("container-graphic-order", {
-        animationEnabled: true,
-        zoomEnabled: false,
-        theme: "light1",// "light2", "dark1", "dark2"
-        title: {
-            text: "Ventas realizadas",
-            fontSize: 15,
-        },
-        axisX: {
-            title: "Año actual",
-             gridThickness: 1,
-            titleFontSize: 19,
-            labelFontSize: 20,
-            valueFormatString: "DD/MM/YY",
-            interval: 1,
-        },
-        axisY: {
-            logarithmic: false, //change it to false
-            titleFontSize: 19,
-            interval: 10000,
-            labelFontSize: 20,
-            title: "Venta realizada",
-            titleFontColor: "#0c0c0c",
-            lineColor: "#21910c",
-            gridThickness: 1,
-            lineThickness: 1,
-            includeZero: false,
-            labelFormatter: addSymbols
-        },
-        legend: {
-            verticalAlign: "top",
-            fontSize: 25,
-            dockInsidePlotArea: true
-        },
-        data: [{
-            type: "line",
-            indexLabelFontStyle: "Bold",
-            indexLabelFontSize: 16,
-            xValueFormatString: "DD/MM",
-            showInLegend: true,
-            name: "Sicuani",
-            indexLabel: "{y}",
-            indexLabelPlacement: "outside",
-            indexLabelOrientation: "horizontal",
-            dataPoints: _s1
-        },
-            {
-                type: "line",
-                indexLabelFontStyle: "Bold",
-                indexLabelFontSize: 14,
-                xValueFormatString: "DD/MM",
-                //axisYType: "secondary",
-                showInLegend: true,
-                name: "Cusco",
-                indexLabel: "{y}",
-                indexLabelPlacement: "outside",
-                indexLabelOrientation: "horizontal",
-                dataPoints: _s2
-            },
-            {
-                type: "line",
-                indexLabelFontSize: 14,
-                indexLabelFontStyle: "Bold",
-                xValueFormatString: "DD/MM",
-                //axisYType: "secondary",
-                showInLegend: true,
-                name: "Puerto Maldonado",
-                indexLabel: "{y}",
-                indexLabelPlacement: "outside",
-                indexLabelOrientation: "horizontal",
-                dataPoints: _s3
-            },
-            {
-                type: "line",
-                indexLabelFontSize: 14,
-                indexLabelFontStyle: "Bold",
-                xValueFormatString: "DD/MM",
-                //axisYType: "secondary",
-                showInLegend: true,
-                name: "Vilcanota",
-                indexLabel: "{y}",
-                indexLabelPlacement: "outside",
-                indexLabelOrientation: "horizontal",
-                dataPoints: _s4
-            },
-            {
-                type: "line",
-                indexLabelFontSize: 14,
-                indexLabelFontStyle: "Bold",
-                xValueFormatString: "DD/MM",
-                //axisYType: "secondary",
-                showInLegend: true,
-                name: "Ilave",
-                indexLabel: "{y}",
-                indexLabelPlacement: "outside",
-                indexLabelOrientation: "horizontal",
-                dataPoints: _s5
-            },
-            {
-                type: "line",
-                indexLabelFontSize: 14,
-                indexLabelFontStyle: "Bold",
-                xValueFormatString: "DD/MM",
-                //axisYType: "secondary",
-                showInLegend: true,
-                name: "Juliaca",
-                indexLabel: "{y}",
-                indexLabelPlacement: "outside",
-                indexLabelOrientation: "horizontal",
-                dataPoints: _s6
-            },
-
-        ]
-    });
-    chart.render();
-
-    function addSymbols(e) {
-        var suffixes = ["", "K", "M", "B"];
-
-        var order = Math.max(Math.floor(Math.log(e.value) / Math.log(1000)), 0);
-        if (order > suffixes.length - 1)
-            order = suffixes.length - 1;
-
-        var suffix = suffixes[order];
-        return CanvasJS.formatNumber(e.value / Math.pow(1000, order)) + suffix;
-    }
-
-
-    let chart1 = new CanvasJS.Chart("container-graphic-cash", {
-        animationEnabled: true,
-        zoomEnabled: false,
-        theme: "light1",// "light2", "dark1", "dark2"
-        title: {
-            text: "Cobranzas",
-            fontSize: 15,
-        },
-        axisX: {
-            title: "Fecha",
-             gridThickness: 1,
-            titleFontSize: 19,
-            labelFontSize: 20,
-            valueFormatString: "DD/MM/YY",
-            interval: 1,
-        },
-        axisY: {
-            logarithmic: false, //change it to false
-            titleFontSize: 19,
-            interval: 10000,
-            labelFontSize: 20,
-            title: "Cobranza",
-            titleFontColor: "#0c0c0c",
-            lineColor: "#21910c",
-            gridThickness: 1,
-            lineThickness: 1,
-            includeZero: false,
-            labelFormatter: addSymbols
-        },
-        legend: {
-            verticalAlign: "top",
-            fontSize: 25,
-            dockInsidePlotArea: true
-        },
-        data: [{
-            type: "line",
-            indexLabelFontStyle: "Bold",
-            indexLabelFontSize: 16,
-            xValueFormatString: "DD/MM",
-            showInLegend: true,
-            name: "Sicuani",
-            indexLabel: "{y}",
-            indexLabelPlacement: "outside",
-            indexLabelOrientation: "horizontal",
-            dataPoints: _cf
-        },
-            {
-                type: "line",
-                indexLabelFontStyle: "Bold",
-                indexLabelFontSize: 16,
-                xValueFormatString: "DD/MM",
-                showInLegend: true,
-                name: "Cusco",
-                indexLabel: "{y}",
-                indexLabelPlacement: "outside",
-                indexLabelOrientation: "horizontal",
-                dataPoints: _cf2
-            },
-            {
-                type: "line",
-                indexLabelFontStyle: "Bold",
-                indexLabelFontSize: 16,
-                xValueFormatString: "DD/MM",
-                showInLegend: true,
-                name: "Puerto Maldonado",
-                indexLabel: "{y}",
-                indexLabelPlacement: "outside",
-                indexLabelOrientation: "horizontal",
-                dataPoints: _cf3
-            },
-            {
-                type: "line",
-                indexLabelFontStyle: "Bold",
-                indexLabelFontSize: 16,
-                xValueFormatString: "DD/MM",
-                showInLegend: true,
-                name: "Vilcanota",
-                indexLabel: "{y}",
-                indexLabelPlacement: "outside",
-                indexLabelOrientation: "horizontal",
-                dataPoints: _cf4
-            },
-            {
-                type: "line",
-                indexLabelFontStyle: "Bold",
-                indexLabelFontSize: 16,
-                xValueFormatString: "DD/MM",
-                showInLegend: true,
-                name: "Ilave",
-                indexLabel: "{y}",
-                indexLabelPlacement: "outside",
-                indexLabelOrientation: "horizontal",
-                dataPoints: _cf5
-            },
-            {
-                type: "line",
-                indexLabelFontSize: 14,
-                indexLabelFontStyle: "Bold",
-                xValueFormatString: "DD/MM",
-                //axisYType: "secondary",
-                showInLegend: true,
-                name: "Juliaca",
-                indexLabel: "{y}",
-                indexLabelPlacement: "outside",
-                indexLabelOrientation: "horizontal",
-                dataPoints: _cf6
-            },
-        ]
-    });
-    chart1.render();
-
-    let chartbar = new CanvasJS.Chart("container-graphic-total", {
+    var chartbar = new CanvasJS.Chart("container-graphic-total", {
         animationEnabled: true,
         title: {
             text: "TOTAL DE VENTAS Y COBRANZAS",
-            fontSize: 15,
+            fontSize: 20,
         },
         axisY: {
             title: "VENTA",
@@ -497,5 +100,574 @@
         }
         chartbar.render();
     }
+
+    {#let _s1 = [#}
+    {#    {% for s in subsidiary1 %}#}
+    {#        {#}
+    {#            x: new Date(#}
+    {#                {{s.create_at|date:"Y"}},#}
+    {#                {{s.create_at|date:"n"}} -1,#}
+    {#                {{s.create_at|date:"d"}}#}
+    {#            ),#}
+    {#            y: {{s.totales|floatformat:0}}#}
+    {#        },#}
+    {#    {% endfor %}#}
+    {##}
+    {#];#}
+    {#console.log(_s1);#}
+    {#let _cf = [#}
+    {#    {% for s in cash_subsidiary1 %}#}
+    {#        {#}
+    {#            x: new Date(#}
+    {#                {{s.transaction_date|date:"Y"}},#}
+    {#                {{s.transaction_date|date:"n"}} -1,#}
+    {#                {{s.transaction_date|date:"d"}}#}
+    {#            ),#}
+    {#            y: {{s.totales|floatformat:0}}#}
+    {#        },#}
+    {#    {% endfor %}#}
+    {##}
+    {#];#}
+    {#let _s2 = [#}
+    {#    {% for s in subsidiary2 %}#}
+    {#        {#}
+    {#            x: new Date(#}
+    {#                {{s.create_at|date:"Y"}},#}
+    {#                {{s.create_at|date:"n"}} -1,#}
+    {#                {{s.create_at|date:"d"}}#}
+    {#            ),#}
+    {#            y: {{s.totales|floatformat:0}}#}
+    {#        },#}
+    {#    {% endfor %}#}
+    {##}
+    {#];#}
+    {##}
+    {#let _cf2 = [#}
+    {#    {% for s in cash_subsidiary2 %}#}
+    {#        {#}
+    {#            x: new Date(#}
+    {#                {{s.transaction_date|date:"Y"}},#}
+    {#                {{s.transaction_date|date:"n"}} -1,#}
+    {#                {{s.transaction_date|date:"d"}}#}
+    {#            ),#}
+    {#            y: {{s.totales|floatformat:0}}#}
+    {#        },#}
+    {#    {% endfor %}#}
+    {##}
+    {#];#}
+    {##}
+    {#let _s3 = [#}
+    {#    {% for s in subsidiary3 %}#}
+    {#        {#}
+    {#            x: new Date(#}
+    {#                {{s.create_at|date:"Y"}},#}
+    {#                {{s.create_at|date:"n"}} -1,#}
+    {#                {{s.create_at|date:"d"}}#}
+    {#            ),#}
+    {#            y: {{s.totales|floatformat:0}}#}
+    {#        },#}
+    {#    {% endfor %}#}
+    {##}
+    {##}
+    {#];#}
+    {#let _cf3 = [#}
+    {#    {% for s in cash_subsidiary3 %}#}
+    {#        {#}
+    {#            x: new Date(#}
+    {#                {{s.transaction_date|date:"Y"}},#}
+    {#                {{s.transaction_date|date:"n"}} -1,#}
+    {#                {{s.transaction_date|date:"d"}}#}
+    {#            ),#}
+    {#            y: {{s.totales|floatformat:0}}#}
+    {#        },#}
+    {#    {% endfor %}#}
+    {##}
+    {#];#}
+    {#let _s4 = [#}
+    {#    {% for s in subsidiary4 %}#}
+    {#        {#}
+    {#            x: new Date(#}
+    {#                {{s.create_at|date:"Y"}},#}
+    {#                {{s.create_at|date:"n"}} -1,#}
+    {#                {{s.create_at|date:"d"}}#}
+    {#            ),#}
+    {#            y: {{s.totales|floatformat:0}}#}
+    {#        },#}
+    {#    {% endfor %}#}
+    {##}
+    {#];#}
+    {#let _cf4 = [#}
+    {#    {% for s in cash_subsidiary4 %}#}
+    {#        {#}
+    {#            x: new Date(#}
+    {#                {{s.transaction_date|date:"Y"}},#}
+    {#                {{s.transaction_date|date:"n"}} -1,#}
+    {#                {{s.transaction_date|date:"d"}}#}
+    {#            ),#}
+    {#            y: {{s.totales|floatformat:0}}#}
+    {#        },#}
+    {#    {% endfor %}#}
+    {##}
+    {#];#}
+    {#let _s5 = [#}
+    {#    {% for s in subsidiary5 %}#}
+    {#        {#}
+    {#            x: new Date(#}
+    {#                {{s.create_at|date:"Y"}},#}
+    {#                {{s.create_at|date:"n"}} -1,#}
+    {#                {{s.create_at|date:"d"}}#}
+    {#            ),#}
+    {#            y: {{s.totales|floatformat:0}}#}
+    {#        },#}
+    {#    {% endfor %}#}
+    {##}
+    {#];#}
+    {#let _cf5 = [#}
+    {#    {% for s in cash_subsidiary5 %}#}
+    {#        {#}
+    {#            x: new Date(#}
+    {#                {{s.transaction_date|date:"Y"}},#}
+    {#                {{s.transaction_date|date:"n"}} -1,#}
+    {#                {{s.transaction_date|date:"d"}}#}
+    {#            ),#}
+    {#            y: {{s.totales|floatformat:0}}#}
+    {#        },#}
+    {#    {% endfor %}#}
+    {##}
+    {#];#}
+    {#let _s6 = [#}
+    {#    {% for s in subsidiary6 %}#}
+    {#        {#}
+    {#            x: new Date(#}
+    {#                {{s.create_at|date:"Y"}},#}
+    {#                {{s.create_at|date:"n"}} -1,#}
+    {#                {{s.create_at|date:"d"}}#}
+    {#            ),#}
+    {#            y: {{s.totales|floatformat:0}}#}
+    {#        },#}
+    {#    {% endfor %}#}
+    {##}
+    {#];#}
+    {#let _cf6 = [#}
+    {#    {% for s in cash_subsidiary6 %}#}
+    {#        {#}
+    {#            x: new Date(#}
+    {#                {{s.transaction_date|date:"Y"}},#}
+    {#                {{s.transaction_date|date:"n"}} -1,#}
+    {#                {{s.transaction_date|date:"d"}}#}
+    {#            ),#}
+    {#            y: {{s.totales|floatformat:0}}#}
+    {#        },#}
+    {#    {% endfor %}#}
+    {##}
+    {#];#}
+
+
+    var chart1 = new CanvasJS.Chart("container-graphic-order", {
+        animationEnabled: true,
+        title: {
+            text: "Ventas realizadas por sucursal",
+            fontSize: 22
+        },
+        axisX: {
+            valueFormatString: "DD/MM/YY",
+            titleFontSize: 20,
+            labelFontSize: 20
+        },
+        axisY: {
+            title: "Ventas en soles (S/.)",
+            prefix: "S/.",
+            titleFontSize: 20,
+            labelFontSize: 20
+        },
+        legend: {
+            cursor: "pointer",
+            fontSize: 15,
+            itemclick: toggleDataSeries
+        },
+        toolTip: {
+            shared: true
+        },
+        data: [
+            {% for s in sales %}
+                {
+                    name: "{{ s|get:'subsidiary' }}",
+                    indexLabelFontStyle: "Bold",
+                    indexLabelFontSize: 16,
+                    indexLabel: "{y}",
+                    indexLabelPlacement: "outside",
+                    indexLabelOrientation: "horizontal",
+                    type: "spline",
+                    yValueFormatString: "#0.##",
+                    showInLegend: true,
+                    dataPoints: [
+                        {% for s2 in s|get:'set' %}
+                            {
+                                x: new Date(
+                                    {{ s2|get:'x'|date:"Y" }},
+                                    {{ s2|get:'x'|date:"m" }} -1,
+                                    {{ s2|get:'x'|date:"d" }}
+                                ),
+                                y: {{ s2|get:'y' }}
+                            },
+                        {% endfor %}
+                    ]
+                },
+            {% endfor %}
+        ]
+    });
+    chart1.render();
+
+    function toggleDataSeries(e) {
+        if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+            e.dataSeries.visible = false;
+        } else {
+            e.dataSeries.visible = true;
+        }
+        chart1.render();
+    }
+
+
+
+
+    {#--------------------------------------------------#}
+     var chart2 = new CanvasJS.Chart("container-graphic-cash", {
+        animationEnabled: true,
+        title: {
+            text: "Cobranza realizadas por sucursal",
+            fontSize: 22
+        },
+        axisX: {
+            valueFormatString: "DD/MM/YY",
+            titleFontSize: 20,
+            labelFontSize: 20
+        },
+        axisY: {
+            title: "Cobranzas en soles (S/.)",
+            prefix: "S/.",
+            titleFontSize: 20,
+            labelFontSize: 20
+        },
+        legend: {
+            cursor: "pointer",
+            fontSize: 15,
+            itemclick: toggleDataSeries
+        },
+        toolTip: {
+            shared: true
+        },
+        data: [
+            {% for p in payment %}
+
+                {
+                    name: "{{ p|get:'subsidiary' }}",
+                    indexLabelFontStyle: "Bold",
+                    indexLabelFontSize: 16,
+                    indexLabel: "{y}",
+                    indexLabelPlacement: "outside",
+                    indexLabelOrientation: "horizontal",
+                    type: "spline",
+                    yValueFormatString: "#0.##",
+                    showInLegend: true,
+                    dataPoints: [
+                        {% for p2 in p|get:'set' %}
+                            {
+                                x: new Date(
+                                    {{ p2|get:'x'|date:"Y" }},
+                                    {{ p2|get:'x'|date:"m" }} -1,
+                                    {{ p2|get:'x'|date:"d" }}
+                                ),
+                                y: {{ p2|get:'y' }}
+                            },
+                        {% endfor %}
+                    ]
+                },
+            {% endfor %}
+        ]
+     });
+    chart2.render();
+
+    function toggleDataSeries(e) {
+        if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+            e.dataSeries.visible = false;
+        } else {
+            e.dataSeries.visible = true;
+        }
+        chart2.render();
+     }
+    {#    {% for key, value  in sales.items %}#}
+    {#        let arr = [#}
+    {#            {% for v in value %}#}
+    {#                {#}
+    {#                    x: new Date({{ v|get:'x'|date:"Y" }}, {{ v|get:'x'|date:"m" }}, {{ v|get:'x'|date:"d" }}),#}
+    {#                    y: {{ v|get:'y' }}#}
+    {#                },#}
+    {#            {% endfor %}#}
+    {#        ]#}
+    {#    {% endfor %}#}
+    {#let chart = new CanvasJS.Chart("container-graphic-order", {#}
+    {#    animationEnabled: true,#}
+    {#    zoomEnabled: false,#}
+    {#    theme: "light1",// "light2", "dark1", "dark2"#}
+    {#    title: {#}
+    {#        text: "Ventas realizadas",#}
+    {#        fontSize: 15,#}
+    {#    },#}
+    {#    axisX: {#}
+    {#        title: "Año actual",#}
+    {#        gridThickness: 1,#}
+    {#        titleFontSize: 19,#}
+    {#        labelFontSize: 20,#}
+    {#        valueFormatString: "DD/MM/YY",#}
+    {#        interval: 1,#}
+    {#    },#}
+    {#    axisY: {#}
+    {#        logarithmic: false, //change it to false#}
+    {#        titleFontSize: 19,#}
+    {#        interval: 10000,#}
+    {#        labelFontSize: 20,#}
+    {#        title: "Venta realizada",#}
+    {#        titleFontColor: "#0c0c0c",#}
+    {#        lineColor: "#21910c",#}
+    {#        gridThickness: 1,#}
+    {#        lineThickness: 1,#}
+    {#        includeZero: false,#}
+    {#        labelFormatter: addSymbols#}
+    {#    },#}
+    {#    legend: {#}
+    {#        verticalAlign: "top",#}
+    {#        fontSize: 25,#}
+    {#        dockInsidePlotArea: true#}
+    {#    },#}
+    {#    data: [#}
+    {#            {% for key, value  in sales.items %}#}
+    {#                {#}
+    {#                    type: "line",#}
+    {#                    indexLabelFontStyle: "Bold",#}
+    {#                    indexLabelFontSize: 16,#}
+    {#                    xValueFormatString: "DD/MM",#}
+    {#                    showInLegend: true,#}
+    {#                    name: {{ key|safe}},#}
+    {#                    indexLabel: "{y}",#}
+    {#                    indexLabelPlacement: "outside",#}
+    {#                    indexLabelOrientation: "horizontal",#}
+    {#                    dataPoints:#}
+    {#                        [  {% for v in value %}#}
+    {#                            {#}
+    {#                                x: new Date({{ v|get:'x'|date:"Y" }}, {{ v|get:'x'|date:"m" }}, {{ v|get:'x'|date:"d" }}),#}
+    {#                                y: {{ v|get:'y' }}#}
+    {#                            },#}
+    {#                        {% endfor %}#}
+    {#                        ]#}
+    {#                },#}
+    {#            {% endfor %}#}
+
+
+
+    {#{#}
+    {#    type: "line",#}
+    {#    indexLabelFontStyle: "Bold",#}
+    {#    indexLabelFontSize: 16,#}
+    {#    xValueFormatString: "DD/MM",#}
+    {#    showInLegend: true,#}
+    {#    name: "Sicuani",#}
+    {#    indexLabel: "{y}",#}
+    {#    indexLabelPlacement: "outside",#}
+    {#    indexLabelOrientation: "horizontal",#}
+    {#    dataPoints: _s1#}
+    {# },#}
+    {#{#}
+    {#    type: "line",#}
+    {#    indexLabelFontStyle: "Bold",#}
+    {#    indexLabelFontSize: 14,#}
+    {#    xValueFormatString: "DD/MM",#}
+    {#    //axisYType: "secondary",#}
+    {#    showInLegend: true,#}
+    {#    name: "Cusco",#}
+    {#    indexLabel: "{y}",#}
+    {#    indexLabelPlacement: "outside",#}
+    {#    indexLabelOrientation: "horizontal",#}
+    {#    dataPoints: _s2#}
+    {# },#}
+    {#{#}
+    {#    type: "line",#}
+    {#    indexLabelFontSize: 14,#}
+    {#    indexLabelFontStyle: "Bold",#}
+    {#    xValueFormatString: "DD/MM",#}
+    {#    //axisYType: "secondary",#}
+    {#    showInLegend: true,#}
+    {#    name: "Puerto Maldonado",#}
+    {#    indexLabel: "{y}",#}
+    {#    indexLabelPlacement: "outside",#}
+    {#    indexLabelOrientation: "horizontal",#}
+    {#    dataPoints: _s3#}
+    {# },#}
+    {#{#}
+    {#    type: "line",#}
+    {#    indexLabelFontSize: 14,#}
+    {#    indexLabelFontStyle: "Bold",#}
+    {#    xValueFormatString: "DD/MM",#}
+    {#    //axisYType: "secondary",#}
+    {#    showInLegend: true,#}
+    {#    name: "Vilcanota",#}
+    {#    indexLabel: "{y}",#}
+    {#    indexLabelPlacement: "outside",#}
+    {#    indexLabelOrientation: "horizontal",#}
+    {#    dataPoints: _s4#}
+    {# },#}
+    {#{#}
+    {#    type: "line",#}
+    {#    indexLabelFontSize: 14,#}
+    {#    indexLabelFontStyle: "Bold",#}
+    {#    xValueFormatString: "DD/MM",#}
+    {#    //axisYType: "secondary",#}
+    {#    showInLegend: true,#}
+    {#    name: "Ilave",#}
+    {#    indexLabel: "{y}",#}
+    {#    indexLabelPlacement: "outside",#}
+    {#    indexLabelOrientation: "horizontal",#}
+    {#    dataPoints: _s5#}
+    {# },#}
+    {#{#}
+    {#    type: "line",#}
+    {#    indexLabelFontSize: 14,#}
+    {#    indexLabelFontStyle: "Bold",#}
+    {#    xValueFormatString: "DD/MM",#}
+    {#    //axisYType: "secondary",#}
+    {#    showInLegend: true,#}
+    {#    name: "Juliaca",#}
+    {#    indexLabel: "{y}",#}
+    {#    indexLabelPlacement: "outside",#}
+    {#    indexLabelOrientation: "horizontal",#}
+    {#    dataPoints: _s6#}
+    {# },#}
+
+    {#    ]#}
+    {# });#}
+    {#chart.render();#}
+
+    {#function addSymbols(e) {#}
+    {#    let suffixes = ["", "K", "M", "B"];#}
+    {##}
+    {#    let order = Math.max(Math.floor(Math.log(e.value) / Math.log(1000)), 0);#}
+    {#    if (order > suffixes.length - 1)#}
+    {#        order = suffixes.length - 1;#}
+    {##}
+    {#    let suffix = suffixes[order];#}
+    {#    return CanvasJS.formatNumber(e.value / Math.pow(1000, order)) + suffix;#}
+    {# }#}
+
+    {##}
+    {#let chart1 = new CanvasJS.Chart("container-graphic-cash", {#}
+    {#    animationEnabled: true,#}
+    {#    zoomEnabled: false,#}
+    {#    theme: "light1",// "light2", "dark1", "dark2"#}
+    {#    title: {#}
+    {#        text: "Cobranzas",#}
+    {#        fontSize: 15,#}
+    {#    },#}
+    {#    axisX: {#}
+    {#        title: "Fecha",#}
+    {#        gridThickness: 1,#}
+    {#        titleFontSize: 19,#}
+    {#        labelFontSize: 20,#}
+    {#        valueFormatString: "DD/MM/YY",#}
+    {#        interval: 1,#}
+    {#    },#}
+    {#    axisY: {#}
+    {#        logarithmic: false, //change it to false#}
+    {#        titleFontSize: 19,#}
+    {#        interval: 10000,#}
+    {#        labelFontSize: 20,#}
+    {#        title: "Cobranza",#}
+    {#        titleFontColor: "#0c0c0c",#}
+    {#        lineColor: "#21910c",#}
+    {#        gridThickness: 1,#}
+    {#        lineThickness: 1,#}
+    {#        includeZero: false,#}
+    {#        labelFormatter: addSymbols#}
+    {#    },#}
+    {#    legend: {#}
+    {#        verticalAlign: "top",#}
+    {#        fontSize: 25,#}
+    {#        dockInsidePlotArea: true#}
+    {#    },#}
+    {#    data: [{#}
+    {#        type: "line",#}
+    {#        indexLabelFontStyle: "Bold",#}
+    {#        indexLabelFontSize: 16,#}
+    {#        xValueFormatString: "DD/MM",#}
+    {#        showInLegend: true,#}
+    {#        name: "Sicuani",#}
+    {#        indexLabel: "{y}",#}
+    {#        indexLabelPlacement: "outside",#}
+    {#        indexLabelOrientation: "horizontal",#}
+    {#        dataPoints: _cf#}
+    {#    },#}
+    {#        {#}
+    {#            type: "line",#}
+    {#            indexLabelFontStyle: "Bold",#}
+    {#            indexLabelFontSize: 16,#}
+    {#            xValueFormatString: "DD/MM",#}
+    {#            showInLegend: true,#}
+    {#            name: "Cusco",#}
+    {#            indexLabel: "{y}",#}
+    {#            indexLabelPlacement: "outside",#}
+    {#            indexLabelOrientation: "horizontal",#}
+    {#            dataPoints: _cf2#}
+    {#        },#}
+    {#        {#}
+    {#            type: "line",#}
+    {#            indexLabelFontStyle: "Bold",#}
+    {#            indexLabelFontSize: 16,#}
+    {#            xValueFormatString: "DD/MM",#}
+    {#            showInLegend: true,#}
+    {#            name: "Puerto Maldonado",#}
+    {#            indexLabel: "{y}",#}
+    {#            indexLabelPlacement: "outside",#}
+    {#            indexLabelOrientation: "horizontal",#}
+    {#            dataPoints: _cf3#}
+    {#        },#}
+    {#        {#}
+    {#            type: "line",#}
+    {#            indexLabelFontStyle: "Bold",#}
+    {#            indexLabelFontSize: 16,#}
+    {#            xValueFormatString: "DD/MM",#}
+    {#            showInLegend: true,#}
+    {#            name: "Vilcanota",#}
+    {#            indexLabel: "{y}",#}
+    {#            indexLabelPlacement: "outside",#}
+    {#            indexLabelOrientation: "horizontal",#}
+    {#            dataPoints: _cf4#}
+    {#        },#}
+    {#        {#}
+    {#            type: "line",#}
+    {#            indexLabelFontStyle: "Bold",#}
+    {#            indexLabelFontSize: 16,#}
+    {#            xValueFormatString: "DD/MM",#}
+    {#            showInLegend: true,#}
+    {#            name: "Ilave",#}
+    {#            indexLabel: "{y}",#}
+    {#            indexLabelPlacement: "outside",#}
+    {#            indexLabelOrientation: "horizontal",#}
+    {#            dataPoints: _cf5#}
+    {#        },#}
+    {#        {#}
+    {#            type: "line",#}
+    {#            indexLabelFontSize: 14,#}
+    {#            indexLabelFontStyle: "Bold",#}
+    {#            xValueFormatString: "DD/MM",#}
+    {#            //axisYType: "secondary",#}
+    {#            showInLegend: true,#}
+    {#            name: "Juliaca",#}
+    {#            indexLabel: "{y}",#}
+    {#            indexLabelPlacement: "outside",#}
+    {#            indexLabelOrientation: "horizontal",#}
+    {#            dataPoints: _cf6#}
+    {#        },#}
+    {#    ]#}
+    {# });#}
+    {#chart1.render();#}
+
 
 </script>

@@ -1,3 +1,4 @@
+import pytz
 from django.db.models.functions import Coalesce
 from django.shortcuts import render
 from django.views.generic import TemplateView, View, CreateView, UpdateView
@@ -3697,27 +3698,15 @@ def get_report_sales_subsidiary(request):
             data_dates = json.loads(dates_request)
             date_initial = (data_dates["date_initial"])
             date_final = (data_dates["date_final"])
-            dictionary = {}
-            Subsidiary_1 = get_order_sales(1, date_initial, date_final)
-            Subsidiary_2 = get_order_sales(2, date_initial, date_final)
-            Subsidiary_3 = get_order_sales(3, date_initial, date_final)
-            Subsidiary_4 = get_order_sales(4, date_initial, date_final)
-            Subsidiary_5 = get_order_sales(5, date_initial, date_final)
-            Subsidiary_6 = get_order_sales(6, date_initial, date_final)
-
-            cash_subsidiary1 = get_cash_payment(1, date_initial, date_final)
-            cash_subsidiary2 = get_cash_payment(2, date_initial, date_final)
-            cash_subsidiary3 = get_cash_payment(3, date_initial, date_final)
-            cash_subsidiary4 = get_cash_payment(4, date_initial, date_final)
-            cash_subsidiary5 = get_cash_payment(5, date_initial, date_final)
-            cash_subsidiary6 = get_cash_payment(6, date_initial, date_final)
             array1 = []
             array2 = []
+            sales_subsidiary = []
+            payment_subsidiary = []
             v1 = "label"
             v2 = "y"
             for s in Subsidiary.objects.all():
                 t = Order.objects.filter(subsidiary_store__subsidiary_id=s.id,
-                                         create_at__range=(
+                                         create_at__date__range=(
                                              date_initial, date_final)).exclude(type='E').aggregate(
                     r=Coalesce(Sum('total'), 0))
                 sales_dict = {
@@ -3734,21 +3723,50 @@ def get_report_sales_subsidiary(request):
                     v2: float(c['r'])
                 }
                 array2.append(cash_dict)
+                # ventas
+                sales = {
+                    'subsidiary': s.name,
+                    'set': []
+                }
+                subsidiary_sales = []
+                for vt in Order.objects.filter(subsidiary_store__subsidiary_id=s.id,
+                                               create_at__range=(
+                                                       date_initial, date_final)).exclude(type='E').values(
+                    'create_at').annotate(totales=Sum('total')):
+                    sales_t = {
+                        # 'x': 'new Date(' + str(vt['create_at'].strftime("%Y, %m, %d")) + ')',
+                        'x': vt['create_at'],
+                        'y': str(vt['totales'])
+                    }
+                    subsidiary_sales.append(sales_t)
+                sales['subsidiary'] = s.name
+                sales['set'] = subsidiary_sales
+                sales_subsidiary.append(sales)
+
+                # Payments
+                payments = {
+                    'subsidiary': s.name,
+                    'set': []
+                }
+                subsidiary_payment = []
+                for pt in CashFlow.objects.filter(cash__subsidiary_id=s.id, type='E',
+                                                  transaction_date__range=(
+                                                          date_initial, date_final)).values(
+                    'transaction_date').annotate(
+                    totales=Sum('total')):
+                    payment_t = {
+                        'x': pt['transaction_date'],
+                        'y': str(pt['totales'])
+                    }
+                    subsidiary_payment.append(payment_t)
+                payments['subsidiary'] = s.name
+                payments['set'] = subsidiary_payment
+                payment_subsidiary.append(payments)
 
             tpl = loader.get_template('sales/report_graphic_sales_by_dates.html')
             context = ({
-                'subsidiary1': Subsidiary_1,
-                'cash_subsidiary1': cash_subsidiary1,
-                'subsidiary2': Subsidiary_2,
-                'cash_subsidiary2': cash_subsidiary2,
-                'subsidiary3': Subsidiary_3,
-                'cash_subsidiary3': cash_subsidiary3,
-                'subsidiary4': Subsidiary_4,
-                'cash_subsidiary4': cash_subsidiary4,
-                'subsidiary5': Subsidiary_5,
-                'cash_subsidiary5': cash_subsidiary5,
-                'subsidiary6': Subsidiary_6,
-                'cash_subsidiary6': cash_subsidiary6,
+                'sales': sales_subsidiary,
+                'payment': payment_subsidiary,
                 'sales_total': array1,
                 'cash_total': array2,
             })
@@ -3785,3 +3803,8 @@ def get_order_sales_total(pk, date_initial, date_final):
                                    create_at__range=(
                                        date_initial, date_final)).exclude(type='E').aggregate(Sum('total'))
     return totales['total__sum']
+
+# def get_utc(_date):
+#     local_tz = pytz.timezone('America/Bogota')
+#     local_dt = _date.replace(tzinfo=pytz.utc).astimezone(local_tz)
+#     return local_tz.normalize(local_dt)
