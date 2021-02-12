@@ -20,6 +20,14 @@
                                                      value="{{ date_now }}" required>
                         </td>
                         <td class="pl-2 pr-2">
+                           <select id="id_subsidiary" name="id_subsidiary_name" class="form-control">
+                                <option value="0">TODOS</option>
+                                {% for s in subsidiary_set %}
+                                    <option value="{{ s.id }}">{{ s.name }}</option>
+                                {% endfor %}
+                          </select>
+                        </td>
+                        <td class="pl-2 pr-2">
                             <button type="button" id="id_btn_show"
                                     class="btn btn-sm btn-success btn-block"> MOSTRAR REPORTE
                             </button>
@@ -43,6 +51,7 @@
                 let dates = {
                     "date_initial": $('#id_date_initial').val(),
                     "date_final": $('#id_date_final').val(),
+                    "subsidiary": $('#id_subsidiary').val(),
                 };
                 $.ajax({
                     url: '/sales/get_report_sales_subsidiary/',

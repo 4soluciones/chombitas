@@ -3698,13 +3698,20 @@ def get_report_sales_subsidiary(request):
             data_dates = json.loads(dates_request)
             date_initial = (data_dates["date_initial"])
             date_final = (data_dates["date_final"])
+            pk_subsidiary = (data_dates["subsidiary"])
             array1 = []
             array2 = []
             sales_subsidiary = []
             payment_subsidiary = []
             v1 = "label"
             v2 = "y"
-            for s in Subsidiary.objects.all():
+            subsidiary_set = None
+            if pk_subsidiary == '0':
+                subsidiary_set = Subsidiary.objects.all()
+            else:
+                subsidiary_set = Subsidiary.objects.filter(id=int(pk_subsidiary))
+
+            for s in subsidiary_set:
                 t = Order.objects.filter(subsidiary_store__subsidiary_id=s.id,
                                          create_at__date__range=(
                                              date_initial, date_final)).exclude(type='E').aggregate(
@@ -3777,8 +3784,10 @@ def get_report_sales_subsidiary(request):
         else:
             my_date = datetime.now()
             date_now = my_date.strftime("%Y-%m-%d")
+            subsidiary_set = Subsidiary.objects.all()
             return render(request, 'sales/report_graphic_sales.html', {
                 'date_now': date_now,
+                'subsidiary_set': subsidiary_set,
             })
 
 

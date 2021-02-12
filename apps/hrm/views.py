@@ -71,11 +71,19 @@ def get_recovered_vs_borrowed():
 def get_ball_recovered():
     my_date = datetime.now()
     recovery = []
-    for p in DistributionDetail.objects.filter(
-            distribution_mobil__date_distribution__year=my_date.year,
-            status='R',
-            type='V', ).values('distribution_mobil__subsidiary__id', 'distribution_mobil__subsidiary__name', ).annotate(
-        Sum('quantity')):
+
+    distribution_mobil_set = DistributionDetail.objects.filter(
+        distribution_mobil__date_distribution__year=my_date.year,
+        status='D',
+        type='V', 
+    ).values(
+        'distribution_mobil__subsidiary__id', 
+        'distribution_mobil__subsidiary__name',
+    ).annotate(Sum('quantity'))
+
+    print(distribution_mobil_set)
+
+    for p in distribution_mobil_set:
         recovery_dict = {
             'label': str(p['distribution_mobil__subsidiary__name']),
             'y': float(round(p['quantity__sum'], 2))
@@ -88,10 +96,14 @@ def get_ball_recovered():
 def get_ball_borrowed():
     borrowed = []
     my_date = datetime.now()
-    for b in OrderDetail.objects.filter(
-            order__distribution_mobil__date_distribution__year=my_date.year,
-            unit__name='B', ).values('order__distribution_mobil__subsidiary__id',
-                                     'order__distribution_mobil__subsidiary__name', ).annotate(Sum('quantity_sold')):
+    order_detail_set = OrderDetail.objects.filter(
+        order__distribution_mobil__date_distribution__year=my_date.year,
+        unit__name='B', 
+    ).values(
+        'order__distribution_mobil__subsidiary__id',
+        'order__distribution_mobil__subsidiary__name', 
+    ).annotate(Sum('quantity_sold'))
+    for b in order_detail_set:
         borrowed_dict = {
             'label': b['order__distribution_mobil__subsidiary__name'],
             'y': float(round(b['quantity_sold__sum'], 2))
