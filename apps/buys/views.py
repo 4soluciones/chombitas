@@ -6,7 +6,7 @@ from http import HTTPStatus
 
 from django.contrib.auth.models import User
 from django.core import serializers
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, F
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.template import loader
@@ -1754,7 +1754,7 @@ def get_report_graphic_glp(request):
                     totals = 0
                 data_payment = {
                     'label': str(r.requirement_buys.approval_date.strftime("%d-%m-%Y")),
-                    'y': float(totals)
+                    'y': float(round(totals * r.change_coin, 2))
                 }
                 amount_payment.append(data_payment)
 

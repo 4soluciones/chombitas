@@ -29,7 +29,7 @@ from django.core import serializers
 from apps.sales.views_SUNAT import send_bill_nubefact, send_receipt_nubefact
 from apps.sales.models import OrderBill
 from apps.sales.number_to_letters import numero_a_letras, numero_a_moneda
-from django.db.models import Min, Sum, Max, Q
+from django.db.models import Min, Sum, Max, Q, Value as V
 
 
 class Home(TemplateView):

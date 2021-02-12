@@ -1,3 +1,4 @@
+from django.db.models.functions import Coalesce
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from apps.hrm.views import get_subsidiary_by_user
@@ -10,13 +11,12 @@ from .models import *
 import decimal
 from django.shortcuts import render
 from django.views.generic import TemplateView
-
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
 from django.db import DatabaseError, IntegrityError
 import json
 from django.core import serializers
-from django.db.models import Min, Sum
+from django.db.models import Min, Sum, F
 
 
 class Home(TemplateView):
@@ -1477,3 +1477,69 @@ def update_description_and_date_cash_bank(request):
             'success': 'Cambios realizados con éxito',
         })
     return JsonResponse({'error': True, 'message': 'Error de peticion.'})
+
+
+def get_graphic_cash_set_vs_purchase(request):
+    if request.method == 'GET':
+        my_date = datetime.now()
+        formatdate = my_date.strftime("%Y-%m-%d")
+        user_id = request.user.id
+        user_obj = User.objects.get(pk=int(user_id))
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+
+        return render(request, 'accounting/get_graphic_purchase_cash.html', {
+            'formatdate': formatdate,
+            'subsidiary_obj': subsidiary_obj,
+        })
+
+    elif request.method == 'POST':
+        date_initial = str(request.POST.get('date_initial'))
+        date_final = str(request.POST.get('date_final'))
+        array1 = []
+        array2 = []
+        sum_total = 0
+        for s in Subsidiary.objects.all():
+            # p = PurchaseDetail.objects.filter(purchase__subsidiary_id=s.id, purchase__status='A',
+            # purchase__purchase_date__range=(date_initial, date_final)).values( 'purchase__purchase_date').annotate(
+            # total=Sum("id", field="price_unit * quantity"))
+
+            # COMPRAS
+
+            p = PurchaseDetail.objects.filter(purchase__subsidiary_id=s.id, purchase__status='A',
+                                                   purchase__purchase_date__range=(date_initial, date_final)).values(
+                'purchase__subsidiary__name').annotate(total=Sum(F('price_unit') * F('quantity')))
+
+            if p.exists():
+                p_obj = p[0]
+                sum_total = p_obj['total']
+                purchase_dict = {
+                    'label': s.name,
+                    'y': float(round(sum_total, 2))
+                }
+            else:
+                purchase_dict = {
+                    'label': s.name,
+                    'y': float(0.00)
+                }
+
+            array2.append(purchase_dict)
+            # GASTOS
+            cs = CashFlow.objects.filter(cash__subsidiary_id=s.id, type='S',
+                                         transaction_date__range=(
+                                             date_initial, date_final)).aggregate(
+                r=Coalesce(Sum('total'), 0))
+            cash_dict = {
+                'label': s.name,
+                'y': float(cs['r'])
+            }
+            array1.append(cash_dict)
+
+        tpl = loader.get_template('accounting/get_report_graphic_purchase_cash.html')
+        context = ({
+            'purchase_total': array1,
+            'cash_total': array2,
+        })
+        return JsonResponse({
+            'success': True,
+            'form': tpl.render(context, request),
+        })

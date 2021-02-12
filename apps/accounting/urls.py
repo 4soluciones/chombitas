@@ -48,4 +48,7 @@ urlpatterns = [
     path('get_cash_report/', login_required(get_cash_report), name='get_cash_report'),
     path('get_cash_by_dates/', login_required(get_cash_by_dates), name='get_cash_by_dates'),
     path('update_transaction_date_in_cash_flow/', login_required(update_transaction_date_in_cash_flow), name='update_transaction_date_in_cash_flow'),
+
+    # graphics
+    path('get_graphic_cash_set_vs_purchase/', login_required(get_graphic_cash_set_vs_purchase), name='get_graphic_cash_set_vs_purchase'),
 ]

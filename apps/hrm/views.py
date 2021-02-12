@@ -7,6 +7,7 @@ from http import HTTPStatus
 from .models import *
 from apps.sales.models import *
 from apps.comercial.models import *
+from apps.accounting.models import *
 from .forms import *
 import json
 from django.core.serializers.json import DjangoJSONEncoder
@@ -14,6 +15,7 @@ from django.db.models.fields.files import ImageFieldFile
 from django.template import loader
 from datetime import datetime
 from django.contrib.auth.hashers import make_password
+from django.db.models import Min, Sum, Max, Q, Count
 
 
 class Home(TemplateView):
@@ -25,20 +27,81 @@ class Home(TemplateView):
         text = '12345678.'
         password = make_password(text)
         context = {
-            'subsidiaries': Subsidiary.objects.all(),
-            'employees': Employee.objects.all(),
-            'products': Product.objects.all(),
-            'sales': Product.objects.all(),
-            'towings': Towing.objects.all(),
             'dist_10bg_set': get_distribution_10kg(),
             'dist_5bg_set': get_distribution_5kg(),
-            'users': User.objects.all(),
-            'pass': password
+            'sales_vs_expenses': get_sales_vs_expenses(),
+            'void_set': get_input_voids(),
         }
         return context
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name, self.get_context_data())
+
+
+def get_input_voids():
+    my_date = datetime.now()
+    void_set = DistributionDetail.objects.filter(
+        distribution_mobil__date_distribution__year=my_date.year,
+        status='R',
+        type='V',
+    ).values(
+        'distribution_mobil__subsidiary__id',
+        'distribution_mobil__subsidiary__name',
+    ).annotate(Sum('quantity'))
+    return void_set
+
+
+def get_sales_vs_expenses():
+    cash_flow_set = get_cash_flow_expenses()
+    order_set = get_sales_distributions()
+
+    truck_dict = {}
+
+    for o in order_set:
+        _search_value = o['distribution_mobil__truck__pk']
+        if o['total__sum'] > 0:
+            truck_dict[_search_value] = {
+                'i_sales': str(float(round(o['total__sum'],2))), 'i_expenses': 0, 'pk': _search_value,
+                'name': o['distribution_mobil__truck__license_plate']
+            }
+
+    for c in cash_flow_set:
+        _search_value = c['order__distribution_mobil__truck__pk']
+        if _search_value in truck_dict.keys():
+            _truck = truck_dict[_search_value]
+            _expenses = _truck.get('i_expenses')
+            if c['total__sum'] > 0:
+                truck_dict[_search_value]['i_expenses'] = str(float(round(c['total__sum'],2)))
+        else:
+            if c['total__sum'] > 0:
+                truck_dict[_search_value] = {
+                    'i_sales': 0, 'i_expenses': str(float(round(c['total__sum'],2))), 'pk': _search_value,
+                    'name': c['order__distribution_mobil__truck__license_plate']
+                }
+    return truck_dict
+                    
+
+def get_cash_flow_expenses():
+    my_date = datetime.now()
+    cash_flow_set = CashFlow.objects.filter(
+        order__distribution_mobil__date_distribution__year=my_date.year,
+        type='S'
+    ).values(
+        'order__distribution_mobil__truck__pk',
+        'order__distribution_mobil__truck__license_plate',
+    ).annotate(Sum('total'))
+    return cash_flow_set
+
+
+def get_sales_distributions():
+    my_date = datetime.now()
+    order_set = Order.objects.filter(
+        distribution_mobil__date_distribution__year=my_date.year
+    ).values(
+        'distribution_mobil__truck__pk',
+        'distribution_mobil__truck__license_plate',
+    ).annotate(Sum('total'))
+    return order_set
 
 
 def get_distribution_10kg():
