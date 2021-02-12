@@ -22,7 +22,6 @@ class Home(TemplateView):
     template_name = 'home.html'
 
     def get_context_data(self, **kwargs):
-
         # subsidiary = Subsidiary.objects.filter(establishment__worker_user=user_obj)
         text = '12345678.'
         password = make_password(text)
@@ -30,7 +29,8 @@ class Home(TemplateView):
             'dist_10bg_set': get_distribution_10kg(),
             'dist_5bg_set': get_distribution_5kg(),
             'sales_vs_expenses': get_sales_vs_expenses(),
-            'void_set': get_input_voids(),
+            'void_set': get_ball_recovered(),
+            'bg_set': get_ball_borrowed(),
         }
         return context
 
@@ -38,17 +38,66 @@ class Home(TemplateView):
         return render(request, self.template_name, self.get_context_data())
 
 
-def get_input_voids():
+def get_recovered_vs_borrowed():
+    recovered_set = get_ball_recovered()
+    borrowed_set = get_ball_borrowed()
+
+    subsidiary_dict = {}
+
+    for o in recovered_set:
+        _search_value = o['distribution_mobil__subsidiary__id']
+        if o['quantity__sum'] > 0:
+            subsidiary_dict[_search_value] = {
+                'i_recovered': str(float(round(o['quantity__sum'], 2))), 'i_borrowed': 0, 'pk': _search_value,
+                'name': o['distribution_mobil__subsidiary__name']
+            }
+
+    for c in borrowed_set:
+        _search_value = c['order__distribution_mobil__subsidiary__id']
+        if _search_value in subsidiary_dict.keys():
+            _truck = subsidiary_dict[_search_value]
+            _expenses = _truck.get('i_borrowed')
+            if c['quantity_sold__sum'] > 0:
+                subsidiary_dict[_search_value]['i_borrowed'] = str(float(round(c['quantity_sold__sum'], 2)))
+        else:
+            if c['quantity_sold__sum'] > 0:
+                subsidiary_dict[_search_value] = {
+                    'i_recovered': 0, 'i_borrowed': str(float(round(c['quantity_sold__sum'], 2))), 'pk': _search_value,
+                    'name': c['order__distribution_mobil__subsidiary__name']
+                }
+    return subsidiary_dict
+
+
+def get_ball_recovered():
     my_date = datetime.now()
-    void_set = DistributionDetail.objects.filter(
-        distribution_mobil__date_distribution__year=my_date.year,
-        status='R',
-        type='V',
-    ).values(
-        'distribution_mobil__subsidiary__id',
-        'distribution_mobil__subsidiary__name',
-    ).annotate(Sum('quantity'))
-    return void_set
+    recovery = []
+    for p in DistributionDetail.objects.filter(
+            distribution_mobil__date_distribution__year=my_date.year,
+            status='R',
+            type='V', ).values('distribution_mobil__subsidiary__id', 'distribution_mobil__subsidiary__name', ).annotate(
+        Sum('quantity')):
+        recovery_dict = {
+            'label': str(p['distribution_mobil__subsidiary__name']),
+            'y': float(round(p['quantity__sum'], 2))
+        }
+        recovery.append(recovery_dict)
+
+    return recovery
+
+
+def get_ball_borrowed():
+    borrowed = []
+    my_date = datetime.now()
+    for b in OrderDetail.objects.filter(
+            order__distribution_mobil__date_distribution__year=my_date.year,
+            unit__name='B', ).values('order__distribution_mobil__subsidiary__id',
+                                     'order__distribution_mobil__subsidiary__name', ).annotate(Sum('quantity_sold')):
+        borrowed_dict = {
+            'label': b['order__distribution_mobil__subsidiary__name'],
+            'y': float(round(b['quantity_sold__sum'], 2))
+        }
+        borrowed.append(borrowed_dict)
+    return borrowed
 
 
 def get_sales_vs_expenses():
@@ -61,7 +110,7 @@ def get_sales_vs_expenses():
         _search_value = o['distribution_mobil__truck__pk']
         if o['total__sum'] > 0:
             truck_dict[_search_value] = {
-                'i_sales': str(float(round(o['total__sum'],2))), 'i_expenses': 0, 'pk': _search_value,
+                'i_sales': str(float(round(o['total__sum'], 2))), 'i_expenses': 0, 'pk': _search_value,
                 'name': o['distribution_mobil__truck__license_plate']
             }
 
@@ -71,15 +120,15 @@ def get_sales_vs_expenses():
             _truck = truck_dict[_search_value]
             _expenses = _truck.get('i_expenses')
             if c['total__sum'] > 0:
-                truck_dict[_search_value]['i_expenses'] = str(float(round(c['total__sum'],2)))
+                truck_dict[_search_value]['i_expenses'] = str(float(round(c['total__sum'], 2)))
         else:
             if c['total__sum'] > 0:
                 truck_dict[_search_value] = {
-                    'i_sales': 0, 'i_expenses': str(float(round(c['total__sum'],2))), 'pk': _search_value,
+                    'i_sales': 0, 'i_expenses': str(float(round(c['total__sum'], 2))), 'pk': _search_value,
                     'name': c['order__distribution_mobil__truck__license_plate']
                 }
     return truck_dict
-                    
+
 
 def get_cash_flow_expenses():
     my_date = datetime.now()
@@ -135,7 +184,6 @@ def get_distribution_5kg():
 
 
 def get_subsidiary_by_user(user_obj):
-
     worker_obj = Worker.objects.get(user=user_obj)
     establishment_obj = Establishment.objects.filter(worker=worker_obj).last()
     subsidiary = Subsidiary.objects.filter(establishment=establishment_obj).first()
@@ -411,7 +459,8 @@ def create_worker(request):
                 return response
         else:
             if bool(create_user):
-                username = employee_obj.names.lower()[:1] + employee_obj.paternal_last_name.lower() + str(employee_obj.id)
+                username = employee_obj.names.lower()[:1] + employee_obj.paternal_last_name.lower() + str(
+                    employee_obj.id)
                 user_email = username + '@user.com'
                 user_obj = User(
                     username=username,
@@ -536,7 +585,6 @@ def get_worker_establishment(request):
 
 def update_worker_establishment(request):
     if request.method == 'POST':
-
         worker = request.POST.get('worker')
         worker_obj = Worker.objects.get(id=int(worker))
 

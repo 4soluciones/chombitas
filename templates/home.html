@@ -200,17 +200,17 @@
 
                         <div class="card-body card-body-cascade">
                             <h5 class="card-title text-uppercase">Resumen</h5>
-
-
-
-
-                            
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-12 col-md-12">
+
+
+                    <div id="chartdiv" style="height: 370px; width: 100%;"></div>
+
                     <div id="chartContainer" style="height: 500px; width: 100%;"></div>
                     <div id="container3" style="width: 100%;height: 500px;"></div>
+                    <div id="container4" style="width: 100%;height: 500px;"></div>
 
 
                 </div><!-- Grid column -->
@@ -300,33 +300,14 @@
 <script src="{% static 'js/sweetalert-dev.js' %}"></script>
 <!-- Graphs -->
 <script src="{% static 'js/canvasjs.min.js' %}"></script>
-<script src="{% static 'Highcharts-9.0.0/code/highcharts.js' %}"></script>
-<script src="{% static 'Highcharts-9.0.0/code/modules/data.js' %}"></script>
-<script src="{% static 'Highcharts-9.0.0/code/modules/drilldown.js' %}"></script>
-<script src="{% static 'Highcharts-9.0.0/code/modules/exporting.js' %}"></script>
-<script src="{% static 'Highcharts-9.0.0/code/modules/export-data.js' %}"></script>
-<script src="{% static 'Highcharts-9.0.0/code/modules/accessibility.js' %}"></script>
 
-<script src="https://cdn.amcharts.com/lib/4/core.js"></script>
-<script src="https://cdn.amcharts.com/lib/4/charts.js"></script>
-<script src="https://cdn.amcharts.com/lib/4/themes/material.js"></script>
-<script src="https://cdn.amcharts.com/lib/4/lang/de_DE.js"></script>
-<script src="https://cdn.amcharts.com/lib/4/geodata/germanyLow.js"></script>
-<script src="https://cdn.amcharts.com/lib/4/fonts/notosans-sc.js"></script>
+
 {% block extrajs %}
 
 
     <script>
 
 
-
-{#am4core.ready(function() {#}
-
-// Themes begin
-// Themes end
-
-// Create chart instance
-{#var chart = am4core.create("chartdiv", am4charts.XYChart);#}
 
 // Add data
 data3 = [
@@ -345,7 +326,8 @@ data4 = [
     },
 {% endfor %}
 ];
-{##------------------------------------------#}
+
+/***********************************/
 var chartbars = new CanvasJS.Chart("container3", {
         animationEnabled: true,
         title: {
@@ -568,85 +550,80 @@ var chartbars = new CanvasJS.Chart("container3", {
             return CanvasJS.formatNumber(e.value / Math.pow(1000, order)) + suffix;
         }
 
-        Highcharts.chart('container2', {
-            chart: {
-                type: 'column'
-            },
-            title: {
-                text: 'TOTAL DE VENTAS'
-            },
-            subtitle: {
-                text: 'Ventas realizadas por sucursal'
-            },
-            accessibility: {
-                announceNewData: {
-                    enabled: true
-                }
-            },
-            xAxis: {
-                type: 'category'
-            },
-            yAxis: {
-                title: {
-                    text: 'Total soles'
-                }
 
-            },
-            legend: {
-                enabled: false
-            },
-            plotOptions: {
-                series: {
-                    borderWidth: 0,
-                    dataLabels: {
-                        enabled: true,
-                        format: '{point.y:.1f}%'
-                    }
-                }
-            },
 
-            tooltip: {
-                headerFormat: '<span style="font-size:11px">{series.name}</span><br>',
-                pointFormat: '<span style="color:{point.color}">{point.name}</span>: <b>{point.y:.2f} S/. </b> Total<br/>'
-            },
+        var chartsubsidiary = new CanvasJS.Chart("container4", {
+        animationEnabled: true,
+        title: {
+            text: "BALONES PRESTADO Y RECUPERADOS POR SEDE",
+            fontSize: 20,
+        },
+        axisY: {
+            title: "Cantidad prestada",
+            titleFontSize: 19,
+            labelFontSize: 20,
+            titleFontColor: "#4F81BC",
+            lineColor: "#4F81BC",
+            labelFontColor: "#4F81BC",
+            tickColor: "#4F81BC",
+            crosshair: {
+                enabled: true,
+                color: "orange",
+                labelFontColor: "#f8f8f8"
+             }
+        },
+        axisY2: {
+            title: "Cantidad recuperada",
+            titleFontSize: 19,
+            labelFontSize: 20,
+            maximum: 20000,
+            titleFontColor: "#C0504E",
+            lineColor: "#C0504E",
+            labelFontColor: "#C0504E",
+            tickColor: "#C0504E",
+            crosshair: {
+                enabled: true,
+                color: "orange",
+                labelFontColor: "#F8F8F8"
+             }
 
-            series: [
-                {
-                    name: "Venta",
-                    colorByPoint: true,
-                    data: [
-                        {
-                            name: "Enero",
-                            y: 62.74,
-                        },
-                        {
-                            name: "Febrero",
-                            y: 10.57,
-                        },
-                        {
-                            name: "Marzo",
-                            y: 7.23,
-                        },
-                        {
-                            name: "Abril",
-                            y: 5.58,
-                        },
-                        {
-                            name: "Mayo",
-                            y: 4.02,
-                        },
-                        {
-                            name: "Junio",
-                            y: 1.92,
-                        },
-                        {
-                            name: "Julio",
-                            y: 7.62,
-                        }
-                    ]
-                }
-            ]
-        });
+        },
+        toolTip: {
+            shared: true
+        },
+        legend: {
+            cursor: "pointer",
+            fontSize: 15,
+            itemclick: toggleDataSeries
+        },
+        data: [{
+            type: "column",
+            name: "Ventas S/.",
+            indexLabelPlacement: "outside",
+            indexLabelFontSize: 16,
+            indexLabelFontStyle: "Bold",
+            indexLabel: "{y}",
+            indexLabelOrientation: "horizontal",
+            legendText: "Ventas S/.",
+            showInLegend: true,
+            dataPoints: {{ void_set|safe }}
+        },
+            {
+                type: "column",
+                name: "Gastos S/.",
+                indexLabelPlacement: "outside",
+                indexLabelFontSize: 16,
+                indexLabelFontStyle: "Bold",
+                indexLabel: "{y}",
+                indexLabelOrientation: "horizontal",
+                legendText: "Gastos S/.",
+                axisYType: "secondary",
+                showInLegend: true,
+                dataPoints: {{ bg_set|safe }}
+            }]
+    });
+    chartsubsidiary.render();
+
     </script>
 
 {% endblock extrajs %}
