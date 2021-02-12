@@ -18,4 +18,6 @@ urlpatterns = [
     path('update_worker_user/', update_worker_user, name='update_worker_user'),
     path('edit_worker_designation/', edit_worker_designation, name='edit_worker_designation'),
     path('update_worker/', login_required(update_worker), name='update_worker'),
+
+    path('get_recovered_vs_borrowed/', login_required(get_recovered_vs_borrowed), name='get_recovered_vs_borrowed'),
 ]

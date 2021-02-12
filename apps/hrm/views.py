@@ -16,6 +16,7 @@ from django.template import loader
 from datetime import datetime
 from django.contrib.auth.hashers import make_password
 from django.db.models import Min, Sum, Max, Q, Count
+from django.db.models.functions import Coalesce
 
 
 class Home(TemplateView):
@@ -24,13 +25,14 @@ class Home(TemplateView):
     def get_context_data(self, **kwargs):
         # subsidiary = Subsidiary.objects.filter(establishment__worker_user=user_obj)
         text = '12345678.'
+        my_date = datetime.now()
         password = make_password(text)
         context = {
             'dist_10bg_set': get_distribution_10kg(),
             'dist_5bg_set': get_distribution_5kg(),
             'sales_vs_expenses': get_sales_vs_expenses(),
-            'void_set': get_ball_recovered(),
-            'bg_set': get_ball_borrowed(),
+            'formatdate': my_date.strftime("%Y-%m-%d"),
+            'subsidiary_set': Subsidiary.objects.all().values('id','name')
         }
         return context
 
@@ -38,54 +40,54 @@ class Home(TemplateView):
         return render(request, self.template_name, self.get_context_data())
 
 
-def get_recovered_vs_borrowed():
-    recovered_set = get_ball_recovered()
-    borrowed_set = get_ball_borrowed()
+def get_recovered_vs_borrowed(request):
+    print(request.method)
+    if request.method == 'GET':
+        subsidiary_id = request.GET.get('subsidiary', '')
+        start_date = request.GET.get('start_date', '')
+        end_date = request.GET.get('end_date', '')
 
-    subsidiary_dict = {}
-
-    for o in recovered_set:
-        _search_value = o['distribution_mobil__subsidiary__id']
-        if o['quantity__sum'] > 0:
-            subsidiary_dict[_search_value] = {
-                'i_recovered': str(float(round(o['quantity__sum'], 2))), 'i_borrowed': 0, 'pk': _search_value,
-                'name': o['distribution_mobil__subsidiary__name']
-            }
-
-    for c in borrowed_set:
-        _search_value = c['order__distribution_mobil__subsidiary__id']
-        if _search_value in subsidiary_dict.keys():
-            _truck = subsidiary_dict[_search_value]
-            _expenses = _truck.get('i_borrowed')
-            if c['quantity_sold__sum'] > 0:
-                subsidiary_dict[_search_value]['i_borrowed'] = str(float(round(c['quantity_sold__sum'], 2)))
-        else:
-            if c['quantity_sold__sum'] > 0:
-                subsidiary_dict[_search_value] = {
-                    'i_recovered': 0, 'i_borrowed': str(float(round(c['quantity_sold__sum'], 2))), 'pk': _search_value,
-                    'name': c['order__distribution_mobil__subsidiary__name']
-                }
-    return subsidiary_dict
+        t = loader.get_template('hrm/bar_dashboard.html')
+        c = ({
+            'void_set': get_ball_recovered(subsidiary_id=int(subsidiary_id),start_date=start_date,end_date=end_date),
+            'bg_set': get_ball_borrowed(subsidiary_id=int(subsidiary_id),start_date=start_date,end_date=end_date),
+        })
+        return JsonResponse({
+            'success': True,
+            'grid': t.render(c, request),
+        })
 
 
-def get_ball_recovered():
+def get_ball_recovered(subsidiary_id=0,start_date='',end_date=''):
     my_date = datetime.now()
     recovery = []
+    if subsidiary_id == 0:
+        subsidiary_set = Subsidiary.objects.all()
+        distribution_mobil_set = DistributionDetail.objects.filter(
+            distribution_mobil__date_distribution__range=[start_date, end_date],
+            distribution_mobil__subsidiary__in=subsidiary_set,
+            status='D',
+            type='V', 
+        ).values(
+            'distribution_mobil__subsidiary__id', 
+            'distribution_mobil__subsidiary__name',
+        ).annotate(quantity__sum=Coalesce(Sum('quantity'), 0))
+    else:
+        distribution_mobil_set = DistributionDetail.objects.filter(
+            distribution_mobil__date_distribution__range=[start_date, end_date],
+            distribution_mobil__subsidiary__id=subsidiary_id,
+            status='D',
+            type='V', 
+        ).values(
+            'distribution_mobil__subsidiary__id', 
+            'distribution_mobil__subsidiary__name',
+        ).annotate(quantity__sum=Coalesce(Sum('quantity'), 0))
 
-    distribution_mobil_set = DistributionDetail.objects.filter(
-        distribution_mobil__date_distribution__year=my_date.year,
-        status='D',
-        type='V', 
-    ).values(
-        'distribution_mobil__subsidiary__id', 
-        'distribution_mobil__subsidiary__name',
-    ).annotate(Sum('quantity'))
-
-    print(distribution_mobil_set)
+    #print(distribution_mobil_set)
 
     for p in distribution_mobil_set:
         recovery_dict = {
-            'label': str(p['distribution_mobil__subsidiary__name']),
+            'label': p['distribution_mobil__subsidiary__name'],
             'y': float(round(p['quantity__sum'], 2))
         }
         recovery.append(recovery_dict)
@@ -93,16 +95,31 @@ def get_ball_recovered():
     return recovery
 
 
-def get_ball_borrowed():
+def get_ball_borrowed(subsidiary_id=0,start_date='',end_date=''):
     borrowed = []
     my_date = datetime.now()
-    order_detail_set = OrderDetail.objects.filter(
-        order__distribution_mobil__date_distribution__year=my_date.year,
-        unit__name='B', 
-    ).values(
-        'order__distribution_mobil__subsidiary__id',
-        'order__distribution_mobil__subsidiary__name', 
-    ).annotate(Sum('quantity_sold'))
+    if subsidiary_id == 0:
+        subsidiary_set = Subsidiary.objects.all()
+        order_detail_set = OrderDetail.objects.filter(
+            order__distribution_mobil__date_distribution__range=[start_date, end_date],
+            order__distribution_mobil__subsidiary__in=subsidiary_set,
+            unit__name='B', 
+        ).values(
+            'order__distribution_mobil__subsidiary__id',
+            'order__distribution_mobil__subsidiary__name', 
+        ).annotate(quantity_sold__sum=Coalesce(Sum('quantity_sold'), 0))
+    else:
+        order_detail_set = OrderDetail.objects.filter(
+            order__distribution_mobil__date_distribution__range=[start_date, end_date],
+            order__distribution_mobil__subsidiary__id=subsidiary_id,
+            unit__name='B', 
+        ).values(
+            'order__distribution_mobil__subsidiary__id',
+            'order__distribution_mobil__subsidiary__name', 
+        ).annotate(quantity_sold__sum=Coalesce(Sum('quantity_sold'), 0))
+
+    #print(order_detail_set)
+
     for b in order_detail_set:
         borrowed_dict = {
             'label': b['order__distribution_mobil__subsidiary__name'],

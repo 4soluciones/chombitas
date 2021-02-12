@@ -13,7 +13,7 @@ from .forms import *
 from apps.hrm.models import Subsidiary, District, DocumentType, Employee, Worker
 from apps.comercial.models import DistributionMobil, Truck, DistributionDetail, ClientAdvancement, ClientProduct
 from django.contrib.auth.models import User
-from apps.hrm.views import get_subsidiary_by_user
+from apps.hrm.views import get_subsidiary_by_user, get_ball_recovered, get_ball_borrowed
 from apps.accounting.views import TransactionAccount, LedgerEntry, get_account_cash, Cash, CashFlow, AccountingAccount
 import json
 import decimal
@@ -29,7 +29,9 @@ from django.core import serializers
 from apps.sales.views_SUNAT import send_bill_nubefact, send_receipt_nubefact
 from apps.sales.models import OrderBill
 from apps.sales.number_to_letters import numero_a_letras, numero_a_moneda
-from django.db.models import Min, Sum, Max, Q, Value as V
+from django.db.models import Min, Sum, Max, Q, Value as V, F
+
+from ..buys.models import PurchaseDetail
 
 
 class Home(TemplateView):
@@ -3701,6 +3703,8 @@ def get_report_sales_subsidiary(request):
             pk_subsidiary = (data_dates["subsidiary"])
             array1 = []
             array2 = []
+            array3 = []
+            array4 = []
             sales_subsidiary = []
             payment_subsidiary = []
             v1 = "label"
@@ -3770,12 +3774,50 @@ def get_report_sales_subsidiary(request):
                 payments['set'] = subsidiary_payment
                 payment_subsidiary.append(payments)
 
+                # COMPRAS VS PAGOS
+                p = PurchaseDetail.objects.filter(purchase__subsidiary_id=s.id, purchase__status='A',
+                                                  purchase__purchase_date__range=(date_initial, date_final)).values(
+                    'purchase__subsidiary__name').annotate(total=Sum(F('price_unit') * F('quantity')))
+
+                if p.exists():
+                    p_obj = p[0]
+                    sum_total = p_obj['total']
+                    purchase_dict = {
+                        'label': s.name,
+                        'y': float(round(sum_total, 2))
+                    }
+                else:
+                    purchase_dict = {
+                        'label': s.name,
+                        'y': float(0.00)
+                    }
+
+                array4.append(purchase_dict)
+                # GASTOS
+                cs = CashFlow.objects.filter(cash__subsidiary_id=s.id, type='S',
+                                             transaction_date__range=(
+                                                 date_initial, date_final)).aggregate(
+                    r=Coalesce(Sum('total'), 0))
+                cash_dict = {
+                    'label': s.name,
+                    'y': float(cs['r'])
+                }
+                array3.append(cash_dict)
+
+            if date_initial != '' and date_final != '':
+                void_set = get_ball_recovered(subsidiary_id=int(pk_subsidiary),start_date=date_initial,end_date=date_final)
+                bg_set = get_ball_borrowed(subsidiary_id=int(pk_subsidiary),start_date=date_initial,end_date=date_final)
+
             tpl = loader.get_template('sales/report_graphic_sales_by_dates.html')
             context = ({
                 'sales': sales_subsidiary,
                 'payment': payment_subsidiary,
                 'sales_total': array1,
                 'cash_total': array2,
+                'purchase_total': array4,
+                'cash_total_purchase': array3,
+                'void_set': void_set,
+                'bg_set': bg_set,
             })
             return JsonResponse({
                 'success': True,

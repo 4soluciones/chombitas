@@ -60,7 +60,6 @@
                     type: 'GET',
                     data: {'pk': pk, 'dates': JSON.stringify(dates),},
                     contentType: 'application/json;charset=UTF-8',
-                    {#headers: {"X-CSRFToken": '{{ csrf_token }}'},#}
                     success: function (response) {
                         $('#container-graphic-sales').html(response.form);
                     },
