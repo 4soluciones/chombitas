@@ -1,25 +1,25 @@
 from django.shortcuts import render
-from django.views.generic import TemplateView, View, CreateView, UpdateView
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
+import decimal
+import json
+from datetime import datetime
 from http import HTTPStatus
 
-from rest_framework.compat import distinct
-
-from .models import *
-from apps.hrm.models import Subsidiary, Worker, Establishment
-from django.template import loader, Context
 from django.contrib.auth.models import User
+from django.core import serializers
+from django.db.models import Q, Sum
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.template import loader
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import TemplateView
+
+from apps.hrm.models import Subsidiary
 from apps.hrm.views import get_subsidiary_by_user
 from apps.sales.views import kardex_input, kardex_ouput, kardex_initial, calculate_minimum_unit, \
     save_loan_payment_in_cash_flow
-import json
-import decimal
-from datetime import datetime
-from ..sales.models import Product, Unit, Supplier, SubsidiaryStore, ProductStore, ProductDetail, Kardex, Order, \
-    OrderDetail, Cash, CashFlow, TransactionPayment, LoanPayment
-from django.core import serializers
-from django.db.models import Q, Max, Sum, Min, Count
+from .models import *
+from ..sales.models import Product, Unit, Supplier, SubsidiaryStore, ProductStore, ProductDetail, Kardex, Cash, \
+    CashFlow, TransactionPayment
 
 
 class Home(TemplateView):
@@ -1718,3 +1718,64 @@ def get_dict_programming_queries(requirement_programming_set):
         'count': count,
     })
     return tpl.render(context)
+
+
+def get_report_graphic_glp(request):
+    if request.method == 'GET':
+        pk = request.GET.get('pk', '')
+        if pk != '':
+            dates_request = request.GET.get('dates', '')
+            data_dates = json.loads(dates_request)
+            date_initial = (data_dates["date_initial"])
+            date_final = (data_dates["date_final"])
+            quantity_date = []
+            amount_date = []
+            amount_payment = []
+            for r in RequirementDetail_buys.objects.filter(
+                    requirement_buys__approval_date__range=(date_initial, date_final)):
+                data_quantity = {
+                    'label': str(r.requirement_buys.approval_date.strftime("%d-%m-%Y")),
+                    'y': float(round(r.quantity, 2))
+                }
+                quantity_date.append(data_quantity)
+                data_amount = {
+                    'label': str(r.requirement_buys.approval_date.strftime("%d-%m-%Y")),
+                    'y': float(round(r.amount_pen, 2))
+                }
+                amount_date.append(data_amount)
+                try:
+                    p = CashFlow.objects.filter(requirement_buys_id=r.requirement_buys.id).values('total').last()
+                    if p is None:
+                        totals = 0
+                    else:
+                        totals = p['total']
+
+                except CashFlow.DoesNotExist:
+                    totals = 0
+                data_payment = {
+                    'label': str(r.requirement_buys.approval_date.strftime("%d-%m-%Y")),
+                    'y': float(totals)
+                }
+                amount_payment.append(data_payment)
+
+            tpl = loader.get_template('buys/report_graphic_glp_by_dates.html')
+            context = ({
+                'quantity_d': quantity_date,
+                'amount_d': amount_date,
+            })
+            tpl1 = loader.get_template('buys/report_graphic_glp_by_dates1.html')
+            context1 = ({
+                'quantity_d': quantity_date,
+                'amount_payment': amount_payment
+            })
+            return JsonResponse({
+                'success': True,
+                'form': tpl.render(context, request),
+                'forms': tpl1.render(context1, request),
+            })
+        else:
+            my_date = datetime.now()
+            date_now = my_date.strftime("%Y-%m-%d")
+            return render(request, 'buys/report_graphic_glp.html', {
+                'date_now': date_now,
+            })

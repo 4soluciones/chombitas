@@ -58,5 +58,7 @@ urlpatterns = [
 
     # Report programmings all
     path('get_programmings_by_dates/', get_programmings_by_dates, name='get_programmings_by_dates'),
+    # Report Graphic
+    path('get_report_graphic_glp/', get_report_graphic_glp, name='get_report_graphic_glp'),
 
 ]
