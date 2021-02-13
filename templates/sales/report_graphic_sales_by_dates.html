@@ -32,6 +32,28 @@
 
 <div class="card p-0  m-0  mt-2" style="border-color: #2b579a">
     <div class="card-header text-center pb-1" style="background: #2b579a">
+        <h6 class="card-title text-white">COMPRAS</h6>
+    </div>
+    <div class="card-body p-0  m-0">
+        <div class="col-lg-12 col-md-12 p-0  m-0">
+            <div id="container-purchase" style="height: 500px; width: 100%;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="card p-0  m-0  mt-2" style="border-color: #2b579a">
+    <div class="card-header text-center pb-1" style="background: #2b579a">
+        <h6 class="card-title text-white">PAGOS</h6>
+    </div>
+    <div class="card-body p-0  m-0">
+        <div class="col-lg-12 col-md-12 p-0  m-0">
+            <div id="container-pay" style="height: 500px; width: 100%;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="card p-0  m-0  mt-2" style="border-color: #2b579a">
+    <div class="card-header text-center pb-1" style="background: #2b579a">
         <h6 class="card-title text-white">COMPRAS Y PAGOS</h6>
     </div>
     <div class="card-body p-0  m-0">
@@ -62,12 +84,26 @@
         </div>
     </div>
 </div>
+
+<div class="card p-0  m-0  mt-2" style="border-color: #2b579a">
+    <div class="card-header text-center pb-1" style="background: #2b579a">
+        <h6 class="card-title text-white">VENTAS POR DISTRITO</h6>
+    </div>
+    <div class="card-body p-0  m-0">
+        <div class="col-lg-12 col-md-12 p-0  m-0">
+            <div id="container-district" class="w-100" style="height: 500px;"></div>
+        </div>
+    </div>
+</div>
 <script type="text/javascript">
+
+
     var chartbar = new CanvasJS.Chart("container-graphic-total", {
         animationEnabled: true,
         title: {
             text: "TOTAL DE VENTAS Y COBRANZAS",
             fontSize: 20,
+            culture: "es",
         },
         axisY: {
             title: "VENTA",
@@ -89,16 +125,19 @@
 
         },
         toolTip: {
-            shared: true
+            shared: true,
+            culture: "es",
         },
         legend: {
             cursor: "pointer",
             fontSize: 15,
+            culture: "es",
             itemclick: toggleDataSeries
         },
         data: [{
             type: "column",
             name: "Venta",
+            culture: "es",
             indexLabelPlacement: "outside",
             indexLabelFontSize: 16,
             indexLabelFontStyle: "Bold",
@@ -119,6 +158,7 @@
                 legendText: "Cobranza",
                 axisYType: "secondary",
                 showInLegend: true,
+                culture: "es",
                 dataPoints: {{ cash_total|safe }}
             }]
     });
@@ -138,7 +178,8 @@
         animationEnabled: true,
         title: {
             text: "Ventas realizadas por sucursal",
-            fontSize: 22
+            fontSize: 22,
+            culture: "es"
         },
         axisX: {
             valueFormatString: "DD/MM/YY",
@@ -263,6 +304,150 @@
         }
         chart2.render();
     }
+
+    /****** COMPRAS ******/
+
+    var chartpurchaselineal = new CanvasJS.Chart("container-purchase", {
+        animationEnabled: true,
+        title: {
+            text: "Compras realizadas por Sucursal",
+            fontSize: 22
+        },
+        axisX: {
+            valueFormatString: "DD/MM/YY",
+            titleFontSize: 20,
+            labelFontSize: 20
+        },
+        axisY: {
+            title: "Compras en soles (S/.)",
+            prefix: "S/.",
+            titleFontSize: 20,
+            labelFontSize: 20
+        },
+        legend: {
+            cursor: "pointer",
+            fontSize: 15,
+            itemclick: toggleDataSeries
+        },
+        toolTip: {
+            shared: true
+        },
+        data: [
+            {% for p in purchase_susbsidiary %}
+
+                {
+                    name: "{{ p|get:'subsidiary' }}",
+                    indexLabelFontStyle: "Bold",
+                    indexLabelFontSize: 16,
+                    indexLabel: "{y}",
+                    indexLabelPlacement: "outside",
+                    indexLabelOrientation: "horizontal",
+                    type: "spline",
+                    yValueFormatString: "#0.##",
+                    showInLegend: true,
+                    dataPoints: [
+                        {% for p2 in p|get:'set' %}
+                            {
+                                x: new Date(
+                                    {{ p2|get:'x'|date:"Y" }},
+                                    {{ p2|get:'x'|date:"m" }} -1,
+                                    {{ p2|get:'x'|date:"d" }}
+                                ),
+                                y: {{ p2|get:'y' }}
+                            },
+                        {% endfor %}
+                    ]
+                },
+            {% endfor %}
+        ]
+    });
+    chartpurchaselineal.render();
+
+    function toggleDataSeries(e) {
+        if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+            e.dataSeries.visible = false;
+        } else {
+            e.dataSeries.visible = true;
+        }
+        chartpurchaselineal.render();
+    }
+
+    /*************** GASTOS **********************/
+
+
+    var chartpaylineal = new CanvasJS.Chart("container-pay", {
+        animationEnabled: true,
+        title: {
+            text: "Pagos realizadas por Sucursal",
+            fontSize: 22
+        },
+        axisX: {
+            valueFormatString: "DD/MM/YY",
+            titleFontSize: 20,
+            labelFontSize: 20
+        },
+        axisY: {
+            title: "Pagos soles (S/.)",
+            prefix: "S/.",
+            titleFontSize: 20,
+            labelFontSize: 20
+        },
+        legend: {
+            cursor: "pointer",
+            fontSize: 15,
+            itemclick: toggleDataSeries
+        },
+        toolTip: {
+            shared: true
+        },
+        data: [
+            {% for p in cash_pay_subsidiary %}
+
+                {
+                    name: "{{ p|get:'subsidiary' }}",
+                    indexLabelFontStyle: "Bold",
+                    indexLabelFontSize: 16,
+                    indexLabel: "{y}",
+                    indexLabelPlacement: "outside",
+                    indexLabelOrientation: "horizontal",
+                    type: "spline",
+                    yValueFormatString: "#0.##",
+                    showInLegend: true,
+                    dataPoints: [
+                        {% for p2 in p|get:'set' %}
+                            {
+                                x: new Date(
+                                    {{ p2|get:'x'|date:"Y" }},
+                                    {{ p2|get:'x'|date:"m" }} -1,
+                                    {{ p2|get:'x'|date:"d" }}
+                                ),
+                                y: {{ p2|get:'y' }}
+                            },
+                        {% endfor %}
+                    ]
+                },
+            {% endfor %}
+        ]
+    });
+    chartpaylineal.render();
+
+    function toggleDataSeries(e) {
+        if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+            e.dataSeries.visible = false;
+        } else {
+            e.dataSeries.visible = true;
+        }
+        chartpaylineal.render();
+    }
+
+
+
+
+
+
+
+
+
 
     /**** COMPRAS VS PAGOS ****/
 
@@ -549,5 +734,65 @@
 };
      */
     /**REPORTE DE VENTAS POR PLACA**/
+
+    /**REPORTE DE VENTAS POR DISTRITO**/
+  var chart_district = new CanvasJS.Chart("container-district", {
+        animationEnabled: true,
+        title: {
+            text: "VENTAS POR DISTRITOS",
+            fontSize: 20,
+        },
+        axisY: {
+            title: "VENTA",
+            titleFontSize: 19,
+            labelFontSize: 20,
+            titleFontColor: "#4F81BC",
+            lineColor: "#4F81BC",
+            labelFontColor: "#4F81BC",
+            tickColor: "#4F81BC"
+        },
+        axisY2: {
+            title: "VENTA",
+            titleFontSize: 19,
+            labelFontSize: 20,
+            titleFontColor: "#C0504E",
+            lineColor: "#C0504E",
+            labelFontColor: "#C0504E",
+            tickColor: "#C0504E"
+
+        },
+        toolTip: {
+            shared: true
+        },
+        legend: {
+            cursor: "pointer",
+            fontSize: 15,
+            itemclick: toggleDataSeries
+        },
+        data: [{
+            type: "column",
+            name: "Venta",
+            indexLabelPlacement: "outside",
+            indexLabelFontSize: 16,
+            indexLabelFontStyle: "Bold",
+            indexLabel: "{y}",
+            indexLabelOrientation: "horizontal",
+            legendText: "Ventas de distrito",
+            showInLegend: true,
+            dataPoints: {{ array_district|safe }}
+        }]
+    });
+    chart_district.render();
+
+    function toggleDataSeries(e) {
+        if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+            e.dataSeries.visible = false;
+        } else {
+            e.dataSeries.visible = true;
+        }
+        chart_district.render();
+    }
+
+
 
 </script>

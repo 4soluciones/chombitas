@@ -24,12 +24,22 @@ class Home(TemplateView):
 
     def get_context_data(self, **kwargs):
         # subsidiary = Subsidiary.objects.filter(establishment__worker_user=user_obj)
+        sicuani_order_set = Order.objects.filter(type='V', subsidiary_store__subsidiary__id=1).annotate(Sum('total'))
+        cusco_order_set = Order.objects.filter(type='V', subsidiary_store__subsidiary__id=2).annotate(Sum('total'))
+        vilcanota_order_set = Order.objects.filter(type='V', subsidiary_store__subsidiary__id=4).annotate(Sum('total'))
+        puerto_order_set = Order.objects.filter(type='V', subsidiary_store__subsidiary__id=3).annotate(Sum('total'))
         text = '12345678.'
         my_date = datetime.now()
         password = make_password(text)
         context = {
             'dist_10bg_set': get_distribution_10kg(),
             'dist_5bg_set': get_distribution_5kg(),
+            'dist_15bg_set': get_distribution_15kg(),
+            'dist_45bg_set': get_distribution_45kg(),
+            'sicuani_order_set': sicuani_order_set,
+            'cusco_order_set': cusco_order_set,
+            'vilcanota_order_set': vilcanota_order_set,
+            'puerto_order_set': puerto_order_set,
             #'sales_vs_expenses': get_sales_vs_expenses(),
         }
         return context
@@ -129,6 +139,34 @@ def get_distribution_5kg():
         'distribution_mobil__date_distribution'
     ).annotate(Sum('quantity')).order_by('distribution_mobil__date_distribution')
     return dist_5bg_set
+
+
+def get_distribution_15kg():
+    my_date = datetime.now()
+    formatdate = my_date.strftime("%Y-%m-%d")
+    dist_15bg_set = DistributionDetail.objects.filter(
+        product__id=12,
+        unit__name='BG',
+        distribution_mobil__date_distribution__year=my_date.year
+    ).values(
+        'unit__name',
+        'distribution_mobil__date_distribution'
+    ).annotate(Sum('quantity')).order_by('distribution_mobil__date_distribution')
+    return dist_15bg_set
+
+
+def get_distribution_45kg():
+    my_date = datetime.now()
+    formatdate = my_date.strftime("%Y-%m-%d")
+    dist_45bg_set = DistributionDetail.objects.filter(
+        product__id=3,
+        unit__name='BG',
+        distribution_mobil__date_distribution__year=my_date.year
+    ).values(
+        'unit__name',
+        'distribution_mobil__date_distribution'
+    ).annotate(Sum('quantity')).order_by('distribution_mobil__date_distribution')
+    return dist_45bg_set
 
 
 # FUNCION PARA RECUPERAR EL USUARIO DE UNA SUCURSAL

@@ -3707,7 +3707,10 @@ def get_report_sales_subsidiary(request):
             array4 = []
             array5 = []
             array6 = []
+            array_district = []
             sales_subsidiary = []
+            purchase_subsidiary = []
+            cash_pay_subsidiary = []
             payment_subsidiary = []
             v1 = "label"
             v2 = "y"
@@ -3717,10 +3720,12 @@ def get_report_sales_subsidiary(request):
                 subsidiary_set = Subsidiary.objects.all()
                 print(date_initial)
                 print(date_final)
-                sales_vs_expenses_set = get_sales_vs_expenses(subsidiary_obj=None, start_date=date_initial, end_date=date_final)
+                sales_vs_expenses_set = get_sales_vs_expenses(subsidiary_obj=None, start_date=date_initial,
+                                                              end_date=date_final)
             else:
                 subsidiary_set = Subsidiary.objects.filter(id=int(pk_subsidiary))
-                sales_vs_expenses_set = get_sales_vs_expenses(subsidiary_obj=subsidiary_set.first(), start_date=date_initial, end_date=date_final)
+                sales_vs_expenses_set = get_sales_vs_expenses(subsidiary_obj=subsidiary_set.first(),
+                                                              start_date=date_initial, end_date=date_final)
             print(sales_vs_expenses_set)
             for s in subsidiary_set:
                 t = Order.objects.filter(
@@ -3733,7 +3738,7 @@ def get_report_sales_subsidiary(request):
                 }
                 array1.append(sales_dict)
                 c = CashFlow.objects.filter(
-                    cash__subsidiary_id=s.id, 
+                    cash__subsidiary_id=s.id,
                     type='E',
                     transaction_date__range=(date_initial, date_final)
                 ).aggregate(r=Coalesce(Sum('total'), 0))
@@ -3742,7 +3747,8 @@ def get_report_sales_subsidiary(request):
                     v2: float(c['r'])
                 }
                 array2.append(cash_dict)
-                # ventas
+
+                # ----------------ventas ------------------
                 sales = {
                     'subsidiary': s.name,
                     'set': []
@@ -3763,7 +3769,7 @@ def get_report_sales_subsidiary(request):
                 sales['set'] = subsidiary_sales
                 sales_subsidiary.append(sales)
 
-                # Payments
+                # ---------------Payments-------------------
                 payments = {
                     'subsidiary': s.name,
                     'set': []
@@ -3772,7 +3778,7 @@ def get_report_sales_subsidiary(request):
                 cashflow_set = CashFlow.objects.filter(
                     cash__subsidiary_id=s.id, type='E',
                     transaction_date__range=(date_initial, date_final)
-                ).values('transaction_date').annotate(totales=Sum('total'))
+                ).values('transaction_date').annotate(totales=Sum('total')).order_by('transaction_date')
                 for pt in cashflow_set:
                     payment_t = {
                         'x': pt['transaction_date'],
@@ -3783,7 +3789,7 @@ def get_report_sales_subsidiary(request):
                 payments['set'] = subsidiary_payment
                 payment_subsidiary.append(payments)
 
-                # COMPRAS VS PAGOS
+                # ----------COMPRAS VS PAGOS----------
                 p = PurchaseDetail.objects.filter(
                     purchase__subsidiary_id=s.id, purchase__status='A',
                     purchase__purchase_date__range=(date_initial, date_final)
@@ -3805,6 +3811,7 @@ def get_report_sales_subsidiary(request):
                     }
 
                 array4.append(purchase_dict)
+
                 # GASTOS
                 cs = CashFlow.objects.filter(
                     cash__subsidiary_id=s.id,
@@ -3816,6 +3823,57 @@ def get_report_sales_subsidiary(request):
                     'y': float(cs['r'])
                 }
                 array3.append(cash_dict)
+
+                # -----------Compras(lineal)--------------
+
+                purchase_lineal = {
+                    'subsidiary': s.name,
+                    'set': []
+                }
+                subsidiary_purchase = []
+                p_l = PurchaseDetail.objects.filter(
+                    purchase__subsidiary_id=s.id, purchase__status='A',
+                    purchase__purchase_date__range=(date_initial, date_final)
+                ).values(
+                    'purchase__purchase_date'
+                ).annotate(total=Sum(F('price_unit') * F('quantity'))).order_by('purchase__purchase_date')
+
+                for pt in p_l:
+                    purchase_t = {
+                        # 'x': 'new Date(' + str(vt['create_at'].strftime("%Y, %m, %d")) + ')',
+                        'x': pt['purchase__purchase_date'],
+                        'y': str(pt['total'])
+                    }
+                    subsidiary_purchase.append(purchase_t)
+                purchase_lineal['subsidiary'] = s.name
+                purchase_lineal['set'] = subsidiary_purchase
+                purchase_subsidiary.append(purchase_lineal)
+
+                # -----------Pagos(lineal)--------------
+
+                cash_lineal = {
+                    'subsidiary': s.name,
+                    'set': []
+                }
+                subsidiary_cash = []
+                cash_flow_set = CashFlow.objects.filter(
+                    cash__subsidiary_id=s.id,
+                    type='S',
+                    transaction_date__range=(date_initial, date_final)
+                ).values(
+                    'transaction_date'
+                ).annotate(r=Coalesce(Sum('total'), 0)).order_by('transaction_date')
+
+                for c in cash_flow_set:
+                    c_t = {
+                        'x': c['transaction_date'],
+                        'y': str(c['r'])
+                    }
+                    subsidiary_cash.append(c_t)
+
+                cash_lineal['subsidiary'] = s.name
+                cash_lineal['set'] = subsidiary_cash
+                cash_pay_subsidiary.append(cash_lineal)
 
                 # recovered
                 distribution_mobil_set = LoanPayment.objects.filter(
@@ -3853,8 +3911,19 @@ def get_report_sales_subsidiary(request):
 
                 subsidiary_trucks = []'''
 
-            
-
+            # VENTAS POR DISTRITO
+            district_ = ''
+            for d in Order.objects.filter(create_at__date__range=(date_initial, date_final)).exclude(type='E').values(
+                    'client__clientaddress__district__description').annotate(totales=Sum(F('total'))):
+                if d['client__clientaddress__district__description'] is None:
+                    district_ = 'OTROS'
+                else:
+                    district_ = str(d['client__clientaddress__district__description'])
+                sales_district = {
+                    'label': district_,
+                    'y': float(d['totales'])
+                }
+                array_district.append(sales_district)
             tpl = loader.get_template('sales/report_graphic_sales_by_dates.html')
             context = ({
                 'sales': sales_subsidiary,
@@ -3865,7 +3934,10 @@ def get_report_sales_subsidiary(request):
                 'cash_total_purchase': array3,
                 'recovered_set': array5,
                 'borrowed_set': array6,
-                'sales_vs_expenses': sales_vs_expenses_set
+                'sales_vs_expenses': sales_vs_expenses_set,
+                'purchase_susbsidiary': purchase_subsidiary,
+                'cash_pay_subsidiary': cash_pay_subsidiary,
+                'array_district': array_district
             })
             return JsonResponse({
                 'success': True,

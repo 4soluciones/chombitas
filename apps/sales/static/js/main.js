@@ -119,3 +119,12 @@ $(document).ready(function() {
 
 
 })(jQuery);
+
+
+    CanvasJS.addCultureInfo("es",
+        {
+            decimalSeparator: ",",// Observe ToolTip Number Format
+            digitGroupSeparator: ".", // Observe axisY labels
+            months: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Setiembre", "Octubre", "Noviembre", "Diciembre"]
+
+        });
