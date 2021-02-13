@@ -1555,6 +1555,8 @@ def get_programming_pay(request):
         user_obj = User.objects.get(id=user_id)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
         programming_invoice_id = request.GET.get('programming_id', '')
+        start_date = request.GET.get('start-date', '')
+        end_date = request.GET.get('end-date', '')
         programming_invoice_obj = Programminginvoice.objects.get(id=int(programming_invoice_id))
         requirement_programming_obj = RequirementBuysProgramming.objects.get(
             id=programming_invoice_obj.requirementBuysProgramming.id)
@@ -1569,7 +1571,9 @@ def get_programming_pay(request):
             'programming_invoice': programming_invoice_obj,
             'choices_account': cash_set,
             'choices_account_bank': cash_deposit_set,
-            'date': formatdate
+            'date': formatdate,
+            'start_date': start_date,
+            'end_date': end_date
         })
 
         return JsonResponse({
@@ -1593,11 +1597,17 @@ def new_payment_programming_glp(request):
         purchases_set = Purchase.objects.filter(purchase_date__range=[start_date, end_date], subsidiary=subsidiary_obj,
                                                 status='A')
 
+        date_converter = ''
+        cash_flow_date = str(request.POST.get('id_date'))
+        cash_flow_transact_date_deposit = str(request.POST.get('id_date_deposit'))
+        date_converter = datetime.strptime(cash_flow_transact_date_deposit, '%Y-%m-%d').date()
+        formatdate = date_converter.strftime("%d-%m-%y")
+
         if transaction_payment_type == 'E':
             cash_id = str(request.POST.get('cash_efectivo'))
             cash_obj = Cash.objects.get(id=cash_id)
             cash_flow_description = str(request.POST.get('description_cash'))
-            cash_flow_date = str(request.POST.get('id_date'))
+            # cash_flow_date = str(request.POST.get('id_date'))
 
             cashflow_obj = CashFlow(
                 transaction_date=cash_flow_date,
@@ -1613,7 +1623,7 @@ def new_payment_programming_glp(request):
 
         if transaction_payment_type == 'D':
             cash_flow_description = str(request.POST.get('description_deposit'))
-            cash_flow_transact_date_deposit = str(request.POST.get('id_date_deposit'))
+            # cash_flow_transact_date_deposit = str(request.POST.get('id_date_deposit'))
             cash_id = str(request.POST.get('id_cash_deposit'))
             cash_obj = Cash.objects.get(id=cash_id)
             code_operation = str(request.POST.get('code_operation'))

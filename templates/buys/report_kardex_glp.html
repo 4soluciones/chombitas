@@ -145,7 +145,11 @@
                 async: true,
                 dataType: 'json',
                 type: 'GET',
-                data: {'programming_id': _programming_id},
+                data: {
+                    'programming_id': _programming_id,
+                    'start-date': $('#id_date_initial').val(),
+                    'end-date': $('#id_date_final').val()
+                },
                 success: function (response) {
                     $('#pay-programming').html(response.grid);
                 },

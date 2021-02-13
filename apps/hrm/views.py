@@ -15,7 +15,7 @@ from django.db.models.fields.files import ImageFieldFile
 from django.template import loader
 from datetime import datetime
 from django.contrib.auth.hashers import make_password
-from django.db.models import Min, Sum, Max, Q, Count
+from django.db.models import Min, Sum, Max, Q, Count, F
 from django.db.models.functions import Coalesce
 
 
@@ -30,9 +30,7 @@ class Home(TemplateView):
         context = {
             'dist_10bg_set': get_distribution_10kg(),
             'dist_5bg_set': get_distribution_5kg(),
-            'sales_vs_expenses': get_sales_vs_expenses(),
-            'formatdate': my_date.strftime("%Y-%m-%d"),
-            'subsidiary_set': Subsidiary.objects.all().values('id','name')
+            #'sales_vs_expenses': get_sales_vs_expenses(),
         }
         return context
 
@@ -40,98 +38,9 @@ class Home(TemplateView):
         return render(request, self.template_name, self.get_context_data())
 
 
-def get_recovered_vs_borrowed(request):
-    print(request.method)
-    if request.method == 'GET':
-        subsidiary_id = request.GET.get('subsidiary', '')
-        start_date = request.GET.get('start_date', '')
-        end_date = request.GET.get('end_date', '')
-
-        t = loader.get_template('hrm/bar_dashboard.html')
-        c = ({
-            'void_set': get_ball_recovered(subsidiary_id=int(subsidiary_id),start_date=start_date,end_date=end_date),
-            'bg_set': get_ball_borrowed(subsidiary_id=int(subsidiary_id),start_date=start_date,end_date=end_date),
-        })
-        return JsonResponse({
-            'success': True,
-            'grid': t.render(c, request),
-        })
-
-
-def get_ball_recovered(subsidiary_id=0,start_date='',end_date=''):
-    my_date = datetime.now()
-    recovery = []
-    if subsidiary_id == 0:
-        subsidiary_set = Subsidiary.objects.all()
-        distribution_mobil_set = DistributionDetail.objects.filter(
-            distribution_mobil__date_distribution__range=[start_date, end_date],
-            distribution_mobil__subsidiary__in=subsidiary_set,
-            status='D',
-            type='V', 
-        ).values(
-            'distribution_mobil__subsidiary__id', 
-            'distribution_mobil__subsidiary__name',
-        ).annotate(quantity__sum=Coalesce(Sum('quantity'), 0))
-    else:
-        distribution_mobil_set = DistributionDetail.objects.filter(
-            distribution_mobil__date_distribution__range=[start_date, end_date],
-            distribution_mobil__subsidiary__id=subsidiary_id,
-            status='D',
-            type='V', 
-        ).values(
-            'distribution_mobil__subsidiary__id', 
-            'distribution_mobil__subsidiary__name',
-        ).annotate(quantity__sum=Coalesce(Sum('quantity'), 0))
-
-    #print(distribution_mobil_set)
-
-    for p in distribution_mobil_set:
-        recovery_dict = {
-            'label': p['distribution_mobil__subsidiary__name'],
-            'y': float(round(p['quantity__sum'], 2))
-        }
-        recovery.append(recovery_dict)
-
-    return recovery
-
-
-def get_ball_borrowed(subsidiary_id=0,start_date='',end_date=''):
-    borrowed = []
-    my_date = datetime.now()
-    if subsidiary_id == 0:
-        subsidiary_set = Subsidiary.objects.all()
-        order_detail_set = OrderDetail.objects.filter(
-            order__distribution_mobil__date_distribution__range=[start_date, end_date],
-            order__distribution_mobil__subsidiary__in=subsidiary_set,
-            unit__name='B', 
-        ).values(
-            'order__distribution_mobil__subsidiary__id',
-            'order__distribution_mobil__subsidiary__name', 
-        ).annotate(quantity_sold__sum=Coalesce(Sum('quantity_sold'), 0))
-    else:
-        order_detail_set = OrderDetail.objects.filter(
-            order__distribution_mobil__date_distribution__range=[start_date, end_date],
-            order__distribution_mobil__subsidiary__id=subsidiary_id,
-            unit__name='B', 
-        ).values(
-            'order__distribution_mobil__subsidiary__id',
-            'order__distribution_mobil__subsidiary__name', 
-        ).annotate(quantity_sold__sum=Coalesce(Sum('quantity_sold'), 0))
-
-    #print(order_detail_set)
-
-    for b in order_detail_set:
-        borrowed_dict = {
-            'label': b['order__distribution_mobil__subsidiary__name'],
-            'y': float(round(b['quantity_sold__sum'], 2))
-        }
-        borrowed.append(borrowed_dict)
-    return borrowed
-
-
-def get_sales_vs_expenses():
-    cash_flow_set = get_cash_flow_expenses()
-    order_set = get_sales_distributions()
+def get_sales_vs_expenses(subsidiary_obj=None, start_date=None, end_date=None):
+    cash_flow_set = get_cash_flow_expenses(subsidiary_obj=subsidiary_obj, start_date=start_date, end_date=end_date)
+    order_set = get_sales_distributions(subsidiary_obj=subsidiary_obj, start_date=start_date, end_date=end_date)
 
     truck_dict = {}
 
@@ -159,23 +68,36 @@ def get_sales_vs_expenses():
     return truck_dict
 
 
-def get_cash_flow_expenses():
+def get_cash_flow_expenses(subsidiary_obj=None, start_date=None, end_date=None):
     my_date = datetime.now()
     cash_flow_set = CashFlow.objects.filter(
-        order__distribution_mobil__date_distribution__year=my_date.year,
+        order__distribution_mobil__date_distribution__range=(start_date, end_date),
+        #order__subsidiary_store__subsidiary_id=subsidiary_obj.id,
+        #order__distribution_mobil__date_distribution__year=my_date.year,
         type='S'
-    ).values(
+    )
+
+    if subsidiary_obj is not None:
+        cash_flow_set = cash_flow_set.filter(order__distribution_mobil__truck__subsidiary_id=subsidiary_obj.id)
+    
+    cash_flow_set = cash_flow_set.values(
         'order__distribution_mobil__truck__pk',
         'order__distribution_mobil__truck__license_plate',
     ).annotate(Sum('total'))
     return cash_flow_set
 
 
-def get_sales_distributions():
+def get_sales_distributions(subsidiary_obj=None, start_date=None, end_date=None):
     my_date = datetime.now()
     order_set = Order.objects.filter(
-        distribution_mobil__date_distribution__year=my_date.year
-    ).values(
+        distribution_mobil__date_distribution__range=(start_date, end_date),
+        #subsidiary_store__subsidiary_id=subsidiary_obj.id
+        #distribution_mobil__date_distribution__year=my_date.year
+    )
+    if subsidiary_obj is not None:
+        order_set = order_set.filter(distribution_mobil__truck__subsidiary_id=subsidiary_obj.id)
+
+    order_set = order_set.values(
         'distribution_mobil__truck__pk',
         'distribution_mobil__truck__license_plate',
     ).annotate(Sum('total'))

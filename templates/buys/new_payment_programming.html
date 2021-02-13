@@ -5,8 +5,8 @@
     <input type="hidden" id="id_purchase" name="purchase" value="{{ programming_invoice.id }}">
     <input type="hidden" id="id_price_unit" name="price_unit" value="{{ detail.price_unit }}">
     <input type="hidden" id="id_quantity" name="quantity" value="{{ detail_purchase.count }}">
-    <input type="hidden" id="date-ini" name="date-ini">
-    <input type="hidden" id="date-fin" name="date-fin">
+    <input type="hidden" id="date-ini" name="date-ini" value="{{ start_date }}">
+    <input type="hidden" id="date-fin" name="date-fin" value="{{ end_date }}">
 
     <table class="table table-sm pay-options">
         <tbody>
@@ -162,11 +162,11 @@
 
 <script type="text/javascript">
 
-    let date1 = $('#id_date_initial').val();
-    $('#date-ini').val(date1);
-    let date2 = $('#id_date_final').val();
-    $('#date-fin').val(date2);
-    console.log(date1, date2)
+    {#let date1 = $('#id_date_initial').val();#}
+    {#$('#date-ini').val(date1);#}
+    {#let date2 = $('#id_date_final').val();#}
+    {#$('#date-fin').val(date2);#}
+    {#console.log(date1, date2)#}
 
     $('#id_transaction_payment_type').change(function () {
 

@@ -29,6 +29,7 @@
         </div>
     </div>
 </div>
+
 <div class="card p-0  m-0  mt-2" style="border-color: #2b579a">
     <div class="card-header text-center pb-1" style="background: #2b579a">
         <h6 class="card-title text-white">COMPRAS Y PAGOS</h6>
@@ -39,13 +40,25 @@
         </div>
     </div>
 </div>
+
 <div class="card p-0  m-0  mt-2" style="border-color: #2b579a">
     <div class="card-header text-center pb-1" style="background: #2b579a">
-        <h6 class="card-title text-white">PRESTADOS Y RECUPERADOS</h6>
+        <h6 class="card-title text-white">REPARTO - PRESTADOS Y RECUPERADOS</h6>
     </div>
     <div class="card-body p-0  m-0">
         <div class="col-lg-12 col-md-12 p-0  m-0">
             <div id="container4" class="w-100" style="height: 500px;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="card p-0  m-0  mt-2" style="border-color: #2b579a">
+    <div class="card-header text-center pb-1" style="background: #2b579a">
+        <h6 class="card-title text-white">REPARTO - VENTAS VS GASTOS</h6>
+    </div>
+    <div class="card-body p-0  m-0">
+        <div class="col-lg-12 col-md-12 p-0  m-0">
+            <div id="container5" class="w-100" style="height: 500px;"></div>
         </div>
     </div>
 </div>
@@ -186,9 +199,7 @@
     }
 
 
-
-
-     var chart2 = new CanvasJS.Chart("container-graphic-cash", {
+    var chart2 = new CanvasJS.Chart("container-graphic-cash", {
         animationEnabled: true,
         title: {
             text: "Cobranza realizadas por sucursal",
@@ -241,7 +252,7 @@
                 },
             {% endfor %}
         ]
-     });
+    });
     chart2.render();
 
     function toggleDataSeries(e) {
@@ -251,11 +262,11 @@
             e.dataSeries.visible = true;
         }
         chart2.render();
-     }
+    }
 
-     /**** COMPRAS VS PAGOS ****/
+    /**** COMPRAS VS PAGOS ****/
 
-     var chartbarpurchase = new CanvasJS.Chart("container-graphic-purchase-cash", {
+    var chartbarpurchase = new CanvasJS.Chart("container-graphic-purchase-cash", {
         animationEnabled: true,
         title: {
             text: "TOTAL DE COMPRAS Y PAGOS",
@@ -326,9 +337,8 @@
     }
 
 
-
     /**************************/
-    
+
     var chartsubsidiary = new CanvasJS.Chart("container4", {
         animationEnabled: true,
         title: {
@@ -343,11 +353,12 @@
             lineColor: "#4F81BC",
             labelFontColor: "#4F81BC",
             tickColor: "#4F81BC",
+            maximum: 2500,
             crosshair: {
                 enabled: true,
                 color: "orange",
                 labelFontColor: "#f8f8f8"
-             }
+            }
         },
         axisY2: {
             title: "Cantidad prestada",
@@ -357,12 +368,12 @@
             lineColor: "#C0504E",
             labelFontColor: "#C0504E",
             tickColor: "#C0504E",
-            maximum: 10000,
+            maximum: 2500,
             crosshair: {
                 enabled: true,
                 color: "orange",
                 labelFontColor: "#F8F8F8"
-             }
+            }
 
         },
         toolTip: {
@@ -383,7 +394,7 @@
             indexLabelOrientation: "horizontal",
             legendText: "Recuperados",
             showInLegend: true,
-            dataPoints: {{ void_set|safe }}
+            dataPoints: {{ recovered_set|safe }}
         },
             {
                 type: "column",
@@ -396,10 +407,147 @@
                 legendText: "Prestados",
                 axisYType: "secondary",
                 showInLegend: true,
-                dataPoints: {{ bg_set|safe }}
+                dataPoints: {{ borrowed_set|safe }}
             }]
     });
     chartsubsidiary.render();
 
+    /**************************/
+
+    data33 = [
+        {% for key, value in sales_vs_expenses.items %}
+            {
+                'label': "{{ value.name }}",
+                'y': {{ value.i_sales }}
+            },
+        {% endfor %}
+    ];
+    data44 = [
+        {% for key, value in sales_vs_expenses.items %}
+            {
+                'label': "{{ value.name }}",
+                'y': {{ value.i_expenses }}
+            },
+        {% endfor %}
+    ];
+
+    console.log(data33);
+    console.log(data44);
+
+    var chartexpenses = new CanvasJS.Chart("container5", {
+        animationEnabled: true,
+        title: {
+            text: "VENTAS Y GASTOS REPARTO",
+            fontSize: 20,
+        },
+        axisY: {
+            title: "Ventas (S/)",
+            titleFontSize: 19,
+            labelFontSize: 20,
+            titleFontColor: "#4F81BC",
+            lineColor: "#4F81BC",
+            labelFontColor: "#4F81BC",
+            tickColor: "#4F81BC",
+            maximum: 400000,
+            crosshair: {
+                enabled: true,
+                color: "orange",
+                labelFontColor: "#f8f8f8"
+            }
+        },
+        axisY2: {
+            title: "Gastos (S/)",
+            titleFontSize: 19,
+            labelFontSize: 20,
+            titleFontColor: "#C0504E",
+            lineColor: "#C0504E",
+            labelFontColor: "#C0504E",
+            tickColor: "#C0504E",
+            maximum: 50000,
+            crosshair: {
+                enabled: true,
+                color: "orange",
+                labelFontColor: "#F8F8F8"
+            }
+
+        },
+        toolTip: {
+            shared: true
+        },
+        legend: {
+            cursor: "pointer",
+            fontSize: 15,
+            itemclick: toggleDataSeries
+        },
+        data: [{
+            type: "column",
+            name: "Ventas S/.",
+            indexLabelPlacement: "outside",
+            indexLabelFontSize: 16,
+            indexLabelFontStyle: "Bold",
+            indexLabel: "{y}",
+            indexLabelOrientation: "horizontal",
+            legendText: "Ventas S/.",
+            showInLegend: true,
+            dataPoints: data33
+        },
+            {
+                type: "column",
+                name: "Gastos S/.",
+                indexLabelPlacement: "outside",
+                indexLabelFontSize: 16,
+                indexLabelFontStyle: "Bold",
+                indexLabel: "{y}",
+                indexLabelOrientation: "horizontal",
+                legendText: "Gastos S/.",
+                axisYType: "secondary",
+                showInLegend: true,
+                dataPoints: data44
+            }]
+    });
+    chartexpenses.render();
+    /****
+     var a = {{ recovered_set|safe }};
+     var b = {{ borrowed_set|safe }};
+
+
+     var res = createObj(a, b);
+
+
+     console.log(a);
+     console.log(b);
+     console.log(res);
+
+     c = diffDict(b, a);
+
+
+
+     console.log(c);
+
+     function createObj(obj1, obj2){
+    var food = {};
+    for (var i in obj1) {
+      food[i] = obj1[i];
+    }
+    for (var j in obj2) {
+      food[j] = obj2[j];
+    }
+    return food;
+};
+
+     function diffDict(obj1, obj2){
+    var diffs = {};
+
+    for (key in obj2) {
+        if (obj2.hasOwnProperty(key)) {
+            if (!obj1[key] && obj1[key] !== obj2[key] ) {
+                diffs[key] = obj2[key];
+            }
+        }
+    }
+    return diffs;
+};
+     */
+    /**REPORTE DE VENTAS POR PLACA**/
 
 </script>
