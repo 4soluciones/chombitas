@@ -105,6 +105,11 @@
             fontSize: 20,
             culture: "es",
         },
+        axisX: {
+            titleFontSize: 25,
+            labelFontSize: 25,
+            labelFontWeight: "bold",
+        },
         axisY: {
             title: "VENTA",
             titleFontSize: 19,
@@ -130,7 +135,7 @@
         },
         legend: {
             cursor: "pointer",
-            fontSize: 15,
+            fontSize: 25,
             culture: "es",
             itemclick: toggleDataSeries
         },
@@ -143,7 +148,7 @@
             indexLabelFontStyle: "Bold",
             indexLabel: "{y}",
             indexLabelOrientation: "horizontal",
-            legendText: "Venta",
+            legendText: "VENTA",
             showInLegend: true,
             dataPoints: {{ sales_total|safe }}
         },
@@ -155,7 +160,7 @@
                 indexLabelFontStyle: "Bold",
                 indexLabel: "{y}",
                 indexLabelOrientation: "horizontal",
-                legendText: "Cobranza",
+                legendText: "COBRANZA",
                 axisYType: "secondary",
                 showInLegend: true,
                 culture: "es",
@@ -184,17 +189,20 @@
         axisX: {
             valueFormatString: "DD/MM/YY",
             titleFontSize: 20,
-            labelFontSize: 20
+            labelFontSize: 20,
+            labelFontWeight: "bold",
         },
         axisY: {
             title: "Ventas en soles (S/.)",
             prefix: "S/.",
             titleFontSize: 20,
-            labelFontSize: 20
+            labelFontSize: 20,
+
         },
         legend: {
             cursor: "pointer",
-            fontSize: 15,
+            fontSize: 25,
+            fontWeight: "bold",
             itemclick: toggleDataSeries
         },
         toolTip: {
@@ -249,7 +257,8 @@
         axisX: {
             valueFormatString: "DD/MM/YY",
             titleFontSize: 20,
-            labelFontSize: 20
+            labelFontSize: 20,
+            labelFontWeight: "bold",
         },
         axisY: {
             title: "Cobranzas en soles (S/.)",
@@ -259,7 +268,7 @@
         },
         legend: {
             cursor: "pointer",
-            fontSize: 15,
+            fontSize: 25,
             itemclick: toggleDataSeries
         },
         toolTip: {
@@ -316,7 +325,8 @@
         axisX: {
             valueFormatString: "DD/MM/YY",
             titleFontSize: 20,
-            labelFontSize: 20
+            labelFontSize: 20,
+            labelFontWeight: "bold",
         },
         axisY: {
             title: "Compras en soles (S/.)",
@@ -326,7 +336,7 @@
         },
         legend: {
             cursor: "pointer",
-            fontSize: 15,
+            fontSize: 25,
             itemclick: toggleDataSeries
         },
         toolTip: {
@@ -384,7 +394,8 @@
         axisX: {
             valueFormatString: "DD/MM/YY",
             titleFontSize: 20,
-            labelFontSize: 20
+            labelFontSize: 20,
+            labelFontWeight: "bold",
         },
         axisY: {
             title: "Pagos soles (S/.)",
@@ -394,7 +405,7 @@
         },
         legend: {
             cursor: "pointer",
-            fontSize: 15,
+            fontSize: 25,
             itemclick: toggleDataSeries
         },
         toolTip: {
@@ -457,6 +468,11 @@
             text: "TOTAL DE COMPRAS Y PAGOS",
             fontSize: 20,
         },
+         axisX: {
+            titleFontSize: 25,
+            labelFontSize: 25,
+            labelFontWeight: "bold",
+        },
         axisY: {
             title: "COMPRAS",
             titleFontSize: 19,
@@ -481,7 +497,7 @@
         },
         legend: {
             cursor: "pointer",
-            fontSize: 15,
+            fontSize: 25,
             itemclick: toggleDataSeries
         },
         data: [{
@@ -492,7 +508,7 @@
             indexLabelFontStyle: "Bold",
             indexLabel: "{y}",
             indexLabelOrientation: "horizontal",
-            legendText: "Compras",
+            legendText: "COMPRAS",
             showInLegend: true,
             dataPoints: {{ purchase_total|safe }}
         },
@@ -504,7 +520,7 @@
                 indexLabelFontStyle: "Bold",
                 indexLabel: "{y}",
                 indexLabelOrientation: "horizontal",
-                legendText: "Pagos",
+                legendText: "PAGOS",
                 axisYType: "secondary",
                 showInLegend: true,
                 dataPoints: {{ cash_total_purchase|safe }}
@@ -530,15 +546,20 @@
             text: "BALONES PRESTADO Y RECUPERADOS POR SEDE",
             fontSize: 20,
         },
+         axisX: {
+            titleFontSize: 25,
+            labelFontSize: 25,
+            labelFontWeight: "bold",
+        },
         axisY: {
             title: "Cantidad recuperada",
-            titleFontSize: 19,
+            titleFontSize: 20,
             labelFontSize: 20,
             titleFontColor: "#4F81BC",
             lineColor: "#4F81BC",
             labelFontColor: "#4F81BC",
             tickColor: "#4F81BC",
-            maximum: 2500,
+            maximum: 10000,
             crosshair: {
                 enabled: true,
                 color: "orange",
@@ -547,13 +568,13 @@
         },
         axisY2: {
             title: "Cantidad prestada",
-            titleFontSize: 19,
+            titleFontSize: 20,
             labelFontSize: 20,
             titleFontColor: "#C0504E",
             lineColor: "#C0504E",
             labelFontColor: "#C0504E",
             tickColor: "#C0504E",
-            maximum: 2500,
+            maximum: 10000,
             crosshair: {
                 enabled: true,
                 color: "orange",
@@ -566,7 +587,7 @@
         },
         legend: {
             cursor: "pointer",
-            fontSize: 15,
+            fontSize: 25,
             itemclick: toggleDataSeries
         },
         data: [{
@@ -577,7 +598,7 @@
             indexLabelFontStyle: "Bold",
             indexLabel: "{y}",
             indexLabelOrientation: "horizontal",
-            legendText: "Recuperados",
+            legendText: "RECUPERADOS",
             showInLegend: true,
             dataPoints: {{ recovered_set|safe }}
         },
@@ -589,7 +610,7 @@
                 indexLabelFontStyle: "Bold",
                 indexLabel: "{y}",
                 indexLabelOrientation: "horizontal",
-                legendText: "Prestados",
+                legendText: "PRESTADOS",
                 axisYType: "secondary",
                 showInLegend: true,
                 dataPoints: {{ borrowed_set|safe }}
@@ -640,6 +661,11 @@
                 labelFontColor: "#f8f8f8"
             }
         },
+        axisX: {
+            titleFontSize: 20,
+            labelFontSize: 20,
+            labelFontWeight: "bold",
+        },
         axisY2: {
             title: "Gastos (S/)",
             titleFontSize: 19,
@@ -648,7 +674,7 @@
             lineColor: "#C0504E",
             labelFontColor: "#C0504E",
             tickColor: "#C0504E",
-            maximum: 50000,
+            maximum: 400000,
             crosshair: {
                 enabled: true,
                 color: "orange",
@@ -661,7 +687,7 @@
         },
         legend: {
             cursor: "pointer",
-            fontSize: 15,
+            fontSize: 25,
             itemclick: toggleDataSeries
         },
         data: [{
@@ -672,7 +698,7 @@
             indexLabelFontStyle: "Bold",
             indexLabel: "{y}",
             indexLabelOrientation: "horizontal",
-            legendText: "Ventas S/.",
+            legendText: "VENTAS S/.",
             showInLegend: true,
             dataPoints: data33
         },
@@ -684,7 +710,7 @@
                 indexLabelFontStyle: "Bold",
                 indexLabel: "{y}",
                 indexLabelOrientation: "horizontal",
-                legendText: "Gastos S/.",
+                legendText: "GASTOS S/.",
                 axisYType: "secondary",
                 showInLegend: true,
                 dataPoints: data44
@@ -761,23 +787,29 @@
             tickColor: "#C0504E"
 
         },
+        axisX: {
+            titleFontSize: 20,
+            labelFontSize: 20,
+            labelFontWeight: "bold",
+        },
+
         toolTip: {
             shared: true
         },
         legend: {
             cursor: "pointer",
-            fontSize: 15,
+            fontSize: 25,
             itemclick: toggleDataSeries
         },
         data: [{
             type: "column",
             name: "Venta",
             indexLabelPlacement: "outside",
-            indexLabelFontSize: 16,
+            indexLabelFontSize: 20,
             indexLabelFontStyle: "Bold",
             indexLabel: "{y}",
             indexLabelOrientation: "horizontal",
-            legendText: "Ventas de distrito",
+            legendText: "VENTAS DE DISTRITO",
             showInLegend: true,
             dataPoints: {{ array_district|safe }}
         }]
