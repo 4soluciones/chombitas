@@ -1,103 +1,144 @@
 {% load operations %}
 <div class="card p-0  m-0" style="border-color: #2b579a">
     <div class="card-header text-center pb-1" style="background: #2b579a">
-        <h6 class="card-title text-white">VENTAS REALIZADAS</h6>
+        <h6 class="card-title text-white">REPORTES GRAFICOS</h6>
+
     </div>
-    <div class="card-body p-0  m-0">
-        <div class="col-lg-12 col-md-12 p-0  m-0">
-            <div id="container-graphic-order" style="height: 500px; width: 100%;"></div>
-        </div>
-    </div>
-</div>
-<div class="card p-0  m-0  mt-2" style="border-color: #2b579a">
-    <div class="card-header text-center" style="background: #2b579a">
-        <h6 class="card-title text-white">COBRANZAS REALIZADAS</h6>
-    </div>
-    <div class="card-body p-0  m-0 ">
-        <div class="col-lg-12 col-md-12 p-0  m-0">
-            <div id="container-graphic-cash" style="height: 500px; width: 100%;"></div>
-        </div>
-    </div>
-</div>
-<div class="card p-0  m-0  mt-2" style="border-color: #2b579a">
-    <div class="card-header text-center pb-1" style="background: #2b579a">
-        <h6 class="card-title text-white">VENTAS Y COBRANZAS</h6>
-    </div>
-    <div class="card-body p-0  m-0">
-        <div class="col-lg-12 col-md-12 p-0  m-0">
-            <div id="container-graphic-total" style="height: 500px; width: 100%;"></div>
+    <div id="id-print">
+        <div class="card-body p-0  m-0">
+            <section class="full-box page-content active" style="height: 700px; overflow-y: scroll;">
+                <div class="col-lg-12 col-md-12 p-3  m-0">
+                    <div class="card p-0  m-0" style="border-color: #2b579a">
+                        {#                <div class="card-header text-center pb-1" style="background: #2b579a">#}
+                        {#                    <h6 class="card-title text-white">VENTAS REALIZADAS</h6>#}
+                        {#                </div>#}
+                        <div class="card-body p-0  m-0">
+                            <div class="col-lg-12 col-md-12 p-0  m-0">
+                                <div id="container-graphic-order" style="height: 500px; width: 100%;"></div>
+                                <div class="p-2">
+                                    <button class="btn btn-warning" id="printChartbar">Imprimir</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card p-0  m-0  mt-5" style="border-color: #2b579a">
+                        {#                <div class="card-header text-center" style="background: #2b579a">#}
+                        {#                    <h6 class="card-title text-white">COBRANZAS REALIZADAS</h6>#}
+                        {#                </div>#}
+                        <div class="card-body p-0  m-0 ">
+                            <div class="col-lg-12 col-md-12 p-0  m-0">
+                                <div id="container-graphic-cash" style="height: 500px; width: 100%;"></div>
+                                 <div class="p-2">
+                                    <button class="btn btn-warning" id="printChart1">Imprimir</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card p-0  m-0  mt-5" style="border-color: #2b579a">
+                        {#                <div class="card-header text-center pb-1" style="background: #2b579a">#}
+                        {#                    <h6 class="card-title text-white">VENTAS Y COBRANZAS</h6>#}
+                        {#                </div>#}
+                        <div class="card-body p-0  m-0">
+                            <div class="col-lg-12 col-md-12 p-0  m-0">
+                                <div id="container-graphic-total" style="height: 500px; width: 100%;"></div>
+                                 <div class="p-2">
+                                    <button class="btn btn-warning" id="printChart2">Imprimir</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-0  m-0  mt-5" style="border-color: #2b579a">
+                        {#                <div class="card-header text-center pb-1" style="background: #2b579a">#}
+                        {#                    <h6 class="card-title text-white">COMPRAS</h6>#}
+                        {#                </div>#}
+                        <div class="card-body p-0  m-0">
+                            <div class="col-lg-12 col-md-12 p-0  m-0">
+                                <div id="container-purchase" style="height: 500px; width: 100%;"></div>
+                                 <div class="p-2">
+                                    <button class="btn btn-warning" id="printChart3">Imprimir</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-0  m-0  mt-5" style="border-color: #2b579a">
+                        {#                <div class="card-header text-center pb-1" style="background: #2b579a">#}
+                        {#                    <h6 class="card-title text-white">PAGOS</h6>#}
+                        {#                </div>#}
+                        <div class="card-body p-0  m-0">
+                            <div class="col-lg-12 col-md-12 p-0  m-0">
+                                <div id="container-pay" style="height: 500px; width: 100%;"></div>
+                                 <div class="p-2">
+                                    <button class="btn btn-warning" id="printChart4">Imprimir</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-0  m-0  mt-5" style="border-color: #2b579a">
+                        {#                <div class="card-header text-center pb-1" style="background: #2b579a">#}
+                        {#                    <h6 class="card-title text-white">COMPRAS Y PAGOS</h6>#}
+                        {#                </div>#}
+                        <div class="card-body p-0  m-0">
+                            <div class="col-lg-12 col-md-12 p-0  m-0">
+                                <div id="container-graphic-purchase-cash" style="height: 500px; width: 100%;"></div>
+                                 <div class="p-2">
+                                    <button class="btn btn-warning" id="printChart5">Imprimir</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-0  m-0  mt-5" style="border-color: #2b579a">
+                        {#                <div class="card-header text-center pb-1" style="background: #2b579a">#}
+                        {#                    <h6 class="card-title text-white">REPARTO - PRESTADOS Y RECUPERADOS</h6>#}
+                        {#                </div>#}
+                        <div class="card-body p-0  m-0">
+                            <div class="col-lg-12 col-md-12 p-0  m-0">
+                                <div id="container4" class="w-100" style="height: 500px;"></div>
+                                 <div class="p-2">
+                                    <button class="btn btn-warning" id="printChart6">Imprimir</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-0  m-0  mt-5" style="border-color: #2b579a">
+                        {#                <div class="card-header text-center pb-1" style="background: #2b579a">#}
+                        {#                    <h6 class="card-title text-white">REPARTO - VENTAS VS GASTOS</h6>#}
+                        {#                </div>#}
+                        <div class="card-body p-0  m-0">
+                            <div class="col-lg-12 col-md-12 p-0  m-0">
+                                <div id="container5" class="w-100" style="height: 500px;"></div>
+                                 <div class="p-2">
+                                    <button class="btn btn-warning" id="printChart7">Imprimir</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-0  m-0  mt-5" style="border-color: #2b579a">
+                        {#                <div class="card-header text-center pb-1" style="background: #2b579a">#}
+                        {#                    <h6 class="card-title text-white">VENTAS POR DISTRITO</h6>#}
+                        {#                </div>#}
+                        <div class="card-body p-0  m-0">
+                            <div class="col-lg-12 col-md-12 p-0  m-0">
+                                <div id="container-district" class="w-100" style="height: 500px;"></div>
+                                 <div class="p-2">
+                                    <button class="btn btn-warning" id="printChart8">Imprimir</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
 </div>
 
-<div class="card p-0  m-0  mt-2" style="border-color: #2b579a">
-    <div class="card-header text-center pb-1" style="background: #2b579a">
-        <h6 class="card-title text-white">COMPRAS</h6>
-    </div>
-    <div class="card-body p-0  m-0">
-        <div class="col-lg-12 col-md-12 p-0  m-0">
-            <div id="container-purchase" style="height: 500px; width: 100%;"></div>
-        </div>
-    </div>
-</div>
 
-<div class="card p-0  m-0  mt-2" style="border-color: #2b579a">
-    <div class="card-header text-center pb-1" style="background: #2b579a">
-        <h6 class="card-title text-white">PAGOS</h6>
-    </div>
-    <div class="card-body p-0  m-0">
-        <div class="col-lg-12 col-md-12 p-0  m-0">
-            <div id="container-pay" style="height: 500px; width: 100%;"></div>
-        </div>
-    </div>
-</div>
-
-<div class="card p-0  m-0  mt-2" style="border-color: #2b579a">
-    <div class="card-header text-center pb-1" style="background: #2b579a">
-        <h6 class="card-title text-white">COMPRAS Y PAGOS</h6>
-    </div>
-    <div class="card-body p-0  m-0">
-        <div class="col-lg-12 col-md-12 p-0  m-0">
-            <div id="container-graphic-purchase-cash" style="height: 500px; width: 100%;"></div>
-        </div>
-    </div>
-</div>
-
-<div class="card p-0  m-0  mt-2" style="border-color: #2b579a">
-    <div class="card-header text-center pb-1" style="background: #2b579a">
-        <h6 class="card-title text-white">REPARTO - PRESTADOS Y RECUPERADOS</h6>
-    </div>
-    <div class="card-body p-0  m-0">
-        <div class="col-lg-12 col-md-12 p-0  m-0">
-            <div id="container4" class="w-100" style="height: 500px;"></div>
-        </div>
-    </div>
-</div>
-
-<div class="card p-0  m-0  mt-2" style="border-color: #2b579a">
-    <div class="card-header text-center pb-1" style="background: #2b579a">
-        <h6 class="card-title text-white">REPARTO - VENTAS VS GASTOS</h6>
-    </div>
-    <div class="card-body p-0  m-0">
-        <div class="col-lg-12 col-md-12 p-0  m-0">
-            <div id="container5" class="w-100" style="height: 500px;"></div>
-        </div>
-    </div>
-</div>
-
-<div class="card p-0  m-0  mt-2" style="border-color: #2b579a">
-    <div class="card-header text-center pb-1" style="background: #2b579a">
-        <h6 class="card-title text-white">VENTAS POR DISTRITO</h6>
-    </div>
-    <div class="card-body p-0  m-0">
-        <div class="col-lg-12 col-md-12 p-0  m-0">
-            <div id="container-district" class="w-100" style="height: 500px;"></div>
-        </div>
-    </div>
-</div>
 <script type="text/javascript">
-
-
     var chartbar = new CanvasJS.Chart("container-graphic-total", {
         animationEnabled: true,
         title: {
@@ -128,7 +169,7 @@
             labelFontColor: "#C0504E",
             tickColor: "#C0504E"
 
-        },
+         },
         toolTip: {
             shared: true,
             culture: "es",
@@ -178,6 +219,9 @@
         chartbar.render();
     }
 
+    document.getElementById("printChart2").addEventListener("click", function () {
+        chartbar.print();
+    });
 
     var chart1 = new CanvasJS.Chart("container-graphic-order", {
         animationEnabled: true,
@@ -247,6 +291,9 @@
         chart1.render();
     }
 
+    document.getElementById("printChartbar").addEventListener("click", function () {
+        chart1.print();
+    });
 
     var chart2 = new CanvasJS.Chart("container-graphic-cash", {
         animationEnabled: true,
@@ -314,6 +361,9 @@
         chart2.render();
     }
 
+    document.getElementById("printChart1").addEventListener("click", function () {
+        chart2.print();
+    });
     /****** COMPRAS ******/
 
     var chartpurchaselineal = new CanvasJS.Chart("container-purchase", {
@@ -382,6 +432,9 @@
         chartpurchaselineal.render();
     }
 
+    document.getElementById("printChart3").addEventListener("click", function () {
+        chartpurchaselineal.print();
+    });
     /*************** GASTOS **********************/
 
 
@@ -451,14 +504,9 @@
         chartpaylineal.render();
     }
 
-
-
-
-
-
-
-
-
+    document.getElementById("printChart4").addEventListener("click", function () {
+        chartpaylineal.print();
+    });
 
     /**** COMPRAS VS PAGOS ****/
 
@@ -468,7 +516,7 @@
             text: "TOTAL DE COMPRAS Y PAGOS",
             fontSize: 20,
         },
-         axisX: {
+        axisX: {
             titleFontSize: 25,
             labelFontSize: 25,
             labelFontWeight: "bold",
@@ -537,6 +585,10 @@
         chartbarpurchase.render();
     }
 
+    document.getElementById("printChart5").addEventListener("click", function () {
+        chartbarpurchase.max
+        chartbarpurchase.print();
+    });
 
     /**************************/
 
@@ -546,7 +598,7 @@
             text: "BALONES PRESTADO Y RECUPERADOS POR SEDE",
             fontSize: 20,
         },
-         axisX: {
+        axisX: {
             titleFontSize: 25,
             labelFontSize: 25,
             labelFontWeight: "bold",
@@ -617,7 +669,9 @@
             }]
     });
     chartsubsidiary.render();
-
+    document.getElementById("printChart6").addEventListener("click", function () {
+        chartsubsidiary.print();
+    });
     /**************************/
 
     data33 = [
@@ -637,8 +691,6 @@
         {% endfor %}
     ];
 
-    console.log(data33);
-    console.log(data44);
 
     var chartexpenses = new CanvasJS.Chart("container5", {
         animationEnabled: true,
@@ -717,6 +769,9 @@
             }]
     });
     chartexpenses.render();
+    document.getElementById("printChart7").addEventListener("click", function () {
+        chartexpenses.print();
+    });
     /****
      var a = {{ recovered_set|safe }};
      var b = {{ borrowed_set|safe }};
@@ -762,7 +817,7 @@
     /**REPORTE DE VENTAS POR PLACA**/
 
     /**REPORTE DE VENTAS POR DISTRITO**/
-  var chart_district = new CanvasJS.Chart("container-district", {
+    var chart_district = new CanvasJS.Chart("container-district", {
         animationEnabled: true,
         title: {
             text: "VENTAS POR DISTRITOS",
@@ -825,6 +880,7 @@
         chart_district.render();
     }
 
-
-
+    document.getElementById("printChart8").addEventListener("click", function () {
+        chart_district.print();
+    });
 </script>

@@ -2142,6 +2142,7 @@ def get_dict_orders(order_set, client_obj=None, is_pdf=False):
                 'total_spending': o.total_cash_flow_spending(),
                 'details_count': o.orderdetail_set.count(),
                 'rowspan': 0,
+                'is_review': o.is_review,
                 'has_loans': False
             }
             license_plate = '-'
@@ -3979,3 +3980,25 @@ def get_order_sales_total(pk, date_initial, date_final):
 #     local_tz = pytz.timezone('America/Bogota')
 #     local_dt = _date.replace(tzinfo=pytz.utc).astimezone(local_tz)
 #     return local_tz.normalize(local_dt)
+
+
+def check_review(request):
+    if request.method == 'GET':
+        pk = request.GET.get('pk', '')
+        # is_review = False
+        order_obj = Order.objects.get(id=pk)
+        if order_obj.is_review is False:
+            order_obj.is_review = True
+            order_obj.save()
+        else:
+            order_obj.is_review = False
+            order_obj.save()
+
+        return JsonResponse({
+            'success': True,
+        })
+
+
+
+
+

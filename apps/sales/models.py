@@ -359,6 +359,7 @@ class Order(models.Model):
         verbose_name='Correlativo de Ventas', max_length=45, null=True, blank=True)
     truck = models.ForeignKey('comercial.Truck', on_delete=models.SET_NULL, null=True,
                               blank=True)
+    is_review = models.BooleanField('Revisado', default=False)
 
     def __str__(self):
         return str(self.type) + " / " + str(self.create_at)

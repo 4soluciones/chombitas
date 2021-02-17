@@ -51,7 +51,7 @@
         {% if not is_pdf %}
             <tbody>{% endif %}
         {% for o in dictionary %}
-            <tr info="{{ o.id }}" class="">
+            <tr info="{{ o.id }}" class="{% if o.is_review %}green{% endif %}">
 
                 <td class="align-middle text-center rowspan" rowspan="{{ o.rowspan }}">
                     <input type="checkbox" class="check-sales" value="S">
@@ -62,6 +62,20 @@
                         <span class="text-success font-weight-bolder">{{ o.type }}</span>
                     {% else %}
                         <span class="text-dark font-weight-bolder">{{ o.type }}</span>
+                    {% endif %}
+
+                    {% if o.is_review %}
+                        <div class="form-check form-switch">
+                            <label class="form-check-label" for="id_is_review_{{ o.id }}">
+                            <input class="form-check-input review" type="checkbox" id="id_is_review_{{ o.id }}" checked>
+                            <span class="review-text">Revisado</span></label>
+                        </div>
+                    {% else %}
+                        <div class="form-check form-switch">
+                            <label class="form-check-label" for="id_is_review_{{ o.id }}">
+                            <input class="form-check-input review" type="checkbox" id="id_is_review_{{ o.id }}">
+                            <span class="review-text">No revisado</span></label>
+                        </div>
                     {% endif %}
                 </td>
                 {#            <td class="align-middle text-center" rowspan="{{ o.rowspan }}">{{ o.client }}</td>#}
@@ -74,8 +88,9 @@
 
                 {% for d in o.order_detail_set %}
 
-                    <td class="align-middle text-center product-obj" rowspan="{{ d.rowspan }}" dpk="{{ d.product_id }}">{{ d.product }}</td>
-                    <td class="align-middle text-center unit-obj" rowspan="{{ d.rowspan }}">
+                    <td class="align-middle text-center product-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}"
+                        dpk="{{ d.product_id }}">{{ d.product }}</td>
+                    <td class="align-middle text-center unit-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">
                         {% if d.unit == 'G' %}
                             <span class="text-danger font-weight-bolder">GLP</span>
                         {% elif d.unit == 'B' %}
@@ -85,14 +100,16 @@
 
                         {% endif %}
                     </td>
-                    <td class="align-middle text-center" rowspan="{{ d.rowspan }}">{{ d.type }}</td>
-                    <td class="align-middle text-center quantity-obj" rowspan="{{ d.rowspan }}">{{ d.quantity_sold }}</td>
-                    <td class="align-middle text-center" rowspan="{{ d.rowspan }}">{{ d.price_unit }}</td>
-                    <td class="align-middle text-center total-obj" rowspan="{{ d.rowspan }}">{{ d.multiply|floatformat:2 }}</td>
+                    <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">{{ d.type }}</td>
+                    <td class="align-middle text-center quantity-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
+                        rowspan="{{ d.rowspan }}">{{ d.quantity_sold }}</td>
+                    <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">{{ d.price_unit }}</td>
+                    <td class="align-middle text-center total-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
+                        rowspan="{{ d.rowspan }}">{{ d.multiply|floatformat:2 }}</td>
                     {#llamar a el modal de expense#}
 
                     {% if d.has_spending %}
-                        <td class="align-middle text-center body-spending" rowspan="{{ d.rowspan }}">
+                        <td class="align-middle text-center body-spending {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">
                             <button type="button"
                                     class="btn btn-outline-danger btn-sm btn-block btn-expense"
                                     data-toggle="modal"
@@ -100,39 +117,39 @@
                             </button>
                         </td>
                     {% else %}
-                        <td class="align-middle text-success text-center body-spending" rowspan="{{ d.rowspan }}">
+                        <td class="align-middle text-success text-center body-spending {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">
                         </td>
                     {% endif %}
 
                     {% for l in d.loan_payment_set %}
 
                         {% if forloop.first %}
-                            <td class="align-middle text-center">{{ l.operation_date|date:"d-m-y" }}</td>
-                            <td class="align-middle text-center">{{ l.quantity }}</td>
-                            <td class="align-middle text-center">{{ l.number_of_vouchers }}</td>
-                            <td class="align-middle text-center">{{ l.price|floatformat:2 }}</td>
-                            <td class="align-middle text-center">{{ l.license_plate }}</td>
-                            <td class="align-middle text-center">
+                            <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.operation_date|date:"d-m-y" }}</td>
+                            <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.quantity }}</td>
+                            <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.number_of_vouchers }}</td>
+                            <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.price|floatformat:2 }}</td>
+                            <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.license_plate }}</td>
+                            <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">
                                 {{ l.type }}
                                 {% if l.cash_flow %}
                                     <br>{{ l.cash_flow.cash.name }}
                                     <br>{{ l.cash_flow.operation_code }}
                                 {% endif %}
                             </td>
-                            <td class="align-middle text-success text-center"
+                            <td class="align-middle text-success text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                 rowspan="{{ d.rowspan }}">{{ d.return_loan }}</td>
-                            <td class="align-middle text-success text-center"
+                            <td class="align-middle text-success text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                 rowspan="{{ d.rowspan }}">{{ d.repay_loan_with_vouchers }}</td>
 
-                            <td class="align-middle text-success text-center repay-loan-obj"
+                            <td class="align-middle text-success text-center repay-loan-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                 rowspan="{{ d.rowspan }}">{{ d.repay_loan|floatformat:2 }}</td>
 
-                            <td class="align-middle text-success text-center"
+                            <td class="align-middle text-success text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                 rowspan="{{ d.rowspan }}">{{ d.repay_loan_ball|floatformat:2 }}</td>
 
-                            <td class="align-middle text-success text-center"
+                            <td class="align-middle text-success text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                 rowspan="{{ d.rowspan }}">{{ d.ball_changes }}</td>
-                            <td class="align-top text-success text-center" rowspan="{{ d.rowspan }}">
+                            <td class="align-top text-success text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">
 
                                 {% if d.unit == 'G' %}
                                     <button type="button"
@@ -168,33 +185,33 @@
 
                             {% if forloop.parentloop.first %}
 
-                                <td class="align-middle text-primary text-right"
+                                <td class="align-middle text-primary text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                     rowspan="{{ o.rowspan }}">{{ o.total|floatformat:2 }}</td>
-                                <td class="align-middle text-primary text-right"
+                                <td class="align-middle text-primary text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                     rowspan="{{ o.rowspan }}">{{ o.total_repay_loan|floatformat:2 }}</td>
-                                <td class="align-middle text-danger font-weight-bold text-right"
+                                <td class="align-middle text-danger font-weight-bold text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                     rowspan="{{ o.rowspan }}">{{ o.total_spending|floatformat:2 }}</td>
-                                <td class="align-middle text-primary text-right"
+                                <td class="align-middle text-primary text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                     rowspan="{{ o.rowspan }}">{{ o.total_repay_loan_with_vouchers|floatformat:2 }}</td>
-                                <td class="align-middle text-primary text-right"
+                                <td class="align-middle text-primary text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                     rowspan="{{ o.rowspan }}">{{ o.total_return_loan|floatformat:2 }}</td>
 
-                                <td class="align-middle text-info font-weight-bold text-right"
+                                <td class="align-middle text-info font-weight-bold text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                     rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan_ball|floatformat:2 }}</td>
 
-                                <td class="align-middle text-primary text-right total-remaining-repay-loan-obj pay-loan-rest"
+                                <td class="align-middle text-primary text-right total-remaining-repay-loan-obj pay-loan-rest {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                     rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan|floatformat:2 }}</td>
-                                <td class="align-middle text-primary text-right total-remaining-return-loan-obj"
+                                <td class="align-middle text-primary text-right total-remaining-return-loan-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                     rowspan="{{ o.rowspan }}">{{ o.total_remaining_return_loan|floatformat:2 }}</td>
 
-                                <td class="align-middle text-warning font-weight-bold text-right"
+                                <td class="align-middle text-warning font-weight-bold text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                     rowspan="{{ o.rowspan }}">{{ o.total_ball_changes|floatformat:2 }}</td>
 
                             {% endif %}
 
                             </tr>
                         {% else %}
-                            <tr class="">
+                            <tr class="{% if o.is_review %}green{% endif %}">
                                 <td class="align-middle text-center">{{ l.operation_date|date:"d-m-y" }}</td>
                                 <td class="align-middle text-center">{{ l.quantity }}</td>
                                 <td class="align-middle text-center">{{ l.number_of_vouchers }}</td>
@@ -212,8 +229,8 @@
                         {% endif %}
 
                     {% empty %}
-                        <td class="align-middle text-primary text-center" colspan="11">SIN PAGOS</td>
-                        <td>
+                        <td class="align-middle text-primary text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" colspan="11">SIN PAGOS</td>
+                        <td class=" {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">
                             {% if d.unit == 'G' %}
                                 <button type="button"
                                         class="btn btn-success btn-sm btn-block btn-payment"
@@ -283,23 +300,31 @@
                                 <td class="align-middle text-primary text-right"
                                     rowspan="{{ o.rowspan }}">{{ o.total|floatformat:2 }}</td><!--TOTAL-->
                                 <td class="align-middle text-primary text-right"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_repay_loan|floatformat:2 }}</td><!--TOTAL PAGADO GLP-->
+                                    rowspan="{{ o.rowspan }}">{{ o.total_repay_loan|floatformat:2 }}</td>
+                                <!--TOTAL PAGADO GLP-->
                                 <td class="align-middle text-danger font-weight-bold text-right"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_spending|floatformat:2 }}</td><!--TOTAL GASTOS-->
+                                    rowspan="{{ o.rowspan }}">{{ o.total_spending|floatformat:2 }}</td>
+                                <!--TOTAL GASTOS-->
                                 <td class="align-middle text-primary text-right"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_repay_loan_with_vouchers|floatformat:2 }}</td><!--TOTAL VALES FISE-->
+                                    rowspan="{{ o.rowspan }}">{{ o.total_repay_loan_with_vouchers|floatformat:2 }}</td>
+                                <!--TOTAL VALES FISE-->
                                 <td class="align-middle text-primary text-right"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_return_loan|floatformat:2 }}</td> <!--TOTAL BALONES DEVUELTOS-->
+                                    rowspan="{{ o.rowspan }}">{{ o.total_return_loan|floatformat:2 }}</td>
+                                <!--TOTAL BALONES DEVUELTOS-->
 
                                 <td class="align-middle text-primary font-weight-bold text-right"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan_ball|floatformat:2 }}</td><!-- PAGO FALTANTE BALONES-->
+                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan_ball|floatformat:2 }}</td>
+                                <!-- PAGO FALTANTE BALONES-->
 
                                 <td class="align-middle text-primary text-right total-remaining-repay-loan-obj pay-loan-rest"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan|floatformat:2 }}</td> <!--PAGO FALTANTE GLP-->
+                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan|floatformat:2 }}</td>
+                                <!--PAGO FALTANTE GLP-->
                                 <td class="align-middle text-primary text-right total-remaining-return-loan-obj"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_return_loan|floatformat:2 }}</td> <!--FALTANTES BALONES-->
+                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_return_loan|floatformat:2 }}</td>
+                                <!--FALTANTES BALONES-->
                                 <td class="align-middle text-warning font-weight-bold text-right"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_ball_changes|floatformat:2 }}</td><!--CANTIDAD DE BALONES CAMBIADOS-->
+                                    rowspan="{{ o.rowspan }}">{{ o.total_ball_changes|floatformat:2 }}</td>
+                                <!--CANTIDAD DE BALONES CAMBIADOS-->
                             {% endif %}
                         {% endif %}
 
@@ -466,5 +491,7 @@
             $(this).find("td.colcount").attr('colspan', '22')
         }
     });
+
+
 
 </script>

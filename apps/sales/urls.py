@@ -127,5 +127,7 @@ urlpatterns = [
     # report graphic
     path('get_report_sales_subsidiary/', login_required(get_report_sales_subsidiary), name='get_report_sales_subsidiary'),
 
+    # is_review
+    path('check_review/', login_required(check_review), name='check_review'),
 ]
 

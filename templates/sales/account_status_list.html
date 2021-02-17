@@ -121,7 +121,7 @@
                 total_glp_gbc: 0,
                 quantity_ball: 0
             },
-        {
+            {
                 id: 3,
                 name: '45kg',
                 total_glp: 0,
@@ -129,7 +129,7 @@
                 total_glp_gbc: 0,
                 quantity_ball: 0
             },
-        {
+            {
                 id: 1,
                 name: '10kg',
                 total_glp: 0,
@@ -157,7 +157,8 @@
             '</div>';
 
         $('#id_client').change(function () {
-            let _search = $(this).val();
+
+           let _search = $(this).val();
 
             $('#table-order').empty();
             $('#table-order').html(loader);
@@ -169,6 +170,7 @@
                 data: {'client_id': _search},
                 success: function (response) {
                     $('#table-order').html(response['grid']);
+
                     array_glp_indexes = [];
                     $('#massive-payment span.badge').text((0).toFixed(2));
                     $('#massive-return span.badge').text((0).toFixed(2));
@@ -348,7 +350,7 @@
 
         $(document).on('click', '#massive-return', function () {
             let _massive_return = parseFloat($(this).find('span.badge').text().trim());
-            if (_massive_return > 0) {
+            if (_massive_return) {
 
                 $('#lending').empty();
                 $('#exampleModalLabel1').text('PAGO MASIVO');
@@ -374,6 +376,82 @@
 
             } else {
                 $('#lending').html('Debe seleccionar al menos una venta');
+            }
+        });
+        $(document).on('click', '.review', function () {
+
+            let $row = $(this).closest('tr');
+            let $o_id = $row.attr('info');
+            console.log($o_id);
+            // What row index is the clicked row?
+            let row = $row.index(); // Subtract heading row
+
+            // Does the clicked row overlap anything following?
+            let rowspan = ~~$row.find('td[rowspan]').attr('rowspan') || 0;
+
+            // Get all rows except the heading, up to the last overlapped row
+            let $rows = $row.parent().children().slice(1, row + rowspan);
+            row--;
+
+            // Now see if any preceding rows overlap the clicked row
+            $rows.each(function (i) {
+                let $tr = $(this);
+
+                // Only check first rowspan of a row
+                let rowspan = ~~$tr.find('td[rowspan]').attr('rowspan') || 0;
+                // If the rowspan is before the clicked row but overlaps it
+                // Or it is a row we included after the selection
+                if ((i < row && ((rowspan + i) > row)) || i > row) {
+                    $row = $row.add($tr);
+                }
+            });
+            //$row.toggleClass('green');
+            if($row.hasClass("green")){
+                $row.removeClass('green');
+
+                {#console.log("false");#}
+                let pk = $row.attr("info");
+                $('td.td-green.o-' + pk).removeClass('td-green').removeClass('o-' + pk);
+
+                $row.find('td span.review-text').text('No revisado');
+                $.ajax({
+                    url: '/sales/check_review/',
+                    async: true,
+                    dataType: 'json',
+                    type: 'GET',
+                    data: {
+                        'pk': pk,
+                    },
+                    success: function (response) {
+                        {#$('#lending').html(response.grid);#}
+                    },
+                    fail: function (response) {
+                        console.log("error");
+                    }
+                });
+            }
+            else{
+                $row.addClass('green');
+                $row.find('td span.review-text').text('Revisado');
+                {#console.log("true")#}
+                {#console.log($row.attr("info"))#}
+                let pk = $row.attr("info")
+                $.ajax({
+                    url: '/sales/check_review/',
+                    async: true,
+                    dataType: 'json',
+                    type: 'GET',
+                    data: {
+                        'pk': pk,
+                    },
+                    success: function (response) {
+                        {#$('#lending').html(response.grid);#}
+                    },
+                    fail: function (response) {
+                        console.log("error");
+                    }
+                });
+
             }
         });
 
