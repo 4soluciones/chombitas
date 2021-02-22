@@ -3713,6 +3713,7 @@ def get_report_sales_subsidiary(request):
             purchase_subsidiary = []
             cash_pay_subsidiary = []
             payment_subsidiary = []
+            array_p_p = []
             v1 = "label"
             v2 = "y"
             subsidiary_set = None
@@ -3912,6 +3913,28 @@ def get_report_sales_subsidiary(request):
 
                 subsidiary_trucks = []'''
 
+                # -------------COMPRAS POR PROVEEDOR------------
+
+                p_p = PurchaseDetail.objects.filter(purchase__subsidiary__id=s.id, purchase__status='A',
+                                                    purchase__purchase_date__range=(date_initial, date_final)).values(
+                    'purchase__supplier__name').annotate(total=Sum(F('price_unit') * F('quantity')))
+
+                if p_p.exists():
+                    for st in p_p:
+                        suplier_name = st['purchase__supplier__name']
+                        total = st['total']
+                        purchase_dict = {
+                            'label': suplier_name,
+                            'y': float(round(total, 2))
+                        }
+                        array_p_p.append(purchase_dict)
+                # else:
+                #     purchase_dict = {
+                #         'label': 'OTROS',
+                #         'y': float(0.00)
+                #     }
+                # array_p_p.append(purchase_dict)
+
             # VENTAS POR DISTRITO
             district_ = ''
             for d in Order.objects.filter(create_at__date__range=(date_initial, date_final)).exclude(type='E').values(
@@ -3925,6 +3948,7 @@ def get_report_sales_subsidiary(request):
                     'y': float(d['totales'])
                 }
                 array_district.append(sales_district)
+
             tpl = loader.get_template('sales/report_graphic_sales_by_dates.html')
             context = ({
                 'sales': sales_subsidiary,
@@ -3938,7 +3962,8 @@ def get_report_sales_subsidiary(request):
                 'sales_vs_expenses': sales_vs_expenses_set,
                 'purchase_susbsidiary': purchase_subsidiary,
                 'cash_pay_subsidiary': cash_pay_subsidiary,
-                'array_district': array_district
+                'array_district': array_district,
+                'array_p_p': array_p_p
             })
             return JsonResponse({
                 'success': True,
@@ -3976,6 +4001,7 @@ def get_order_sales_total(pk, date_initial, date_final):
                                        date_initial, date_final)).exclude(type='E').aggregate(Sum('total'))
     return totales['total__sum']
 
+
 # def get_utc(_date):
 #     local_tz = pytz.timezone('America/Bogota')
 #     local_dt = _date.replace(tzinfo=pytz.utc).astimezone(local_tz)
@@ -3997,8 +4023,3 @@ def check_review(request):
         return JsonResponse({
             'success': True,
         })
-
-
-
-
-

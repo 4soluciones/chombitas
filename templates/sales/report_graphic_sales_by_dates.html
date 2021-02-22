@@ -131,6 +131,21 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="card p-0  m-0  mt-5" style="border-color: #2b579a">
+                        {#                <div class="card-header text-center pb-1" style="background: #2b579a">#}
+                        {#                    <h6 class="card-title text-white">VENTAS POR DISTRITO</h6>#}
+                        {#                </div>#}
+                        <div class="card-body p-0  m-0">
+                            <div class="col-lg-12 col-md-12 p-0  m-0">
+                                <div id="container-purhcase-suplier" class="w-100" style="height: 500px;"></div>
+                                 <div class="p-2">
+                                    <button class="btn btn-warning" id="printChart9">Imprimir</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </section>
         </div>
@@ -870,6 +885,33 @@
         }]
     });
     chart_district.render();
+
+
+
+
+    var chart_purchase_suplier = new CanvasJS.Chart("container-purhcase-suplier",
+	{
+		title:{
+			text: "COMPRAS POR PROVEEDORES"
+		},
+		legend: {
+			maxWidth: 350,
+			itemWidth: 120
+		},
+		data: [
+		{
+			type: "pie",
+			showInLegend: true,
+			legendText: "{indexLabel}",
+            toolTipContent: "{y} - #percent %",
+			dataPoints: {{ array_p_p|safe }}
+
+		}
+		]
+	});
+	chart_purchase_suplier.render();
+
+
 
     function toggleDataSeries(e) {
         if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
