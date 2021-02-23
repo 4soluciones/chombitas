@@ -28,7 +28,7 @@
                         <div class="card-body p-0  m-0 ">
                             <div class="col-lg-12 col-md-12 p-0  m-0">
                                 <div id="container-graphic-cash" style="height: 500px; width: 100%;"></div>
-                                 <div class="p-2">
+                                <div class="p-2">
                                     <button class="btn btn-warning" id="printChart1">Imprimir</button>
                                 </div>
                             </div>
@@ -41,7 +41,7 @@
                         <div class="card-body p-0  m-0">
                             <div class="col-lg-12 col-md-12 p-0  m-0">
                                 <div id="container-graphic-total" style="height: 500px; width: 100%;"></div>
-                                 <div class="p-2">
+                                <div class="p-2">
                                     <button class="btn btn-warning" id="printChart2">Imprimir</button>
                                 </div>
                             </div>
@@ -55,7 +55,7 @@
                         <div class="card-body p-0  m-0">
                             <div class="col-lg-12 col-md-12 p-0  m-0">
                                 <div id="container-purchase" style="height: 500px; width: 100%;"></div>
-                                 <div class="p-2">
+                                <div class="p-2">
                                     <button class="btn btn-warning" id="printChart3">Imprimir</button>
                                 </div>
                             </div>
@@ -69,7 +69,7 @@
                         <div class="card-body p-0  m-0">
                             <div class="col-lg-12 col-md-12 p-0  m-0">
                                 <div id="container-pay" style="height: 500px; width: 100%;"></div>
-                                 <div class="p-2">
+                                <div class="p-2">
                                     <button class="btn btn-warning" id="printChart4">Imprimir</button>
                                 </div>
                             </div>
@@ -83,7 +83,7 @@
                         <div class="card-body p-0  m-0">
                             <div class="col-lg-12 col-md-12 p-0  m-0">
                                 <div id="container-graphic-purchase-cash" style="height: 500px; width: 100%;"></div>
-                                 <div class="p-2">
+                                <div class="p-2">
                                     <button class="btn btn-warning" id="printChart5">Imprimir</button>
                                 </div>
                             </div>
@@ -97,7 +97,7 @@
                         <div class="card-body p-0  m-0">
                             <div class="col-lg-12 col-md-12 p-0  m-0">
                                 <div id="container4" class="w-100" style="height: 500px;"></div>
-                                 <div class="p-2">
+                                <div class="p-2">
                                     <button class="btn btn-warning" id="printChart6">Imprimir</button>
                                 </div>
                             </div>
@@ -111,7 +111,7 @@
                         <div class="card-body p-0  m-0">
                             <div class="col-lg-12 col-md-12 p-0  m-0">
                                 <div id="container5" class="w-100" style="height: 500px;"></div>
-                                 <div class="p-2">
+                                <div class="p-2">
                                     <button class="btn btn-warning" id="printChart7">Imprimir</button>
                                 </div>
                             </div>
@@ -125,7 +125,7 @@
                         <div class="card-body p-0  m-0">
                             <div class="col-lg-12 col-md-12 p-0  m-0">
                                 <div id="container-district" class="w-100" style="height: 500px;"></div>
-                                 <div class="p-2">
+                                <div class="p-2">
                                     <button class="btn btn-warning" id="printChart8">Imprimir</button>
                                 </div>
                             </div>
@@ -138,8 +138,8 @@
                         {#                </div>#}
                         <div class="card-body p-0  m-0">
                             <div class="col-lg-12 col-md-12 p-0  m-0">
-                                <div id="container-purhcase-suplier" class="w-100" style="height: 500px;"></div>
-                                 <div class="p-2">
+                                <div id="container-purchase-suplier" class="w-100" style="height: 500px;"></div>
+                                <div class="p-2">
                                     <button class="btn btn-warning" id="printChart9">Imprimir</button>
                                 </div>
                             </div>
@@ -184,7 +184,7 @@
             labelFontColor: "#C0504E",
             tickColor: "#C0504E"
 
-         },
+        },
         toolTip: {
             shared: true,
             culture: "es",
@@ -887,31 +887,30 @@
     chart_district.render();
 
 
-
-
-    var chart_purchase_suplier = new CanvasJS.Chart("container-purhcase-suplier",
-	{
-		title:{
-			text: "COMPRAS POR PROVEEDORES"
-		},
-		legend: {
-			maxWidth: 350,
-			itemWidth: 120
-		},
-		data: [
-		{
-			type: "pie",
-			showInLegend: true,
-			legendText: "{indexLabel}",
-            toolTipContent: "{y} - #percent %",
-			dataPoints: {{ array_p_p|safe }}
-
-		}
-		]
-	});
-	chart_purchase_suplier.render();
-
-
+    var chart_purchase_suplier = new CanvasJS.Chart("container-purchase-suplier",
+        {
+            title: {
+                text: "COMPRAS POR PROVEEDORES"
+            },
+            legend: {
+                maxWidth: 350,
+                itemWidth: 120
+            },
+            data: [
+                {
+                    type: "pie",
+                    showInLegend: true,
+                    legendText: "{indexLabel}",
+                    toolTipContent: "{y} - #percent %",
+                    indexLabelFormatter: function(e){
+                        return e.dataPoint.label + " " + " - " + " " + "S/." + e.dataPoint.y;
+                    },
+                    indexLabelLineThickness: 3,
+                    dataPoints: {{ array_p_p|safe }}
+                }
+            ]
+        });
+    chart_purchase_suplier.render();
 
     function toggleDataSeries(e) {
         if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
@@ -922,7 +921,7 @@
         chart_district.render();
     }
 
-    document.getElementById("printChart8").addEventListener("click", function () {
-        chart_district.print();
+    document.getElementById("printChart9").addEventListener("click", function () {
+        chart_purchase_suplier.print();
     });
 </script>

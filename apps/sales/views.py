@@ -3917,7 +3917,7 @@ def get_report_sales_subsidiary(request):
 
                 p_p = PurchaseDetail.objects.filter(purchase__subsidiary__id=s.id, purchase__status='A',
                                                     purchase__purchase_date__range=(date_initial, date_final)).values(
-                    'purchase__supplier__name').annotate(total=Sum(F('price_unit') * F('quantity')))
+                    'purchase__supplier__name').annotate(total=Sum(F('price_unit') * F('quantity'))).order_by('-total')
 
                 if p_p.exists():
                     for st in p_p:
