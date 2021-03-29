@@ -599,7 +599,7 @@ class OrderBill(models.Model):
     type = models.CharField('Tipo de Comprobante', max_length=2, choices=TYPE_CHOICES)
     n_receipt = models.IntegerField('Numero de Comprobante', default=0)
     sunat_status = models.CharField('Sunat Status', max_length=5, null=True, blank=True)
-    sunat_description = models.CharField('Sunat descripcion', max_length=50, null=True, blank=True)
+    sunat_description = models.CharField('Sunat descripcion', max_length=200, null=True, blank=True)
     user = models.ForeignKey(User, verbose_name='Usuario', on_delete=models.CASCADE)
     sunat_enlace_pdf = models.CharField('Sunat Enlace Pdf', max_length=200, null=True, blank=True)
     # total = models.DecimalField('Monto Total', max_digits=10, decimal_places=2, default=0)
@@ -784,7 +784,7 @@ class PerceptronDetail(models.Model):
     charged_date = models.DateTimeField(auto_now_add=False, null=True, blank=True)
     total_perceptron = models.DecimalField('Total Cobrado con Percepcion', max_digits=10, decimal_places=2, default=0)
     sunat_status = models.CharField('Sunat Status', max_length=5, null=True, blank=True)
-    sunat_description = models.CharField('Sunat descripcion', max_length=50, null=True, blank=True)
+    sunat_description = models.CharField('Sunat descripcion', max_length=200, null=True, blank=True)
     sunat_enlace_pdf = models.CharField('Sunat Enlace Pdf', max_length=200, null=True, blank=True)
 
     def __str__(self):
