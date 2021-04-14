@@ -937,13 +937,16 @@ def get_bank_control_list(request):
         transfers_set = cash_flow_set.filter(type='T').values('cash').annotate(totals=Sum('total'))
         inputs = 0
         if inputs_set:
-            inputs = inputs_set[0].get('totals')
+            inputs = inputs_set.aggregate(r=Coalesce(Sum('total'), 0))
         outputs = 0
         if outputs_set:
-            outputs = outputs_set[0].get('totals')
+            outputs = outputs_set.aggregate(r=Coalesce(Sum('total'), 0))
         transfers = 0
         if transfers_set:
-            transfers = transfers_set[0].get('totals')
+            transfers = transfers_set.aggregate(r=Coalesce(Sum('total'), 0))
+
+        current_balance = inputs['r'] - outputs['r']
+
         has_rows = False
         if cash_flow_set:
             has_rows = True
@@ -957,11 +960,11 @@ def get_bank_control_list(request):
         context = ({
             'cash_flow_set': cash_flow_set,
             'has_rows': has_rows,
-            'inputs': inputs,
-            'outputs': outputs,
+            'inputs': inputs['r'],
+            'outputs': outputs['r'],
             'transfers': transfers,
             # 'current_balance': Cash.objects.get(id=id_cash).current_balance()
-            'current_balance': inputs - outputs
+            'current_balance': current_balance
         })
         return JsonResponse({
             'grid': tpl.render(context, request),
