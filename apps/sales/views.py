@@ -3819,6 +3819,7 @@ def get_report_sales_subsidiary(request):
                     cash__subsidiary_id=s.id,
                     type='S',
                     cash__currency_type='S',
+                    cash_transfer__isnull=True,
                     transaction_date__range=(date_initial, date_final)
                 ).aggregate(r=Coalesce(Sum('total'), 0))
                 cash_dict = {
