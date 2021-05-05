@@ -23,6 +23,7 @@ from .views import get_context_kardex_glp, get_dict_orders
 from django.template import loader
 from chombitas import settings
 from datetime import datetime
+from .format_dates import utc_to_local
 from django.db.models import Sum
 import io
 import pdfkit
@@ -118,7 +119,8 @@ def account_order_list_pdf(request, pk):
 
 Title = "ESTADO DE CUENTA DE "
 pageinfo = "VICTORIA JUAN GAS S.A.C."
-date_now = datetime.now().strftime("%d/%m/%y %H:%M")
+register_date_now = utc_to_local(datetime.now())
+date_now = register_date_now.strftime("%d/%m/%y %H:%M")
 # A4 CM 21.0 x 29.7
 
 
