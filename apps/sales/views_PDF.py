@@ -126,6 +126,9 @@ date_now = register_date_now.strftime("%d/%m/%y %H:%M")
 
 def all_account_order_list_pdf(self, pk=None):
 
+    register_date_now = utc_to_local(datetime.now())
+    date_now = register_date_now.strftime("%d/%m/%y %H:%M")
+
     user_obj = User.objects.get(id=int(pk))
     buff = io.BytesIO()
     ml = 2.5 * cm
@@ -226,6 +229,8 @@ def all_account_order_list_pdf(self, pk=None):
 
 
 def all_account_order_list_first_page(canvas, doc, custom_data):
+    register_date_now = utc_to_local(datetime.now())
+    date_now = register_date_now.strftime("%d/%m/%y %H:%M")
     canvas.saveState()
     canvas.line(2.5 * cm, 26.75 * cm, 18.5 * cm, 26.75 * cm)
     canvas.line(2.5 * cm, 25.5 * cm, 18.5 * cm, 25.5 * cm)
