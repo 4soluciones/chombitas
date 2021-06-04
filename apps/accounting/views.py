@@ -937,15 +937,15 @@ def get_bank_control_list(request):
         transfers_set = cash_flow_set.filter(type='T').values('cash').annotate(totals=Sum('total'))
         inputs = 0
         if inputs_set:
-            inputs = inputs_set.aggregate(r=Coalesce(Sum('total'), 0))
+            inputs = inputs_set.aggregate(r=Coalesce(Sum('total'), 0))['r']
         outputs = 0
         if outputs_set:
-            outputs = outputs_set.aggregate(r=Coalesce(Sum('total'), 0))
+            outputs = outputs_set.aggregate(r=Coalesce(Sum('total'), 0))['r']
         transfers = 0
         if transfers_set:
             transfers = transfers_set.aggregate(r=Coalesce(Sum('total'), 0))
 
-        current_balance = inputs['r'] - outputs['r']
+        current_balance = inputs - outputs
 
         has_rows = False
         if cash_flow_set:
@@ -960,8 +960,8 @@ def get_bank_control_list(request):
         context = ({
             'cash_flow_set': cash_flow_set,
             'has_rows': has_rows,
-            'inputs': inputs['r'],
-            'outputs': outputs['r'],
+            'inputs': inputs,
+            'outputs': outputs,
             'transfers': transfers,
             # 'current_balance': Cash.objects.get(id=id_cash).current_balance()
             'current_balance': current_balance
