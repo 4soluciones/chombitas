@@ -2,6 +2,8 @@
     {% csrf_token %}
 
     <input type="hidden" id="id_order" name="id_order">
+    <input type="hidden" id="id_start_date" name="start_date" value="{{ start_date }}">
+    <input type="hidden" id="id_end_date" name="end_date" value="{{ end_date }}">
     <input type="hidden" id="pay-loan" name="pay-loan" class="pay-loan"
            value="{{ detail.order.total_remaining_repay_loan|floatformat:2 }}">
 
@@ -206,7 +208,7 @@
             processData: false,
             contentType: false,
             success: function (response, textStatus, xhr) {
-                if (xhr.status == 200) {
+                if (xhr.status === 200) {
                     // $('#product-detail-grid').html(response.grid);
                     $('#modal-expense').modal('hide');
                     $('#table-order').html(response['grid']);
@@ -214,7 +216,7 @@
                 }
             },
             error: function (jqXhr, textStatus, xhr) {
-                if (jqXhr.status == 500) {
+                if (jqXhr.status === 500) {
                     toastr.error(jqXhr.responseJSON.error, '¡Error!');
                 }
             }

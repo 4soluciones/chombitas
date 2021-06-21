@@ -2111,10 +2111,14 @@ def order_list(request):
         user_id = request.user.id
         user_obj = User.objects.get(id=user_id)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
+        mydate = datetime.now()
+        formatdate = mydate.strftime("%Y-%m-%d")
+
         clients = Client.objects.filter(clientassociate__subsidiary=subsidiary_obj)
 
         return render(request, 'sales/account_status_list.html', {
             'clients': clients,
+            'formatdate': formatdate,
         })
 
 
@@ -2273,8 +2277,11 @@ def get_dict_orders(order_set, client_obj=None, is_pdf=False):
 def get_orders_by_client(request):
     if request.method == 'GET':
         client_id = request.GET.get('client_id', '')
+        start_date = request.GET.get('start_date', '')
+        end_date = request.GET.get('end_date', '')
+
         client_obj = Client.objects.get(pk=int(client_id))
-        order_set = Order.objects.filter(client=client_obj).exclude(type='E').order_by('id')
+        order_set = Order.objects.filter(client=client_obj, create_at__date__range=[start_date, end_date]).exclude(type='E').order_by('id')
 
         return JsonResponse({
             'grid': get_dict_orders(order_set, client_obj=client_obj, is_pdf=False),
@@ -2296,6 +2303,8 @@ def get_order_detail_for_pay(request):
         user_obj = User.objects.get(id=user_id)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
         detail_id = request.GET.get('detail_id', '')
+        start_date = request.GET.get('start_date', '')
+        end_date = request.GET.get('end_date', '')
         detail_obj = OrderDetail.objects.get(id=int(detail_id))
         order_obj = Order.objects.get(orderdetail=detail_obj)
         cash_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='101')
@@ -2309,7 +2318,9 @@ def get_order_detail_for_pay(request):
             'order': order_obj,
             'choices_account': cash_set,
             'choices_account_bank': cash_deposit_set,
-            'date': formatdate
+            'date': formatdate,
+            'start_date': start_date,
+            'end_date': end_date
         })
 
         return JsonResponse({
@@ -2321,6 +2332,8 @@ def get_expenses(request):
     if request.method == 'GET':
         transactionaccount_obj = TransactionAccount.objects.all()
         user_id = request.user.id
+        start_date = request.GET.get('start_date', '')
+        end_date = request.GET.get('end_date', '')
         user_obj = User.objects.get(id=user_id)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
         tpl = loader.get_template('sales/new_expense.html')
@@ -2334,7 +2347,9 @@ def get_expenses(request):
             'transactionaccount': transactionaccount_obj,
             'choices_account': cash_set,
             'choices_account_bank': cash_deposit_set,
-            'date': formatdate
+            'date': formatdate,
+            'start_date': start_date,
+            'end_date': end_date
         })
 
         return JsonResponse({
@@ -2345,6 +2360,8 @@ def get_expenses(request):
 def new_expense(request):
     if request.method == 'POST':
         transaction_date = str(request.POST.get('id_date'))
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
         type_document = str(request.POST.get('id_transaction_document_type'))
         serie = str(request.POST.get('id_serie'))
         nro = str(request.POST.get('id_nro'))
@@ -2405,7 +2422,7 @@ def new_expense(request):
         cashflow_obj.save()
 
         order_set = Order.objects.filter(
-            client=order_obj.client).exclude(type='E').order_by('id')
+            client=order_obj.client, create_at__date__range=[start_date, end_date]).exclude(type='E').order_by('id')
 
         return JsonResponse({
             'message': 'Registro guardado correctamente.',
@@ -2417,8 +2434,9 @@ def new_expense(request):
 def new_loan_payment(request):
     data = dict()
     if request.method == 'POST':
-
         id_detail = int(request.POST.get('detail'))
+        start_date = request.POST.get('start_date','')
+        end_date = request.POST.get('end_date','')
         detail_obj = OrderDetail.objects.get(id=id_detail)
         option = str(request.POST.get('radio'))  # G or B or P
         user_id = request.user.id
@@ -2722,7 +2740,7 @@ def new_loan_payment(request):
                                     transaction_payment_obj.save()
 
         order_set = Order.objects.filter(
-            client=detail_obj.order.client).exclude(type='E').order_by('id')
+            client=detail_obj.order.client, create_at__date__range=[start_date, end_date]).exclude(type='E').order_by('id')
 
         return JsonResponse({
             'message': 'Cambios guardados con exito.',
@@ -2788,11 +2806,15 @@ def return_loan_account(order_detail_obj, payment=0, quantity=0):
 def get_order_detail_for_ball_change(request):
     if request.method == 'GET':
         detail_id = request.GET.get('detail_id', '')
+        start_date = request.GET.get('_start_date', '')
+        end_date = request.GET.get('_end_date', '')
         detail_obj = OrderDetail.objects.get(id=int(detail_id))
         tpl = loader.get_template('sales/new_ball_change.html')
         context = ({
             'choices_status': BallChange._meta.get_field('status').choices,
             'detail': detail_obj,
+            'start_date': start_date,
+            'end_date': end_date,
         })
 
         return JsonResponse({
@@ -2805,6 +2827,8 @@ def new_ball_change(request):
 
         id_detail = int(request.POST.get('detail'))
         detail_obj = OrderDetail.objects.get(id=id_detail)
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
 
         quantity = 0
         ball_change_obj = None
@@ -2861,7 +2885,7 @@ def new_ball_change(request):
                                ball_change_obj=ball_change_obj)
 
         order_set = Order.objects.filter(
-            client=detail_obj.order.client).exclude(type='E').order_by('id')
+            client=detail_obj.order.client, create_at__date__range=[start_date, end_date]).exclude(type='E').order_by('id')
 
         return JsonResponse({
             'message': 'Cambios guardados con exito.',
