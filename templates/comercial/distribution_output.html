@@ -139,7 +139,7 @@
 
 
         $('#details').append(
-            '<tr product="0">' +
+            '<tr product="0" type="L" status="E">' +
             '<td class="text-center align-middle item-number">' + '</td>' +
             // '<td class="align-middle item-product">' + _product + '</td>' +
             '<td class="align-middle item-product"><select class="form-control form-control-sm">' + options + '</td>' +
@@ -253,7 +253,7 @@
     })
     $('#form-distribution_output').submit(function (event) {
         event.preventDefault();
-        if ($('#details tr').length == 0) {
+        if ($('#details tr').length === 0) {
             toastr.warning("POR FAVOR,AGREGUE UN PRODUCTO", "ADVERTENCIA");
             return false
         }
@@ -267,8 +267,9 @@
 
         $("#details  tr").each(function () {
 
-            if ($(this).attr('product') != '' && $(this).find("td.item-quantity input").val() != '' && $(this).find("td.item-unit").attr('unit') != '') {
+            if ($(this).attr('product') !== '' && $(this).find("td.item-quantity input").val() !== '' && $(this).find("td.item-unit").attr('unit') !== '' && $(this).attr('type') !== 'V') {
                 let _product = $(this).attr('product');
+                let _type = $(this).attr('type');
                 let _quantity = parseFloat($(this).find("td.item-quantity input").val());
                 let _unit = $(this).find("td.item-unit").attr('unit');
                 let _quantity_last = parseFloat($(this).find("td.item-quantity-last").text());
@@ -290,11 +291,31 @@
                     "Product": _product,
                     "Quantity": _quantity,
                     "Unit": _unit,
+                    "Type": _type,
+                    "Status": 'E',
+                    "Quantity_total": _quantity + _quantity_last,
+                };
+                distribution.Details.push(detailObj);
+            }
+            if ($(this).attr('type') === 'V') {
+                let _product = $(this).attr('product');
+                let _type = $(this).attr('type');
+                let _quantity = 0;
+                let _unit = '4';
+                let _quantity_last = parseFloat($(this).find("td.item-quantity-last").text());
+
+                let detailObj = {
+                    "Product": _product,
+                    "Quantity": _quantity,
+                    "Unit": _unit,
+                    "Type": _type,
+                    "Status": 'E',
                     "Quantity_total": _quantity + _quantity_last,
                 };
                 distribution.Details.push(detailObj);
             }
         });
+        console.log(JSON.stringify(distribution))
         let mensaje = confirm("¿Esta seguro de registrar la salida");
         if (mensaje) {
             $.ajax({
@@ -332,25 +353,33 @@
             type: 'GET',
             data: {'ip': _search},
             success: function (response) {
-                if (response.message == true) {
+                if (response.message === true) {
                     $('#item-details-distribution-last').html(response.grid).parent('tr').slideDown();
                     $('#id_truck').val(response['truck']).trigger('change');
                     let _list = JSON.parse(response['list']);
+                    console.log(_list)
                     for (let i = 0; i < _list.length; i++) {
                         if (parseFloat(_list[i].fields.quantity)>0){
                             AddRow_Details();
                             let _tr = $('#details tr[f='+(i+1)+']');
                             let _select = _tr.find('td.item-product select');
+
+                            if (_list[i].fields.type === 'V'){
+                                _tr.addClass('d-none');
+                            }
+
                             _select.find('option[value='+_list[i].fields.product+']').attr('selected', 'selected');
                             _select.trigger('change');
                             _tr.attr('product', _list[i].fields.product);
+                            _tr.attr('type', _list[i].fields.type);
+                            _tr.attr('status', _list[i].fields.status);
                             _select.find('option[value!='+_list[i].fields.product+']').remove();
                             _tr.find('td.item-quantity-last').text(parseFloat(_list[i].fields.quantity));
                             _tr.find('td.item-delete button').prop('disabled',true);
                         }
                     }
                 } else {
-                    if (response.truck != '') {
+                    if (response.truck !== '') {
                         $('#id_truck').val(response['truck']).trigger('change');
                     }
                 }

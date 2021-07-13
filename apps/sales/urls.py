@@ -129,5 +129,13 @@ urlpatterns = [
 
     # is_review
     path('check_review/', login_required(check_review), name='check_review'),
+    path('sold_ball/', login_required(sold_ball), name='sold_ball'),
+    path('sold_ball_request/', login_required(sold_ball_request), name='sold_ball_request'),
+
+    # report payments
+    path('report_payments_by_client/', login_required(report_payments_by_client), name='report_payments_by_client'),
+
+    # report ball mass
+    path('report_ball_all_mass/', login_required(report_ball_all_mass), name='report_ball_all_mass'),
 ]
 

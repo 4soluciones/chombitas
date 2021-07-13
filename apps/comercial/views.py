@@ -1318,11 +1318,13 @@ def distribution_mobil_save(request):
         }
         distribution_obj = DistributionMobil.objects.create(**new_distribution)
         distribution_obj.save()
-
+        status=''
         for detail in data_distribution['Details']:
             quantity = decimal.Decimal(detail['Quantity'])
             quantity_total = decimal.Decimal(detail['Quantity_total'])
             product_id = int(detail['Product'])
+            type = str(detail['Type'])
+            status = str(detail['Status'])
             product_obj = Product.objects.get(id=product_id)
             unit_id = int(detail['Unit'])
             unit_obj = Unit.objects.get(id=unit_id)
@@ -1332,12 +1334,13 @@ def distribution_mobil_save(request):
                 'distribution_mobil': distribution_obj,
                 'quantity': quantity_total,
                 'unit': unit_obj,
-
+                'type': type,
+                'status': status,
             }
             new_detail_distribution = DistributionDetail.objects.create(**new_detail_distribution)
             new_detail_distribution.save()
 
-            if quantity > 0:
+            if quantity > 0 and type != 'V':
                 product_store_obj = ProductStore.objects.get(product=product_obj,
                                                              subsidiary_store=subsidiary_store_obj)
                 quantity_minimum_unit = calculate_minimum_unit(quantity, unit_obj, product_obj)

@@ -427,15 +427,19 @@ class DistributionMobil(models.Model):
                 _sold_bg = _product.get('i_sold_bg')
 
                 if d.status == 'E':
-                    product_dict[d.product.id]['i_expenses'] = d.quantity
-                    _sold = d.calculate_total_quantity_sold_by_product_glp()
-                    _returned = d.quantity - _sold
-                    _ball = _ball + d.calculate_total_quantity_sold_by_product() - d.calculate_total_quantity_container_sold_by_product()
-                    _sold_bg = d.calculate_total_quantity_container_sold_by_product()
-                    product_dict[d.product.id]['i_sold'] = _sold
-                    product_dict[d.product.id]['i_returned'] = _returned
-                    product_dict[d.product.id]['i_ball'] = _ball
-                    product_dict[d.product.id]['i_sold_bg'] = _sold_bg
+                    if d.type == 'L':
+                        product_dict[d.product.id]['i_expenses'] = d.quantity
+                        _sold = d.calculate_total_quantity_sold_by_product_glp()
+                        _returned = d.quantity - _sold
+                        _ball = _ball + d.calculate_total_quantity_sold_by_product() - d.calculate_total_quantity_container_sold_by_product()
+                        _sold_bg = d.calculate_total_quantity_container_sold_by_product()
+                        product_dict[d.product.id]['i_sold'] = _sold
+                        product_dict[d.product.id]['i_returned'] = _returned
+                        product_dict[d.product.id]['i_ball'] = _ball
+                        product_dict[d.product.id]['i_sold_bg'] = _sold_bg
+
+                    elif d.type == 'V':
+                        product_dict[d.product.id]['i_ball'] = _ball + d.quantity
 
                 if d.status == 'R':
                     product_dict[d.product.id]['i_recovered'] = d.quantity
@@ -449,19 +453,32 @@ class DistributionMobil(models.Model):
 
             else:
                 if d.status == 'E':
-                    _sold = d.calculate_total_quantity_sold_by_product_glp()
-                    _returned = d.quantity - _sold
-                    product_dict[d.product.id] = {
-                        'i_expenses': d.quantity,
-                        'i_returned': _returned,
-                        'i_advanced': 0,
-                        'i_sold': _sold,
-                        'i_recovered': 0,
-                        'i_ball': d.calculate_total_quantity_sold_by_product() - d.calculate_total_quantity_container_sold_by_product(),
-                        'i_sold_bg': d.calculate_total_quantity_container_sold_by_product(),
-                        'pk': d.product.id,
-                        'name': d.product.name
-                    }
+                    if d.type == 'L':
+                        _sold = d.calculate_total_quantity_sold_by_product_glp()
+                        _returned = d.quantity - _sold
+                        product_dict[d.product.id] = {
+                            'i_expenses': d.quantity,
+                            'i_returned': _returned,
+                            'i_advanced': 0,
+                            'i_sold': _sold,
+                            'i_recovered': 0,
+                            'i_ball': d.calculate_total_quantity_sold_by_product() - d.calculate_total_quantity_container_sold_by_product(),
+                            'i_sold_bg': d.calculate_total_quantity_container_sold_by_product(),
+                            'pk': d.product.id,
+                            'name': d.product.name
+                        }
+                    elif d.type == 'V':
+                        product_dict[d.product.id] = {
+                            'i_expenses': 0,
+                            'i_returned': 0,
+                            'i_advanced': 0,
+                            'i_sold': 0,
+                            'i_recovered': 0,
+                            'i_ball': d.quantity,
+                            'i_sold_bg': 0,
+                            'pk': d.product.id,
+                            'name': d.product.name
+                        }
                 if d.status == 'R':
                     _sold = d.calculate_total_quantity_sold_by_product_glp()
                     product_dict[d.product.id] = {

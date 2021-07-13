@@ -172,7 +172,7 @@
                 let _quantity = parseInt($('#id_quantity').val());
                 let _type = $('#id_type').val();
 
-                if (_type == 'L' || _type == 'M') {
+                if (_type === 'L' || _type === 'M') {
                     let _quantity_return_last = parseInt($(this).find('td.item-quantity-return-full').text());
                     let _value_full = _quantity_return_last - _quantity;
                     if (_value_full >= 0) {
@@ -184,7 +184,7 @@
                         return false;
                     }
                 } else {
-                    if (_type == 'V' || _typesiE == 'VM') {
+                    if (_type === 'V' || _typesiE === 'VM') {
                         let _quantity_return_empty_last = parseInt($(this).find('td.item-quantity-return-empty').text());
                         let _value_empty = _quantity_return_empty_last - _quantity;
                         if (_value_empty >= 0) {
@@ -207,12 +207,12 @@
 
     function operation_add_quantity(_del_product, _del_type, _del_quantity) {
         $('table#table-sales-distribution-total tbody.detail-sales-distribution-tbody tr').each(function () {
-            if ($(this).attr('product') == _del_product) {
-                if (_del_type == 'L' || _del_type == 'M') {
+            if ($(this).attr('product') === _del_product) {
+                if (_del_type === 'L' || _del_type === 'M') {
                     let _quantity_return_last = parseInt($(this).find('td.item-quantity-return-full').text());
                     $(this).find('td.item-quantity-return-full').text(parseInt(_quantity_return_last) + parseInt(_del_quantity));
                 } else {
-                    if (_del_type == 'V' || _del_type == 'VM') {
+                    if (_del_type === 'V' || _del_type === 'VM') {
                         let _quantity_return_empty_last = parseInt($(this).find('td.item-quantity-return-empty').text());
                         $(this).find('td.item-quantity-return-empty').text(parseInt(_quantity_return_empty_last) + parseInt(_del_quantity));
                     }
@@ -222,22 +222,42 @@
     }
 
     function save_return_in_distribution() {
-        let c_distribution_mobil = {
-            "c_detail": [],
-            "c_distribution_id": $('#id_distribution').val(),
-        };
+
+        let details = []
         $("table#table-sales-distribution-total tbody.detail-sales-distribution-tbody tr").each(function () {
-            if (parseFloat($(this).find("td.item-quantity-return-full").text(),) > 0) {
-                let c_detail_obj = {
+            let c_detail_obj;
+            if (parseFloat($(this).find("td.item-quantity-return-full").text()) > 0) {
+                c_detail_obj = {
                     "c_product_id": $(this).attr('product'),
                     "c_quantity": $(this).find("td.item-quantity-return-full").text(),
                     "c_unit": 'BG',
                     "c_type_id": 'L',
                 };
                 console.log(c_detail_obj);
-                c_distribution_mobil.c_detail.push(c_detail_obj);
+                details.push(c_detail_obj);
             }
+
+            if (parseFloat($(this).find("td.item-quantity-return-empty").text()) > 0) {
+                c_detail_obj = {
+                    "c_product_id": $(this).attr('product'),
+                    "c_quantity": $(this).find("td.item-quantity-return-empty").text(),
+                    "c_unit": 'B',
+                    "c_type_id": 'V',
+                };
+                console.log(c_detail_obj);
+                details.push(c_detail_obj);
+
+            }
+
         });
+
+        let c_distribution_mobil = {
+            "c_detail": details,
+            "c_distribution_id": $('#id_distribution').val(),
+        };
+
+        console.log(JSON.stringify(c_distribution_mobil));
+
         $.ajax({
             url: '/comercial/c_return_distribution_mobil_detail/',
             async: true,
@@ -250,9 +270,9 @@
                 if (xhr.status == 200) {
                     toastr.success(response.message, '¡Mensaje!');
                     $('#modal-distribution').modal('hide');
-                    setTimeout(() => {
+                    /*setTimeout(() => {
                         location.reload();
-                    }, 500);
+                    }, 500);*/
                 }
             },
             error: function (jqXhr, textStatus, xhr) {

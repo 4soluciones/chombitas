@@ -1,0 +1,51 @@
+<table class="table table-bordered">
+    <thead>
+    <tr class="text-white small text-uppercase">
+
+        <td class="col-form-label col-form-label-lg bg-primary">FECHA DE PAGO</td>
+        <td class="col-form-label col-form-label-lg bg-primary">TOTAL PAGADO (AGRUPADO)</td>
+
+
+
+        <td class="col-form-label col-form-label-lg bg-secondary">ID DE VENTA</td>
+        <td class="col-form-label col-form-label-lg bg-secondary">FECHA DE VENTA</td>
+        <td class="col-form-label col-form-label-lg bg-secondary">MONTO DE VENTA</td>
+
+        <td class="col-form-label col-form-label-lg bg-primary">PENDIENTE</td>
+        <!--<td class="bg-warning">price_accumulated</td>-->
+        <td class="col-form-label col-form-label-lg bg-primary">MONTO</td>
+        <td class="col-form-label col-form-label-lg bg-primary">TRANSACCION</td>
+        <td class="col-form-label col-form-label-lg bg-primary">COD. OPERACION</td>
+    </tr>
+    </thead>
+    <tbody>
+
+
+
+    {% for lpg in loan_payment_group %}
+        <tr class="tbl-row">
+            <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ lpg.rows }}">{{ lpg.date|date:"d-m-y" }}</td>
+            <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ lpg.rows }}">{{ lpg.sum|floatformat:2 }}</td>
+            {% for lp in lpg.loan_payment_dict %}
+                {% if not forloop.first %}<tr>{% endif %}
+
+                <td data-order="{{ lp.order_obj.id }}" class="align-middle text-center p-1" rowspan="{{ lp.transaction_count }}">{{ lp.order_obj.id }}</td>
+                <td data-order="{{ lp.order_obj.id }}" class="align-middle text-center p-1" rowspan="{{ lp.transaction_count }}">{{ lp.order_obj.create_at|date:"d-m-y" }}</td>
+                <td data-order="{{ lp.order_obj.id }}" class="align-middle text-center p-1" rowspan="{{ lp.transaction_count }}">{{ lp.total_order|floatformat:2 }}</td>
+
+                <td data-order="{{ lp.order_obj.id }}" class="align-middle text-center p-1" rowspan="{{ lp.transaction_count }}" lp="{{ lp.id }}">{{ lp.pending|floatformat:2 }}</td>
+                <!--<td data-order="{{ lp.order_obj.id }}" class="align-middle text-center bg-warning" rowspan="{{ lp.transaction_count }}">{{ lp.price_accumulated|floatformat:2 }}</td>-->
+                <td data-order="{{ lp.order_obj.id }}" class="align-middle text-center p-1" rowspan="{{ lp.transaction_count }}">{{ lp.price|floatformat:2 }}</td>
+                {% for t in lp.transaction %}
+                    <td data-order="{{ lp.order_obj.id }}" class="align-middle text-center p-1">{% if t.type == 'E' %}EFECTIVO{% elif t.type == 'D' %}DEPOSITO{% elif t.type == 'F' %}FISE{% endif %}</td>
+                    <td data-order="{{ lp.order_obj.id }}" class="align-middle text-center p-1">{% if t.operation_code == 'None' %}-{% else %}{{ t.operation_code|default:'-' }}{% endif %}</td></tr>
+                    {% empty %}
+                    <td data-order="{{ lp.order_obj.id }}" class="align-middle text-center p-1"></td>
+                    <td data-order="{{ lp.order_obj.id }}" class="align-middle text-center p-1"></td></tr>
+                {% endfor %}
+
+            {% endfor %}
+
+    {% endfor %}
+    </tbody>
+</table>

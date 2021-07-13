@@ -291,6 +291,8 @@ def get_recipe_by_product(request):
 
 def get_kardex_by_product(request):
     data = dict()
+    mydate = datetime.now()
+    formatdate = mydate.strftime("%Y-%m-%d")
     if request.method == 'GET':
         pk = request.GET.get('pk', '')
         try:
@@ -303,6 +305,7 @@ def get_kardex_by_product(request):
         products = Product.objects.all()
         subsidiaries = Subsidiary.objects.all()
         subsidiaries_stores = SubsidiaryStore.objects.all()
+
         # check product detail
         basic_product_detail = ProductDetail.objects.filter(
             product=product, quantity_minimum=1)
@@ -314,6 +317,7 @@ def get_kardex_by_product(request):
             'basic_product_detail': basic_product_detail,
             'subsidiaries_stores': subsidiaries_stores,
             'products': products,
+            'date_now': formatdate,
         })
 
         return JsonResponse({
@@ -327,6 +331,8 @@ def get_list_kardex(request):
     if request.method == 'GET':
         pk = request.GET.get('pk', '')
         pk_subsidiary_store = request.GET.get('subsidiary_store', '')
+        start_date = request.GET.get('start_date', '')
+        end_date = request.GET.get('end_date', '')
 
         try:
             product = Product.objects.get(id=pk)
@@ -350,7 +356,8 @@ def get_list_kardex(request):
 
         inventories = None
         if product_store.count() > 0:
-            inventories = Kardex.objects.filter(product_store=product_store[0]).order_by('id')
+            inventories = Kardex.objects.filter(product_store=product_store[0],
+                                                create_at__date__range=[start_date, end_date]).order_by('id')
 
         t = loader.get_template('sales/kardex_grid_list.html')
         c = ({'product': product, 'inventories': inventories})
@@ -2281,7 +2288,8 @@ def get_orders_by_client(request):
         end_date = request.GET.get('end_date', '')
 
         client_obj = Client.objects.get(pk=int(client_id))
-        order_set = Order.objects.filter(client=client_obj, create_at__date__range=[start_date, end_date]).exclude(type='E').order_by('id')
+        order_set = Order.objects.filter(client=client_obj, create_at__date__range=[start_date, end_date]).exclude(
+            type='E').order_by('id')
 
         return JsonResponse({
             'grid': get_dict_orders(order_set, client_obj=client_obj, is_pdf=False),
@@ -2435,8 +2443,8 @@ def new_loan_payment(request):
     data = dict()
     if request.method == 'POST':
         id_detail = int(request.POST.get('detail'))
-        start_date = request.POST.get('start_date','')
-        end_date = request.POST.get('end_date','')
+        start_date = request.POST.get('start_date', '')
+        end_date = request.POST.get('end_date', '')
         detail_obj = OrderDetail.objects.get(id=id_detail)
         option = str(request.POST.get('radio'))  # G or B or P
         user_id = request.user.id
@@ -2740,7 +2748,8 @@ def new_loan_payment(request):
                                     transaction_payment_obj.save()
 
         order_set = Order.objects.filter(
-            client=detail_obj.order.client, create_at__date__range=[start_date, end_date]).exclude(type='E').order_by('id')
+            client=detail_obj.order.client, create_at__date__range=[start_date, end_date]).exclude(type='E').order_by(
+            'id')
 
         return JsonResponse({
             'message': 'Cambios guardados con exito.',
@@ -2885,7 +2894,8 @@ def new_ball_change(request):
                                ball_change_obj=ball_change_obj)
 
         order_set = Order.objects.filter(
-            client=detail_obj.order.client, create_at__date__range=[start_date, end_date]).exclude(type='E').order_by('id')
+            client=detail_obj.order.client, create_at__date__range=[start_date, end_date]).exclude(type='E').order_by(
+            'id')
 
         return JsonResponse({
             'message': 'Cambios guardados con exito.',
@@ -4049,3 +4059,469 @@ def check_review(request):
         return JsonResponse({
             'success': True,
         })
+
+
+def sold_ball_request(request):
+    user_id = request.user.id
+    user_obj = User.objects.get(id=user_id)
+    subsidiary_obj = get_subsidiary_by_user(user_obj)
+
+    if request.method == 'GET':
+        client_id = request.GET.get('client_id', '')
+        start_date = request.GET.get('start_date', '')
+        end_date = request.GET.get('end_date', '')
+
+        client_obj = Client.objects.get(pk=int(client_id))
+        order_set = Order.objects.filter(
+            client=client_obj,
+            create_at__date__range=[start_date, end_date]
+        ).exclude(type='E').values('id', 'client__names', 'create_at', 'total').order_by('id')
+
+        dict_orders = get_dict_sold_ball(order_set=order_set, client_obj=client_obj)
+
+        tpl = loader.get_template('sales/report_sold_ball_grid.html')
+        context = ({
+            'dict_orders': dict_orders,
+        })
+        return JsonResponse({
+            'success': True,
+            'grid': tpl.render(context, request),
+        }, status=HTTPStatus.OK)
+
+
+def sold_ball(request):
+    user_id = request.user.id
+    user_obj = User.objects.get(id=user_id)
+    subsidiary_obj = get_subsidiary_by_user(user_obj)
+
+    if request.method == 'GET':
+        mydate = datetime.now()
+        formatdate = mydate.strftime("%Y-%m-%d")
+        clients = Client.objects.filter(clientassociate__subsidiary=subsidiary_obj)
+
+        return render(request, 'sales/report_sold_ball.html', {
+            'clients': clients,
+            'formatdate': formatdate,
+        })
+
+
+def get_dict_sold_ball(order_set, client_obj=None):
+    o_dict = []
+    for o in order_set:
+        order_detail_set = OrderDetail.objects.filter(order_id=o['id'], unit__name='B').values(
+            'id', 'product__id', 'product__name', 'unit__id', 'unit__name', 'quantity_sold', 'price_unit'
+        )
+
+        od_dict = []
+        sum_loans = 0
+        for od in order_detail_set:
+            loan_payment_set = LoanPayment.objects.filter(order_detail__id=od['id']).values(
+                'id', 'quantity', 'price', 'discount', 'operation_date'
+            )
+
+            lp_dict = []
+
+            for lp in loan_payment_set:
+                transaction_payment_set = TransactionPayment.objects.filter(loan_payment__id=lp['id']).values(
+                    'id', 'payment', 'type', 'operation_code', 'number_of_vouchers'
+                )
+                if transaction_payment_set.exists():
+                    lp_item = {
+                        'id': lp['id'],
+                        'quantity': lp['quantity'],
+                        'price': lp['price'],
+                        'discount': lp['discount'],
+                        'operation_date': lp['operation_date'],
+                        'transaction_payment_set': transaction_payment_set
+                    }
+                    lp_dict.append(lp_item)
+            if len(lp_dict) > 0:
+                od_item = {
+                    'id': od['id'],
+                    'product_id': od['product__id'],
+                    'product_name': od['product__name'],
+                    'unit_id': od['unit__id'],
+                    'unit_name': od['unit__name'],
+                    'quantity_sold': od['quantity_sold'],
+                    'price_unit': od['price_unit'],
+                    'subtotal': od['price_unit'] * od['quantity_sold'],
+                    'loan_payment_dict': lp_dict,
+                    'loan_payment_count': len(lp_dict)
+                }
+                sum_loans += len(lp_dict)
+                od_dict.append(od_item)
+        if len(od_dict) > 0:
+            o_item = {
+                'id': o['id'],
+                'client_names': o['client__names'],
+                'create_at': o['create_at'],
+                'total': o['total'],
+                'order_detail_dict': od_dict,
+                'order_detail_count': sum_loans
+            }
+            o_dict.append(o_item)
+
+    return o_dict
+
+
+def get_total_order(order_id):
+    sum_multiply = 0
+    order_detail_obj = OrderDetail.objects.filter(order__id=order_id).values('price_unit', 'quantity_sold')
+    for od in order_detail_obj:
+        sum_multiply += od['quantity_sold'] * od['price_unit']
+    return sum_multiply
+
+
+def report_payments_by_client(request):
+    user_id = request.user.id
+    user_obj = User.objects.get(id=user_id)
+    subsidiary_obj = get_subsidiary_by_user(user_obj)
+
+    if request.method == 'GET':
+        mydate = datetime.now()
+        formatdate = mydate.strftime("%Y-%m-%d")
+        clients = Client.objects.filter(clientassociate__subsidiary=subsidiary_obj)
+
+        return render(request, 'sales/report_payments_by_client.html', {
+            'clients': clients,
+            'formatdate': formatdate,
+        })
+
+    elif request.method == 'POST':
+        start_date = str(request.POST.get('start-date'))
+        end_date = str(request.POST.get('end-date'))
+        client_id = int(request.POST.get('id_client'))
+
+        loan_payments_group = LoanPayment.objects.filter(
+            operation_date__range=[start_date, end_date],
+            order_detail__order__client__id=client_id).values('operation_date').annotate(sum=Sum('price'))
+
+        # loan_payments_set = LoanPayment.objects.filter(
+        #     operation_date__range=[start_date, end_date],
+        #     order_detail__order__client__id=client_id).values('operation_date').annotate(sum=Sum('price'))
+        loan_payment_group = []
+        order_dict = {}
+        for lpg in loan_payments_group:
+
+            loan_payments_set = LoanPayment.objects.filter(
+                operation_date=lpg['operation_date'],
+                order_detail__order__client__id=client_id).values(
+                'operation_date', 'id', 'order_detail__order__id', 'order_detail__id', 'price'
+            )
+
+            rows = 0
+            rows_loans = 0
+
+            loan_payment_dict = []
+
+            for lp in loan_payments_set:
+
+                sum_subtotal = 0
+
+                transaction_payments_set = TransactionPayment.objects.filter(
+                    loan_payment__id=lp['id']
+                ).values('id', 'payment', 'type', 'operation_code')
+
+                order_obj = Order.objects.filter(
+                    pk=lp['order_detail__order__id']
+                ).values('id', 'truck__license_plate', 'create_at').first()
+
+                total_order = get_total_order(order_obj['id'])
+
+                price_accumulated = 0
+
+                _search_value = order_obj['id']
+                if _search_value in order_dict.keys():
+                    _order = order_dict[_search_value]
+                    _occurrences = _order.get('occurrences')
+                    _accumulated = _order.get('accumulated')
+                    order_dict[_search_value]['occurrences'] = _occurrences + 1
+                    order_dict[_search_value]['accumulated'] = _accumulated + lp['price']
+                    price_accumulated = _accumulated + lp['price']
+                else:
+                    order_dict[_search_value] = {'occurrences': 0, 'accumulated': lp['price'], }
+                    price_accumulated = lp['price']
+
+                order_detail_set = OrderDetail.objects.filter(
+                    order__id=lp['order_detail__order__id']
+                ).values('id', 'quantity_sold', 'price_unit', 'unit__id', 'unit__name', 'product__id', 'product__name')
+
+                rows = rows + transaction_payments_set.count()
+                payed = 0
+                for od in order_detail_set:
+
+                    subtotal = od['quantity_sold'] * od['price_unit']
+                    sum_subtotal += subtotal
+
+                    has_loan_payment_set = LoanPayment.objects.filter(order_detail__id=od['id'])
+                    if has_loan_payment_set.exists():
+                        has_loan_payment_obj = has_loan_payment_set.first()
+                        price = has_loan_payment_obj.price
+                        payed += price
+
+                transaction_count = transaction_payments_set.count()
+                if transaction_count == 0:
+                    transaction_count = 1
+                    rows = rows + 1
+
+                item_loan = {
+                    'id': lp['id'],
+                    'price': lp['price'],
+                    'transaction': transaction_payments_set,
+                    'transaction_count': transaction_count,
+                    'sum_subtotal': sum_subtotal,
+                    'operation_date': lp['operation_date'],
+                    'payed': payed,
+                    'total_order': total_order,
+                    'pending': total_order - price_accumulated,
+                    'order_detail_set': order_detail_set,
+                    'order_obj': order_obj,
+                    'price_accumulated': price_accumulated,
+                }
+                loan_payment_dict.append(item_loan)
+
+            if rows == 0:
+                rows = 1
+
+            loan_payment_group.append({
+                'date': lpg['operation_date'],
+                'loan_payment_dict': loan_payment_dict,
+                'loan_payment_count': len(loan_payment_dict),
+                'sum': lpg['sum'],  # Agrupado de pagos por fecha
+                'rows': rows,
+                'orders': len(order_dict)
+            })
+
+        tpl = loader.get_template('sales/report_payments_by_client_grid.html')
+        context = ({
+            'loan_payment_group': loan_payment_group,
+        })
+        return JsonResponse({
+            'grid': tpl.render(context, request),
+        }, status=HTTPStatus.OK)
+
+
+def report_ball_all_mass(request):
+    user_id = request.user.id
+    user_obj = User.objects.get(id=user_id)
+    subsidiary_obj = get_subsidiary_by_user(user_obj)
+    products_in_ball = [1, 12, 2, 3] # BALONES
+    products_in_ball_names = ['BALON DE 10 KG', 'BALON DE 15 KG', 'BALON DE 5KG', 'BALON DE 45 KG'] # BALONES
+    products_in_iron = [5, 11, 6, 7]   # FIERROS
+    products_in_iron_names = ['FIERRO DE 10 KG ', 'FIERRO DE 15KG', 'FIERRO DE 5 KG', 'FIERRO DE 45 KG']  # FIERROS
+    sum_ball_5 = 0
+    sum_ball_10 = 0
+    sum_ball_15 = 0
+    sum_ball_45 = 0
+    sum_iron_5 = 0
+    sum_iron_10 = 0
+    sum_iron_15 = 0
+    sum_iron_45 = 0
+    sum_ball_loan_5 = 0
+    sum_ball_loan_10 = 0
+    sum_ball_loan_15 = 0
+    sum_ball_loan_45 = 0
+    subsidiaries_dict = []
+
+    if request.method == 'GET':
+        subsidiaries_set = Subsidiary.objects.all().values('id', 'name')
+
+        for s in subsidiaries_set:
+
+            #  CONTEO DE FIERROS
+            irons = {}
+            for f in products_in_iron:
+                product_store_iron = ProductStore.objects.filter(subsidiary_store__category='I',
+                                                                 subsidiary_store__subsidiary__id=s['id'],
+                                                                 product__id=f).values(
+                    'id',
+                    'product__name',
+                    'product__id',
+                    'stock')
+
+                if product_store_iron.exists():
+                    for ps in product_store_iron:
+                        search_value = ps['id']
+                        if f == 5:  # FIERRO DE 10
+                            sum_iron_10 += ps['stock']
+                        elif f == 11:  # FIERRO DE 15
+                            sum_iron_15 += ps['stock']
+                        elif f == 6:  # FIERRO DE 5
+                            sum_iron_5 += ps['stock']
+                        elif f == 7:  # FIERRO DE 45
+                            sum_iron_45 += ps['stock']
+
+                        if search_value in irons.keys():
+                            product = irons[search_value]
+                            stock = product.get('stock')
+                            irons[search_value]['stock'] = stock + ps['stock']
+                        else:
+                            irons[search_value] = {
+                                'product_id': ps['product__id'],
+                                'product_name': ps['product__name'],
+                                'stock': ps['stock'],
+                            }
+                else:
+                    index = products_in_iron.index(f)
+                    irons[f + 100] = {
+                        'product_id': 0,
+                        'product_name': products_in_iron_names[index],
+                        'stock': 0,
+                    }
+
+            #  CONTEO DE BALONES
+            balls = {}
+            for b in products_in_ball:
+                ball_loan = 0
+                order_detail_set = OrderDetail.objects.filter(order__subsidiary_store__subsidiary_id=s['id'],
+                                                              product_id=b, unit__id=4).values(
+                    'id',
+                    'quantity_sold',
+                    'product_id',
+                    'product__name')
+                for od in order_detail_set:
+                    loan_payment_set = LoanPayment.objects.filter(order_detail_id=od['id']).values(
+                        'id',
+                        'quantity')
+                    if loan_payment_set.exists():
+                        ball_loan_total = 0
+                        ball_total = od['quantity_sold']
+                        for lp in loan_payment_set:
+                            ball_loan_total = ball_loan_total + lp['quantity']
+                        ball_loan += ball_total - ball_loan_total
+                    else:
+                        ball_loan += od['quantity_sold']
+
+                if b == 1:  # BALON DE 10
+                    sum_ball_loan_10 += ball_loan
+                elif b == 12:  # BALON DE 15
+                    sum_ball_loan_15 += ball_loan
+                elif b == 2:  # BALON DE 5
+                    sum_ball_loan_5 += ball_loan
+                elif b == 3:  # BALON DE 45
+                    sum_ball_loan_45 += ball_loan
+
+                product_store_ball = ProductStore.objects.filter(subsidiary_store__category='V',
+                                                                 subsidiary_store__subsidiary__id=s['id'],
+                                                                 product__id=b).values(
+                    'id',
+                    'product__name',
+                    'product__id',
+                    'stock')
+
+                if product_store_ball.exists():
+                    for ps in product_store_ball:
+                        search_value = ps['id']
+                        if b == 1:  # BALON DE 10
+                            sum_ball_10 += ps['stock']
+                        elif b == 12:  # BALON DE 15
+                            sum_ball_15 += ps['stock']
+                        elif b == 2:  # BALON DE 5
+                            sum_ball_5 += ps['stock']
+                        elif b == 3:  # BALON DE 45
+                            sum_ball_45 += ps['stock']
+
+                        if search_value in balls.keys():
+                            product = balls[search_value]
+                            stock = product.get('stock')
+                            balls[search_value]['stock'] = stock + ps['stock']
+                        else:
+                            balls[search_value] = {
+                                'product_id': ps['product__id'],
+                                'product_name': ps['product__name'],
+                                'stock': ps['stock'],
+                                'ball_loan': ball_loan
+                            }
+                else:
+                    index = products_in_ball.index(b)
+                    balls[b + 100] = {
+                        'product_id': 0,
+                        'product_name': products_in_ball_names[index],
+                        'stock': 0,
+                        'ball_loan': ball_loan
+                    }
+
+            unify_dict = get_unify_dict(irons, balls)
+
+            # has_10 = h
+
+            subsidiaries_item = {
+                'id': s['id'],
+                'subsidiary_name': s['name'],
+                'balls': balls,
+                'irons': irons,
+                'unify_dict': unify_dict
+            }
+            subsidiaries_dict.append(subsidiaries_item)
+
+    return render(request, 'sales/report_ball_all_mass.html', {
+        'subsidiaries_dict': subsidiaries_dict,
+        'sum_ball_10': sum_ball_10,
+        'sum_ball_15': sum_ball_15,
+        'sum_ball_5': sum_ball_5,
+        'sum_ball_45': sum_ball_45,
+        'sum_ball_loan_5': sum_ball_loan_5,
+        'sum_ball_loan_10': sum_ball_loan_10,
+        'sum_ball_loan_15': sum_ball_loan_15,
+        'sum_ball_loan_45': sum_ball_loan_45,
+        'sum_iron_10': sum_iron_10,
+        'sum_iron_15': sum_iron_15,
+        'sum_iron_5': sum_ball_5,
+        'sum_iron_45': sum_iron_45
+    })
+
+
+def get_unify_dict(irons=None, balls=None):
+    unify_dict = {}
+
+    for i in irons:
+        search_value = 0
+        if irons[i]['product_id'] == 5:
+            search_value = 10
+        elif irons[i]['product_id'] == 11:
+            search_value = 15
+        elif irons[i]['product_id'] == 6:
+            search_value = 5
+        elif irons[i]['product_id'] == 7:
+            search_value = 45
+
+        if search_value not in unify_dict.keys():
+            unify_dict[search_value] = {
+                # 'product_id': irons[i]['product_id'],
+                'product_name_iron': irons[i]['product_name'],
+                'product_name_ball': '',
+                'stock_iron': irons[i]['stock'],
+                'stock_ball': 0,
+                'ball_loan': 0
+            }
+
+    for b in balls:
+        search_value = 0
+        if balls[b]['product_id'] == 1:
+            search_value = 10
+        elif balls[b]['product_id'] == 12:
+            search_value = 15
+        elif balls[b]['product_id'] == 2:
+            search_value = 5
+        elif balls[b]['product_id'] == 3:
+            search_value = 45
+
+        # search_value = balls[b]['product_id']
+        if search_value in unify_dict.keys():
+            # if search_value == 0:
+            #     # index = unify_dict.index(b)
+            #     # # balls[b + 100] = {
+            #     # #     unify_dict[search_value]['ball_loan']
+            #     # #     'product_name': products_in_ball_names[index],
+            #     # #     'stock': 0,
+            #     # #     'ball_loan': ball_loan
+            #     # # }
+            #     print('empty')
+            # product = unify_dict[search_value]
+            # ball_loan = product.get('ball_loan')
+            unify_dict[search_value]['ball_loan'] = balls[b]['ball_loan']
+            # product_name_ball = product.get('product_name_ball')
+            unify_dict[search_value]['product_name_ball'] = balls[b]['product_name']
+            # stock_ball = product.get('stock_ball')
+            unify_dict[search_value]['stock_ball'] = balls[b]['stock']
+    return unify_dict
