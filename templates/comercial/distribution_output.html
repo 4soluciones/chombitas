@@ -188,6 +188,7 @@
     $(document).on('change', '#details tr td.item-product select', function () {
         //recupera el id_dela opcion seleccionada
         let value = $(this).val();
+        console.log("value :", value)
         let _tr = $(this).parent('td').parent('tr');
         let _select_product = $(this);
         let _td_unit = _tr.find('td.item-unit');
@@ -204,13 +205,13 @@
 
 // console.log($('#details tr[product="' + value + '"]').length);
 
-        if ($('#details tr[product="' + value + '"]').length > 0) {
+        if ($('#details tr[product="' + value + '"][type="L"]').length) {
             $(this).find('option[value=0]').attr('selected', 'selected');
             toastr.warning('SELECCIONE OTRO PRODUCTO', '¡MENSAJE!');
             return false;
         }
 
-        if (value != '0') {
+        if (value !== '0') {
             $.ajax({
                 url: '/buys/get_units_product/',
                 async: true,
@@ -364,9 +365,6 @@
                             let _tr = $('#details tr[f='+(i+1)+']');
                             let _select = _tr.find('td.item-product select');
 
-                            if (_list[i].fields.type === 'V'){
-                                _tr.addClass('d-none');
-                            }
 
                             _select.find('option[value='+_list[i].fields.product+']').attr('selected', 'selected');
                             _select.trigger('change');
@@ -376,6 +374,11 @@
                             _select.find('option[value!='+_list[i].fields.product+']').remove();
                             _tr.find('td.item-quantity-last').text(parseFloat(_list[i].fields.quantity));
                             _tr.find('td.item-delete button').prop('disabled',true);
+
+
+                            if (_tr.attr('type') === 'V'){
+                                _tr.addClass('d-none');
+                            }
                         }
                     }
                 } else {
