@@ -11,7 +11,8 @@ from .format_dates import validate
 from .models import *
 from .forms import *
 from apps.hrm.models import Subsidiary, District, DocumentType, Employee, Worker
-from apps.comercial.models import DistributionMobil, Truck, DistributionDetail, ClientAdvancement, ClientProduct
+from apps.comercial.models import DistributionMobil, Truck, DistributionDetail, ClientAdvancement, ClientProduct, \
+    Programming, Route, Guide, GuideDetail
 from django.contrib.auth.models import User
 from apps.hrm.views import get_subsidiary_by_user, get_sales_vs_expenses
 from apps.accounting.views import TransactionAccount, LedgerEntry, get_account_cash, Cash, CashFlow, AccountingAccount
@@ -4305,9 +4306,9 @@ def report_ball_all_mass(request):
     user_id = request.user.id
     user_obj = User.objects.get(id=user_id)
     subsidiary_obj = get_subsidiary_by_user(user_obj)
-    products_in_ball = [1, 12, 2, 3] # BALONES
-    products_in_ball_names = ['BALON DE 10 KG', 'BALON DE 15 KG', 'BALON DE 5KG', 'BALON DE 45 KG'] # BALONES
-    products_in_iron = [5, 11, 6, 7]   # FIERROS
+    products_in_ball = [1, 12, 2, 3]  # BALONES
+    products_in_ball_names = ['BALON DE 10 KG', 'BALON DE 15 KG', 'BALON DE 5KG', 'BALON DE 45 KG']  # BALONES
+    products_in_iron = [5, 11, 6, 7]  # FIERROS
     products_in_iron_names = ['FIERRO DE 10 KG ', 'FIERRO DE 15KG', 'FIERRO DE 5 KG', 'FIERRO DE 45 KG']  # FIERROS
     sum_ball_5 = 0
     sum_ball_10 = 0
@@ -4321,27 +4322,164 @@ def report_ball_all_mass(request):
     sum_ball_loan_10 = 0
     sum_ball_loan_15 = 0
     sum_ball_loan_45 = 0
+    sum_route_void_5 = 0
+    sum_route_void_10 = 0
+    sum_route_void_15 = 0
+    sum_route_void_45 = 0
+    sum_route_filled_5 = 0
+    sum_route_filled_10 = 0
+    sum_route_filled_15 = 0
+    sum_route_filled_45 = 0
+    sum_car_void_5 = 0
+    sum_car_void_10 = 0
+    sum_car_void_15 = 0
+    sum_car_void_45 = 0
+    sum_car_filled_5 = 0
+    sum_car_filled_10 = 0
+    sum_car_filled_15 = 0
+    sum_car_filled_45 = 0
+
     subsidiaries_dict = []
 
     if request.method == 'GET':
         subsidiaries_set = Subsidiary.objects.all().values('id', 'name')
 
         for s in subsidiaries_set:
+            # print(s['name'])
+            distributions = {}
+            # CONTEO EN CARRO
+            pilot_set = DistributionMobil.objects.filter(subsidiary__id=s['id']).distinct('pilot__id').values('pilot__id')
+            # print(pilot_set)
+            for p in pilot_set:
+                last_distribution_mobil_id = DistributionMobil.objects.filter(pilot__id=p['pilot__id'], status='F').aggregate(Max('id'))
+                for db in products_in_ball:
+                    distribution_detail_set = DistributionDetail.objects.filter(distribution_mobil__id=last_distribution_mobil_id['id__max'],
+                                                                                status='C',
+                                                                                type__in=['L', 'V'], product__id=db).values('id',
+                                                                                                            'product__id',
+                                                                                                            'product__name',
+                                                                                                            'quantity',
+                                                                                                            'unit__id',
+                                                                                                            'unit__name',
+                                                                                                            'type')
+                    for d in distribution_detail_set:
+                        if d['type'] == 'V':
+                            if db == 1:  # BALON DE 10
+                                sum_car_void_10 += d['quantity']
+                            elif db == 12:  # BALON DE 15
+                                sum_car_void_15 += d['quantity']
+                            elif db == 2:  # BALON DE 5
+                                sum_car_void_5 += d['quantity']
+                            elif db == 3:  # BALON DE 45
+                                sum_car_void_45 += d['quantity']
+                        elif d['type'] == 'L':
+                            if db == 1:  # BALON DE 10
+                                sum_car_filled_10 += d['quantity']
+                            elif db == 12:  # BALON DE 15
+                                sum_car_filled_15 += d['quantity']
+                            elif db == 2:  # BALON DE 5
+                                sum_car_filled_5 += d['quantity']
+                            elif db == 3:  # BALON DE 45
+                                sum_car_filled_45 += d['quantity']
+                        stock_l = 0
+                        stock_v = 0
+                        search_value = d['product__id']
+                        if search_value in distributions.keys():
+                            product = distributions[search_value]
+                            if d['type'] == 'L':
+                                stock_l = product.get('stock_l')
+                                distributions[search_value]['stock_l'] = stock_l + d['quantity']
+                            elif d['type'] == 'V':
+                                stock_v = product.get('stock_v')
+                                distributions[search_value]['stock_v'] = stock_v + d['quantity']
+                        else:
+                            if d['type'] == 'L':
+                                stock_l = d['quantity']
+                            elif d['type'] == 'V':
+                                stock_v = d['quantity']
+                            distributions[search_value] = {
+                                'product_id': d['product__id'],
+                                'product_name': d['product__name'],
+                                'stock_l': stock_l,
+                                'stock_v': stock_v,
+                                'distribution_id': last_distribution_mobil_id['id__max'],
+                            }
+                    # print(last_distribution_mobil_id)
+                # print(distributions)
+
+            #  CONTEO EN RUTA
+            route_set = Route.objects.filter(type='D', subsidiary__id=s['id'],
+                                             programming__isnull=False,
+                                             programming__guide__guidedetail__isnull=False,
+                                             programming__status='P').distinct('programming__id').values(
+                'programming__id',
+                'programming__guide__id')
+            car = {}
+            for r in route_set:
+                for gb in products_in_ball:
+                    guide_detail_set = GuideDetail.objects.filter(guide__id=r['programming__guide__id'],
+                                                                  type__in=[1, 2],
+                                                                  product__id=gb).values('id',
+                                                                                         'product__id',
+                                                                                         'product__name',
+                                                                                         'quantity',
+                                                                                         'unit_measure',
+                                                                                                'type')
+                    for g in guide_detail_set:
+                        if g['type'] == '1':
+                            if gb == 1:  # BALON DE 10
+                                sum_route_void_10 += g['quantity']
+                            elif gb == 12:  # BALON DE 15
+                                sum_route_void_15 += g['quantity']
+                            elif gb == 2:  # BALON DE 5
+                                sum_route_void_5 += g['quantity']
+                            elif gb == 3:  # BALON DE 45
+                                sum_route_void_45 += g['quantity']
+                        elif g['type'] == '2':
+                            if gb == 1:  # BALON DE 10
+                                sum_route_filled_10 += g['quantity']
+                            elif gb == 12:  # BALON DE 15
+                                sum_route_filled_15 += g['quantity']
+                            elif gb == 2:  # BALON DE 5
+                                sum_route_filled_5 += g['quantity']
+                            elif gb == 3:  # BALON DE 45
+                                sum_route_filled_45 += g['quantity']
+                        stock_void = 0
+                        stock_filled = 0
+                        search_value = g['product__id']
+                        if search_value in car.keys():
+                            product = car[search_value]
+                            if g['type'] == '1':
+                                stock_void = product.get('stock_void')
+                                car[search_value]['stock_void'] = stock_void + g['quantity']
+                            elif g['type'] == '2':
+                                stock_filled = product.get('stock_filled')
+                                car[search_value]['stock_filled'] = stock_filled + g['quantity']
+                        else:
+                            if g['type'] == '1':
+                                stock_void = g['quantity']
+                            elif g['type'] == '2':
+                                stock_filled = g['quantity']
+                            car[search_value] = {
+                                'product_id': g['product__id'],
+                                'product_name': g['product__name'],
+                                'stock_filled': stock_filled,
+                                'stock_void': stock_void,
+                                'type': g['type'],
+                            }
+            # print(car)
 
             #  CONTEO DE FIERROS
             irons = {}
             for f in products_in_iron:
-                product_store_iron = ProductStore.objects.filter(subsidiary_store__category='I',
-                                                                 subsidiary_store__subsidiary__id=s['id'],
-                                                                 product__id=f).values(
-                    'id',
-                    'product__name',
-                    'product__id',
-                    'stock')
+                product_store_iron = ProductStore.objects.filter(
+                    subsidiary_store__category='I', subsidiary_store__subsidiary__id=s['id'], product__id=f
+                ).values('id', 'product__name', 'product__id', 'stock')
 
                 if product_store_iron.exists():
                     for ps in product_store_iron:
-                        search_value = ps['id']
+                        # search_value = ps['id']
+                        search_value = ps['product__id']
                         if f == 5:  # FIERRO DE 10
                             sum_iron_10 += ps['stock']
                         elif f == 11:  # FIERRO DE 15
@@ -4363,8 +4501,8 @@ def report_ball_all_mass(request):
                             }
                 else:
                     index = products_in_iron.index(f)
-                    irons[f + 100] = {
-                        'product_id': 0,
+                    irons[f] = {
+                        'product_id': f,
                         'product_name': products_in_iron_names[index],
                         'stock': 0,
                     }
@@ -4373,25 +4511,23 @@ def report_ball_all_mass(request):
             balls = {}
             for b in products_in_ball:
                 ball_loan = 0
-                order_detail_set = OrderDetail.objects.filter(order__subsidiary_store__subsidiary_id=s['id'],
-                                                              product_id=b, unit__id=4).values(
-                    'id',
-                    'quantity_sold',
-                    'product_id',
-                    'product__name')
-                for od in order_detail_set:
-                    loan_payment_set = LoanPayment.objects.filter(order_detail_id=od['id']).values(
-                        'id',
-                        'quantity')
-                    if loan_payment_set.exists():
-                        ball_loan_total = 0
-                        ball_total = od['quantity_sold']
-                        for lp in loan_payment_set:
-                            ball_loan_total = ball_loan_total + lp['quantity']
-                        ball_loan += ball_total - ball_loan_total
-                    else:
-                        ball_loan += od['quantity_sold']
+                order_detail_set = OrderDetail.objects.filter(
+                    order__subsidiary_store__subsidiary_id=s['id'], product_id=b, unit__id=4
+                ).values('id', 'quantity_sold', 'product_id', 'product__name')
 
+                if order_detail_set.exists():
+                    for od in order_detail_set:
+                        loan_payment_set = LoanPayment.objects.filter(order_detail_id=od['id']).values('id', 'quantity')
+                        if loan_payment_set.exists():
+                            ball_loan_total = 0
+                            ball_total = od['quantity_sold']
+                            for lp in loan_payment_set:
+                                ball_loan_total = ball_loan_total + lp['quantity']
+                            ball_loan += ball_total - ball_loan_total
+                        else:
+                            ball_loan += od['quantity_sold']
+                # else:
+                #     ball_loan = -1
                 if b == 1:  # BALON DE 10
                     sum_ball_loan_10 += ball_loan
                 elif b == 12:  # BALON DE 15
@@ -4401,17 +4537,13 @@ def report_ball_all_mass(request):
                 elif b == 3:  # BALON DE 45
                     sum_ball_loan_45 += ball_loan
 
-                product_store_ball = ProductStore.objects.filter(subsidiary_store__category='V',
-                                                                 subsidiary_store__subsidiary__id=s['id'],
-                                                                 product__id=b).values(
-                    'id',
-                    'product__name',
-                    'product__id',
-                    'stock')
+                product_store_ball = ProductStore.objects.filter(
+                    subsidiary_store__category='V', subsidiary_store__subsidiary__id=s['id'], product__id=b
+                ).values('id', 'product__name', 'product__id', 'stock')
 
                 if product_store_ball.exists():
                     for ps in product_store_ball:
-                        search_value = ps['id']
+                        search_value = ps['product__id']
                         if b == 1:  # BALON DE 10
                             sum_ball_10 += ps['stock']
                         elif b == 12:  # BALON DE 15
@@ -4434,23 +4566,30 @@ def report_ball_all_mass(request):
                             }
                 else:
                     index = products_in_ball.index(b)
-                    balls[b + 100] = {
-                        'product_id': 0,
+                    balls[b] = {
+                        'product_id': b,
                         'product_name': products_in_ball_names[index],
                         'stock': 0,
                         'ball_loan': ball_loan
                     }
 
-            unify_dict = get_unify_dict(irons, balls)
+            # print('--------------------------------------')
+            # print(s['name'])
+            # print(irons)
+            # print(balls)
+            # print(car)
+            # print('--------------------------------------')
 
-            # has_10 = h
+            unify_dict = get_unify_dict(irons, balls, car, distributions)
+            # print(unify_dict)
 
             subsidiaries_item = {
                 'id': s['id'],
                 'subsidiary_name': s['name'],
                 'balls': balls,
                 'irons': irons,
-                'unify_dict': unify_dict
+                'unify_dict': unify_dict,
+                'pilot_set': pilot_set
             }
             subsidiaries_dict.append(subsidiaries_item)
 
@@ -4467,11 +4606,27 @@ def report_ball_all_mass(request):
         'sum_iron_10': sum_iron_10,
         'sum_iron_15': sum_iron_15,
         'sum_iron_5': sum_ball_5,
-        'sum_iron_45': sum_iron_45
+        'sum_iron_45': sum_iron_45,
+        'sum_route_void_5': sum_route_void_5,
+        'sum_route_void_10': sum_route_void_10,
+        'sum_route_void_15': sum_route_void_15,
+        'sum_route_void_45': sum_route_void_45,
+        'sum_route_filled_5': sum_route_filled_5,
+        'sum_route_filled_10': sum_route_filled_10,
+        'sum_route_filled_15': sum_route_filled_15,
+        'sum_route_filled_45': sum_route_filled_45,
+        'sum_car_void_5': sum_car_void_5,
+        'sum_car_void_10': sum_car_void_10,
+        'sum_car_void_15': sum_car_void_15,
+        'sum_car_void_45': sum_car_void_45,
+        'sum_car_filled_5': sum_car_filled_5,
+        'sum_car_filled_10': sum_car_filled_10,
+        'sum_car_filled_15': sum_car_filled_15,
+        'sum_car_filled_45': sum_car_filled_45,
     })
 
 
-def get_unify_dict(irons=None, balls=None):
+def get_unify_dict(irons=None, balls=None, car=None, distributions=None):
     unify_dict = {}
 
     for i in irons:
@@ -4487,12 +4642,16 @@ def get_unify_dict(irons=None, balls=None):
 
         if search_value not in unify_dict.keys():
             unify_dict[search_value] = {
-                # 'product_id': irons[i]['product_id'],
+                'id': search_value,
                 'product_name_iron': irons[i]['product_name'],
                 'product_name_ball': '',
                 'stock_iron': irons[i]['stock'],
                 'stock_ball': 0,
-                'ball_loan': 0
+                'ball_loan': 0,
+                'car_ball_filled': 0,
+                'car_ball_void': 0,
+                'distribution_ball_void': 0,
+                'distribution_ball_filled': 0,
             }
 
     for b in balls:
@@ -4508,20 +4667,40 @@ def get_unify_dict(irons=None, balls=None):
 
         # search_value = balls[b]['product_id']
         if search_value in unify_dict.keys():
-            # if search_value == 0:
-            #     # index = unify_dict.index(b)
-            #     # # balls[b + 100] = {
-            #     # #     unify_dict[search_value]['ball_loan']
-            #     # #     'product_name': products_in_ball_names[index],
-            #     # #     'stock': 0,
-            #     # #     'ball_loan': ball_loan
-            #     # # }
-            #     print('empty')
-            # product = unify_dict[search_value]
-            # ball_loan = product.get('ball_loan')
             unify_dict[search_value]['ball_loan'] = balls[b]['ball_loan']
             # product_name_ball = product.get('product_name_ball')
             unify_dict[search_value]['product_name_ball'] = balls[b]['product_name']
             # stock_ball = product.get('stock_ball')
             unify_dict[search_value]['stock_ball'] = balls[b]['stock']
+
+    for c in car:
+        search_value = 0
+        if car[c]['product_id'] == 1:
+            search_value = 10
+        elif car[c]['product_id'] == 12:
+            search_value = 15
+        elif car[c]['product_id'] == 2:
+            search_value = 5
+        elif car[c]['product_id'] == 3:
+            search_value = 45
+
+        if search_value in unify_dict.keys():
+            unify_dict[search_value]['car_ball_void'] = car[c]['stock_void']
+            unify_dict[search_value]['car_ball_filled'] = car[c]['stock_filled']
+
+    for d in distributions:
+        search_value = 0
+        if distributions[d]['product_id'] == 1:
+            search_value = 10
+        elif distributions[d]['product_id'] == 12:
+            search_value = 15
+        elif distributions[d]['product_id'] == 2:
+            search_value = 5
+        elif distributions[d]['product_id'] == 3:
+            search_value = 45
+
+        if search_value in unify_dict.keys():
+            unify_dict[search_value]['distribution_ball_void'] = distributions[d]['stock_v']
+            unify_dict[search_value]['distribution_ball_filled'] = distributions[d]['stock_l']
+
     return unify_dict

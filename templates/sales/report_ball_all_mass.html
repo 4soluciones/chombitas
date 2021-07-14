@@ -17,83 +17,64 @@
             <div class="card-body table-responsive" id="tbl-mass">
                 <table class="table table-sm table-bordered">
                     <thead>
-                    <tr class="text-white small text-uppercase">
-                        <td class="bg-primary">SEDE</td>
-                        <td class="bg-primary" colspan="2">BALON DE 10 KG</td>
-                        <td class="bg-primary" colspan="2">FIERRO DE 10 KG</td>
-                        <td class="bg-primary" colspan="2">BALON DE 15 KG</td>
-                        <td class="bg-primary" colspan="2">FIERRO DE 15 KG</td>
-                        <td class="bg-primary" colspan="2">BALON DE 5 KG</td>
-                        <td class="bg-primary" colspan="2">FIERRO DE 5 KG</td>
-                        <td class="bg-primary" colspan="2">BALON DE 45 KG</td>
-                        <td class="bg-primary" colspan="2">FIERRO DE 45 KG</td>
-                        <td class="bg-primary">ALMACEN</td>
-                    </tr>
-
-                    </thead>
-                    <tbody>
-                    {% for s in subsidiaries_dict %}
-                        <tr>
-                            <td class="align-middle text-center">{{ s.subsidiary_name }}</td>
-                            {% for key, value in s.balls.items %}
-                                <td class="align-middle text-center">{{ value.product_name }}
-                                    - {{ value.stock|safe|floatformat:0 }}</td>
-                                <td class="align-middle text-center">{{ value.ball_loan|safe|floatformat:0 }}</td>
-                            {% endfor %}
-
-                            {% for key, value in s.irons.items %}
-                                <td class="align-middle text-center">{{ value.product_name }}
-                                    - {{ value.stock|safe|floatformat:0 }}</td>
-                                <td></td>
-                            {% endfor %}
-
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <td class="align-middle text-center">TOTAL EN PLANTA</td>
-                        <td class="align-middle text-center" colspan="1">{{ sum_ball_10|safe|floatformat:0 }}</td>
-                        <td class="align-middle text-center" colspan="1">{{ sum_ball_loan_10|safe|floatformat:0 }}</td>
-                        <td class="align-middle text-center" colspan="1">{{ sum_ball_15|safe|floatformat:0 }}</td>
-                        <td class="align-middle text-center" colspan="1">{{ sum_ball_loan_15|safe|floatformat:0 }}</td>
-                        <td class="align-middle text-center" colspan="1">{{ sum_ball_5|safe|floatformat:0 }}</td>
-                        <td class="align-middle text-center" colspan="1">{{ sum_ball_loan_5|safe|floatformat:0 }}</td>
-                        <td class="align-middle text-center" colspan="1">{{ sum_ball_45|safe|floatformat:0 }}</td>
-                        <td class="align-middle text-center" colspan="1">{{ sum_ball_loan_45|safe|floatformat:0 }}</td>
-                    </tr>
-
-
-                    </tfoot>
-                </table>
-
-                <table class="table table-sm table-bordered">
-                    <thead>
                     <tr class="text-white text-uppercase">
-                        <td class="bg-primary align-middle text-center" rowspan="2">SEDE</td>
-                        <td class="bg-primary align-middle text-center" colspan="3">BALON DE 10 KG</td>
-                        <td class="bg-primary align-middle text-center" colspan="3">BALON DE 15 KG</td>
-                        <td class="bg-primary align-middle text-center" colspan="3">BALON DE 5 KG</td>
-                        <td class="bg-primary align-middle text-center" colspan="3">BALON DE 45 KG</td>
-
-
+                        <td class="bg-primary align-middle text-center" rowspan="3">SEDE</td>
+                        <td class="bg-primary align-middle text-center" colspan="7">BALON DE 10 KG</td>
+                        <td class="bg-primary align-middle text-center" colspan="7">BALON DE 15 KG</td>
+                        <td class="bg-primary align-middle text-center" colspan="7">BALON DE 5 KG</td>
+                        <td class="bg-primary align-middle text-center" colspan="7">BALON DE 45 KG</td>
                     </tr>
                     <tr class="text-white text-uppercase">
-                        <td class="bg-primary" colspan="1">BALONES EN PLANTA</td>
-                        <td class="bg-primary" colspan="1">BALONES PRESTADOS</td>
-                        <td class="bg-primary" colspan="1">BALONES EN PRODUCCION</td>
+                        <td class="bg-primary align-middle text-center" colspan="4">BALONES LLENOS</td>
+                        <td class="bg-primary align-middle text-center" colspan="3">BALONES VACIOS</td>
 
-                        <td class="bg-primary" colspan="1">BALONES EN PLANTA</td>
-                        <td class="bg-primary" colspan="1">BALONES PRESTADOS</td>
-                        <td class="bg-primary" colspan="1">BALONES EN PRODUCCION</td>
+                        <td class="bg-primary align-middle text-center" colspan="4">BALONES LLENOS</td>
+                        <td class="bg-primary align-middle text-center" colspan="3">BALONES VACIOS</td>
 
-                        <td class="bg-primary" colspan="1">BALONES EN PLANTA</td>
-                        <td class="bg-primary" colspan="1">BALONES PRESTADOS</td>
-                        <td class="bg-primary" colspan="1">BALONES EN PRODUCCION</td>
+                        <td class="bg-primary align-middle text-center" colspan="4">BALONES LLENOS</td>
+                        <td class="bg-primary align-middle text-center" colspan="3">BALONES VACIOS</td>
 
-                        <td class="bg-primary" colspan="1">BALONES EN PLANTA</td>
-                        <td class="bg-primary" colspan="1">BALONES PRESTADOS</td>
-                        <td class="bg-primary" colspan="1">BALONES EN PRODUCCION</td>
+                        <td class="bg-primary align-middle text-center" colspan="4">BALONES LLENOS</td>
+                        <td class="bg-primary align-middle text-center" colspan="3">BALONES VACIOS</td>
+                    </tr>
+                    <tr class="text-white text-uppercase">
+                        <td class="bg-primary" colspan="1">EN PLANTA</td>
+                        <td class="bg-primary" colspan="1">EN RUTA</td>
+                        <td class="bg-primary" colspan="1">PRESTADOS</td>
+                        <td class="bg-primary" colspan="1">EN CARRO(R)</td>
+
+                        <td class="bg-primary" colspan="1">EN PLANTA</td>
+                        <td class="bg-primary" colspan="1">EN RUTA</td>
+                        <td class="bg-primary" colspan="1">EN CARRO(R)</td>
+
+                        <td class="bg-primary" colspan="1">EN PLANTA</td>
+                        <td class="bg-primary" colspan="1">EN RUTA</td>
+                        <td class="bg-primary" colspan="1">PRESTADOS</td>
+                        <td class="bg-primary" colspan="1">EN CARRO(R)</td>
+
+                        <td class="bg-primary" colspan="1">EN PLANTA</td>
+                        <td class="bg-primary" colspan="1">EN RUTA</td>
+                        <td class="bg-primary" colspan="1">EN CARRO(R)</td>
+
+                        <td class="bg-primary" colspan="1">EN PLANTA</td>
+                        <td class="bg-primary" colspan="1">EN RUTA</td>
+                        <td class="bg-primary" colspan="1">PRESTADOS</td>
+                        <td class="bg-primary" colspan="1">EN CARRO(R)</td>
+
+                        <td class="bg-primary" colspan="1">EN PLANTA</td>
+                        <td class="bg-primary" colspan="1">EN RUTA</td>
+                        <td class="bg-primary" colspan="1">EN CARRO(R)</td>
+
+                        <td class="bg-primary" colspan="1">EN PLANTA</td>
+                        <td class="bg-primary" colspan="1">EN RUTA</td>
+                        <td class="bg-primary" colspan="1">PRESTADOS</td>
+                        <td class="bg-primary" colspan="1">EN CARRO(R)</td>
+
+                        <td class="bg-primary" colspan="1">EN PLANTA</td>
+                        <td class="bg-primary" colspan="1">EN RUTA</td>
+                        <td class="bg-primary" colspan="1">EN CARRO(R)</td>
+
+
                     </tr>
                     </thead>
                     <tbody>
@@ -102,32 +83,52 @@
                             <td class="align-middle text-center">{{ s.subsidiary_name }}</td>
                             {% for key, value in s.unify_dict.items %}
                                 <td class="align-middle text-center">{{ value.stock_ball|safe|floatformat:0 }}</td>
+                                <td class="align-middle text-center">{{ value.car_ball_filled|safe|floatformat:0 }}</td>
                                 <td class="align-middle text-center">{{ value.ball_loan|safe|floatformat:0 }}</td>
+                                <td class="align-middle text-center">{{ value.distribution_ball_filled|safe|floatformat:0 }}</td>
+
                                 <td class="align-middle text-center">{{ value.stock_iron|safe|floatformat:0 }}</td>
-                            {% empty %}
-                                <td>0</td>
-                                <td>0</td>
-                                <td>0</td>
+                                <td class="align-middle text-center">{{ value.car_ball_void|safe|floatformat:0 }}</td>
+                                <td class="align-middle text-center">{{ value.distribution_ball_void|safe|floatformat:0 }}</td>
                             {% endfor %}
 
                         </tr>
                     {% endfor %}
                     </tbody>
                     <tfoot>
-                    <tr>
+                    <tr class="align-middle text-center bg-success">
                         <td class="align-middle text-center">TOTAL EN PLANTA</td>
                         <td class="align-middle text-center" colspan="1">{{ sum_ball_10|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="1">{{ sum_route_filled_10|safe|floatformat:0 }}</td>
                         <td class="align-middle text-center" colspan="1">{{ sum_ball_loan_10|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="1">{{ sum_car_filled_10|safe|floatformat:0 }}</td>
                         <td class="align-middle text-center" colspan="1">{{ sum_iron_10|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="1">{{ sum_route_void_10|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="1">{{ sum_car_void_10|safe|floatformat:0 }}</td>
+
                         <td class="align-middle text-center" colspan="1">{{ sum_ball_15|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="1">{{ sum_route_filled_15|safe|floatformat:0 }}</td>
                         <td class="align-middle text-center" colspan="1">{{ sum_ball_loan_15|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="1">{{ sum_car_filled_15|safe|floatformat:0 }}</td>
                         <td class="align-middle text-center" colspan="1">{{ sum_iron_15|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="1">{{ sum_route_void_15|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="1">{{ sum_car_void_15|safe|floatformat:0 }}</td>
+
                         <td class="align-middle text-center" colspan="1">{{ sum_ball_5|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="1">{{ sum_route_filled_5|safe|floatformat:0 }}</td>
                         <td class="align-middle text-center" colspan="1">{{ sum_ball_loan_5|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="1">{{ sum_car_filled_5|safe|floatformat:0 }}</td>
                         <td class="align-middle text-center" colspan="1">{{ sum_iron_5|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="1">{{ sum_route_void_5|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="1">{{ sum_car_filled_5|safe|floatformat:0 }}</td>
+
                         <td class="align-middle text-center" colspan="1">{{ sum_ball_45|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="1">{{ sum_route_filled_45|safe|floatformat:0 }}</td>
                         <td class="align-middle text-center" colspan="1">{{ sum_ball_loan_45|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="1">{{ sum_car_filled_45|safe|floatformat:0 }}</td>
                         <td class="align-middle text-center" colspan="1">{{ sum_iron_45|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="1">{{ sum_route_void_45|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="1">{{ sum_car_filled_45|safe|floatformat:0 }}</td>
                     </tr>
 
                     </tfoot>
