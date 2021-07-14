@@ -4342,14 +4342,13 @@ def report_ball_all_mass(request):
     subsidiaries_dict = []
 
     if request.method == 'GET':
-        subsidiaries_set = Subsidiary.objects.all().values('id', 'name')
+        subsidiaries_set = Subsidiary.objects.all().exclude(id__in=[5, 8, 7]).values('id', 'name')
 
         for s in subsidiaries_set:
             # print(s['name'])
             distributions = {}
             # CONTEO EN CARRO
             pilot_set = DistributionMobil.objects.filter(subsidiary__id=s['id']).distinct('pilot__id').values('pilot__id')
-            # print(pilot_set)
             for p in pilot_set:
                 last_distribution_mobil_id = DistributionMobil.objects.filter(pilot__id=p['pilot__id'], status='F').aggregate(Max('id'))
                 for db in products_in_ball:
@@ -4526,8 +4525,7 @@ def report_ball_all_mass(request):
                             ball_loan += ball_total - ball_loan_total
                         else:
                             ball_loan += od['quantity_sold']
-                # else:
-                #     ball_loan = -1
+
                 if b == 1:  # BALON DE 10
                     sum_ball_loan_10 += ball_loan
                 elif b == 12:  # BALON DE 15
@@ -4574,7 +4572,6 @@ def report_ball_all_mass(request):
                     }
 
             # print('--------------------------------------')
-            # print(s['name'])
             # print(irons)
             # print(balls)
             # print(car)
@@ -4593,37 +4590,55 @@ def report_ball_all_mass(request):
             }
             subsidiaries_dict.append(subsidiaries_item)
 
-    return render(request, 'sales/report_ball_all_mass.html', {
-        'subsidiaries_dict': subsidiaries_dict,
-        'sum_ball_10': sum_ball_10,
-        'sum_ball_15': sum_ball_15,
-        'sum_ball_5': sum_ball_5,
-        'sum_ball_45': sum_ball_45,
-        'sum_ball_loan_5': sum_ball_loan_5,
-        'sum_ball_loan_10': sum_ball_loan_10,
-        'sum_ball_loan_15': sum_ball_loan_15,
-        'sum_ball_loan_45': sum_ball_loan_45,
-        'sum_iron_10': sum_iron_10,
-        'sum_iron_15': sum_iron_15,
-        'sum_iron_5': sum_ball_5,
-        'sum_iron_45': sum_iron_45,
-        'sum_route_void_5': sum_route_void_5,
-        'sum_route_void_10': sum_route_void_10,
-        'sum_route_void_15': sum_route_void_15,
-        'sum_route_void_45': sum_route_void_45,
-        'sum_route_filled_5': sum_route_filled_5,
-        'sum_route_filled_10': sum_route_filled_10,
-        'sum_route_filled_15': sum_route_filled_15,
-        'sum_route_filled_45': sum_route_filled_45,
-        'sum_car_void_5': sum_car_void_5,
-        'sum_car_void_10': sum_car_void_10,
-        'sum_car_void_15': sum_car_void_15,
-        'sum_car_void_45': sum_car_void_45,
-        'sum_car_filled_5': sum_car_filled_5,
-        'sum_car_filled_10': sum_car_filled_10,
-        'sum_car_filled_15': sum_car_filled_15,
-        'sum_car_filled_45': sum_car_filled_45,
-    })
+        sum_total_ball_filled_10 = sum_ball_10 + sum_route_filled_10 + sum_ball_loan_10 + sum_car_filled_10
+        sum_total_ball_filled_15 = sum_ball_15 + sum_route_filled_15 + sum_ball_loan_15 + sum_car_filled_15
+        sum_total_ball_filled_5 = sum_ball_5 + sum_route_filled_5 + sum_ball_loan_5 + sum_car_filled_5
+        sum_total_ball_filled_45 = sum_ball_45 + sum_route_filled_45 + sum_ball_loan_45 + sum_car_filled_45
+
+        sum_total_ball_void_10 = sum_iron_10 + sum_route_void_10 + sum_car_void_10
+        sum_total_ball_void_15 = sum_iron_15 + sum_route_void_15 + sum_car_void_15
+        sum_total_ball_void_5 = sum_iron_5 + sum_route_void_5 + sum_car_void_5
+        sum_total_ball_void_45 = sum_iron_45 + sum_route_void_45 + sum_car_void_45
+
+        return render(request, 'sales/report_ball_all_mass.html', {
+            'subsidiaries_dict': subsidiaries_dict,
+            'sum_ball_10': sum_ball_10,
+            'sum_ball_15': sum_ball_15,
+            'sum_ball_5': sum_ball_5,
+            'sum_ball_45': sum_ball_45,
+            'sum_ball_loan_5': sum_ball_loan_5,
+            'sum_ball_loan_10': sum_ball_loan_10,
+            'sum_ball_loan_15': sum_ball_loan_15,
+            'sum_ball_loan_45': sum_ball_loan_45,
+            'sum_iron_10': sum_iron_10,
+            'sum_iron_15': sum_iron_15,
+            'sum_iron_5': sum_iron_5,
+            'sum_iron_45': sum_iron_45,
+            'sum_route_void_5': sum_route_void_5,
+            'sum_route_void_10': sum_route_void_10,
+            'sum_route_void_15': sum_route_void_15,
+            'sum_route_void_45': sum_route_void_45,
+            'sum_route_filled_5': sum_route_filled_5,
+            'sum_route_filled_10': sum_route_filled_10,
+            'sum_route_filled_15': sum_route_filled_15,
+            'sum_route_filled_45': sum_route_filled_45,
+            'sum_car_void_5': sum_car_void_5,
+            'sum_car_void_10': sum_car_void_10,
+            'sum_car_void_15': sum_car_void_15,
+            'sum_car_void_45': sum_car_void_45,
+            'sum_car_filled_5': sum_car_filled_5,
+            'sum_car_filled_10': sum_car_filled_10,
+            'sum_car_filled_15': sum_car_filled_15,
+            'sum_car_filled_45': sum_car_filled_45,
+            'sum_total_ball_filled_10': sum_total_ball_filled_10,
+            'sum_total_ball_filled_15': sum_total_ball_filled_15,
+            'sum_total_ball_filled_5': sum_total_ball_filled_5,
+            'sum_total_ball_filled_45': sum_total_ball_filled_45,
+            'sum_total_ball_void_10': sum_total_ball_void_10,
+            'sum_total_ball_void_15': sum_total_ball_void_15,
+            'sum_total_ball_void_5': sum_total_ball_void_5,
+            'sum_total_ball_void_45': sum_total_ball_void_45,
+        })
 
 
 def get_unify_dict(irons=None, balls=None, car=None, distributions=None):
