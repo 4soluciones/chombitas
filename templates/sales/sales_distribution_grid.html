@@ -19,7 +19,7 @@
             </thead>
             <tbody class="sales-distribution-detail">
             {% for dt in list_distribution.distributiondetail_set.all %}
-                {% if dt.status == 'E' %}
+                {% if dt.status == 'E' and dt.type == 'L' %}
                     <tr class="table-warning text-center" pk="{{ dt.id }}" product="{{ dt.product.id }}">
                         <td>{{ list_distribution.truck.license_plate }}</td>
                         <td>{{ list_distribution.pilot.full_name }}</td>

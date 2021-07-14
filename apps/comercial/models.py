@@ -613,6 +613,16 @@ class DistributionDetail(models.Model):
         return response
 
 
+class DistributionMobilClient(models.Model):
+    id = models.AutoField(primary_key=True)
+    distribution_detail = models.ForeignKey(DistributionDetail, on_delete=models.SET_NULL, null=True, blank=True)
+    client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True, blank=True)
+    quantity = models.IntegerField('Numero de Ejes', null=True, default=0)
+
+    def __str__(self):
+        return str(self.id)
+
+
 class MantenimentProduct(models.Model):
     STATUS_CHOICES = (('P', 'PROGRAMADO'), ('F', 'FINALIZADO'), ('E', 'EN PROCESO'),)
     TYPE_CHOICES = (('G', 'GRANALLAR'), ('V', 'CAMBIO DE VALVULA'), ('B', 'CAMBIO DE BASE/ASA'),)

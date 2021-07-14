@@ -335,10 +335,10 @@
         function distribution_value(_product, _unit) {
             let param = 0;
             $('table#id-table-detail-order tbody#sales-details tr').each(function () {
-                if ($(this).attr('product') == _product && $(this).attr('pu') == _unit) {
+                if ($(this).attr('product') === _product && $(this).attr('pu') === _unit) {
                     param = parseFloat($(this).find('td.item-quantity').text());
                     $('#tbl-sales-distribution-grid tbody.sales-distribution-detail tr').each(function () {
-                        if (_product == parseInt($(this).attr('product'))) {
+                        if (_product === parseInt($(this).attr('product'))) {
                             let value_last = parseFloat($(this).find('td.quantity-surplus').text());
                             $(this).find('td.quantity-surplus').text((value_last + param).toFixed(2));
                         }
@@ -630,10 +630,10 @@
                         return false;
                     }
                 }
-                if (($('#id_distribution').val() != 0 || $('#id_distribution').text() != '') && _input_quantity != '') {
+                if (($('#id_distribution').val() !== 0 || $('#id_distribution').text() !== '') && _input_quantity !== '') {
                     let _product_row = $(this).attr('product_id')
                     $('#tbl-sales-distribution-grid tbody.sales-distribution-detail tr').each(function () {
-                        if (parseInt(_product_row) == parseInt($(this).attr('product'))) {
+                        if (parseInt(_product_row) === parseInt($(this).attr('product'))) {
                             row = 1;
                             let value_last = parseFloat($(this).find('td.quantity-surplus').text());
                             if (parseFloat(_input_quantity) > value_last) {
