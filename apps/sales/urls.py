@@ -137,5 +137,8 @@ urlpatterns = [
 
     # report ball mass
     path('report_ball_all_mass/', login_required(report_ball_all_mass), name='report_ball_all_mass'),
+
+    # new_report_status_account
+    path('status_account/', login_required(status_account), name='status_account'),
 ]
 

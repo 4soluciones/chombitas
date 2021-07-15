@@ -1623,7 +1623,7 @@ def output_distribution(request):
         user_obj = User.objects.get(id=user_id)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
         subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='V').first()
-        products_set = Product.objects.filter(productstore__subsidiary_store=subsidiary_store_obj)
+        products_set = Product.objects.filter(productstore__subsidiary_store=subsidiary_store_obj).exclude(id__in=[5, 4])
         t = loader.get_template('comercial/distribution_output.html')
         c = ({
             'truck_set': trucks_set,
