@@ -1,7 +1,7 @@
 {% extends 'home.html' %}
 
 {% block title %}
-coronasoft.dev | ESTADO DE CUENTA
+    coronasoft.dev | ESTADO DE CUENTA
 {% endblock title %}
 
 {% block body %}
@@ -9,61 +9,73 @@ coronasoft.dev | ESTADO DE CUENTA
 
     <div class="container">
 
-    <table class="table table-sm table-bordered">
-        <thead>
+        <table class="table table-sm table-bordered">
+            <thead>
             <tr class="text-white small text-uppercase">
                 <td class="bg-primary">Nro</td>
                 <td class="bg-primary">Conductor</td>
                 <td class="bg-primary">Placa</td>
-                <td class="bg-primary">Balls</td>
-                <td class="bg-primary">Cant</td>
+                {#                <td class="bg-primary">Balls</td>#}
+                {#                <td class="bg-primary">Cant</td>#}
+                <td class="bg-primary">balones llenos</td>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             {% for a in all_pilots %}
-            <tr>
-                <td class="align-middle text-center" rowspan="{{ a.balls_count }}">{{ a.pilot_id }}</td>
-                <td class="align-middle text-center" rowspan="{{ a.balls_count }}">{{ a.pilot_names }}</td>
-                {% for key, value in a.balls_in_car.items %}
-                    {% if not forloop.first %}<tr>{% endif %}
+                <tr>
+                    <td class="align-middle text-center" rowspan="{{ a.balls_count }}">{{ a.pilot_id }}</td>
+                    <td class="align-middle text-center" rowspan="{{ a.balls_count }}">{{ a.pilot_names }}</td>
+                    {% for key, value in a.balls_in_car.items %}
+                        {% if not forloop.first %}
+                            <tr>{% endif %}
                     <td class="align-middle text-center">{{ value.license_plate }}</td>
-                    <td class="align-middle text-center">{{ value.product_name }}</td>
-                    <td class="align-middle text-center">{{ value.quantity|safe }}</td>
+                    {#                    <td class="align-middle text-center">{{ value.product_name }}</td>#}
+                    {#                    <td class="align-middle text-center">{{ value.quantity|safe }}</td>#}
+                    {% if forloop.first %}
+                        <td class="align-middle text-center"
+                            rowspan="{{ a.balls_count }}">{{ a.sum_ball|safe }}</td>{% endif %}
                     </tr>
-                    {% empty %}
-                    <td class="align-middle text-center" colspan="3"></td>
-                    </tr>
-                {% endfor %}
+                    {% endfor %}
             {% endfor %}
-        </tbody>
+            </tbody>
+            <tfoot>
+            <tr class="bg-dark text-white">
+                <td class="align-middle text-center" colspan="3">SUMA TOTAL</td>
+                <td class="align-middle text-center">{{ sum_total|safe|floatformat:0 }}</td>
+            </tr>
+            </tfoot>
 
-    </table>
+        </table>
 
 
-    <table class="table table-sm table-bordered">
-        <thead>
+        <table class="table table-sm table-bordered">
+            <thead>
             <tr class="text-white small text-uppercase">
                 <td class="bg-primary">Nro</td>
                 <td class="bg-primary">Cliente</td>
                 <td class="bg-primary">PAGO FALTANTE (EFECTIVO)</td>
                 <td class="bg-primary">CANTIDAD FALTANTE (FIERROS)</td>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             {% for a in all_orders %}
-            <tr>
-                <td class="align-middle text-center">{{ a.client_id }}</td>
-                <td class="align-middle text-center">{{ a.client_names }}</td>
-                <td class="align-middle text-center">{{ a.sum_total_remaining_repay_loan|safe|floatformat:2 }}</td>
-                <td class="align-middle text-center">{{ a.sum_total_remaining_return_loan|safe|floatformat:0 }}</td>
-            </tr>
+                <tr>
+                    <td class="align-middle text-center">{{ a.client_id }}</td>
+                    <td class="align-middle text-center">{{ a.client_names }}</td>
+                    <td class="align-middle text-center">{{ a.sum_total_remaining_repay_loan|safe|floatformat:2 }}</td>
+                    <td class="align-middle text-center">{{ a.sum_total_remaining_return_loan|safe|floatformat:0 }}</td>
+                </tr>
             {% endfor %}
-        </tbody>
+            </tbody>
+            <tfoot>
+            <tr class="bg-dark text-white">
+                <td class="align-middle text-center" colspan="2">SUMA TOTAL</td>
+                <td class="align-middle text-center">{{ summary_sum_total_remaining_repay_loan|safe|floatformat:2 }}</td>
+                <td class="align-middle text-center">{{ summary_sum_total_remaining_return_loan|safe|floatformat:0 }}</td>
+            </tr>
+            </tfoot>
 
-    </table>
-
-
-
+        </table>
 
 
     </div>
@@ -72,8 +84,8 @@ coronasoft.dev | ESTADO DE CUENTA
 
 
 {% block extrajs %}
-<script type="text/javascript">
+    <script type="text/javascript">
 
 
-</script>
+    </script>
 {% endblock extrajs %}

@@ -1,31 +1,35 @@
 <table class="table table-bordered">
     <thead>
-    <tr class="text-white small text-uppercase">
+    <tr class="text-white bg-dark text-uppercase">
 
-        <td class="col-form-label col-form-label-lg bg-primary">FECHA DE PAGO</td>
-        <td class="col-form-label col-form-label-lg bg-primary">TOTAL PAGADO (AGRUPADO)</td>
+        <td class="col-form-label col-form-label-lg">CHECK</td>
+        <td class="col-form-label col-form-label-lg">FECHA DE PAGO</td>
+        <td class="col-form-label col-form-label-lg">TOTAL PAGADO (AGRUPADO)</td>
 
 
 
-        <td class="col-form-label col-form-label-lg bg-secondary">ID DE VENTA</td>
-        <td class="col-form-label col-form-label-lg bg-secondary">FECHA DE VENTA</td>
-        <td class="col-form-label col-form-label-lg bg-secondary">MONTO DE VENTA</td>
+        <td class="col-form-label col-form-label-lg">ID DE VENTA</td>
+        <td class="col-form-label col-form-label-lg">FECHA DE VENTA</td>
+        <td class="col-form-label col-form-label-lg">MONTO DE VENTA</td>
 
-        <td class="col-form-label col-form-label-lg bg-primary">PENDIENTE</td>
+        <td class="col-form-label col-form-label-lg">PENDIENTE</td>
         <!--<td class="bg-warning">price_accumulated</td>-->
-        <td class="col-form-label col-form-label-lg bg-primary">MONTO</td>
-        <td class="col-form-label col-form-label-lg bg-primary">TRANSACCION</td>
-        <td class="col-form-label col-form-label-lg bg-primary">COD. OPERACION</td>
+        <td class="col-form-label col-form-label-lg">MONTO</td>
+        <td class="col-form-label col-form-label-lg">TRANSACCION</td>
+        <td class="col-form-label col-form-label-lg">COD. OPERACION</td>
     </tr>
     </thead>
     <tbody>
 
-
-
     {% for lpg in loan_payment_group %}
         <tr class="tbl-row">
+            <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ lpg.rows }}">
+                 <input class="order-programming align-middle check-payment" type="checkbox"  style=" transform: scale(2.7);" value="{{ lpg.order_details_ids }}" {% if lpg.check %} checked
+
+                 {% endif %} >
+            </td>
             <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ lpg.rows }}">{{ lpg.date|date:"d-m-y" }}</td>
-            <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ lpg.rows }}">{{ lpg.sum|floatformat:2 }}</td>
+            <td class="col-form-label col-form-label-lg align-middle text-center bg-light" rowspan="{{ lpg.rows }}">S/ {{ lpg.sum|safe }}</td>
             {% for lp in lpg.loan_payment_dict %}
                 {% if not forloop.first %}<tr>{% endif %}
 

@@ -705,6 +705,7 @@ class LoanPayment(models.Model):
                                            blank=True)
     requirement_detail_buys = models.ForeignKey('buys.RequirementDetail_buys', on_delete=models.SET_NULL, null=True,
                                                 blank=True)
+    is_check = models.BooleanField('check', default=False)
 
     def __str__(self):
         return str(self.id)

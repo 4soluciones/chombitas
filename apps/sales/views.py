@@ -4078,11 +4078,17 @@ def sold_ball_request(request):
             create_at__date__range=[start_date, end_date]
         ).exclude(type='E').values('id', 'client__names', 'create_at', 'total').order_by('id')
 
-        dict_orders = get_dict_sold_ball(order_set=order_set, client_obj=client_obj)
+        context = get_dict_sold_ball(order_set=order_set, client_obj=client_obj)
+
+        dict_orders = context.get('o_dict')
+        sum_quantity = context.get('sum_quantity')
+        sum_payment = context.get('sum_payment')
 
         tpl = loader.get_template('sales/report_sold_ball_grid.html')
         context = ({
             'dict_orders': dict_orders,
+            'sum_quantity': sum_quantity,
+            'sum_payment': sum_payment,
         })
         return JsonResponse({
             'success': True,
@@ -4108,6 +4114,8 @@ def sold_ball(request):
 
 def get_dict_sold_ball(order_set, client_obj=None):
     o_dict = []
+    sum_quantity = 0
+    sum_payment = 0
     for o in order_set:
         order_detail_set = OrderDetail.objects.filter(order_id=o['id'], unit__name='B').values(
             'id', 'product__id', 'product__name', 'unit__id', 'unit__name', 'quantity_sold', 'price_unit'
@@ -4115,6 +4123,7 @@ def get_dict_sold_ball(order_set, client_obj=None):
 
         od_dict = []
         sum_loans = 0
+
         for od in order_detail_set:
             loan_payment_set = LoanPayment.objects.filter(order_detail__id=od['id']).values(
                 'id', 'quantity', 'price', 'discount', 'operation_date'
@@ -4127,6 +4136,10 @@ def get_dict_sold_ball(order_set, client_obj=None):
                     'id', 'payment', 'type', 'operation_code', 'number_of_vouchers'
                 )
                 if transaction_payment_set.exists():
+                    transaction_payment_obj = transaction_payment_set.first()
+                    payment = round(transaction_payment_obj['payment'], 2)
+                    sum_payment += payment
+                    sum_quantity += lp['quantity']
                     lp_item = {
                         'id': lp['id'],
                         'quantity': lp['quantity'],
@@ -4145,7 +4158,7 @@ def get_dict_sold_ball(order_set, client_obj=None):
                     'unit_name': od['unit__name'],
                     'quantity_sold': od['quantity_sold'],
                     'price_unit': od['price_unit'],
-                    'subtotal': od['price_unit'] * od['quantity_sold'],
+                    'subtotal': round(od['price_unit'] * od['quantity_sold'], 2),
                     'loan_payment_dict': lp_dict,
                     'loan_payment_count': len(lp_dict)
                 }
@@ -4158,11 +4171,16 @@ def get_dict_sold_ball(order_set, client_obj=None):
                 'create_at': o['create_at'],
                 'total': o['total'],
                 'order_detail_dict': od_dict,
-                'order_detail_count': sum_loans
+                'order_detail_count': sum_loans,
             }
             o_dict.append(o_item)
 
-    return o_dict
+    context = ({
+        'o_dict': o_dict,
+        'sum_quantity': sum_quantity,
+        'sum_payment': sum_payment,
+    })
+    return context
 
 
 def get_total_order(order_id):
@@ -4201,21 +4219,27 @@ def report_payments_by_client(request):
         #     operation_date__range=[start_date, end_date],
         #     order_detail__order__client__id=client_id).values('operation_date').annotate(sum=Sum('price'))
         loan_payment_group = []
+
         order_dict = {}
         for lpg in loan_payments_group:
 
             loan_payments_set = LoanPayment.objects.filter(
                 operation_date=lpg['operation_date'],
                 order_detail__order__client__id=client_id).values(
-                'operation_date', 'id', 'order_detail__order__id', 'order_detail__id', 'price'
+                'operation_date', 'id', 'order_detail__order__id', 'order_detail__id', 'price', 'is_check'
             )
-
+            has_check = False
             rows = 0
             rows_loans = 0
-
+            order_details_ids = []
             loan_payment_dict = []
 
             for lp in loan_payments_set:
+
+                if lp['is_check']:
+                    has_check = True
+
+                order_details_ids.append(lp['order_detail__id'])
 
                 sum_subtotal = 0
 
@@ -4288,9 +4312,11 @@ def report_payments_by_client(request):
                 'date': lpg['operation_date'],
                 'loan_payment_dict': loan_payment_dict,
                 'loan_payment_count': len(loan_payment_dict),
-                'sum': lpg['sum'],  # Agrupado de pagos por fecha
+                'sum': round(lpg['sum'], 2),  # Agrupado de pagos por fecha
                 'rows': rows,
-                'orders': len(order_dict)
+                'orders': len(order_dict),
+                'order_details_ids': order_details_ids,
+                'check': has_check
             })
 
         tpl = loader.get_template('sales/report_payments_by_client_grid.html')
@@ -4730,57 +4756,83 @@ def status_account(request):
         all_pilots = []
         summary_sum_total_remaining_repay_loan = 0
         summary_sum_total_remaining_return_loan = 0
+        sum_total = 0
 
-        pilot_set = DistributionMobil.objects.filter(subsidiary=subsidiary_obj).distinct('pilot__id').values('pilot__id', 'pilot__names')
+        pilot_set = DistributionMobil.objects.filter(subsidiary=subsidiary_obj
+                                                     ).distinct('pilot__id').values('pilot__id', 'pilot__names')
         for p in pilot_set:
             balls_in_car = {}
             distribution_detail_set = DistributionDetail.objects.filter(distribution_mobil__subsidiary=subsidiary_obj,
                                                                         distribution_mobil__status='P',
                                                                         distribution_mobil__pilot_id=p['pilot__id'],
                                                                         status='E',
-                                                                        type='L').values('id', 'quantity', 'unit__id', 'product__id', 'product__name',
+                                                                        type='L').values('id',
+                                                                                         'quantity',
+                                                                                         'unit__id',
+                                                                                         'product__id', 'product__name',
                                                                                          'distribution_mobil__pilot_id',
                                                                                          'distribution_mobil__pilot__names',
                                                                                          'distribution_mobil__truck__id',
                                                                                          'distribution_mobil__truck__license_plate',
                                                                                          )
-            for d in distribution_detail_set:
-                search_value = d['product__id']
-                if search_value in balls_in_car.keys():
-                    product = balls_in_car[search_value]
-                    quantity = product.get('quantity')
-                    bg_subtotal = product.get('bg_subtotal')
-                    balls_in_car[search_value]['quantity'] = quantity + d['quantity']
-                    balls_in_car[search_value]['bg_subtotal'] = bg_subtotal + (bg_price * d['quantity'])
-                else:
-                    product_detail_set = ProductDetail.objects.filter(product__id=d['product__id'], unit__id=d['unit__id']).values('price_sale')
-                    bg_price = 0
-                    if product_detail_set.exists():
-                        product_detail_obj = product_detail_set.first()
-                        bg_price = product_detail_obj['price_sale']
 
-                    balls_in_car[search_value] = {
-                        'product_id': d['product__id'],
-                        'product_name': d['product__name'],
-                        'quantity': d['quantity'],
-                        'bg_price': bg_price,
-                        'bg_subtotal': bg_price * d['quantity'],
-                        'pilot_id': d['distribution_mobil__pilot_id'],
-                        'pilot_names': d['distribution_mobil__pilot__names'],
-                        'license_plate': d['distribution_mobil__truck__license_plate']
-                    }
-            balls_count = len(balls_in_car)
-            if balls_count == 0:
-                balls_count = 1
-            item_pilot = {
-                'pilot_id': p['pilot__id'],
-                'pilot_names': p['pilot__names'],
-                'balls_in_car': balls_in_car,
-                'balls_count': balls_count,
-            }
-            all_pilots.append(item_pilot)
-            # print(p['pilot__id'])
-            # print(balls_in_car)
+            if distribution_detail_set.exists():
+                sum_ball_5 = 0
+                sum_ball_10 = 0
+                sum_ball_15 = 0
+                sum_ball_45 = 0
+                for d in distribution_detail_set:
+                    search_value = d['product__id']
+                    if search_value in balls_in_car.keys():
+                        product = balls_in_car[search_value]
+                        quantity = product.get('quantity')
+                        bg_subtotal = product.get('bg_subtotal')
+                        bg_price = product.get('bg_price')
+                        balls_in_car[search_value]['quantity'] = quantity + d['quantity']
+                        balls_in_car[search_value]['bg_subtotal'] = bg_subtotal + (bg_price * d['quantity'])
+                    else:
+                        product_detail_set = ProductDetail.objects.filter(product__id=d['product__id'], unit__id=d['unit__id']).values('price_sale')
+                        bg_price = 0
+                        if product_detail_set.exists():
+                            product_detail_obj = product_detail_set.first()
+                            bg_price = product_detail_obj['price_sale']
+
+                        balls_in_car[search_value] = {
+                            'product_id': d['product__id'],
+                            'product_name': d['product__name'],
+                            'quantity': d['quantity'],
+                            'bg_price': bg_price,
+                            'bg_subtotal': bg_price * d['quantity'],
+                            'pilot_id': d['distribution_mobil__pilot_id'],
+                            'pilot_names': d['distribution_mobil__pilot__names'],
+                            'license_plate': d['distribution_mobil__truck__license_plate']
+                        }
+                    if search_value == 1:  # BALON DE 10
+                        sum_ball_10 += d['quantity']
+                    elif search_value == 12:  # BALON DE 15
+                        sum_ball_5 += d['quantity']
+                    elif search_value == 2:  # BALON DE 5
+                        sum_ball_15 += d['quantity']
+                    elif search_value == 3:  # BALON DE 45
+                        sum_ball_45 += d['quantity']
+
+                sum_ball = sum_ball_10 + sum_ball_5 + sum_ball_15 + sum_ball_45
+                sum_total += sum_ball
+
+                balls_count = len(balls_in_car)
+                if balls_count == 0:
+                    balls_count = 1
+                item_pilot = {
+                    'pilot_id': p['pilot__id'],
+                    'pilot_names': p['pilot__names'],
+                    'balls_in_car': balls_in_car,
+                    'balls_count': balls_count,
+                    'sum_ball': sum_ball,
+                }
+                all_pilots.append(item_pilot)
+                # print(p['pilot__id'])
+
+                # print(balls_in_car)
 
         for c in Client.objects.filter(clientassociate__subsidiary=subsidiary_obj).order_by('names').values('id',
                                                                                                             'names'):
@@ -4804,10 +4856,11 @@ def status_account(request):
                 'sum_total_remaining_return_loan': sum_total_remaining_return_loan
             }
             all_orders.append(item_orders)
-
+        print(sum_total)
         return render(request, 'sales/status_account.html', {
             'all_orders': all_orders,
             'all_pilots': all_pilots,
+            'sum_total': sum_total,
             'summary_sum_total_remaining_repay_loan': summary_sum_total_remaining_repay_loan,
             'summary_sum_total_remaining_return_loan': summary_sum_total_remaining_return_loan,
         })
@@ -4852,3 +4905,27 @@ def return_loan(order_detail_id=None):
     if loan_payment_set.exists():
         response = loan_payment_set[0].get('totals')
     return response
+
+
+def check_loan_payment(request):
+    if request.method == 'GET':
+        order_details_ids = str(request.GET.get('order_details_ids', '')).replace('[', '').replace(']', '')
+        operation = bool(request.GET.get('operation', ''))
+        array_od = order_details_ids.split(", ")
+        map_object = map(int, array_od)
+        list_of_integers = list(map_object)
+
+        LoanPayment.objects.filter(order_detail_id__in=list_of_integers).update(is_check=operation)
+
+        return JsonResponse({
+            'message': 'ok',
+        })
+
+
+
+
+
+
+
+
+

@@ -98,17 +98,52 @@
             });
             $('#btn-search').removeAttr("disabled", "false");
         });
-$(document).on('click', '#tbl-pays tbody tr td', function () {
+        $(document).on('click', '#tbl-pays tbody tr td', function () {
 
-    //let tr = $(this).parent('tr');
-    let pk = $(this).attr('data-order');
+            //let tr = $(this).parent('tr');
+            let pk = $(this).attr('data-order');
 
-    $(`#tbl-pays tbody td[data-order]`).removeClass('bg-warning');
-    
-    $(`#tbl-pays tbody td[data-order="${pk}"]`).addClass('bg-warning');
+            $(`#tbl-pays tbody td[data-order]`).removeClass('bg-warning');
 
-});
+            $(`#tbl-pays tbody td[data-order="${pk}"]`).addClass('bg-warning');
+
+        });
+
+        $(document).on('click', '.check-payment', function () {
+            let _order_details_ids = $(this).val();
+
+            if ($(this).prop('checked')) {
+                checkedPay(_order_details_ids, true)
+
+            } else {
+                checkedPay(_order_details_ids, false)
+            }
+        });
+
+        function checkedPay(_order_details_ids, operation) {
+
+            $.ajax({
+                url: '/sales/check_loan_payment/',
+                async: true,
+                dataType: 'json',
+                type: 'GET',
+                data: {
+                    'order_details_ids': _order_details_ids,
+                    'operation': operation,
+                },
+                success: function (response) {
+                    console.log(response.message)
+                },
+                fail: function (response) {
+                    console.log("error");
+                }
+            });
+        }
+
+
     </script>
+
+
 
 
 {% endblock extrajs %}

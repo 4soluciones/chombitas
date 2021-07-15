@@ -140,5 +140,8 @@ urlpatterns = [
 
     # new_report_status_account
     path('status_account/', login_required(status_account), name='status_account'),
+
+    # check payment
+    path('check_loan_payment/', login_required(check_loan_payment), name='check_loan_payment'),
 ]
 
