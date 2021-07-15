@@ -2,6 +2,7 @@
     <thead>
     <tr class="text-white bg-dark text-uppercase">
 
+        <td class="col-form-label col-form-label-lg">CLIENTE</td>
         <td class="col-form-label col-form-label-lg">CHECK</td>
         <td class="col-form-label col-form-label-lg">FECHA DE PAGO</td>
         <td class="col-form-label col-form-label-lg">TOTAL PAGADO (AGRUPADO)</td>
@@ -21,13 +22,25 @@
     </thead>
     <tbody>
 
-    {% for lpg in loan_payment_group %}
-        <tr class="tbl-row">
+
+    {% for client in client_dict %}
+
+<tr class="tbl-row">
+
+    {% for lpg in client.loan_payment_group %}
+
+
+        {% if forloop.first %}
+            <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ client.loan_payment_count }}">{{ client.client_names }}</td>
+        {% endif %}
+
             <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ lpg.rows }}">
                  <input class="order-programming align-middle check-payment" type="checkbox"  style=" transform: scale(2.7);" value="{{ lpg.lps }}" {% if lpg.check %}checked{% endif %} >
             </td>
+
             <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ lpg.rows }}">{{ lpg.date|date:"d-m-y" }}</td>
             <td class="col-form-label col-form-label-lg align-middle text-center bg-light" rowspan="{{ lpg.rows }}">S/ {{ lpg.sum|safe }}</td>
+
             {% for lp in lpg.loan_payment_dict %}
                 {% if not forloop.first %}<tr>{% endif %}
 
@@ -49,5 +62,11 @@
             {% endfor %}
 
     {% endfor %}
+
+
+    {% endfor %}
+
+
+
     </tbody>
 </table>

@@ -19,7 +19,8 @@ from reportlab.lib.colors import PCMYKColor, PCMYKColorSep, Color, black, blue, 
 from .models import Product, Client, Order, OrderDetail, SubsidiaryStore, ProductStore, Kardex
 from django.contrib.auth.models import User
 from apps.hrm.views import get_subsidiary_by_user
-from .views import get_context_kardex_glp, get_dict_orders
+from .views import get_context_kardex_glp, get_dict_orders, total_remaining_repay_loan, total_remaining_return_loan,\
+    repay_loan, return_loan
 from django.template import loader
 from chombitas import settings
 from datetime import datetime
@@ -164,26 +165,34 @@ def all_account_order_list_pdf(self, pk=None):
     summary_sum_total_remaining_return_loan = 0
 
     # for c in Client.objects.all().order_by('pk').values('id', 'names'):
-    for c in Client.objects.filter(clientassociate__subsidiary=subsidiary_obj).order_by('names').values('id', 'names'):
+    client_set = Order.objects.filter(subsidiary_store__subsidiary=subsidiary_obj).exclude(type='E').values(
+        'client__id', 'client__names').distinct('client__id')
+    # for c in Client.objects.filter(clientassociate__subsidiary=subsidiary_obj).order_by('names').values('id', 'names'):
+    for c in client_set:
         sum_total_remaining_repay_loan = 0
         sum_total_remaining_return_loan = 0
-
-        order_set = Order.objects.filter(client=c['id']).exclude(type='E').order_by('id')
+        order_set = Order.objects.filter(client=c['client__id'], subsidiary_store__subsidiary=subsidiary_obj).exclude(
+            type='E').values('id').order_by('id')
+        # order_set = Order.objects.filter(client=c['id']).exclude(type='E').order_by('id')
 
         if order_set.count() > 0:
 
             a = a + 1
             for o in order_set:
 
-                sum_total_remaining_repay_loan = sum_total_remaining_repay_loan + o.total_remaining_repay_loan()
-                sum_total_remaining_return_loan = sum_total_remaining_return_loan + o.total_remaining_return_loan()
-            summary_sum_total_remaining_repay_loan = summary_sum_total_remaining_repay_loan + sum_total_remaining_repay_loan
-            summary_sum_total_remaining_return_loan = summary_sum_total_remaining_return_loan + sum_total_remaining_return_loan
+            #     sum_total_remaining_repay_loan = sum_total_remaining_repay_loan + o.total_remaining_repay_loan()
+            #     sum_total_remaining_return_loan = sum_total_remaining_return_loan + o.total_remaining_return_loan()
+            # summary_sum_total_remaining_repay_loan = summary_sum_total_remaining_repay_loan + sum_total_remaining_repay_loan
+            # summary_sum_total_remaining_return_loan = summary_sum_total_remaining_return_loan + sum_total_remaining_return_loan
+                sum_total_remaining_repay_loan += total_remaining_repay_loan(o['id'])
+                sum_total_remaining_return_loan += total_remaining_return_loan(o['id'])
+            summary_sum_total_remaining_repay_loan += sum_total_remaining_repay_loan
+            summary_sum_total_remaining_return_loan += sum_total_remaining_return_loan
 
         all_orders.append(
             (
                 a,
-                c['names'],
+                c['client__names'],
 
                 # c.names.upper(),
                 round(sum_total_remaining_repay_loan, 2),
