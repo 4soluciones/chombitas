@@ -4231,7 +4231,7 @@ def report_payments_by_client(request):
             has_check = False
             rows = 0
             rows_loans = 0
-            order_details_ids = []
+            lps = []
             loan_payment_dict = []
 
             for lp in loan_payments_set:
@@ -4239,7 +4239,7 @@ def report_payments_by_client(request):
                 if lp['is_check']:
                     has_check = True
 
-                order_details_ids.append(lp['order_detail__id'])
+                lps.append(lp['id'])
 
                 sum_subtotal = 0
 
@@ -4315,7 +4315,7 @@ def report_payments_by_client(request):
                 'sum': round(lpg['sum'], 2),  # Agrupado de pagos por fecha
                 'rows': rows,
                 'orders': len(order_dict),
-                'order_details_ids': order_details_ids,
+                'lps': lps,
                 'check': has_check
             })
 
@@ -4364,6 +4364,10 @@ def report_ball_all_mass(request):
     sum_car_filled_10 = 0
     sum_car_filled_15 = 0
     sum_car_filled_45 = 0
+    sum_total_ball_5 = 0
+    sum_total_ball_10 = 0
+    sum_total_ball_15 = 0
+    sum_total_ball_45 = 0
 
     subsidiaries_dict = []
 
@@ -4626,6 +4630,11 @@ def report_ball_all_mass(request):
         sum_total_ball_void_5 = sum_iron_5 + sum_route_void_5 + sum_car_void_5
         sum_total_ball_void_45 = sum_iron_45 + sum_route_void_45 + sum_car_void_45
 
+        sum_total_ball_5 = sum_total_ball_filled_5 + sum_total_ball_void_5
+        sum_total_ball_10 = sum_total_ball_filled_10 + sum_total_ball_void_10
+        sum_total_ball_15 = sum_total_ball_filled_15 + sum_total_ball_void_15
+        sum_total_ball_45 = sum_total_ball_filled_45 + sum_total_ball_void_45
+
         return render(request, 'sales/report_ball_all_mass.html', {
             'subsidiaries_dict': subsidiaries_dict,
             'sum_ball_10': sum_ball_10,
@@ -4664,6 +4673,10 @@ def report_ball_all_mass(request):
             'sum_total_ball_void_15': sum_total_ball_void_15,
             'sum_total_ball_void_5': sum_total_ball_void_5,
             'sum_total_ball_void_45': sum_total_ball_void_45,
+            'sum_total_ball_5': sum_total_ball_5,
+            'sum_total_ball_10': sum_total_ball_10,
+            'sum_total_ball_15': sum_total_ball_15,
+            'sum_total_ball_45': sum_total_ball_45,
         })
 
 
@@ -4909,13 +4922,13 @@ def return_loan(order_detail_id=None):
 
 def check_loan_payment(request):
     if request.method == 'GET':
-        order_details_ids = str(request.GET.get('order_details_ids', '')).replace('[', '').replace(']', '')
+        lps = str(request.GET.get('lps', '')).replace('[', '').replace(']', '')
         operation = bool(request.GET.get('operation', ''))
-        array_od = order_details_ids.split(", ")
-        map_object = map(int, array_od)
+        array_lps = lps.split(", ")
+        map_object = map(int, array_lps)
         list_of_integers = list(map_object)
 
-        LoanPayment.objects.filter(order_detail_id__in=list_of_integers).update(is_check=operation)
+        LoanPayment.objects.filter(id__in=list_of_integers).update(is_check=operation)
 
         return JsonResponse({
             'message': 'ok',

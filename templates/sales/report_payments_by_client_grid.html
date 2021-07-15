@@ -24,9 +24,7 @@
     {% for lpg in loan_payment_group %}
         <tr class="tbl-row">
             <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ lpg.rows }}">
-                 <input class="order-programming align-middle check-payment" type="checkbox"  style=" transform: scale(2.7);" value="{{ lpg.order_details_ids }}" {% if lpg.check %} checked
-
-                 {% endif %} >
+                 <input class="order-programming align-middle check-payment" type="checkbox"  style=" transform: scale(2.7);" value="{{ lpg.lps }}" {% if lpg.check %}checked{% endif %} >
             </td>
             <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ lpg.rows }}">{{ lpg.date|date:"d-m-y" }}</td>
             <td class="col-form-label col-form-label-lg align-middle text-center bg-light" rowspan="{{ lpg.rows }}">S/ {{ lpg.sum|safe }}</td>

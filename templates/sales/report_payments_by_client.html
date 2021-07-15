@@ -110,17 +110,17 @@
         });
 
         $(document).on('click', '.check-payment', function () {
-            let _order_details_ids = $(this).val();
+            let lps = $(this).val();
 
             if ($(this).prop('checked')) {
-                checkedPay(_order_details_ids, true)
+                checkedPay(lps, true)
 
             } else {
-                checkedPay(_order_details_ids, false)
+                checkedPay(lps, false)
             }
         });
 
-        function checkedPay(_order_details_ids, operation) {
+        function checkedPay(lps, operation) {
 
             $.ajax({
                 url: '/sales/check_loan_payment/',
@@ -128,7 +128,7 @@
                 dataType: 'json',
                 type: 'GET',
                 data: {
-                    'order_details_ids': _order_details_ids,
+                    'lps': lps,
                     'operation': operation,
                 },
                 success: function (response) {

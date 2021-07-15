@@ -132,7 +132,7 @@
                     </tr>
 
                     <tr class="align-middle text-center bg-dark text-white">
-                        <td class="align-middle text-center">SUMA TOTAL</td>
+                        <td class="align-middle text-center">SUMA POR TIPO</td>
                         <td class="align-middle text-center" colspan="4">{{ sum_total_ball_filled_10|safe|floatformat:0 }}</td>
                         <td class="align-middle text-center" colspan="3">{{ sum_total_ball_void_10|safe|floatformat:0 }}</td>
 
@@ -144,6 +144,14 @@
 
                         <td class="align-middle text-center" colspan="4">{{ sum_total_ball_filled_45|safe|floatformat:0 }}</td>
                         <td class="align-middle text-center" colspan="3">{{ sum_total_ball_void_45|safe|floatformat:0 }}</td>
+                    </tr>
+                    <tr class="align-middle text-center bg-dark text-white">
+                        <td class="align-middle text-center">SUMA TOTAL</td>
+                        <td class="align-middle text-center" colspan="7">{{ sum_total_ball_10|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="7">{{ sum_total_ball_15|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="7">{{ sum_total_ball_5|safe|floatformat:0 }}</td>
+                        <td class="align-middle text-center" colspan="7">{{ sum_total_ball_45|safe|floatformat:0 }}</td>
+
                     </tr>
 
                     </tfoot>
