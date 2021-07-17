@@ -143,5 +143,7 @@ urlpatterns = [
 
     # check payment
     path('check_loan_payment/', login_required(check_loan_payment), name='check_loan_payment'),
+
+    # path('update_order_subsidiary/', login_required(update_order_subsidiary), name='update_order_subsidiary'),
 ]
 

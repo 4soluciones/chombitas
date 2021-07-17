@@ -360,6 +360,7 @@ class Order(models.Model):
     truck = models.ForeignKey('comercial.Truck', on_delete=models.SET_NULL, null=True,
                               blank=True)
     is_review = models.BooleanField('Revisado', default=False)
+    subsidiary = models.ForeignKey('hrm.Subsidiary', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return str(self.type) + " / " + str(self.create_at)

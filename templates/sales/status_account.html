@@ -78,6 +78,37 @@
         </table>
 
 
+
+        <table class="table table-sm table-bordered">
+            <thead>
+            <tr class="text-white small text-uppercase">
+                <td class="bg-dark">Nro</td>
+                <td class="bg-dark">Cliente</td>
+                <td class="bg-dark">PAGO FALTANTE (EFECTIVO)</td>
+                <td class="bg-dark">CANTIDAD FALTANTE (FIERROS)</td>
+            </tr>
+            </thead>
+            <tbody>
+            {% for key, value in client_dict.items %}
+                <tr>
+                    <td class="align-middle text-center">{{ value.client_id }}</td>
+                    <td class="align-middle text-center">{{ value.client_names }}</td>
+                    <td class="align-middle text-center">{{ value.orders }}</td>
+                    <td class="align-middle text-center"></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            <tfoot>
+            <tr class="bg-dark text-white">
+                <td class="align-middle text-center" colspan="2">SUMA TOTAL</td>
+                <td class="align-middle text-center"></td>
+                <td class="align-middle text-center"></td>
+            </tr>
+            </tfoot>
+
+        </table>
+
+
     </div>
 
 {% endblock body %}

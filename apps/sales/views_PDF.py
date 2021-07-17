@@ -13,7 +13,7 @@ from reportlab.platypus import Table, Flowable
 from reportlab.lib.colors import HexColor
 from reportlab.pdfgen import canvas
 from reportlab.pdfgen.canvas import Canvas
-from reportlab.rl_config import defaultPageSize
+# from reportlab.rl_config import defaultPageSize
 from functools import partial
 from reportlab.lib.colors import PCMYKColor, PCMYKColorSep, Color, black, blue, red, pink, green
 from .models import Product, Client, Order, OrderDetail, SubsidiaryStore, ProductStore, Kardex
@@ -29,8 +29,8 @@ from django.db.models import Sum
 import io
 import pdfkit
 # Register Fonts
-PAGE_HEIGHT = defaultPageSize[1]
-PAGE_WIDTH = defaultPageSize[0]
+# PAGE_HEIGHT = defaultPageSize[1]
+# PAGE_WIDTH = defaultPageSize[0]
 styles = getSampleStyleSheet()
 styleN = styles['Normal']
 styleH = styles['Heading1']
@@ -245,11 +245,12 @@ def all_account_order_list_first_page(canvas, doc, custom_data):
     canvas.line(2.5 * cm, 25.5 * cm, 18.5 * cm, 25.5 * cm)
     canvas.line(2.5 * cm, 25.4 * cm, 18.5 * cm, 25.4 * cm)
     canvas.setFont('Helvetica-Bold', 16)
-    canvas.drawCentredString(PAGE_WIDTH/2.0, PAGE_HEIGHT-108, Title + str(custom_data.name))
+    canvas.drawCentredString(210*mm/2.0, 297*mm-108, Title + str(custom_data.name))
     canvas.setFont('Times-Roman', 9)
     canvas.drawString(cm, 0.75 * cm, "Pagina 1 - %s" % pageinfo)
     canvas.drawString(16.5 * cm, 26.25 * cm, date_now)
     canvas.restoreState()
+
 
 def all_account_order_list_later_pages(canvas, doc):
 
