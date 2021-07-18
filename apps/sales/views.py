@@ -4890,7 +4890,7 @@ def status_account(request):
         client_dict = {}
         client_set = Client.objects.filter(
             order__isnull=False, order__subsidiary=subsidiary_obj, order__type__in=['V', 'R']
-        ).distinct('id').values('id', 'names')[:5]
+        ).distinct('id').values('id', 'names')
 
         order_set = Order.objects.filter(
             subsidiary=subsidiary_obj, type__in=['V', 'R'],
