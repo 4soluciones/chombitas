@@ -6,7 +6,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.forms.models import model_to_dict
 from django.http import JsonResponse, HttpResponse
 from http import HTTPStatus
-
 from .format_dates import validate
 from .models import *
 from .forms import *
@@ -1382,9 +1381,9 @@ def get_sales_by_subsidiary_store(request):
             by_units = str(request.POST.get('by-units', 'NO-UNIT'))
 
             if start_date == end_date:
-                orders = orders.filter(create_at__date=start_date).exclude(type='E')
+                orders = orders.filter(create_at__date=start_date, type__in=['V', 'R'])
             else:
-                orders = orders.filter(create_at__date__range=[start_date, end_date]).exclude(type='E')
+                orders = orders.filter(create_at__date__range=[start_date, end_date], type__in=['V', 'R'])
             if orders:
                 if by_units == 'NO-UNIT':
                     return JsonResponse({
@@ -1588,9 +1587,9 @@ def get_sales_all_subsidiaries(request):
         by_units = str(request.POST.get('by-units', 'NO-UNIT'))
 
         if start_date == end_date:
-            orders = orders.filter(create_at__date=start_date).exclude(type='E')
+            orders = orders.filter(create_at__date=start_date, type__in=['V', 'R'])
         else:
-            orders = orders.filter(create_at__date__range=[start_date, end_date]).exclude(type='E')
+            orders = orders.filter(create_at__date__range=[start_date, end_date], type__in=['V', 'R'])
         if orders:
             if by_units == 'NO-UNIT':
                 return JsonResponse({
@@ -1621,9 +1620,9 @@ def get_general_orders_by_unit(request):
         by_units = str(request.POST.get('by-units', 'NO-UNIT'))
 
         if start_date == end_date:
-            orders = orders.filter(create_at__date=start_date).exclude(type='E')
+            orders = orders.filter(create_at__date=start_date, type__in=['V', 'R'])
         else:
-            orders = orders.filter(create_at__date__range=[start_date, end_date]).exclude(type='E')
+            orders = orders.filter(create_at__date__range=[start_date, end_date], type__in=['V', 'R'])
         if orders:
             return JsonResponse({
                 'grid': get_dict_orders_by_units(orders, is_pdf=False, is_unit=True),
@@ -2290,8 +2289,7 @@ def get_orders_by_client(request):
         end_date = request.GET.get('end_date', '')
 
         client_obj = Client.objects.get(pk=int(client_id))
-        order_set = Order.objects.filter(client=client_obj, create_at__date__range=[start_date, end_date]).exclude(
-            type='E').order_by('id')
+        order_set = Order.objects.filter(client=client_obj, create_at__date__range=[start_date, end_date], type__in=['V', 'R']).order_by('id')
 
         return JsonResponse({
             'grid': get_dict_orders(order_set, client_obj=client_obj, is_pdf=False),
@@ -2432,7 +2430,7 @@ def new_expense(request):
         cashflow_obj.save()
 
         order_set = Order.objects.filter(
-            client=order_obj.client, create_at__date__range=[start_date, end_date]).exclude(type='E').order_by('id')
+            client=order_obj.client, create_at__date__range=[start_date, end_date], type__in=['V', 'R']).order_by('id')
 
         return JsonResponse({
             'message': 'Registro guardado correctamente.',
@@ -2750,7 +2748,7 @@ def new_loan_payment(request):
                                     transaction_payment_obj.save()
 
         order_set = Order.objects.filter(
-            client=detail_obj.order.client, create_at__date__range=[start_date, end_date]).exclude(type='E').order_by(
+            client=detail_obj.order.client, create_at__date__range=[start_date, end_date], type__in=['V', 'R']).order_by(
             'id')
 
         return JsonResponse({
@@ -2896,7 +2894,7 @@ def new_ball_change(request):
                                ball_change_obj=ball_change_obj)
 
         order_set = Order.objects.filter(
-            client=detail_obj.order.client, create_at__date__range=[start_date, end_date]).exclude(type='E').order_by(
+            client=detail_obj.order.client, create_at__date__range=[start_date, end_date], type__in=['V', 'R']).order_by(
             'id')
 
         return JsonResponse({
@@ -3181,7 +3179,7 @@ def new_massiel_payment(request):
                         transaction_payment_type=transaction_payment_type,
                     )
             client_obj = Client.objects.get(id=client_orders)
-            order_set = Order.objects.filter(client=client_obj).exclude(type='E').order_by('id')
+            order_set = Order.objects.filter(client=client_obj, type__in=['V', 'R']).order_by('id')
 
         return JsonResponse({
             'success': True,
@@ -3350,7 +3348,7 @@ def new_massiel_return(request):
                     massive_return = massive_return - quantity
 
         client_obj = Client.objects.get(id=client_orders)
-        order_set = Order.objects.filter(client=client_obj).exclude(type='E').order_by('id')
+        order_set = Order.objects.filter(client=client_obj, type__in=['V', 'R']).order_by('id')
 
         return JsonResponse({
             'success': True,
@@ -3502,9 +3500,9 @@ def purchases_of_clients(request):
         by_units = str(request.POST.get('by-units', 'NO-UNIT'))
 
         if start_date == end_date:
-            orders = orders.filter(create_at__date=start_date).exclude(type='E')
+            orders = orders.filter(create_at__date=start_date, type__in=['V', 'R'])
         else:
-            orders = orders.filter(create_at__date__range=[start_date, end_date]).exclude(type='E')
+            orders = orders.filter(create_at__date__range=[start_date, end_date], type__in=['V', 'R'])
         if orders:
             if by_units == 'NO-UNIT':
                 return JsonResponse({
@@ -3634,8 +3632,8 @@ def get_summary_debtors(request):
                 }
 
                 order_cumulative_set = Order.objects.filter(
-                    client=c['id'], create_at__date__lt=start
-                ).exclude(type='E').order_by('id').values('id', 'total')
+                    client=c['id'], create_at__date__lt=start, type__in=['V', 'R']
+                ).order_by('id').values('id', 'total')
 
                 cmr_repay_loan = 0
                 cmr_return_loan = 0
@@ -3657,8 +3655,8 @@ def get_summary_debtors(request):
                     }
 
                     order_set = Order.objects.filter(
-                        client=c['id'], create_at__date=date.strftime("%Y-%m-%d")
-                    ).exclude(type='E').order_by('id').values('id', 'total')
+                        client=c['id'], create_at__date=date.strftime("%Y-%m-%d"), type__in=['V', 'R']
+                    ).order_by('id').values('id', 'total')
 
                     _rpl_in_orders = 0
                     _rtl_in_orders = 0
@@ -3768,8 +3766,8 @@ def get_report_sales_subsidiary(request):
             for s in subsidiary_set:
                 t = Order.objects.filter(
                     subsidiary_store__subsidiary_id=s.id,
-                    create_at__date__range=(date_initial, date_final)
-                ).exclude(type='E').aggregate(r=Coalesce(Sum('total'), 0))
+                    create_at__date__range=(date_initial, date_final), type__in=['V', 'R']
+                ).aggregate(r=Coalesce(Sum('total'), 0))
                 sales_dict = {
                     v1: s.name,
                     v2: float(t['r'])
@@ -3794,8 +3792,8 @@ def get_report_sales_subsidiary(request):
                 subsidiary_sales = []
                 order_set = Order.objects.filter(
                     subsidiary_store__subsidiary_id=s.id,
-                    create_at__range=(date_initial, date_final)
-                ).exclude(type='E').values('create_at').annotate(totales=Sum('total'))
+                    create_at__range=(date_initial, date_final), type__in=['V', 'R']
+                ).values('create_at').annotate(totales=Sum('total'))
                 for vt in order_set:
                     sales_t = {
                         # 'x': 'new Date(' + str(vt['create_at'].strftime("%Y, %m, %d")) + ')',
@@ -3975,7 +3973,7 @@ def get_report_sales_subsidiary(request):
 
             # VENTAS POR DISTRITO
             district_ = ''
-            for d in Order.objects.filter(create_at__date__range=(date_initial, date_final)).exclude(type='E').values(
+            for d in Order.objects.filter(create_at__date__range=(date_initial, date_final), type__in=['V', 'R']).values(
                     'client__clientaddress__district__description').annotate(totales=Sum(F('total'))):
                 if d['client__clientaddress__district__description'] is None:
                     district_ = 'OTROS'
@@ -4020,7 +4018,7 @@ def get_report_sales_subsidiary(request):
 def get_order_sales(pk, date_initial, date_final):
     order_set = Order.objects.filter(subsidiary_store__subsidiary_id=pk,
                                      create_at__range=(
-                                         date_initial, date_final)).exclude(type='E').values('create_at').annotate(
+                                         date_initial, date_final), type__in=['V', 'R']).values('create_at').annotate(
         totales=Sum('total'))
     return order_set
 
@@ -4036,7 +4034,7 @@ def get_cash_payment(pk, date_initial, date_final):
 def get_order_sales_total(pk, date_initial, date_final):
     totales = Order.objects.filter(subsidiary_store__subsidiary_id=pk,
                                    create_at__range=(
-                                       date_initial, date_final)).exclude(type='E').aggregate(Sum('total'))
+                                       date_initial, date_final), type__in=['V', 'R']).aggregate(Sum('total'))
     return totales['total__sum']
 
 
@@ -4076,8 +4074,8 @@ def sold_ball_request(request):
         client_obj = Client.objects.get(pk=int(client_id))
         order_set = Order.objects.filter(
             client=client_obj,
-            create_at__date__range=[start_date, end_date]
-        ).exclude(type='E').values('id', 'client__names', 'create_at', 'total').order_by('id')
+            create_at__date__range=[start_date, end_date], type__in=['V', 'R']
+        ).values('id', 'client__names', 'create_at', 'total').order_by('id')
 
         context = get_dict_sold_ball(order_set=order_set, client_obj=client_obj)
 
@@ -4777,121 +4775,60 @@ def get_unify_dict(irons=None, balls=None, car=None, distributions=None):
     return unify_dict
 
 
-def detail_order_append(orders, o):
-    order_key = o['id']
-    order_detail_key = o['orderdetail__id']
-    ods = orders[order_key]['ods']
-    ods[order_detail_key] = {
-        'od_id': o['orderdetail__id'],
-        'quantity': o['orderdetail__quantity_sold'],
-        'price_unit': o['orderdetail__price_unit'],
-        'lps': {}
+def get_balls_in_car(distribution_detail_set=None, balls_in_car=None):
+    sum_ball_5 = 0
+    sum_ball_10 = 0
+    sum_ball_15 = 0
+    sum_ball_45 = 0
+
+    for d in distribution_detail_set:
+        key_product = d.product.id
+
+        # print(product_detail_set)
+
+        if key_product in balls_in_car:
+            product = balls_in_car[key_product]
+            old_quantity = product.get('quantity')
+            old_bg_subtotal = product.get('bg_subtotal')
+            old_bg_price = product.get('bg_price')
+            balls_in_car[key_product]['quantity'] = old_quantity + d.quantity
+            balls_in_car[key_product]['bg_subtotal'] = old_bg_subtotal + (old_bg_price * d.quantity)
+        else:
+            product_detail_set = d.product.rates
+            bg_price = get_price_of_product(product_detail_set=product_detail_set, product=d.product, unit=d.unit)
+            balls_in_car[key_product] = {
+                'product_id': d.product.id,
+                'product_name': d.product.name,
+                'quantity': d.quantity,
+                'bg_price': bg_price,
+                'bg_subtotal': bg_price * d.quantity,
+                'unit_name': d.unit.name,
+            }
+        if key_product == 1:  # BALON DE 10
+            sum_ball_10 += d.quantity
+        elif key_product == 12:  # BALON DE 15
+            sum_ball_5 += d.quantity
+        elif key_product == 2:  # BALON DE 5
+            sum_ball_15 += d.quantity
+        elif key_product == 3:  # BALON DE 45
+            sum_ball_45 += d.quantity
+
+    sum_ball = sum_ball_10 + sum_ball_5 + sum_ball_15 + sum_ball_45
+
+    context = {
+        'balls_in_car': balls_in_car,
+        'sum_ball': sum_ball,
     }
-    return orders
+
+    return context
 
 
-def order_append(orders, o):
-    order_key = o['id']
-    key_od = o['orderdetail__id']
-    key_lp = o['orderdetail__loanpayment__id']
-
-    if order_key not in orders:
-        lps = {}
-        sum_loan_price = decimal.Decimal(0)
-        sum_loan_quantity = decimal.Decimal(0)
-        unit_name = o['orderdetail__unit__name']
-        if key_lp is not None:
-            if unit_name == 'G' or unit_name == 'GBC':
-                sum_loan_price = o['orderdetail__loanpayment__price']
-            elif unit_name == 'B':
-                sum_loan_quantity = o['orderdetail__loanpayment__quantity']
-            lps[key_lp] = {
-                'lp_id': o['orderdetail__loanpayment__id'],
-                'lp_price': o['orderdetail__loanpayment__price'],
-                'lp_quantity': o['orderdetail__loanpayment__quantity'],
-            }
-        subtotal = o['orderdetail__quantity_sold'] * o['orderdetail__price_unit']
-        sum_g_and_gbc = decimal.Decimal(0)
-        if unit_name == 'G' or unit_name == 'GBC':
-            sum_g_and_gbc = subtotal
-        orders[order_key] = {
-            'o_id': o['id'],
-            'ods': {
-                o['orderdetail__id']: {
-                    'od_id': o['orderdetail__id'],
-                    'quantity': o['orderdetail__quantity_sold'],
-                    'price_unit': o['orderdetail__price_unit'],
-                    'unit_name': o['orderdetail__unit__name'],
-                    'lps': lps,
-                    'subtotal': subtotal,
-                }
-            },
-            # 'sum_total': subtotal,
-            'sum_g_and_gbc': sum_g_and_gbc,
-            'sum_loan_price': sum_loan_price,
-            'difference': round(float(sum_g_and_gbc - sum_loan_price), 2),
-            'sum_loan_quantity': sum_loan_quantity,
-        }
-    else:
-        ods = orders[order_key]['ods']
-        # sum_total = orders[order_key]['sum_total']
-        sum_g_and_gbc = orders[order_key]['sum_g_and_gbc']
-        sum_loan_price = orders[order_key]['sum_loan_price']
-        sum_loan_quantity = orders[order_key]['sum_loan_quantity']
-        lps = {}
-        loan_quantity = 0
-        if key_od not in ods:
-
-            if o['orderdetail__loanpayment__quantity'] is not None:
-                loan_quantity = o['orderdetail__loanpayment__quantity']
-            lps[key_lp] = {
-                'lp_id': o['orderdetail__loanpayment__id'],
-                'lp_price': o['orderdetail__loanpayment__price'],
-                'lp_quantity': o['orderdetail__loanpayment__quantity'],
-            }
-        subtotal = o['orderdetail__quantity_sold'] * o['orderdetail__price_unit']
-        unit_name = o['orderdetail__unit__name']
-        # sum_g_and_gbc = 0
-        if unit_name == 'G' or unit_name == 'GBC':
-            sum_g_and_gbc += subtotal
-        elif unit_name == 'B':
-            sum_loan_quantity += loan_quantity
-        ods[key_od] = {
-            'od_id': o['orderdetail__id'],
-            'quantity': o['orderdetail__quantity_sold'],
-            'price_unit': o['orderdetail__price_unit'],
-            'unit_name': o['orderdetail__unit__name'],
-            'lps': lps,
-            'subtotal': subtotal,
-        }
-        orders[order_key] = {
-            'o_id': o['id'],
-            'ods': ods,
-            # 'sum_total': sum_total + subtotal,
-            'sum_g_and_gbc': sum_g_and_gbc,
-            'sum_loan_price': sum_loan_price,
-            'difference': round(float(sum_g_and_gbc - sum_loan_price), 2),
-            'sum_loan_quantity': sum_loan_quantity,
-        }
-
-        if key_lp is not None:
-            # sum_loan_price = orders[order_key]['ods'][key_od]['sum_loan_price']
-            # orders[order_key]['sum_loan_price'] += o['orderdetail__loanpayment__price']
-            unit_name = orders[order_key]['ods'][key_od]['unit_name']
-            if key_lp is not None:
-                if unit_name == 'G' or unit_name == 'GBC':
-                    orders[order_key]['sum_loan_price'] += o['orderdetail__loanpayment__price']
-                    orders[order_key]['difference'] = round(float(orders[order_key]['sum_g_and_gbc'] - orders[order_key]['sum_loan_price']), 2)
-                elif unit_name == 'B':
-                    orders[order_key]['sum_loan_quantity'] += o['orderdetail__loanpayment__quantity']
-            lps = orders[order_key]['ods'][key_od]['lps']
-            lps[key_lp] = {
-                'lp_id': o['orderdetail__loanpayment__id'],
-                'lp_price': o['orderdetail__loanpayment__price'],
-                'lp_quantity': o['orderdetail__loanpayment__quantity'],
-            }
-
-    return orders
+def get_price_of_product(product_detail_set=None, product=None, unit=None):
+    price = 0
+    for pd in product_detail_set:
+        if pd.product == product and pd.unit == unit:
+            price = pd.price_sale
+    return price
 
 
 def status_account(request):
@@ -4899,178 +4836,99 @@ def status_account(request):
         user_id = request.user.id
         user_obj = User.objects.get(id=user_id)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
-        all_orders = []
-        all_pilots = []
+
+        sum_total = 0
+        pilot_dict = {}
+        distribution_mobil_set = DistributionMobil.objects.filter(
+            subsidiary=subsidiary_obj, status='P',
+        ).prefetch_related(
+            Prefetch(
+                'distributiondetail_set',
+                queryset=DistributionDetail.objects.filter(
+                    status='E', type='L'
+                ).select_related('unit', 'product').prefetch_related(
+                    Prefetch(
+                        'product__productdetail_set',
+                        queryset=ProductDetail.objects.select_related('unit'), to_attr='rates'
+                    )
+                )
+            ),
+            # Prefetch('distributiondetail_set__product__productdetail_set', to_attr='rates')
+        ).select_related('pilot').select_related('truck')
+        for dm in distribution_mobil_set:
+
+            key = dm.pilot.id
+
+            # product_detail_set = dm.rates.all()
+            sum_ball = 0
+            if key in pilot_dict:
+                pilot = pilot_dict[key]
+                old_balls_in_car = pilot.get('balls_in_car')
+                old_sum_total = pilot.get('sum_total')
+                context = get_balls_in_car(
+                    distribution_detail_set=dm.distributiondetail_set.all(), balls_in_car=old_balls_in_car
+                )
+                sum_ball = context.get('sum_ball')
+                pilot_dict[key]['balls_in_car'] = context.get('balls_in_car')
+                pilot_dict[key]['sum_total'] = old_sum_total + sum_ball
+            else:
+                context = get_balls_in_car(
+                    distribution_detail_set=dm.distributiondetail_set.all(), balls_in_car={}
+                )
+                sum_ball = context.get('sum_ball')
+                pilot_dict[key] = {
+                    'pilot_id': dm.pilot.id,
+                    'pilot_names': dm.pilot.names,
+                    'license_plate': dm.truck.license_plate,
+                    'balls_in_car': context.get('balls_in_car'),
+                    'sum_total': sum_ball,
+                }
+            sum_total += sum_ball
+
         summary_sum_total_remaining_repay_loan = 0
         summary_sum_total_remaining_return_loan = 0
-        sum_total = 0
-
-        # pilot_set = DistributionMobil.objects.filter(subsidiary=subsidiary_obj).distinct('pilot__id').values('pilot__id', 'pilot__names')
-        # for p in pilot_set:
-        #     balls_in_car = {}
-        #     distribution_detail_set = DistributionDetail.objects.filter(distribution_mobil__subsidiary=subsidiary_obj,
-        #                                                                 distribution_mobil__status='P',
-        #                                                                 distribution_mobil__pilot_id=p['pilot__id'],
-        #                                                                 status='E',
-        #                                                                 type='L').values('id',
-        #                                                                                  'quantity',
-        #                                                                                  'unit__id',
-        #                                                                                  'product__id', 'product__name',
-        #                                                                                  'distribution_mobil__pilot_id',
-        #                                                                                  'distribution_mobil__pilot__names',
-        #                                                                                  'distribution_mobil__truck__id',
-        #                                                                                  'distribution_mobil__truck__license_plate',
-        #                                                                                  )
-        #
-        #     if distribution_detail_set.exists():
-        #         sum_ball_5 = 0
-        #         sum_ball_10 = 0
-        #         sum_ball_15 = 0
-        #         sum_ball_45 = 0
-        #         for d in distribution_detail_set:
-        #             search_value = d['product__id']
-        #             if search_value in balls_in_car.keys():
-        #                 product = balls_in_car[search_value]
-        #                 quantity = product.get('quantity')
-        #                 bg_subtotal = product.get('bg_subtotal')
-        #                 bg_price = product.get('bg_price')
-        #                 balls_in_car[search_value]['quantity'] = quantity + d['quantity']
-        #                 balls_in_car[search_value]['bg_subtotal'] = bg_subtotal + (bg_price * d['quantity'])
-        #             else:
-        #                 product_detail_set = ProductDetail.objects.filter(product__id=d['product__id'], unit__id=d['unit__id']).values('price_sale')
-        #                 bg_price = 0
-        #                 if product_detail_set.exists():
-        #                     product_detail_obj = product_detail_set.first()
-        #                     bg_price = product_detail_obj['price_sale']
-        #
-        #                 balls_in_car[search_value] = {
-        #                     'product_id': d['product__id'],
-        #                     'product_name': d['product__name'],
-        #                     'quantity': d['quantity'],
-        #                     'bg_price': bg_price,
-        #                     'bg_subtotal': bg_price * d['quantity'],
-        #                     'pilot_id': d['distribution_mobil__pilot_id'],
-        #                     'pilot_names': d['distribution_mobil__pilot__names'],
-        #                     'license_plate': d['distribution_mobil__truck__license_plate']
-        #                 }
-        #             if search_value == 1:  # BALON DE 10
-        #                 sum_ball_10 += d['quantity']
-        #             elif search_value == 12:  # BALON DE 15
-        #                 sum_ball_5 += d['quantity']
-        #             elif search_value == 2:  # BALON DE 5
-        #                 sum_ball_15 += d['quantity']
-        #             elif search_value == 3:  # BALON DE 45
-        #                 sum_ball_45 += d['quantity']
-        #
-        #         sum_ball = sum_ball_10 + sum_ball_5 + sum_ball_15 + sum_ball_45
-        #         sum_total += sum_ball
-        #
-        #         balls_count = len(balls_in_car)
-        #         if balls_count == 0:
-        #             balls_count = 1
-        #         item_pilot = {
-        #             'pilot_id': p['pilot__id'],
-        #             'pilot_names': p['pilot__names'],
-        #             'balls_in_car': balls_in_car,
-        #             'balls_count': balls_count,
-        #             'sum_ball': sum_ball,
-        #         }
-        #         all_pilots.append(item_pilot)
-        #         # print(p['pilot__id'])
-        #         # print(balls_in_car)
-
-        # client_set = Client.objects.filter(clientassociate__subsidiary=subsidiary_obj).values('id', 'names')
-        # order_set = Order.objects.filter(client=c['id']).exclude(type='E').values('id').order_by('id')
         client_dict = {}
-        client_set = Client.objects.filter(id=315, order__isnull=False, order__subsidiary=subsidiary_obj, order__type__in=['V', 'R']).distinct('id').values('id', 'names')
+        client_set = Client.objects.filter(
+            order__isnull=False, order__subsidiary=subsidiary_obj, order__type__in=['V', 'R']
+        ).distinct('id').values('id', 'names')[:5]
 
-        order_set = Order.objects.prefetch_related('orderdetail_set__loanpayment_set'
-            # Prefetch(, queryset=OrderDetail.objects.only('id', 'quantity_sold', 'price_unit'), to_attr="orderdetail_query")
-        ).filter(subsidiary=subsidiary_obj, type__in=['V', 'R'], client__id__in=[c['id'] for c in client_set]).values('client__id',
-                                                                                                                      'client__names',
-                                                                                                                      'id',
-                                                                                                                      'orderdetail__id',
-                                                                                                                      'orderdetail__quantity_sold',
-                                                                                                                      'orderdetail__price_unit',
-                                                                                                                      'orderdetail__loanpayment__id',
-                                                                                                                      'orderdetail__loanpayment__quantity',
-                                                                                                                      'orderdetail__unit__id',
-                                                                                                                      'orderdetail__unit__name',
-                                                                                                                      'orderdetail__loanpayment__price')
+        order_set = Order.objects.filter(
+            subsidiary=subsidiary_obj, type__in=['V', 'R'],
+            client__id__in=[c['id'] for c in client_set]
+        ).prefetch_related(
+            Prefetch('orderdetail_set', queryset=OrderDetail.objects.select_related('unit')),
+            Prefetch('orderdetail_set__loanpayment_set'),
+        ).select_related('client')
 
         for o in order_set:
-            sum_total_remaining_repay_loan = 0
-            sum_total_remaining_return_loan = 0
-            # orders_by_client = order_set
-            # key = order_set.get('client__id')
-            key = o['client__id']
-            if key in client_dict:
 
+            key = o.client.id
+
+            rpl = total_remaining_repay_loan(order_detail_set=o.orderdetail_set.all())
+            rtl = total_remaining_return_loan(order_detail_set=o.orderdetail_set.all())
+
+            if key in client_dict:
                 client = client_dict[key]
-                order_append(client.get('orders'), o)
+
+                old_rpl = client.get('sum_total_remaining_repay_loan')
+                old_rtl = client.get('sum_total_remaining_return_loan')
+
+                client_dict[key]['sum_total_remaining_repay_loan'] = old_rpl + rpl
+                client_dict[key]['sum_total_remaining_return_loan'] = old_rtl + rtl
+
             else:
                 client_dict[key] = {
-                    'client_id': o['client__id'],
-                    'client_names': o['client__names'],
-                    'orders': order_append({}, o),
-                    'repay_loan': 0
+                    'client_id': o.client.id,
+                    'client_names': o.client.names,
+                    'sum_total_remaining_repay_loan': rpl,
+                    'sum_total_remaining_return_loan': rtl,
                 }
 
-        print(client_dict)
+            summary_sum_total_remaining_repay_loan += rpl
+            summary_sum_total_remaining_return_loan += rtl
 
-
-
-
-            # if order_set['id']['client__id']:
-            #     print(c['id'])
-
-            # for o in orders_by_client:
-
-            # orders_set = [o.total for o in c.order_set.all()]
-            # print(o.id)
-            #     detail_set = o.orderdetail_set.all()
-            #     for d in detail_set:
-            #         print(d.quantity_sold)
-            #         print(d.price_unit)
-                # loan_payment_set = d.loanpayment_set.all()
-                # for lp in loan_payment_set:
-                #     transaction_set = lp.transactionpayment_set.all()
-                #     for t in transaction_set:
-                #         print(t.id)
-            # print(o.id)
-            # client_dict[c.id] = {'client_id': c.id, 'client_names': c.names, 'orders': 1}
-            # search_client = c.id
-            #
-            # try:
-            #     client = client_dict[search_client]
-            #     orders = client.get('orders')
-            #     client_dict[search_client]['orders'] = orders + 1
-            # except KeyError as err:
-            #     client_dict[search_client] = {'client_id': c.id, 'client_names': c.names, 'orders': 1}
-
-            # order_set = Order.objects.filter(client=c['client__id'], subsidiary=subsidiary_obj).exclude(type='E').values('id').order_by('id')
-            # order_set = Order.objects.filter(client=c['client__id'], subsidiary=subsidiary_obj).exclude(type='E').values('id').order_by('id')
-            # order_set = OrderDetail.objects.prefetch_related('loanpayment_set')
-            # if order_set.exists():
-
-            # for o in order_set:
-            #     sum_total_remaining_repay_loan += total_remaining_repay_loan(o['id'])
-            # sum_total_remaining_return_loan += total_remaining_return_loan(o['id'])
-            # summary_sum_total_remaining_repay_loan += sum_total_remaining_repay_loan
-            # summary_sum_total_remaining_return_loan += sum_total_remaining_return_loan
-
-            # item_orders = {
-                # 'client_id': c['id'],
-                # 'client_id': c['client__id'],
-                # 'client_names': c['client__names'],
-                # 'client_names': c['names'],
-                # 'sum_total_remaining_repay_loan': sum_total_remaining_repay_loan,
-                # 'sum_total_remaining_return_loan': sum_total_remaining_return_loan
-            # }
-            # all_orders.append(item_orders)
         return render(request, 'sales/status_account.html', {
-            # 'all_orders': all_orders,
-            'all_pilots': all_pilots,
+            'pilot_dict': pilot_dict,
             'sum_total': sum_total,
             'client_dict': client_dict,
             'summary_sum_total_remaining_repay_loan': summary_sum_total_remaining_repay_loan,
@@ -5078,45 +4936,49 @@ def status_account(request):
         })
 
 
-def total_remaining_repay_loan(order_id=None):
+def total_remaining_repay_loan(order_detail_set=None):
     response = 0
-    order_detail_set = OrderDetail.objects.prefetch_related('loanpayment_set').filter(order__id=order_id,
-                                                                                      loanaccount__quantity=0).values(
-        'quantity_sold', 'id', 'price_unit', 'unit__name')
 
     for d in order_detail_set:
-        multiply = d['quantity_sold'] * d['price_unit']
-        if d['unit__name'] == 'G' or d['unit__name'] == 'GBC':
-            response += (multiply - repay_loan(d['id']))
+
+        multiply = d.quantity_sold * d.price_unit
+
+        if d.unit.name == 'G' or d.unit.name == 'GBC':
+            loan_payment_set = d.loanpayment_set.all()
+            response += (multiply - repay_loan(loan_payment_set))
+
     return response
 
 
-def total_remaining_return_loan(order_id=None):
+def total_remaining_return_loan(order_detail_set=None):
     response = 0
-    order_detail_set = OrderDetail.objects.filter(order__id=order_id, product__id__in=[1, 12, 2, 3]).values(
-        'quantity_sold', 'id', 'price_unit', 'unit__name')
-
+    # product__id__in = [1, 12, 2, 3]
     for d in order_detail_set:
-        if d['unit__name'] == 'B':
-            response += (d['quantity_sold'] - return_loan(d['id']))
+        if d.unit.name == 'B':
+            loan_payment_set = d.loanpayment_set.all()
+            response += (d.quantity_sold - return_loan(loan_payment_set))
     return response
 
 
-def repay_loan(order_detail_id=None):
+def repay_loan(loan_payment_set=None):
     response = 0
-    loan_payment_set = LoanPayment.objects.filter(order_detail=order_detail_id, quantity=0).values(
-        'order_detail').annotate(totals=Sum('price'))
-    if loan_payment_set.exists():
-        response = loan_payment_set[0].get('totals')
+
+    for lp in loan_payment_set:
+
+        if lp.quantity == 0:
+            response += lp.price
+
     return response
 
 
-def return_loan(order_detail_id=None):
+def return_loan(loan_payment_set=None):
     response = 0
-    loan_payment_set = LoanPayment.objects.filter(order_detail=order_detail_id).values(
-        'order_detail').annotate(totals=Sum('quantity'))
-    if loan_payment_set.exists():
-        response = loan_payment_set[0].get('totals')
+
+    for lp in loan_payment_set:
+
+        if lp.quantity == 0:
+            response += lp.quantity
+
     return response
 
 
