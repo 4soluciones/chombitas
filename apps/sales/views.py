@@ -4446,8 +4446,19 @@ def report_ball_all_mass(request):
 
     subsidiaries_dict = []
 
+    # if request.method == 'GET':
+    #     ids = [1, 2, 3, 4, 6]
+    #     subsidiaries_set = Subsidiary.objects.filter(id__in=ids).prefetch_related(
+    #         Prefetch(
+    #             'distributionmobil_set',
+    #             queryset=DistributionMobil.objects.select_related('pilot', 'truck').prefetch_related(
+    #                 Prefetch('distributiondetail_set')
+    #             )
+    #         ),
+    #     )
+
     if request.method == 'GET':
-        subsidiaries_set = Subsidiary.objects.all().exclude(id__in=[5, 8, 7]).values('id', 'name')
+        subsidiaries_set = Subsidiary.objects.filter(id__in=[1, 2, 3, 4, 6]).values('id', 'name')
 
         for s in subsidiaries_set:
             # print(s['name'])
@@ -4960,7 +4971,7 @@ def status_account(request):
             subsidiary=subsidiary_obj, type__in=['V', 'R'],
             client__id__in=[c['id'] for c in client_set]
         ).prefetch_related(
-            Prefetch('orderdetail_set', queryset=OrderDetail.objects.select_related('unit')),
+            Prefetch('orderdetail_set', queryset=OrderDetail.objects.select_related('unit', 'product')),
             Prefetch('orderdetail_set__loanpayment_set'),
         ).select_related('client')
 

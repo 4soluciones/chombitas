@@ -17,9 +17,9 @@ def total_remaining_repay_loan(order_detail_set=None):
 
 def total_remaining_return_loan(order_detail_set=None):
     response = 0
-    # product__id__in = [1, 12, 2, 3]
+    product__array = [1, 12, 2, 3]
     for d in order_detail_set:
-        if d.unit.name == 'B':
+        if d.unit.name == 'B' and d.product.id in product__array:
             loan_payment_set = d.loanpayment_set.all()
             response += (d.quantity_sold - return_loan(loan_payment_set))
     return response
