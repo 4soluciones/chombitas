@@ -4976,8 +4976,7 @@ def return_loan(loan_payment_set=None):
 
     for lp in loan_payment_set:
 
-        if lp.quantity == 0:
-            response += lp.quantity
+        response += lp.quantity
 
     return response
 
