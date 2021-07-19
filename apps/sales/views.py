@@ -32,6 +32,7 @@ from apps.sales.number_to_letters import numero_a_letras, numero_a_moneda
 from django.db.models import Min, Sum, Max, Q, Value as V, F, Prefetch
 
 from ..buys.models import PurchaseDetail
+from apps.sales.funtions import *
 
 
 class Home(TemplateView):
@@ -48,9 +49,7 @@ class ProductList(View):
             is_enabled=True
         ).select_related('product_family', 'product_brand').prefetch_related(
             Prefetch(
-                'productstore_set', queryset=ProductStore.objects.select_related('subsidiary_store').prefetch_related(
-                    Prefetch('subsidiary_store__subsidiary')
-                )
+                'productstore_set', queryset=ProductStore.objects.select_related('subsidiary_store__subsidiary')
             ),
             Prefetch(
                 'productdetail_set', queryset=ProductDetail.objects.select_related('unit')
@@ -2179,11 +2178,36 @@ def order_list(request):
         })
 
 
-def get_dict_orders(order_set, client_obj=None, is_pdf=False):
+def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=None):
+
+    order_set = Order.objects.filter(
+        client=client_obj, create_at__date__range=[start_date, end_date], type__in=['V', 'R']
+    ).prefetch_related(
+        Prefetch(
+            'orderdetail_set', queryset=OrderDetail.objects.select_related('product', 'unit').prefetch_related(
+                Prefetch(
+                    'loanpayment_set',
+                    queryset=LoanPayment.objects.select_related('order_detail__order').prefetch_related(
+                        Prefetch(
+                            'transactionpayment_set',
+                            queryset=TransactionPayment.objects.select_related('loan_payment__order_detail__order')
+                        )
+                    )
+                ),
+                Prefetch('ballchange_set'),
+            )
+        ),
+        Prefetch(
+            'cashflow_set', queryset=CashFlow.objects.select_related('cash')
+        ),
+    ).select_related('distribution_mobil__truck', 'distribution_mobil__pilot', 'client').order_by('id')
+
     dictionary = []
 
     for o in order_set:
-        if o.orderdetail_set.count() > 0:
+        if o.orderdetail_set.all().exists():
+            order_detail_set = o.orderdetail_set.all()
+            cashflow_set = o.cashflow_set.all()
             new = {
                 'id': o.id,
                 'type': o.get_type_display(),
@@ -2193,15 +2217,15 @@ def get_dict_orders(order_set, client_obj=None, is_pdf=False):
                 'order_detail_set': [],
                 'status': o.get_status_display(),
                 'total': o.total,
-                'total_repay_loan': o.total_repay_loan(),
-                'total_repay_loan_with_vouchers': o.total_repay_loan_with_vouchers(),
-                'total_return_loan': o.total_return_loan(),
-                'total_remaining_repay_loan': o.total_remaining_repay_loan(),
-                'total_remaining_repay_loan_ball': o.total_remaining_repay_loan_ball(),
-                'total_remaining_return_loan': o.total_remaining_return_loan(),
-                'total_ball_changes': o.total_ball_changes(),
-                'total_spending': o.total_cash_flow_spending(),
-                'details_count': o.orderdetail_set.count(),
+                'total_repay_loan': total_repay_loan(order_detail_set=order_detail_set),
+                'total_repay_loan_with_vouchers': total_repay_loan_with_vouchers(order_detail_set=order_detail_set),
+                'total_return_loan': total_return_loan(order_detail_set=order_detail_set),
+                'total_remaining_repay_loan': total_remaining_repay_loan(order_detail_set=order_detail_set),
+                'total_remaining_repay_loan_ball': total_remaining_repay_loan_ball(order_detail_set=order_detail_set),
+                'total_remaining_return_loan': total_remaining_return_loan(order_detail_set=order_detail_set),
+                'total_ball_changes': total_ball_changes(order_detail_set=order_detail_set),
+                'total_spending': total_cash_flow_spending(cashflow_set=cashflow_set),
+                'details_count': order_detail_set.count(),
                 'rowspan': 0,
                 'is_review': o.is_review,
                 'has_loans': False
@@ -2217,7 +2241,7 @@ def get_dict_orders(order_set, client_obj=None, is_pdf=False):
             }
             new.get('distribution_mobil').append(distribution_mobil)
 
-            for d in OrderDetail.objects.filter(order=o):
+            for d in order_detail_set:
                 _type = '-'
                 if d.unit.name == 'G':
                     _type = 'CANJEADO'
@@ -2229,11 +2253,13 @@ def get_dict_orders(order_set, client_obj=None, is_pdf=False):
                     _payment_type = '-'
                     _cash_flow = None
                     _number_of_vouchers = 0
-                    transaction_payment_set = lp.transactionpayment_set
+                    transaction_payment_set = lp.transactionpayment_set.all()
                     truck_ = "-"
-                    if transaction_payment_set.count() > 0:
-                        transaction_payment = transaction_payment_set.first()
-                        _cash_flow = transaction_payment.get_cash_flow()
+                    if transaction_payment_set.exists():
+                        transaction_payment = None
+                        for t in transaction_payment_set:
+                            transaction_payment = t
+                        _cash_flow = get_cash_flow(order=o, transactionpayment=transaction_payment)
                         _payment_type = transaction_payment.get_type_display()
                         _number_of_vouchers = transaction_payment.number_of_vouchers
 
@@ -2253,7 +2279,7 @@ def get_dict_orders(order_set, client_obj=None, is_pdf=False):
                     }
                     loan_payment_set.append(loan_payment)
 
-                loans_count = d.loanpayment_set.count()
+                loans_count = d.loanpayment_set.all().count()
 
                 if loans_count == 0:
                     rowspan = 1
@@ -2271,11 +2297,11 @@ def get_dict_orders(order_set, client_obj=None, is_pdf=False):
                     'quantity_sold': d.quantity_sold,
                     'price_unit': d.price_unit,
                     'multiply': d.multiply,
-                    'return_loan': d.return_loan(),
-                    'repay_loan': d.repay_loan(),
-                    'repay_loan_ball': d.repay_loan_ball(),
-                    'repay_loan_with_vouchers': d.repay_loan_with_vouchers(),
-                    'ball_changes': d.ball_changes(),
+                    'return_loan': return_loan(loan_payment_set=d.loanpayment_set.all()),
+                    'repay_loan': repay_loan(loan_payment_set=d.loanpayment_set.all()),
+                    'repay_loan_ball': repay_loan_ball(loan_payment_set=d.loanpayment_set.all()),
+                    'repay_loan_with_vouchers': repay_loan_with_vouchers(loan_payment_set=d.loanpayment_set.all()),
+                    'ball_changes': ball_changes(ballchange_set=d.ballchange_set.all()),
                     'loan_payment_set': loan_payment_set,
                     'loans_count': loans_count,
                     'rowspan': rowspan,
@@ -2300,16 +2326,18 @@ def get_dict_orders(order_set, client_obj=None, is_pdf=False):
     sum_total_remaining_repay_loan_ball = 0
     sum_total_ball_changes = 0
     sum_total_cash_flow_spending = 0
-    if order_set.count() > 0:
+    if order_set.exists():
         for o in order_set:
-            sum_total_repay_loan = sum_total_repay_loan + o.total_repay_loan()
-            sum_total_repay_loan_with_vouchers = sum_total_repay_loan_with_vouchers + o.total_repay_loan_with_vouchers()
-            sum_total_return_loan = sum_total_return_loan + o.total_return_loan()
-            sum_total_remaining_repay_loan = sum_total_remaining_repay_loan + o.total_remaining_repay_loan()
-            sum_total_remaining_return_loan = sum_total_remaining_return_loan + o.total_remaining_return_loan()
-            sum_total_remaining_repay_loan_ball = sum_total_remaining_repay_loan_ball + o.total_remaining_repay_loan_ball()
-            sum_total_ball_changes = sum_total_ball_changes + o.total_ball_changes()
-            sum_total_cash_flow_spending = sum_total_cash_flow_spending + o.total_cash_flow_spending()
+            order_detail_set = o.orderdetail_set.all()
+            cashflow_set = o.cashflow_set.all()
+            sum_total_repay_loan += total_repay_loan(order_detail_set=order_detail_set)
+            sum_total_repay_loan_with_vouchers += total_repay_loan_with_vouchers(order_detail_set=order_detail_set)
+            sum_total_return_loan += total_return_loan(order_detail_set=order_detail_set)
+            sum_total_remaining_repay_loan += total_remaining_repay_loan(order_detail_set=order_detail_set)
+            sum_total_remaining_return_loan += total_remaining_return_loan(order_detail_set=order_detail_set)
+            sum_total_remaining_repay_loan_ball += total_remaining_repay_loan_ball(order_detail_set=order_detail_set)
+            sum_total_ball_changes += total_ball_changes(order_detail_set=order_detail_set)
+            sum_total_cash_flow_spending += total_cash_flow_spending(cashflow_set=cashflow_set)
         total_set = order_set.values('client').annotate(totals=Sum('total'))
         sum_total = total_set[0].get('totals')
     tpl = loader.get_template('sales/account_order_list.html')
@@ -2338,10 +2366,10 @@ def get_orders_by_client(request):
         end_date = request.GET.get('end_date', '')
 
         client_obj = Client.objects.get(pk=int(client_id))
-        order_set = Order.objects.filter(client=client_obj, create_at__date__range=[start_date, end_date], type__in=['V', 'R']).order_by('id')
+        # order_set = Order.objects.filter(client=client_obj, create_at__date__range=[start_date, end_date], type__in=['V', 'R']).order_by('id')
 
         return JsonResponse({
-            'grid': get_dict_orders(order_set, client_obj=client_obj, is_pdf=False),
+            'grid': get_dict_orders(client_obj=client_obj, is_pdf=False, start_date=start_date, end_date=end_date),
         }, status=HTTPStatus.OK)
 
 
@@ -2478,12 +2506,9 @@ def new_expense(request):
         )
         cashflow_obj.save()
 
-        order_set = Order.objects.filter(
-            client=order_obj.client, create_at__date__range=[start_date, end_date], type__in=['V', 'R']).order_by('id')
-
         return JsonResponse({
             'message': 'Registro guardado correctamente.',
-            'grid': get_dict_orders(order_set, client_obj=order_obj.client, is_pdf=False)
+            'grid': get_dict_orders(client_obj=order_obj.client, is_pdf=False, start_date=start_date, end_date=end_date)
         }, status=HTTPStatus.OK)
     return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)
 
@@ -2796,13 +2821,9 @@ def new_loan_payment(request):
                                     )
                                     transaction_payment_obj.save()
 
-        order_set = Order.objects.filter(
-            client=detail_obj.order.client, create_at__date__range=[start_date, end_date], type__in=['V', 'R']).order_by(
-            'id')
-
         return JsonResponse({
             'message': 'Cambios guardados con exito.',
-            'grid': get_dict_orders(order_set, client_obj=detail_obj.order.client, is_pdf=False),
+            'grid': get_dict_orders(client_obj=detail_obj.order.client, is_pdf=False, start_date=start_date, end_date=end_date),
         }, status=HTTPStatus.OK)
     return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)
 
@@ -2942,13 +2963,9 @@ def new_ball_change(request):
                                detail_obj.product.calculate_minimum_price_sale(),
                                ball_change_obj=ball_change_obj)
 
-        order_set = Order.objects.filter(
-            client=detail_obj.order.client, create_at__date__range=[start_date, end_date], type__in=['V', 'R']).order_by(
-            'id')
-
         return JsonResponse({
             'message': 'Cambios guardados con exito.',
-            'grid': get_dict_orders(order_set, client_obj=detail_obj.order.client, is_pdf=False),
+            'grid': get_dict_orders(client_obj=detail_obj.order.client, is_pdf=False, start_date=start_date, end_date=end_date),
         }, status=HTTPStatus.OK)
     return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)
 
@@ -3228,13 +3245,12 @@ def new_massiel_payment(request):
                         transaction_payment_type=transaction_payment_type,
                     )
             client_obj = Client.objects.get(id=client_orders)
-            order_set = Order.objects.filter(client=client_obj, type__in=['V', 'R']).order_by('id')
 
-        return JsonResponse({
-            'success': True,
-            'message': 'El cliente se asocio correctamente.',
-            'grid': get_dict_orders(order_set, client_obj=client_obj, is_pdf=False),
-        })
+            return JsonResponse({
+                'success': True,
+                'message': 'El cliente se asocio correctamente.',
+                'grid': get_dict_orders(client_obj=client_obj, is_pdf=False, start_date=None, end_date=None),
+            })
     return JsonResponse({'error': True, 'message': 'Error de peticion.'})
 
 
@@ -3397,12 +3413,11 @@ def new_massiel_return(request):
                     massive_return = massive_return - quantity
 
         client_obj = Client.objects.get(id=client_orders)
-        order_set = Order.objects.filter(client=client_obj, type__in=['V', 'R']).order_by('id')
 
         return JsonResponse({
             'success': True,
             'message': 'El cliente se asocio correctamente.',
-            'grid': get_dict_orders(order_set, client_obj=client_obj, is_pdf=False),
+            'grid': get_dict_orders(client_obj=client_obj, is_pdf=False, start_date=None, end_date=None),
         })
     return JsonResponse({'error': True, 'message': 'Error de peticion.'})
 
@@ -4985,51 +5000,6 @@ def status_account(request):
         })
 
 
-def total_remaining_repay_loan(order_detail_set=None):
-    response = 0
-
-    for d in order_detail_set:
-
-        multiply = d.quantity_sold * d.price_unit
-
-        if d.unit.name == 'G' or d.unit.name == 'GBC':
-            loan_payment_set = d.loanpayment_set.all()
-            response += (multiply - repay_loan(loan_payment_set))
-
-    return response
-
-
-def total_remaining_return_loan(order_detail_set=None):
-    response = 0
-    # product__id__in = [1, 12, 2, 3]
-    for d in order_detail_set:
-        if d.unit.name == 'B':
-            loan_payment_set = d.loanpayment_set.all()
-            response += (d.quantity_sold - return_loan(loan_payment_set))
-    return response
-
-
-def repay_loan(loan_payment_set=None):
-    response = 0
-
-    for lp in loan_payment_set:
-
-        if lp.quantity == 0:
-            response += lp.price
-
-    return response
-
-
-def return_loan(loan_payment_set=None):
-    response = 0
-
-    for lp in loan_payment_set:
-
-        response += lp.quantity
-
-    return response
-
-
 def check_loan_payment(request):
     if request.method == 'GET':
         lps = str(request.GET.get('lps', '')).replace('[', '').replace(']', '')
@@ -5044,16 +5014,16 @@ def check_loan_payment(request):
             'message': 'ok',
         })
 
-# def update_order_subsidiary(request):
-#     if request.method == 'GET':
-#         # subsidiaries_set = Subsidiary.objects.all()
-#         # for s in subsidiaries_set:
-#         for o in Order.objects.all():
-#             o.subsidiary = o.subsidiary_store.subsidiary
-#             o.save()
-#
-#         print('termino')
-#         return JsonResponse({
-#             'message': 'ok',
-#         })
-#
+
+def test(request):
+    if request.method == 'GET':
+        client_id = 1
+        start_date = '2021-04-01'
+        end_date = '2021-07-19'
+
+        client_obj = Client.objects.get(pk=int(client_id))
+
+        return render(request, 'sales/test.html', {
+            'grid': get_dict_orders(client_obj=client_obj, is_pdf=False, start_date=start_date, end_date=end_date),
+        })
+
