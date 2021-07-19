@@ -2170,10 +2170,13 @@ def order_list(request):
         mydate = datetime.now()
         formatdate = mydate.strftime("%Y-%m-%d")
 
-        clients = Client.objects.filter(clientassociate__subsidiary=subsidiary_obj)
+        # clients = Client.objects.filter(clientassociate__subsidiary=subsidiary_obj)
+        client_set = Client.objects.filter(
+            order__isnull=False, order__subsidiary=subsidiary_obj, order__type__in=['V', 'R']
+        ).distinct('id').values('id', 'names')
 
         return render(request, 'sales/account_status_list.html', {
-            'clients': clients,
+            'client_set': client_set,
             'formatdate': formatdate,
         })
 

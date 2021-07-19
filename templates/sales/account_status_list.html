@@ -35,7 +35,7 @@
 
                 <select class="form-control" id="id_client">
                     <option value="0">Seleccione</option>
-                    {% for client in clients %}
+                    {% for client in client_set %}
                         <option value="{{ client.id }}">{{ client.names }}</option>
                     {% endfor %}
                 </select>
