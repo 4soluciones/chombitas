@@ -91,24 +91,29 @@
 
                             <td class="p-0">
                                 {% if product.recipes.all.count > 0 %}
-                                    <table class="table table-sm text-uppercase small">
-                                        <thead>
-                                        <th>Insumo (Prod.)</th>
-                                        <th>Cant.</th>
-                                        <th>Unidad</th>
-                                        <th>P.U</th>
-                                        </thead>
-                                        <tbody>
+                                    <div class="container">
+                                        <div class="row text-uppercase">
+                                            <div class="col-3 border">Insumo (Prod.)</div>
+                                            <div class="col-3 border">Cant.</div>
+                                            <div class="col-3 border">Unidad</div>
+                                            <div class="col-3 border">P.U</div>
+                                        </div>
                                         {% for product_recipe in product.recipes.all %}
-                                            <tr>
-                                                <td class="text-primary font-weight-bolder">{{ product_recipe.product_input.name }}</td>
-                                                <td>{{ product_recipe.get_quantity_with_dot }}</td>
-                                                <td>{{ product_recipe.unit.description }}</td>
-                                                <td>{{ product_recipe.get_price_with_dot }}</td>
-                                            </tr>
+{#                                            <tr>#}
+{#                                                <td class="text-primary font-weight-bolder">{{ product_recipe.product_input.name }}</td>#}
+{#                                                <td>{{ product_recipe.get_quantity_with_dot }}</td>#}
+{#                                                <td>{{ product_recipe.unit.description }}</td>#}
+{#                                                <td>{{ product_recipe.get_price_with_dot }}</td>#}
+{#                                            </tr>#}
+                                        <div class="row">
+                                            <div class="col-3 border text-primary">{{ product_recipe.product_input.name }}</div>
+                                            <div class="col-3 border">{{ product_recipe.get_quantity_with_dot }}</div>
+                                            <div class="col-3 border">{{ product_recipe.unit.description }}</div>
+                                            <div class="col-3 border">{{ product_recipe.get_price_with_dot }}</div>
+                                        </div>
                                         {% endfor %}
-                                        </tbody>
-                                    </table>
+                                    </div>
+
                                 {% endif %}
 
                             </td>

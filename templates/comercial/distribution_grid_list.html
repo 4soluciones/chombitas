@@ -1,16 +1,15 @@
 {% if distribution_mobil %}
-    <div class="card border-primary m-2">
-        <div class="card-header pb-0" style="background: #2b579a">
+    <div class="card mt-3">
+        <div class="card-header pb-0 bg-secondary">
             <h6 class="card-title text-center text-white">LISTA DE SALIDAS REPARTO</h6>
         </div>
 
         <div class="card-body">
-            <div class="table-responsive dataTables_wrapper ">
+            <div class="table-responsive">
                 <table id="table-distribution-programmings"
-                       class="table table-sm  align-content-center table-bordered response"
-                       cellspacing="0" width="100%">
+                       class="table table-bordered">
                     <thead>
-                    <tr class="text-center  bg-primary text-white" style="height: 15px;">
+                    <tr class="text-center bg-light text-dark">
 
                         <th class="th-sm font-weight-normal">#</th>
                         <th class="th-sm font-weight-normal">Placa</th>
@@ -26,24 +25,26 @@
 
                     {% for dm in distribution_mobil %}
                         <tr class="text-center ">
-                            <td>{{ dm.id }}</td>
-                            <td><span
-                                    class="badge badge-primary  badge-pill p-2 font-weight-normal">{{ dm.truck.license_plate }}</span>
-                            </td>
-                            <td>{{ dm.pilot.full_name }}</td>
-                            <td>{{ dm.guide_number }}</td>
-                            <td>{{ dm.date_distribution }}</td>
+                            <td class="align-middle col-form-label col-form-label-lg">{{ dm.id }}</td>
                             <td>
+                                <h3><span class="badge badge-secondary  badge-pill p-2 font-weight-normal">{{ dm.truck.license_plate }}</span></h3>
+                            </td>
+                            <td class="align-middle col-form-label col-form-label-lg">{{ dm.pilot.full_name }}</td>
+                            <td class="align-middle col-form-label col-form-label-lg">{{ dm.guide_number|default:"-" }}</td>
+                            <td class="align-middle col-form-label col-form-label-lg">{{ dm.date_distribution|date:"d/m/Y" }}</td>
+                            <td class="align-middle">
+                                <h4>
                                 {% if dm.status == 'F' %}
                                     <span class="badge badge-primary badge-pill p-2 font-weight-normal">{{ dm.get_status_display }}</span>
                                 {% else %}
                                     <span class="badge badge-success badge-pill p-2 font-weight-normal">{{ dm.get_status_display }}</span>
                                 {% endif %}
+                                </h4>
                             </td>
                             <td>{{ dm.user.worker_set.last.employee.full_name }}</td>
-                            <td class="p-1">
+                            <td class="align-middle">
                                 <div class="btn-group">
-                                    <button type="button" class="btn btn-sm btn-primary  dropdown-toggle"
+                                    <button type="button" class="btn btn-block btn-primary  dropdown-toggle"
                                             pk="{{ dm.id }}"
                                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         Action
@@ -77,12 +78,12 @@
 
                         </tr>
                         <tr style="display: none">
-                            <td colspan="7" class="table-details-distribution bg-white p-0"></td>
+                            <td colspan="8" class="table-details-distribution bg-white p-0"></td>
                         </tr>
                     {% endfor %}
                     </tbody>
                     <tfoot>
-                    <tr class="text-center bg-primary text-white" style="height: 15px;">
+                    <tr class="text-center bg-light text-dark">
                         <th class="th-sm font-weight-normal">#</th>
                         <th class="th-sm font-weight-normal">Placa</th>
                         <th class="th-sm font-weight-normal">Conductor</th>

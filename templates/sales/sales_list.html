@@ -98,7 +98,7 @@
     <div class="card-group">
         <div class="card col-sm-6 p-1">
             <div class="col-sm-12 m-0 p-0">
-                {% include "sales/sales_grid_tab1.html" %}
+                {% include "sales/sales_grid_tab1.html" with client_dict=client_dict %}
                 <div class="col-sm-12 m-0 p-0 mt-1" id="table-distribution-grid">
                     {% if distribution %}
                         {% include "sales/sales_distribution_grid.html" %}

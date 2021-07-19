@@ -13,7 +13,7 @@ from apps.hrm.models import Subsidiary, District, DocumentType, Employee, Worker
 from apps.comercial.models import DistributionMobil, Truck, DistributionDetail, ClientAdvancement, ClientProduct, \
     Programming, Route, Guide, GuideDetail
 from django.contrib.auth.models import User
-from apps.hrm.views import get_subsidiary_by_user, get_sales_vs_expenses
+from apps.hrm.views import get_subsidiary_by_user, get_sales_vs_expenses, get_subsidiary_by_user_id
 from apps.accounting.views import TransactionAccount, LedgerEntry, get_account_cash, Cash, CashFlow, AccountingAccount
 import json
 import decimal
@@ -44,12 +44,27 @@ class ProductList(View):
     template_name = 'sales/product_list.html'
 
     def get_queryset(self):
-        return self.model.objects.filter(is_enabled=True)
+        return self.model.objects.filter(
+            is_enabled=True
+        ).select_related('product_family', 'product_brand').prefetch_related(
+            Prefetch(
+                'productstore_set', queryset=ProductStore.objects.select_related('subsidiary_store').prefetch_related(
+                    Prefetch('subsidiary_store__subsidiary')
+                )
+            ),
+            Prefetch(
+                'productdetail_set', queryset=ProductDetail.objects.select_related('unit')
+            ),
+            Prefetch(
+                'recipes', queryset=ProductRecipe.objects.select_related('unit').select_related('product_input')
+            )
+        )
 
     def get_context_data(self, **kwargs):
         user = self.request.user.id
-        user_obj = User.objects.get(id=int(user))
-        subsidiary_obj = get_subsidiary_by_user(user_obj)
+        # user_obj = User.objects.get(id=int(user))
+        # subsidiary_obj = get_subsidiary_by_user(user_obj)
+        subsidiary_obj = get_subsidiary_by_user_id(user)
         context = {
             'products': self.get_queryset(),
             'subsidiary': subsidiary_obj,
@@ -356,8 +371,25 @@ def get_list_kardex(request):
 
         inventories = None
         if product_store.count() > 0:
-            inventories = Kardex.objects.filter(product_store=product_store[0],
-                                                create_at__date__range=[start_date, end_date]).order_by('id')
+            inventories = Kardex.objects.filter(
+                product_store=product_store[0],create_at__date__range=[start_date, end_date]
+            ).select_related(
+                'product_store__product',
+                'programming_invoice__requirement_buys__subsidiary',
+                'requirement_detail',
+                'purchase_detail',
+                'manufacture_detail',
+                'manufacture_recipe',
+                'order_detail__order',
+                'distribution_detail__distribution_mobil__truck',
+                'loan_payment',
+                'ball_change',
+                'guide_detail__guide__programming__truck',
+                'guide_detail__guide__guide_motive',
+                'advance_detail__client_advancement__client',
+            ).prefetch_related(
+                Prefetch('programming_invoice__kardex_set', queryset=Kardex.objects.select_related('product_store__subsidiary_store')),
+            ).order_by('id')
 
         t = loader.get_template('sales/kardex_grid_list.html')
         c = ({'product': product, 'inventories': inventories})
@@ -567,12 +599,29 @@ class SalesList(View):
         if sales_store is None:
             error = "No tiene un almacen de ventas registrado, Favor de registrar un almacen primero."
         else:
-            products = Product.objects.filter(is_enabled=True, productstore__subsidiary_store=sales_store).order_by(
-                'id')
+            products = Product.objects.filter(
+                is_enabled=True, productstore__subsidiary_store=sales_store
+            ).prefetch_related(
+                Prefetch(
+                    'productstore_set', queryset=ProductStore.objects.select_related('subsidiary_store')
+                ),
+                Prefetch(
+                    'productdetail_set', queryset=ProductDetail.objects.select_related('unit')
+                )
+            ).order_by('id')
         worker_obj = Worker.objects.filter(user=user_obj).last()
         employee = Employee.objects.get(worker=worker_obj)
 
-        clients = Client.objects.filter(clientassociate__subsidiary=subsidiary_obj)
+        client_type_set = ClientType.objects.select_related('client').filter(client__clientassociate__subsidiary=subsidiary_obj)
+        client_dict = {}
+        for ct in client_type_set:
+            key = ct.client.id
+            if key not in client_dict:
+                client_dict[key] = {
+                    'client_id': ct.client.id,
+                    'client_names': ct.client.names,
+                    'client_document_number': ct.document_number,
+                }
         series_set = Truck.objects.all()
 
         contexto['employee'] = employee
@@ -580,7 +629,7 @@ class SalesList(View):
         contexto['sales_store'] = sales_store
         contexto['subsidiary'] = subsidiary_obj
         contexto['products'] = products
-        contexto['clients'] = clients
+        contexto['client_dict'] = client_dict
         contexto['date'] = formatdate
         contexto['distribution'] = pk
         contexto['choices_payments'] = TransactionPayment._meta.get_field('type').choices

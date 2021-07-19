@@ -21,7 +21,7 @@
                         <label class="pt-2" for="id_date_distribution">Fecha</label>
                     </div>
                     <div class="col-2">
-                        <input type="date" class="form-control" id="id_date_distribution">
+                        <input type="date" class="form-control" id="id_date_distribution" value="{{ date_now }}">
                     </div>
                 </form>
             </div>
@@ -218,5 +218,7 @@
             });
         }
     });
+       $('#id_date_distribution').trigger('change');
+
     </script>
 {% endblock extrajs %}

@@ -15,7 +15,7 @@ from django.db.models.fields.files import ImageFieldFile
 from django.template import loader
 from datetime import datetime
 from django.contrib.auth.hashers import make_password
-from django.db.models import Min, Sum, Max, Q, Count, F
+from django.db.models import Min, Sum, Max, Q, Count, F, Prefetch
 from django.db.models.functions import Coalesce
 
 
@@ -172,7 +172,20 @@ def get_distribution_45kg():
 # FUNCION PARA RECUPERAR EL USUARIO DE UNA SUCURSAL
 
 
+def get_subsidiary_by_user_id(user_id):
+
+    user_obj = User.objects.prefetch_related(
+        Prefetch('worker_set__establishment_set__subsidiary'),
+    ).get(id=user_id)
+
+    worker_obj = user_obj.worker_set.all().last()
+    establishment_obj = worker_obj.establishment_set.all().last()
+    subsidiary_obj = establishment_obj.subsidiary
+    return subsidiary_obj
+
+
 def get_subsidiary_by_user(user_obj):
+
     worker_obj = Worker.objects.get(user=user_obj)
     establishment_obj = Establishment.objects.filter(worker=worker_obj).last()
     subsidiary = Subsidiary.objects.filter(establishment=establishment_obj).first()

@@ -1,7 +1,6 @@
 import decimal
 from http import HTTPStatus
-from django.db.models import Q
-from django.db.models import Q, Max
+from django.db.models import Q, Max, F, Prefetch
 from django.shortcuts import render
 from django.views.generic import View, TemplateView, UpdateView, CreateView
 from django.views.decorators.csrf import csrf_exempt
@@ -1366,7 +1365,9 @@ def get_details_by_distributions_mobil(request):
     if request.method == 'GET':
         distribution_mobil_id = request.GET.get('ip', '')
         distribution_mobil_obj = DistributionMobil.objects.get(pk=int(distribution_mobil_id))
-        details_distribution_mobil = DistributionDetail.objects.filter(distribution_mobil=distribution_mobil_obj)
+        details_distribution_mobil = DistributionDetail.objects.filter(
+            distribution_mobil=distribution_mobil_obj
+        ).select_related('product', 'unit')
         t = loader.get_template('comercial/table_details_output_distribution.html')
         c = ({
             'details': details_distribution_mobil,
@@ -1572,8 +1573,10 @@ def get_distribution_list(request):
         date_distribution = request.GET.get('_date', '')
         if date_distribution != '':
 
-            distribution_mobil = DistributionMobil.objects.filter(subsidiary=subsidiary_obj,
-                                                                  date_distribution=date_distribution)
+            distribution_mobil = DistributionMobil.objects.filter(
+                subsidiary=subsidiary_obj, date_distribution=date_distribution).prefetch_related(
+                Prefetch('distributiondetail_set')
+            ).select_related('truck')
             tpl = loader.get_template('comercial/distribution_grid_list.html')
             context = ({
                 'distribution_mobil': distribution_mobil,
@@ -1585,6 +1588,9 @@ def get_distribution_list(request):
         else:
             my_date = datetime.now()
             date_now = my_date.strftime("%Y-%m-%d")
+            distribution_mobil_set = DistributionMobil.objects.annotate(max_date=Max('date_distribution')).filter(subsidiary=subsidiary_obj, date_distribution=F('max_date'))
+            if distribution_mobil_set.exists():
+                date_now = distribution_mobil_set.first().date_distribution.strftime("%Y-%m-%d")
             return render(request, 'comercial/distribution_list.html', {
                 'date_now': date_now,
             })

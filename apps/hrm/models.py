@@ -180,7 +180,7 @@ class Employee(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return str(self.names)
+        return str(self.pk)
 
     def full_name(self):
         # return str(self.names) + ' ' + str(self.paternal_last_name) + ' ' + str(self.maternal_last_name)
@@ -355,7 +355,7 @@ class Worker(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.employee
+        return str(self.id)
 
     def get_worker_type(self):
         worker_type = None
@@ -583,7 +583,7 @@ class Establishment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.employee
+        return str(self.id)
 
     class Meta:
         verbose_name = 'Establecimiento donde labora el trabajador'
