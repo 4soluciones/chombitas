@@ -158,7 +158,7 @@
                 </table>
 
                 <table class="table table-bordered">
-                    {% for k, q in query_dict.items %}
+                    {% for k, q in balls.items %}
                     <tr>
                         <td>{{ q.subsidiary_id }}</td>
                         <td>{{ q.subsidiary_name }}</td>
@@ -167,9 +167,8 @@
                             <div class="row">
                                 <div class="col-1">{{ p.product_id }}</div>
                                 <div class="col-3">{{ p.product_name }}</div>
-                                <div class="col-1">{{ p.stock_l }}</div>
-                                <div class="col-1">{{ p.stock_v }}</div>
-                                <div class="col">{{ p.distribution_detail_id }}</div>
+                                <div class="col-1">{{ p.stock }}</div>
+                                <div class="col-1">{{ p.ball_loan }}</div>
                             </div>
                             {% endfor %}
                         </td>

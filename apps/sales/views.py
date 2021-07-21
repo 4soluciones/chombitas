@@ -4046,7 +4046,7 @@ def get_report_sales_subsidiary(request):
             district_ = ''
             for d in Order.objects.filter(create_at__date__range=(date_initial, date_final),
                                           type__in=['V', 'R']).values(
-                    'client__clientaddress__district__description').annotate(totales=Sum(F('total'))):
+                'client__clientaddress__district__description').annotate(totales=Sum(F('total'))):
                 if d['client__clientaddress__district__description'] is None:
                     district_ = 'OTROS'
                 else:
@@ -4452,7 +4452,7 @@ def report_ball_all_mass(request):
     subsidiaries_dict = []
 
     subsidiaries = [1, 2, 3, 4, 6]
-
+    '''
     subsidiaries_set = Subsidiary.objects.filter(id__in=[1, 2, 3, 4, 6]).values('id', 'name')
 
     for s in subsidiaries_set:
@@ -4705,7 +4705,8 @@ def report_ball_all_mass(request):
         }
         subsidiaries_dict.append(subsidiaries_item)
     '''
-    queryset = DistributionMobil.objects.filter(subsidiary__id__in=subsidiaries, status='F') \
+    queryset = DistributionMobil.objects \
+        .filter(subsidiary__id__in=subsidiaries, status='F', distributiondetail__isnull=False) \
         .values('pilot__id', 'subsidiary__id').annotate(max=Max('id'))
 
     distribution_mobil_set = DistributionMobil.objects.filter(
@@ -4713,33 +4714,24 @@ def report_ball_all_mass(request):
     ).select_related('pilot', 'truck', 'subsidiary').prefetch_related(
         Prefetch(
             'distributiondetail_set',
-            queryset=DistributionDetail.objects.filter(status='C', type__in=['L', 'V'], product__id__in=products_in_ball).select_related('product', 'unit')
+            queryset=DistributionDetail.objects.filter(
+                status='C', type__in=['L', 'V'], product__id__in=products_in_ball
+            ).select_related('product', 'unit')
         )
     ).order_by('subsidiary__id')
 
-    query_dict = {}
-    distributions = {}
-    dist_dict = {}
+    balls_in_distribution = {}
+
     for dist in distribution_mobil_set:
-        print(dist.subsidiary.name)
         for d in dist.distributiondetail_set.all():
 
             subsidiary_key = dist.subsidiary.id
-            if subsidiary_key in query_dict:
-                subsidiary = query_dict[subsidiary_key]
+            if subsidiary_key in balls_in_distribution:
+                subsidiary = balls_in_distribution[subsidiary_key]
                 dist_dict = subsidiary.get('distributions')
-                # key = d.product.id
-                # if key not in old_distributions:
-                    # old_stock_l = old_distributions[key]['stock_l']
-                    # old_stock_v = old_distributions[key]['stock_v']
-                    # if d.type == 'L':
-                    #     query_dict[subsidiary_key]['distributions'][key]['stock_l'] = old_stock_l + d.quantity
-                    # elif d.type == 'V':
-                    #     query_dict[subsidiary_key]['distributions'][key]['stock_v'] = old_stock_v + d.quantity
-                    # query_dict[subsidiary_key]['distributions'] = {**old_distributions, **distributions}
             else:
                 dist_dict = {}
-                query_dict[subsidiary_key] = {
+                balls_in_distribution[subsidiary_key] = {
                     'subsidiary_id': dist.subsidiary.id,
                     'subsidiary_name': dist.subsidiary.name,
                     'distributions': dist_dict,
@@ -4766,7 +4758,7 @@ def report_ball_all_mass(request):
             stock_l = 0
             stock_v = 0
             search_value = d.product.id
-            if search_value in dist_dict.keys():
+            if search_value in dist_dict:
                 product = dist_dict[search_value]
                 if d.type == 'L':
                     stock_l = product.get('stock_l')
@@ -4786,10 +4778,249 @@ def report_ball_all_mass(request):
                     'stock_v': stock_v,
                     'distribution_detail_id': d.id,
                 }
-            query_dict[subsidiary_key]['distributions'][search_value] = dist_dict[search_value]
-            print(dist_dict)
+            balls_in_distribution[subsidiary_key]['distributions'][search_value] = dist_dict[search_value]
 
-    '''
+    # queryset = Route.objects.filter(
+    #     subsidiary__id__in=subsidiaries, type='D', programming__isnull=False, programming__status='P'
+    # ).values('programming__id', 'subsidiary__id')
+
+    programming_set = Programming.objects.filter(status='P').prefetch_related(
+        Prefetch(
+            'route_set',
+            queryset=Route.objects.filter(type='D', subsidiary__id__in=subsidiaries).select_related('subsidiary')
+        ),
+        Prefetch(
+            'guide_set', queryset=Guide.objects.prefetch_related(
+                # type__in = ('1', 'VACIO(S)'), ('2', 'LLENO(S)')
+                Prefetch(
+                    'guidedetail_set',
+                    queryset=GuideDetail.objects.filter(
+                        type__in=[1, 2], product__id__in=products_in_ball
+                    ).select_related('product', 'unit_measure')
+                )
+            )
+        ),
+    )
+
+    balls_pending_arrival = {}
+    for prg in programming_set:
+
+        s = None
+
+        for r in prg.route_set.all():
+            s = r.subsidiary
+
+        if s is not None:
+
+            for g in prg.guide_set.all():
+
+                for gd in g.guidedetail_set.all():
+                    subsidiary_key = s.id
+                    if subsidiary_key in balls_pending_arrival:
+                        subsidiary = balls_pending_arrival[subsidiary_key]
+                        car_dict = subsidiary.get('distributions')
+                    else:
+                        car_dict = {}
+                        balls_pending_arrival[subsidiary_key] = {
+                            'subsidiary_id': s.id,
+                            'subsidiary_name': s.name,
+                            'distributions': car_dict,
+                        }
+
+                    if gd.type == '1':
+                        if gd.product.id == 1:  # BALON DE 10
+                            sum_route_void_10 += gd.quantity
+                        elif gd.product.id == 12:  # BALON DE 15
+                            sum_route_void_15 += gd.quantity
+                        elif gd.product.id == 2:  # BALON DE 5
+                            sum_route_void_5 += gd.quantity
+                        elif gd.product.id == 3:  # BALON DE 45
+                            sum_route_void_45 += gd.quantity
+                    elif gd.type == '2':
+                        if gd.product.id == 1:  # BALON DE 10
+                            sum_route_filled_10 += gd.quantity
+                        elif gd.product.id == 12:  # BALON DE 15
+                            sum_route_filled_15 += gd.quantity
+                        elif gd.product.id == 2:  # BALON DE 5
+                            sum_route_filled_5 += gd.quantity
+                        elif gd.product.id == 3:  # BALON DE 45
+                            sum_route_filled_45 += gd.quantity
+                    stock_void = 0
+                    stock_filled = 0
+                    search_value = gd.product.id
+                    if search_value in car_dict:
+                        product = car_dict[search_value]
+                        if gd.type == '1':
+                            stock_void = product.get('stock_void')
+                            car_dict[search_value]['stock_void'] = stock_void + gd.quantity
+                        elif gd.type == '2':
+                            stock_filled = product.get('stock_filled')
+                            car_dict[search_value]['stock_filled'] = stock_filled + gd.quantity
+                    else:
+                        if gd.type == '1':
+                            stock_void = gd.quantity
+                        elif gd.type == '2':
+                            stock_filled = gd.quantity
+                        car_dict[search_value] = {
+                            'product_id': gd.product.id,
+                            'product_name': gd.product.name,
+                            'stock_filled': stock_filled,
+                            'stock_void': stock_void,
+                            'type': gd.type,
+                        }
+                    balls_pending_arrival[subsidiary_key]['distributions'][search_value] = car_dict[search_value]
+
+    product_store_in_iron = ProductStore.objects.filter(
+        subsidiary_store__category='I',
+        subsidiary_store__subsidiary__id__in=subsidiaries,
+        product__id__in=products_in_iron
+    ).select_related('subsidiary_store__subsidiary', 'product')
+
+    balls_in_irons = {}
+
+    for ps in product_store_in_iron:
+
+        subsidiary_key = ps.subsidiary_store.subsidiary.id
+
+        if subsidiary_key in balls_in_irons:
+            subsidiary = balls_in_irons[subsidiary_key]
+            iron_dict = subsidiary.get('distributions')
+        else:
+            iron_dict = {}
+            balls_in_irons[subsidiary_key] = {
+                'subsidiary_id': ps.subsidiary_store.subsidiary.id,
+                'subsidiary_name': ps.subsidiary_store.subsidiary.name,
+                'distributions': iron_dict,
+            }
+
+        search_value = ps.product.id
+        if ps.product.id == 5:  # FIERRO DE 10
+            sum_iron_10 += ps.stock
+        elif ps.product.id == 11:  # FIERRO DE 15
+            sum_iron_15 += ps.stock
+        elif ps.product.id == 6:  # FIERRO DE 5
+            sum_iron_5 += ps.stock
+        elif ps.product.id == 7:  # FIERRO DE 45
+            sum_iron_45 += ps.stock
+
+        if search_value in iron_dict.keys():
+            product = iron_dict[search_value]
+            stock = product.get('stock')
+            iron_dict[search_value]['stock'] = stock + ps.stock
+        else:
+            iron_dict[search_value] = {
+                'product_id': ps.product.id,
+                'product_name': ps.product.name,
+                'stock': ps.stock,
+            }
+        balls_in_irons[subsidiary_key]['distributions'][search_value] = iron_dict[search_value]
+
+    balls = {}
+
+    order_detail_set = OrderDetail.objects.filter(
+        order__subsidiary__id__in=subsidiaries, product__id__in=products_in_ball, unit__name='B',
+        order__type__in=['R', 'V'],
+    ).select_related('order__subsidiary', 'product', 'unit').prefetch_related(
+        Prefetch('loanpayment_set')
+    )
+    for od in order_detail_set:
+        subsidiary_key = od.order.subsidiary.id
+        # ball_loan = 0
+        if subsidiary_key in balls:
+            subsidiary = balls[subsidiary_key]
+            ball_dict = subsidiary.get('distributions')
+        else:
+            ball_dict = {}
+            balls[subsidiary_key] = {
+                'subsidiary_id': od.order.subsidiary.id,
+                'subsidiary_name': od.order.subsidiary.name,
+                'distributions': ball_dict,
+            }
+
+        loan_payment_set = od.loanpayment_set.all()
+
+        if loan_payment_set.exists():
+            ball_loan_total = 0
+            ball_total = od.quantity_sold
+            for lp in loan_payment_set:
+                ball_loan_total = ball_loan_total + lp.quantity
+            ball_loan = ball_total - ball_loan_total
+        else:
+            ball_loan = od.quantity_sold
+
+        if od.product.id == 1:  # BALON DE 10
+            sum_ball_loan_10 += ball_loan
+        elif od.product.id == 12:  # BALON DE 15
+            sum_ball_loan_15 += ball_loan
+        elif od.product.id == 2:  # BALON DE 5
+            sum_ball_loan_5 += ball_loan
+        elif od.product.id == 3:  # BALON DE 45
+            sum_ball_loan_45 += ball_loan
+
+        search_value = od.product.id
+
+        if search_value in ball_dict:
+            product = ball_dict[search_value]
+            old_ball_loan = product.get('ball_loan')
+            ball_dict[search_value]['ball_loan'] = old_ball_loan + ball_loan
+        else:
+            ball_dict[search_value] = {
+                'product_id': od.product.id,
+                'product_name': od.product.name,
+                'stock': 0,
+                'ball_loan': ball_loan
+            }
+        balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
+
+    product_store_in_ball = ProductStore.objects.filter(
+        subsidiary_store__category='V', subsidiary_store__subsidiary__id__in=subsidiaries,
+        product__id__in=products_in_ball
+    ).select_related('subsidiary_store__subsidiary', 'product')
+
+    for ps in product_store_in_ball:
+
+        subsidiary_key = ps.subsidiary_store.subsidiary.id
+
+        if subsidiary_key in balls:
+            subsidiary = balls[subsidiary_key]
+            ball_dict = subsidiary.get('distributions')
+        else:
+            ball_dict = {}
+            balls[subsidiary_key] = {
+                'subsidiary_id': ps.subsidiary_store.subsidiary.id,
+                'subsidiary_name': ps.subsidiary_store.subsidiary.name,
+                'distributions': ball_dict,
+            }
+
+        search_value = ps.product.id
+        if ps.product.id == 1:  # BALON DE 10
+            sum_ball_10 += ps.stock
+        elif ps.product.id == 12:  # BALON DE 15
+            sum_ball_15 += ps.stock
+        elif ps.product.id == 2:  # BALON DE 5
+            sum_ball_5 += ps.stock
+        elif ps.product.id == 3:  # BALON DE 45
+            sum_ball_45 += ps.stock
+
+        if search_value in ball_dict:
+            product = ball_dict[search_value]
+            stock = product.get('stock')
+            ball_dict[search_value]['stock'] = stock + ps.stock
+        else:
+            ball_dict[search_value] = {
+                'product_id': ps.product.id,
+                'product_name': ps.product.name,
+                'stock': ps.stock,
+                'ball_loan': 0
+            }
+        balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
+
+    # subsidiaries_dict = get_unify_dict2(
+    #     balls_in_irons=balls_in_irons, balls=balls,
+    #     balls_pending_arrival=balls_pending_arrival,
+    #     balls_in_distribution=balls_in_distribution
+    # )
+
     sum_total_ball_filled_10 = sum_ball_10 + sum_route_filled_10 + sum_ball_loan_10 + sum_car_filled_10
     sum_total_ball_filled_15 = sum_ball_15 + sum_route_filled_15 + sum_ball_loan_15 + sum_car_filled_15
     sum_total_ball_filled_5 = sum_ball_5 + sum_route_filled_5 + sum_ball_loan_5 + sum_car_filled_5
@@ -4806,7 +5037,7 @@ def report_ball_all_mass(request):
     sum_total_ball_45 = sum_total_ball_filled_45 + sum_total_ball_void_45
 
     return render(request, 'sales/report_ball_all_mass.html', {
-        # 'query_dict': query_dict,
+        'balls': balls,
         'subsidiaries_dict': subsidiaries_dict,
         'sum_ball_10': sum_ball_10,
         'sum_ball_15': sum_ball_15,
@@ -4849,6 +5080,11 @@ def report_ball_all_mass(request):
         'sum_total_ball_15': sum_total_ball_15,
         'sum_total_ball_45': sum_total_ball_45,
     })
+
+
+# def get_unify_dict2(balls_in_irons=None, balls=None, balls_pending_arrival=None, balls_in_distribution=None):
+#     unify_dict = {}
+#     return unify_dict
 
 
 def get_unify_dict(irons=None, balls=None, car=None, distributions=None):
