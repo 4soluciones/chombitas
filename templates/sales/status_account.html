@@ -15,8 +15,11 @@
                 <td class="bg-secondary">Nro</td>
                 <td class="bg-secondary">Conductor</td>
                 <td class="bg-secondary">Placa</td>
-                <td class="bg-secondary">Productos</td>
-                <td class="bg-dark">balones llenos</td>
+                <td class="bg-secondary">BALON DE 5KG</td>
+                <td class="bg-secondary">BALON DE 10KG</td>
+                <td class="bg-secondary">BALON DE 15KG</td>
+                <td class="bg-secondary">BALON DE 45KG</td>
+{#                <td class="bg-dark">balones llenos</td>#}
             </tr>
             </thead>
             <tbody>
@@ -25,35 +28,23 @@
                     <td class="align-middle text-center">{{ value.pilot_id }}</td>
                     <td class="align-middle text-center">{{ value.pilot_names }}</td>
                     <td class="align-middle text-center">{{ value.license_plate }}</td>
-                    <td class="align-middle">
-                        <div class="container">
-                            <div class="row">
-                            <div class="col-6 text-left">DESCRIPCION</div>
-                            <div class="col-2 text-center">UND</div>
-                            <div class="col-2 text-center">CANT</div>
-                            <div class="col-2 text-right">PRECIO</div>
-                        </div>
-                        {% for k, v in value.balls_in_car.items %}
-                        <div class="row">
-                            <div class="col-6 text-left">{{ v.product_name }}</div>
-                            <div class="col-2 text-center">{{ v.unit_name }}</div>
-                            <div class="col-2 text-center">{{ v.quantity|safe|floatformat:0 }}</div>
-                            <div class="col-2 text-right">{{ v.bg_price|safe }}</div>
-                        </div>
-                        {% endfor %}
-                        </div>
-
-
-                    </td>
-                    <td class="align-middle text-center bg-dark text-white">{{ value.sum_total|floatformat:0 }}</td>
-
+                    <td class="align-middle text-center">{{ value.sum_ball_5 }}</td>
+                    <td class="align-middle text-center">{{ value.sum_ball_10 }}</td>
+                    <td class="align-middle text-center">{{ value.sum_ball_15 }}</td>
+                    <td class="align-middle text-center">{{ value.sum_ball_45 }}</td>
                 </tr>
             {% endfor %}
             </tbody>
             <tfoot>
             <tr class="">
-                <td class="align-middle text-center" colspan="4">SUMA TOTAL</td>
-                <td class="align-middle text-center bg-dark text-white">{{ sum_total|safe|floatformat:0 }}</td>
+                <td class="align-middle text-center" colspan="3" rowspan="2">SUMA TOTAL</td>
+                <td class="align-middle text-center bg-dark text-white">{{ acm_sum_5|safe|floatformat:0 }}</td>
+                <td class="align-middle text-center bg-dark text-white">{{ acm_sum_10|safe|floatformat:0 }}</td>
+                <td class="align-middle text-center bg-dark text-white">{{ acm_sum_15|safe|floatformat:0 }}</td>
+                <td class="align-middle text-center bg-dark text-white">{{ acm_sum_45|safe|floatformat:0 }}</td>
+            </tr>
+            <tr class="">
+                <td class="align-middle text-center" colspan="4">{{ sum_total|safe|floatformat:0 }}</td>
             </tr>
             </tfoot>
 

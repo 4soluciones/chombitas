@@ -363,7 +363,7 @@ class Order(models.Model):
     subsidiary = models.ForeignKey('hrm.Subsidiary', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
-        return str(self.type) + " / " + str(self.create_at)
+        return str(self.pk)
 
     def total_repay_loan(self):
         response = 0
@@ -453,7 +453,7 @@ class OrderDetail(models.Model):
     status = models.CharField('Estado', max_length=1, choices=STATUS_CHOICES, default='P', )
 
     def __str__(self):
-        return str(self.product.code) + " / " + str(self.status)
+        return str(self.pk)
 
     def multiply(self):
         return self.quantity_sold * self.price_unit

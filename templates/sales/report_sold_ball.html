@@ -29,7 +29,7 @@
                     <label class="mr-2 ml-2">Cliente</label>
 
                     <select class="form-control" id="id_client">
-                        <option value="0">Seleccione</option>
+                        <option value="T">-- TODOS --</option>
                         {% for client in clients %}
                             <option value="{{ client.id }}">{{ client.names }}</option>
                         {% endfor %}

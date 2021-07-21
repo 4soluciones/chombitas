@@ -51,16 +51,16 @@
                         <tr>{% endif %}
                 <td class="align-middle text-center">{{ lp.operation_date|date:"d-m-y" }}</td>
                 <td class="align-middle text-center">{{ lp.quantity|safe|floatformat:0 }}</td>
-                <td class="align-middle text-center">S/ {{ lp.transaction_payment_set.first.payment|safe }}</td>
-                {% if lp.transaction_payment_set.first.type == 'E' %}
+                <td class="align-middle text-center">S/ {{ lp.transaction_payment_obj.payment|safe }}</td>
+                {% if lp.transaction_payment_obj.type == 'E' %}
                     <td class="align-middle text-center">EFECTIVO</td>
-                {% elif lp.transaction_payment_set.first.type == 'D' %}
+                {% elif lp.transaction_payment_obj.type == 'D' %}
                     <td class="align-middle text-center">DEPOSITO</td>
                 {% endif %}
-                {% if lp.transaction_payment_set.first.operation_code == 'None' %}
+                {% if lp.transaction_payment_obj.operation_code == 'None' %}
                     <td class="align-middle text-center">-</td>
-                {% elif lp.transaction_payment_set.first.operation_code != 'None' %}
-                    <td class="align-middle text-center">{{ lp.transaction_payment_set.first.operation_code }}</td>
+                {% elif lp.transaction_payment_obj.operation_code != 'None' %}
+                    <td class="align-middle text-center">{{ lp.transaction_payment_obj.operation_code }}</td>
                 {% endif %}
                 </tr>
                 {% endfor %}

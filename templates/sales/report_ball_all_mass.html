@@ -78,10 +78,10 @@
                     </tr>
                     </thead>
                     <tbody>
-                    {% for s in subsidiaries_dict %}
+                    {% for k, s in balls.items %}
                         <tr>
                             <td class="align-middle text-center">{{ s.subsidiary_name }}</td>
-                            {% for key, value in s.unify_dict.items %}
+                            {% for key, value in s.distributions.items %}
                                 <td class="align-middle text-center">{% if value.stock_ball == 0 %}-{% else %}{{ value.stock_ball|safe|floatformat:0 }}{% endif %}</td>
                                 <td class="align-middle text-center">{% if value.car_ball_filled == 0 %}-{% else %}{{ value.car_ball_filled|safe|floatformat:0 }}{% endif %}</td>
                                 <td class="align-middle text-center">{% if value.ball_loan == 0 %}-{% else %}{{ value.ball_loan|safe|floatformat:0 }}{% endif %}</td>
@@ -157,25 +157,6 @@
                     </tfoot>
                 </table>
 
-                <table class="table table-bordered">
-                    {% for k, q in balls.items %}
-                    <tr>
-                        <td>{{ q.subsidiary_id }}</td>
-                        <td>{{ q.subsidiary_name }}</td>
-                        <td>
-                            {% for k2, p in q.distributions.items %}
-                            <div class="row">
-                                <div class="col-1">{{ p.product_id }}</div>
-                                <div class="col-3">{{ p.product_name }}</div>
-                                <div class="col-1">{{ p.stock }}</div>
-                                <div class="col-1">{{ p.ball_loan }}</div>
-                            </div>
-                            {% endfor %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </table>
-            {{ query_dict }}
             </div>
         </div>
     </div>
