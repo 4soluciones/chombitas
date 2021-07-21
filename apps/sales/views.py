@@ -4452,6 +4452,7 @@ def report_ball_all_mass(request):
     subsidiaries_dict = []
 
     subsidiaries = [1, 2, 3, 4, 6]
+
     subsidiaries_set = Subsidiary.objects.filter(id__in=[1, 2, 3, 4, 6]).values('id', 'name')
 
     for s in subsidiaries_set:
@@ -4461,7 +4462,7 @@ def report_ball_all_mass(request):
         pilot_set = DistributionMobil.objects.filter(subsidiary__id=s['id']).distinct('pilot__id').values(
             'pilot__id')
         for p in pilot_set:
-            last_distribution_mobil_id = DistributionMobil.objects.filter(pilot__id=p['pilot__id'],
+            last_distribution_mobil_id = DistributionMobil.objects.filter(pilot__id=p['pilot__id'], subsidiary__id=s['id'],
                                                                           status='F').aggregate(Max('id'))
             for db in products_in_ball:
                 distribution_detail_set = DistributionDetail.objects.filter(
@@ -4705,23 +4706,45 @@ def report_ball_all_mass(request):
         subsidiaries_dict.append(subsidiaries_item)
     '''
     queryset = DistributionMobil.objects.filter(subsidiary__id__in=subsidiaries, status='F') \
-        .values('pilot__id', 'pilot__names').annotate(max=Max('id'))
+        .values('pilot__id', 'subsidiary__id').annotate(max=Max('id'))
 
     distribution_mobil_set = DistributionMobil.objects.filter(
         id__in=[q['max'] for q in queryset]
     ).select_related('pilot', 'truck', 'subsidiary').prefetch_related(
         Prefetch(
             'distributiondetail_set',
-            queryset=DistributionDetail.objects.filter(status='C', type__in=['L', 'V']).select_related('product', 'unit')
+            queryset=DistributionDetail.objects.filter(status='C', type__in=['L', 'V'], product__id__in=products_in_ball).select_related('product', 'unit')
         )
-    )
+    ).order_by('subsidiary__id')
 
     query_dict = {}
-
+    distributions = {}
+    dist_dict = {}
     for dist in distribution_mobil_set:
-
-        distributions = {}
+        print(dist.subsidiary.name)
         for d in dist.distributiondetail_set.all():
+
+            subsidiary_key = dist.subsidiary.id
+            if subsidiary_key in query_dict:
+                subsidiary = query_dict[subsidiary_key]
+                dist_dict = subsidiary.get('distributions')
+                # key = d.product.id
+                # if key not in old_distributions:
+                    # old_stock_l = old_distributions[key]['stock_l']
+                    # old_stock_v = old_distributions[key]['stock_v']
+                    # if d.type == 'L':
+                    #     query_dict[subsidiary_key]['distributions'][key]['stock_l'] = old_stock_l + d.quantity
+                    # elif d.type == 'V':
+                    #     query_dict[subsidiary_key]['distributions'][key]['stock_v'] = old_stock_v + d.quantity
+                    # query_dict[subsidiary_key]['distributions'] = {**old_distributions, **distributions}
+            else:
+                dist_dict = {}
+                query_dict[subsidiary_key] = {
+                    'subsidiary_id': dist.subsidiary.id,
+                    'subsidiary_name': dist.subsidiary.name,
+                    'distributions': dist_dict,
+                }
+
             if d.type == 'V':
                 if d.product.id == 1:  # BALON DE 10
                     sum_car_void_10 += d.quantity
@@ -4743,40 +4766,29 @@ def report_ball_all_mass(request):
             stock_l = 0
             stock_v = 0
             search_value = d.product.id
-            if search_value in distributions.keys():
-                product = distributions[search_value]
+            if search_value in dist_dict.keys():
+                product = dist_dict[search_value]
                 if d.type == 'L':
                     stock_l = product.get('stock_l')
-                    distributions[search_value]['stock_l'] = stock_l + d.quantity
+                    dist_dict[search_value]['stock_l'] = stock_l + d.quantity
                 elif d.type == 'V':
                     stock_v = product.get('stock_v')
-                    distributions[search_value]['stock_v'] = stock_v + d.quantity
+                    dist_dict[search_value]['stock_v'] = stock_v + d.quantity
             else:
                 if d.type == 'L':
                     stock_l = d.quantity
                 elif d.type == 'V':
                     stock_v = d.quantity
-                distributions[search_value] = {
+                dist_dict[search_value] = {
                     'product_id': d.product.id,
                     'product_name': d.product.name,
                     'stock_l': stock_l,
                     'stock_v': stock_v,
-                    'distribution_id': dist.id,
+                    'distribution_detail_id': d.id,
                 }
+            query_dict[subsidiary_key]['distributions'][search_value] = dist_dict[search_value]
+            print(dist_dict)
 
-        subsidiary_key = dist.subsidiary.id
-        if subsidiary_key in query_dict:
-            subsidiary = query_dict[subsidiary_key]
-            old_distributions = subsidiary.get('distributions')
-            query_dict[subsidiary_key]['distributions'] = {**old_distributions, **distributions}
-        else:
-            query_dict[subsidiary_key] = {
-                'subsidiary_id': dist.subsidiary.id,
-                'subsidiary_name': dist.subsidiary.name,
-                'distributions': distributions,
-            }
-
-    print(queryset)
     '''
     sum_total_ball_filled_10 = sum_ball_10 + sum_route_filled_10 + sum_ball_loan_10 + sum_car_filled_10
     sum_total_ball_filled_15 = sum_ball_15 + sum_route_filled_15 + sum_ball_loan_15 + sum_car_filled_15
