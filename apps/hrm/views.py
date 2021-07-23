@@ -17,6 +17,9 @@ from datetime import datetime
 from django.contrib.auth.hashers import make_password
 from django.db.models import Min, Sum, Max, Q, Count, F, Prefetch
 from django.db.models.functions import Coalesce
+# This is the default low-level cache.
+from django.views.decorators.cache import cache_page
+from django.core.cache import cache
 
 
 class Home(TemplateView):
@@ -185,11 +188,15 @@ def get_subsidiary_by_user_id(user_id):
 
 
 def get_subsidiary_by_user(user_obj):
-
-    worker_obj = Worker.objects.get(user=user_obj)
-    establishment_obj = Establishment.objects.filter(worker=worker_obj).last()
-    subsidiary = Subsidiary.objects.filter(establishment=establishment_obj).first()
-    return subsidiary
+    cache_key = 'subsidiary'
+    cache_time = 7200
+    data = cache.get(cache_key)
+    if not data:
+        worker_obj = Worker.objects.get(user=user_obj)
+        establishment_obj = Establishment.objects.filter(worker=worker_obj).last()
+        subsidiary = Subsidiary.objects.filter(establishment=establishment_obj).first()
+        cache.set(cache_key, subsidiary, cache_time)
+    return data
 
 
 # Create your views here.

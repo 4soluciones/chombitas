@@ -28,23 +28,23 @@
                     <td class="align-middle text-center">{{ value.pilot_id }}</td>
                     <td class="align-middle text-center">{{ value.pilot_names }}</td>
                     <td class="align-middle text-center">{{ value.license_plate }}</td>
-                    <td class="align-middle text-center">{{ value.sum_ball_5 }}</td>
-                    <td class="align-middle text-center">{{ value.sum_ball_10 }}</td>
-                    <td class="align-middle text-center">{{ value.sum_ball_15 }}</td>
-                    <td class="align-middle text-center">{{ value.sum_ball_45 }}</td>
+                    <td class="align-middle text-center">{{ value.sum_ball_5|safe|floatformat:0 }}</td>
+                    <td class="align-middle text-center">{{ value.sum_ball_10|safe|floatformat:0 }}</td>
+                    <td class="align-middle text-center">{{ value.sum_ball_15|safe|floatformat:0 }}</td>
+                    <td class="align-middle text-center">{{ value.sum_ball_45|safe|floatformat:0 }}</td>
                 </tr>
             {% endfor %}
             </tbody>
             <tfoot>
             <tr class="">
-                <td class="align-middle text-center" colspan="3" rowspan="2">SUMA TOTAL</td>
-                <td class="align-middle text-center bg-dark text-white">{{ acm_sum_5|safe|floatformat:0 }}</td>
-                <td class="align-middle text-center bg-dark text-white">{{ acm_sum_10|safe|floatformat:0 }}</td>
-                <td class="align-middle text-center bg-dark text-white">{{ acm_sum_15|safe|floatformat:0 }}</td>
-                <td class="align-middle text-center bg-dark text-white">{{ acm_sum_45|safe|floatformat:0 }}</td>
+                <td class="align-middle text-center bg-info text-white" colspan="3" rowspan="2">SUMA TOTAL</td>
+                <td class="align-middle text-center bg-info text-white">{{ acm_sum_5|safe|floatformat:0 }}</td>
+                <td class="align-middle text-center bg-info text-white">{{ acm_sum_10|safe|floatformat:0 }}</td>
+                <td class="align-middle text-center bg-info text-white">{{ acm_sum_15|safe|floatformat:0 }}</td>
+                <td class="align-middle text-center bg-info text-white">{{ acm_sum_45|safe|floatformat:0 }}</td>
             </tr>
             <tr class="">
-                <td class="align-middle text-center" colspan="4">{{ sum_total|safe|floatformat:0 }}</td>
+                <td class="align-middle text-center bg-info text-white" colspan="4">{{ sum_total|safe|floatformat:0 }}</td>
             </tr>
             </tfoot>
 
