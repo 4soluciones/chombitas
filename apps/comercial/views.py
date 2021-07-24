@@ -1588,9 +1588,9 @@ def get_distribution_list(request):
         else:
             my_date = datetime.now()
             date_now = my_date.strftime("%Y-%m-%d")
-            distribution_mobil_set = DistributionMobil.objects.annotate(max_date=Max('date_distribution')).filter(subsidiary=subsidiary_obj, date_distribution=F('max_date'))
-            if distribution_mobil_set.exists():
-                date_now = distribution_mobil_set.first().date_distribution.strftime("%Y-%m-%d")
+            # distribution_mobil_set = DistributionMobil.objects.annotate(id=Max('date_distribution')).filter(subsidiary=subsidiary_obj, date_distribution=F('max_date'))
+            # if distribution_mobil_set.exists():
+            #     date_now = distribution_mobil_set.first().date_distribution.strftime("%Y-%m-%d")
             return render(request, 'comercial/distribution_list.html', {
                 'date_now': date_now,
             })
