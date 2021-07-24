@@ -16,18 +16,19 @@ from reportlab.pdfgen.canvas import Canvas
 # from reportlab.rl_config import defaultPageSize
 from functools import partial
 from reportlab.lib.colors import PCMYKColor, PCMYKColorSep, Color, black, blue, red, pink, green
-from .models import Product, Client, Order, OrderDetail, SubsidiaryStore, ProductStore, Kardex
+from .models import Product, Client, Order, OrderDetail, SubsidiaryStore, ProductStore, Kardex, LoanPayment
 from django.contrib.auth.models import User
 from apps.hrm.views import get_subsidiary_by_user
-from .views import get_context_kardex_glp, get_dict_orders, total_remaining_repay_loan, total_remaining_return_loan,\
+from .views import get_context_kardex_glp, get_dict_orders, total_remaining_repay_loan, total_remaining_return_loan, \
     repay_loan, return_loan
 from django.template import loader
 from chombitas import settings
 from datetime import datetime
 from .format_dates import utc_to_local
-from django.db.models import Sum
+from django.db.models import Sum, Max, Min, Sum, Q, Value as V, F, Prefetch
 import io
 import pdfkit
+
 # Register Fonts
 # PAGE_HEIGHT = defaultPageSize[1]
 # PAGE_WIDTH = defaultPageSize[0]
@@ -79,7 +80,6 @@ def kardex_glp_pdf(request, pk):
     subsidiary_obj = get_subsidiary_by_user(user_obj)
     if request.method == 'GET':
         if pk != '':
-
             html = get_context_kardex_glp(subsidiary_obj, pk, is_pdf=True)
             options = {
                 'page-size': 'A3',
@@ -96,14 +96,13 @@ def kardex_glp_pdf(request, pk):
 
 
 def account_order_list_pdf(request, pk):
-
     if request.method == 'GET':
         client_obj = Client.objects.get(pk=int(pk))
 
         order_set = Order.objects.filter(client=client_obj, type='R')
 
         if pk != '':
-            html = get_dict_orders(order_set, client_obj=client_obj, is_pdf=True,)
+            html = get_dict_orders(order_set, client_obj=client_obj, is_pdf=True, )
             options = {
                 'page-size': 'A3',
                 'orientation': 'Landscape',
@@ -122,11 +121,12 @@ Title = "ESTADO DE CUENTA DE "
 pageinfo = "VICTORIA JUAN GAS S.A.C."
 register_date_now = utc_to_local(datetime.now())
 date_now = register_date_now.strftime("%d/%m/%y %H:%M")
+
+
 # A4 CM 21.0 x 29.7
 
 
 def all_account_order_list_pdf(self, pk=None):
-
     register_date_now = utc_to_local(datetime.now())
     date_now = register_date_now.strftime("%d/%m/%y %H:%M")
 
@@ -158,6 +158,7 @@ def all_account_order_list_pdf(self, pk=None):
     )
     all_orders = []
     detail_orders = []
+    client_dict = {}
 
     subsidiary_obj = get_subsidiary_by_user(user_obj)
     # Title = Title + str(get_subsidiary_by_user(user_obj))
@@ -165,40 +166,77 @@ def all_account_order_list_pdf(self, pk=None):
     summary_sum_total_remaining_return_loan = 0
 
     # for c in Client.objects.all().order_by('pk').values('id', 'names'):
-    client_set = Order.objects.filter(subsidiary_store__subsidiary=subsidiary_obj).exclude(type='E').values(
-        'client__id', 'client__names').distinct('client__id')
+    # client_set = Order.objects.filter(subsidiary_store__subsidiary=subsidiary_obj).exclude(type='E').values(
+    #     'client__id', 'client__names').distinct('client__id')
+
+    client_set = Client.objects.filter(
+        order__isnull=False,
+        order__subsidiary=subsidiary_obj,
+        order__type__in=['V', 'R']).distinct('id').values('id', 'names')
+
+    # client_set = Client.objects.filter(
+    #     order__isnull=False, order__subsidiary=subsidiary_obj, order__type__in=['V', 'R']
+    # ).values('id', 'names').annotate(max=Max('id'))
     # for c in Client.objects.filter(clientassociate__subsidiary=subsidiary_obj).order_by('names').values('id', 'names'):
-    for c in client_set:
-        sum_total_remaining_repay_loan = 0
-        sum_total_remaining_return_loan = 0
-        order_set = Order.objects.filter(client=c['client__id'], subsidiary_store__subsidiary=subsidiary_obj).exclude(
-            type='E').values('id').order_by('id')
-        # order_set = Order.objects.filter(client=c['id']).exclude(type='E').order_by('id')
 
-        if order_set.count() > 0:
-
-            a = a + 1
-            for o in order_set:
-
-            #     sum_total_remaining_repay_loan = sum_total_remaining_repay_loan + o.total_remaining_repay_loan()
-            #     sum_total_remaining_return_loan = sum_total_remaining_return_loan + o.total_remaining_return_loan()
-            # summary_sum_total_remaining_repay_loan = summary_sum_total_remaining_repay_loan + sum_total_remaining_repay_loan
-            # summary_sum_total_remaining_return_loan = summary_sum_total_remaining_return_loan + sum_total_remaining_return_loan
-                sum_total_remaining_repay_loan += total_remaining_repay_loan(o['id'])
-                sum_total_remaining_return_loan += total_remaining_return_loan(o['id'])
-            summary_sum_total_remaining_repay_loan += sum_total_remaining_repay_loan
-            summary_sum_total_remaining_return_loan += sum_total_remaining_return_loan
-
-        all_orders.append(
-            (
-                a,
-                c['client__names'],
-
-                # c.names.upper(),
-                round(sum_total_remaining_repay_loan, 2),
-                round(sum_total_remaining_return_loan),
+    order_set = Order.objects.filter(
+        subsidiary=subsidiary_obj, type__in=['V', 'R'],
+        client__id__in=[c['id'] for c in client_set]
+    ).prefetch_related(
+        Prefetch(
+            'orderdetail_set', queryset=OrderDetail.objects.select_related('unit', 'product').prefetch_related(
+                Prefetch(
+                    'loanpayment_set',
+                     queryset=LoanPayment.objects.only(
+                         'id', 'order_detail__id', 'quantity', 'price', 'discount'
+                     )
+                )
+            )
+            .only(
+                'id', 'order__id', 'quantity_sold', 'price_unit',
+                'product__id', 'product__name', 'unit__id', 'unit__name'
             )
         )
+    ).select_related('client')
+
+    for o in order_set:
+
+        key = o.client.id
+
+        rpl = total_remaining_repay_loan(order_detail_set=o.orderdetail_set.all())
+        rtl = total_remaining_return_loan(order_detail_set=o.orderdetail_set.all())
+
+        if key in client_dict:
+            client = client_dict[key]
+
+            old_rpl = client.get('sum_total_remaining_repay_loan')
+            old_rtl = client.get('sum_total_remaining_return_loan')
+
+            client_dict[key]['sum_total_remaining_repay_loan'] = old_rpl + rpl
+            client_dict[key]['sum_total_remaining_return_loan'] = old_rtl + rtl
+
+        else:
+            client_dict[key] = {
+                'client_id': o.client.id,
+                'client_names': o.client.names,
+                'sum_total_remaining_repay_loan': rpl,
+                'sum_total_remaining_return_loan': rtl,
+            }
+
+    for k, c in client_dict.items():
+        all_orders.append(
+            (
+                c['client_id'],
+                c['client_names'],
+                # c.names.upper(),
+                round(c['sum_total_remaining_repay_loan'], 2),
+                round(c['sum_total_remaining_return_loan']),
+            )
+        )
+
+        summary_sum_total_remaining_repay_loan += c['sum_total_remaining_repay_loan']
+        summary_sum_total_remaining_return_loan += c['sum_total_remaining_return_loan']
+
 
     t = Table([headings] + all_orders)
     t.setStyle(TableStyle(
@@ -245,7 +283,7 @@ def all_account_order_list_first_page(canvas, doc, custom_data):
     canvas.line(2.5 * cm, 25.5 * cm, 18.5 * cm, 25.5 * cm)
     canvas.line(2.5 * cm, 25.4 * cm, 18.5 * cm, 25.4 * cm)
     canvas.setFont('Helvetica-Bold', 16)
-    canvas.drawCentredString(210*mm/2.0, 297*mm-108, Title + str(custom_data.name))
+    canvas.drawCentredString(210 * mm / 2.0, 297 * mm - 108, Title + str(custom_data.name))
     canvas.setFont('Times-Roman', 9)
     canvas.drawString(cm, 0.75 * cm, "Pagina 1 - %s" % pageinfo)
     canvas.drawString(16.5 * cm, 26.25 * cm, date_now)
@@ -253,7 +291,6 @@ def all_account_order_list_first_page(canvas, doc, custom_data):
 
 
 def all_account_order_list_later_pages(canvas, doc):
-
     canvas.saveState()
     canvas.setFont('Times-Roman', 9)
     canvas.drawString(cm, 0.75 * cm, "Pagina %d - %s" % (doc.page, pageinfo))

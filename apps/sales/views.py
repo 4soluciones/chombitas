@@ -4290,136 +4290,136 @@ def report_payments_by_client(request):
             order__isnull=False, order__subsidiary=subsidiary_obj, order__type__in=['V', 'R']
         ).distinct('id').values('id', 'names')
 
-        loan_payments_group_set = LoanPayment.objects.filter(
-            operation_date__range=[start_date, end_date],
-            order_detail__order__client__id__in=[c['id'] for c in client_set]
-        ).values('operation_date').annotate(sum=Sum('price'))
-        print(loan_payments_group_set)
+        # loan_payments_group_set = LoanPayment.objects.filter(
+        #     operation_date__range=[start_date, end_date],
+        #     order_detail__order__client__id__in=[c['id'] for c in client_set]
+        # ).values('operation_date').annotate(sum=Sum('price'))
+        # print(loan_payments_group_set)
 
-        # for c in client_set:
-        #
-        #     loan_payments_group = LoanPayment.objects.filter(
-        #         operation_date__range=[start_date, end_date],
-        #         order_detail__order__client__id=c['id']).values('operation_date').annotate(sum=Sum('price'))
-        #     loan_payment_group = []
-        #
-        #     order_dict = {}
-        #     loan_payment_count = 0
-        #     for lpg in loan_payments_group:
-        #
-        #         loan_payments_set = LoanPayment.objects.filter(
-        #             operation_date=lpg['operation_date'],
-        #             order_detail__order__client__id=c['id']).values(
-        #             'operation_date', 'id', 'order_detail__order__id', 'order_detail__id', 'price', 'is_check'
-        #         )
-        #         has_check = False
-        #         rows = 0
-        #         rows_loans = 0
-        #         lps = []
-        #         loan_payment_dict = []
-        #
-        #         for lp in loan_payments_set:
-        #
-        #             if lp['is_check']:
-        #                 has_check = True
-        #
-        #             lps.append(lp['id'])
-        #
-        #             sum_subtotal = 0
-        #
-        #             transaction_payments_set = TransactionPayment.objects.filter(
-        #                 loan_payment__id=lp['id']
-        #             ).values('id', 'payment', 'type', 'operation_code')
-        #
-        #             order_obj = Order.objects.filter(
-        #                 pk=lp['order_detail__order__id']
-        #             ).values('id', 'truck__license_plate', 'create_at').first()
-        #
-        #             total_order = get_total_order(order_obj['id'])
-        #
-        #             price_accumulated = 0
-        #
-        #             _search_value = order_obj['id']
-        #             if _search_value in order_dict.keys():
-        #                 _order = order_dict[_search_value]
-        #                 _occurrences = _order.get('occurrences')
-        #                 _accumulated = _order.get('accumulated')
-        #                 order_dict[_search_value]['occurrences'] = _occurrences + 1
-        #                 order_dict[_search_value]['accumulated'] = _accumulated + lp['price']
-        #                 price_accumulated = _accumulated + lp['price']
-        #             else:
-        #                 order_dict[_search_value] = {'occurrences': 0, 'accumulated': lp['price'], }
-        #                 price_accumulated = lp['price']
-        #
-        #             order_detail_set = OrderDetail.objects.filter(
-        #                 order__id=lp['order_detail__order__id']
-        #             ).values('id', 'quantity_sold', 'price_unit', 'unit__id', 'unit__name', 'product__id',
-        #                      'product__name')
-        #
-        #             rows = rows + transaction_payments_set.count()
-        #             payed = 0
-        #             for od in order_detail_set:
-        #
-        #                 subtotal = od['quantity_sold'] * od['price_unit']
-        #                 sum_subtotal += subtotal
-        #
-        #                 has_loan_payment_set = LoanPayment.objects.filter(order_detail__id=od['id'])
-        #                 if has_loan_payment_set.exists():
-        #                     has_loan_payment_obj = has_loan_payment_set.first()
-        #                     price = has_loan_payment_obj.price
-        #                     payed += price
-        #
-        #             transaction_count = transaction_payments_set.count()
-        #             if transaction_count == 0:
-        #                 transaction_count = 1
-        #                 rows = rows + 1
-        #
-        #             item_loan = {
-        #                 'id': lp['id'],
-        #                 'price': lp['price'],
-        #                 'transaction': transaction_payments_set,
-        #                 'transaction_count': transaction_count,
-        #                 'sum_subtotal': sum_subtotal,
-        #                 'operation_date': lp['operation_date'],
-        #                 'payed': payed,
-        #                 'total_order': total_order,
-        #                 'pending': total_order - price_accumulated,
-        #                 'order_detail_set': order_detail_set,
-        #                 'order_obj': order_obj,
-        #                 'price_accumulated': price_accumulated,
-        #             }
-        #             loan_payment_dict.append(item_loan)
-        #
-        #         if rows == 0:
-        #             rows = 1
-        #
-        #         loan_payment_count = loan_payment_count + rows
-        #
-        #         loan_payment_group.append({
-        #             'date': lpg['operation_date'],
-        #             'loan_payment_dict': loan_payment_dict,
-        #             'loan_payment_count': len(loan_payment_dict),
-        #             'sum': round(lpg['sum'], 2),  # Agrupado de pagos por fecha
-        #             'rows': rows,
-        #             'orders': len(order_dict),
-        #             'lps': lps,
-        #             'check': has_check
-        #         })
-        #
-        #     # loan_payment_count = len(loan_payment_group)
-        #     if loan_payments_group.exists():
-        #         client_item = {
-        #             'client_id': c['id'],
-        #             'client_names': c['names'],
-        #             'loan_payment_group': loan_payment_group,
-        #             'loan_payment_count': loan_payment_count
-        #         }
-        #         client_dict.append(client_item)
+        for c in client_set:
+
+            loan_payments_group = LoanPayment.objects.filter(
+                operation_date__range=[start_date, end_date],
+                order_detail__order__client__id=c['id']).values('operation_date').annotate(sum=Sum('price'))
+            loan_payment_group = []
+
+            order_dict = {}
+            loan_payment_count = 0
+            for lpg in loan_payments_group:
+
+                loan_payments_set = LoanPayment.objects.filter(
+                    operation_date=lpg['operation_date'],
+                    order_detail__order__client__id=c['id']).values(
+                    'operation_date', 'id', 'order_detail__order__id', 'order_detail__id', 'price', 'is_check'
+                )
+                has_check = False
+                rows = 0
+                rows_loans = 0
+                lps = []
+                loan_payment_dict = []
+
+                for lp in loan_payments_set:
+
+                    if lp['is_check']:
+                        has_check = True
+
+                    lps.append(lp['id'])
+
+                    sum_subtotal = 0
+
+                    transaction_payments_set = TransactionPayment.objects.filter(
+                        loan_payment__id=lp['id']
+                    ).values('id', 'payment', 'type', 'operation_code')
+
+                    order_obj = Order.objects.filter(
+                        pk=lp['order_detail__order__id']
+                    ).values('id', 'truck__license_plate', 'create_at').first()
+
+                    total_order = get_total_order(order_obj['id'])
+
+                    price_accumulated = 0
+
+                    _search_value = order_obj['id']
+                    if _search_value in order_dict.keys():
+                        _order = order_dict[_search_value]
+                        _occurrences = _order.get('occurrences')
+                        _accumulated = _order.get('accumulated')
+                        order_dict[_search_value]['occurrences'] = _occurrences + 1
+                        order_dict[_search_value]['accumulated'] = _accumulated + lp['price']
+                        price_accumulated = _accumulated + lp['price']
+                    else:
+                        order_dict[_search_value] = {'occurrences': 0, 'accumulated': lp['price'], }
+                        price_accumulated = lp['price']
+
+                    order_detail_set = OrderDetail.objects.filter(
+                        order__id=lp['order_detail__order__id']
+                    ).values('id', 'quantity_sold', 'price_unit', 'unit__id', 'unit__name', 'product__id',
+                             'product__name')
+
+                    rows = rows + transaction_payments_set.count()
+                    payed = 0
+                    for od in order_detail_set:
+
+                        subtotal = od['quantity_sold'] * od['price_unit']
+                        sum_subtotal += subtotal
+
+                        has_loan_payment_set = LoanPayment.objects.filter(order_detail__id=od['id'])
+                        if has_loan_payment_set.exists():
+                            has_loan_payment_obj = has_loan_payment_set.first()
+                            price = has_loan_payment_obj.price
+                            payed += price
+
+                    transaction_count = transaction_payments_set.count()
+                    if transaction_count == 0:
+                        transaction_count = 1
+                        rows = rows + 1
+
+                    item_loan = {
+                        'id': lp['id'],
+                        'price': lp['price'],
+                        'transaction': transaction_payments_set,
+                        'transaction_count': transaction_count,
+                        'sum_subtotal': sum_subtotal,
+                        'operation_date': lp['operation_date'],
+                        'payed': payed,
+                        'total_order': total_order,
+                        'pending': total_order - price_accumulated,
+                        'order_detail_set': order_detail_set,
+                        'order_obj': order_obj,
+                        'price_accumulated': price_accumulated,
+                    }
+                    loan_payment_dict.append(item_loan)
+
+                if rows == 0:
+                    rows = 1
+
+                loan_payment_count = loan_payment_count + rows
+
+                loan_payment_group.append({
+                    'date': lpg['operation_date'],
+                    'loan_payment_dict': loan_payment_dict,
+                    'loan_payment_count': len(loan_payment_dict),
+                    'sum': round(lpg['sum'], 2),  # Agrupado de pagos por fecha
+                    'rows': rows,
+                    'orders': len(order_dict),
+                    'lps': lps,
+                    'check': has_check
+                })
+
+            # loan_payment_count = len(loan_payment_group)
+            if loan_payments_group.exists():
+                client_item = {
+                    'client_id': c['id'],
+                    'client_names': c['names'],
+                    'loan_payment_group': loan_payment_group,
+                    'loan_payment_count': loan_payment_count
+                }
+                client_dict.append(client_item)
 
         tpl = loader.get_template('sales/report_payments_by_client_grid.html')
         context = ({
             'client_dict': client_dict,
-            'loan_payments_group_set': loan_payments_group_set,
+            # 'loan_payments_group_set': loan_payments_group_set,
         })
         return JsonResponse({
             'grid': tpl.render(context, request),
@@ -4994,12 +4994,12 @@ def status_account(request):
             .values('pilot__id', 'subsidiary__id').annotate(max=Max('id'))
 
         distribution_mobil_set = DistributionMobil.objects.filter(
-            id__in=[q['max'] for q in queryset]
+            id__in=[q['max'] for q in queryset], distributiondetail__isnull=False
         ).prefetch_related(
             Prefetch(
                 'distributiondetail_set',
                 queryset=DistributionDetail.objects.filter(
-                    status='C', type__in=['L']
+                    status='C', type__in=['L'], quantity__gt=0
                 ).select_related('unit', 'product').prefetch_related(
                     Prefetch(
                         'product__productdetail_set',
@@ -5088,23 +5088,6 @@ def status_account(request):
         order_set = Order.objects.filter(
             subsidiary=subsidiary_obj, type__in=['V', 'R'],
             client__id__in=[c['id'] for c in client_set]
-        # )
-            # .prefetch_related(
-            # Prefetch(
-            #     'orderdetail_set', queryset=OrderDetail.objects.select_related('unit', 'product').prefetch_related(
-            #         Prefetch(
-            #             'loanpayment_set',
-            #             queryset=LoanPayment.objects.only(
-            #                 'id', 'order_detail__id', 'quantity', 'price', 'discount'
-            #             )
-            #         )
-            #     )
-            #     .only(
-            #         'id', 'order__id', 'quantity_sold', 'price_unit',
-            #         'product__id', 'product__name', 'unit__id', 'unit__name'
-            #     )
-            # )
-            # )\
         ).select_related('client').annotate(
             total_remaining_return_loan=Coalesce(
                 Subquery(
@@ -5151,16 +5134,14 @@ def status_account(request):
                 )
                 , Value(0)
             )
-        ).only('id', 'client__id', 'client__names')
+        ).values('id', 'client__id', 'client__names', 'total_remaining_return_loan', 'total_remaining_repay_loan')
 
         for o in order_set:
 
-            key = o.client.id
+            key = o['client__id']
 
-            # rpl = total_remaining_repay_loan(order_detail_set=o.orderdetail_set.all())
-            # rtl = total_remaining_return_loan(order_detail_set=o.orderdetail_set.all())
-            rpl = o.total_remaining_repay_loan
-            rtl = o.total_remaining_return_loan
+            rpl = o['total_remaining_repay_loan']
+            rtl = o['total_remaining_return_loan']
 
             if key in client_dict:
                 client = client_dict[key]
@@ -5173,8 +5154,8 @@ def status_account(request):
 
             else:
                 client_dict[key] = {
-                    'client_id': o.client.id,
-                    'client_names': o.client.names,
+                    'client_id': o['client__id'],
+                    'client_names': o['client__names'],
                     'sum_total_remaining_repay_loan': rpl,
                     'sum_total_remaining_return_loan': rtl,
                 }
