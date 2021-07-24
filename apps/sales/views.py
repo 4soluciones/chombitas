@@ -29,7 +29,7 @@ from django.core import serializers
 from apps.sales.views_SUNAT import send_bill_nubefact, send_receipt_nubefact
 from apps.sales.models import OrderBill
 from apps.sales.number_to_letters import numero_a_letras, numero_a_moneda
-from django.db.models import Min, Sum, Max, Q, Value as V, F, Prefetch
+from django.db.models import Min, Sum, Max, Q, F, Prefetch, Subquery, OuterRef, Value
 from django.db.models.functions import Greatest
 
 from ..buys.models import PurchaseDetail
@@ -5083,33 +5083,84 @@ def status_account(request):
         client_dict = {}
         client_set = Client.objects.filter(
             order__isnull=False, order__subsidiary=subsidiary_obj, order__type__in=['V', 'R']
-        ).distinct('id').values('id', 'names')
+        ).values('id', 'names').annotate(max=Max('id'))
 
         order_set = Order.objects.filter(
             subsidiary=subsidiary_obj, type__in=['V', 'R'],
             client__id__in=[c['id'] for c in client_set]
-        ).prefetch_related(
-            Prefetch(
-                'orderdetail_set', queryset=OrderDetail.objects.select_related('unit', 'product').prefetch_related(
-                    Prefetch(
-                        'loanpayment_set',
-                        queryset=LoanPayment.objects.only(
-                            'id', 'order_detail__id', 'quantity', 'price', 'discount'
-                        )
+        # )
+            # .prefetch_related(
+            # Prefetch(
+            #     'orderdetail_set', queryset=OrderDetail.objects.select_related('unit', 'product').prefetch_related(
+            #         Prefetch(
+            #             'loanpayment_set',
+            #             queryset=LoanPayment.objects.only(
+            #                 'id', 'order_detail__id', 'quantity', 'price', 'discount'
+            #             )
+            #         )
+            #     )
+            #     .only(
+            #         'id', 'order__id', 'quantity_sold', 'price_unit',
+            #         'product__id', 'product__name', 'unit__id', 'unit__name'
+            #     )
+            # )
+            # )\
+        ).select_related('client').annotate(
+            total_remaining_return_loan=Coalesce(
+                Subquery(
+                    OrderDetail.objects.filter(
+                        order_id=OuterRef('id'), product_id__in=[1, 12, 2, 3], unit__name='B'
                     )
-                ).only(
-                    'id', 'order__id', 'quantity_sold', 'price_unit',
-                    'product__id', 'product__name', 'unit__id', 'unit__name'
+                    .annotate(
+                        return_loan_sum=Coalesce(
+                            Subquery(
+                                LoanPayment.objects.filter(order_detail=OuterRef('id')).values(
+                                    'order_detail_id').annotate(
+                                    return_loan=Coalesce(Sum('quantity'), Value(0))).values('return_loan')[:1],
+                                output_field=models.DecimalField()
+                            ), Value(0)
+                        )
+                    ).values('order_id')
+                    .annotate(
+                        amount=Sum(F('quantity_sold')-F('return_loan_sum'))
+                    )
+                    .values('amount')[:1]
                 )
+                , Value(0)
             )
-        ).select_related('client').only('id', 'client__id', 'client__names')
+        ).annotate(
+            total_remaining_repay_loan=Coalesce(
+                Subquery(
+                    OrderDetail.objects.filter(
+                        order_id=OuterRef('id'), unit__name__in=['G', 'GBC']
+                    )
+                    .annotate(
+                        repay_loan_sum=Coalesce(
+                            Subquery(
+                                LoanPayment.objects.filter(order_detail=OuterRef('id'), quantity=0).values(
+                                    'order_detail_id').annotate(
+                                    repay_loan=Coalesce(Sum('price'), Value(0))).values('repay_loan')[:1],
+                                output_field=models.DecimalField()
+                            ), Value(0)
+                        )
+                    ).values('order_id')
+                    .annotate(
+                        amount2=Sum(F('quantity_sold')*F('price_unit')-F('repay_loan_sum'))
+                    )
+                    .values('amount2')[:1]
+                )
+                , Value(0)
+            )
+        ).only('id', 'client__id', 'client__names')
 
         for o in order_set:
 
             key = o.client.id
 
-            rpl = total_remaining_repay_loan(order_detail_set=o.orderdetail_set.all())
-            rtl = total_remaining_return_loan(order_detail_set=o.orderdetail_set.all())
+            # rpl = total_remaining_repay_loan(order_detail_set=o.orderdetail_set.all())
+            # rtl = total_remaining_return_loan(order_detail_set=o.orderdetail_set.all())
+            rpl = o.total_remaining_repay_loan
+            rtl = o.total_remaining_return_loan
 
             if key in client_dict:
                 client = client_dict[key]

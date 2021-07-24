@@ -188,15 +188,15 @@ def get_subsidiary_by_user_id(user_id):
 
 
 def get_subsidiary_by_user(user_obj):
-    cache_key = 'subsidiary'
-    cache_time = 7200
-    data = cache.get(cache_key)
-    if not data:
-        worker_obj = Worker.objects.get(user=user_obj)
-        establishment_obj = Establishment.objects.filter(worker=worker_obj).last()
-        subsidiary = Subsidiary.objects.filter(establishment=establishment_obj).first()
-        cache.set(cache_key, subsidiary, cache_time)
-    return data
+    # cache_key = 'subsidiary'
+    # cache_time = 7200
+    # data = cache.get(cache_key)
+    # if not data:
+    worker_obj = Worker.objects.get(user=user_obj)
+    establishment_obj = Establishment.objects.filter(worker=worker_obj).last()
+    subsidiary = Subsidiary.objects.filter(establishment=establishment_obj).first()
+    # cache.set(cache_key, subsidiary, cache_time)
+    return subsidiary
 
 
 # Create your views here.
@@ -206,7 +206,15 @@ class EmployeeList(View):
     template_name = 'hrm/employee_list.html'
 
     def get_queryset(self):
-        return self.model.objects.all().order_by("created_at")
+        return self.model.objects.all().prefetch_related(
+            Prefetch(
+                'worker_set', queryset=Worker.objects.prefetch_related(
+                    Prefetch(
+                        'establishment_set', queryset=Establishment.objects.select_related('subsidiary')
+                    )
+                ).select_related('occupation_private_sector', 'user')
+            ),
+        ).select_related('document_type', 'document_issuing_country').order_by("created_at")
 
     def get_context_data(self, **kwargs):
         contexto = {}
