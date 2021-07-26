@@ -1,4 +1,4 @@
-<table class="table table-bordered">
+<table class="table table-bordered" id="report-payments">
     <thead>
     <tr class="text-white bg-dark text-uppercase">
 
@@ -70,3 +70,13 @@
 
     </tbody>
 </table>
+
+<button class="btn btn-success" id="printReportExcel">EXCEL</button>
+
+<script type="text/javascript">
+    $('#printReportExcel').click(function () {
+        $("#report-payments").table2excel({filename: "Reporte_Pagos_Agrupados.xls"});
+    });
+
+
+    </script>

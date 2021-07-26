@@ -4,7 +4,8 @@ from django.contrib.auth.decorators import login_required
 from apps.buys.views import new_loan_payment_buys_approved
 from apps.sales.views import *
 from apps.sales.views_SUNAT import query_dni
-from apps.sales.views_PDF import product_print, kardex_glp_pdf, account_order_list_pdf, all_account_order_list_pdf
+from apps.sales.views_PDF import product_print, kardex_glp_pdf, account_order_list_pdf, \
+    pdf_get_orders_for_status_account
 from apps.sales.views_EXCEL import kardex_glp_excel
 urlpatterns = [
     path('', login_required(Home.as_view()), name='home'),
@@ -69,7 +70,6 @@ urlpatterns = [
     # ReportLab
     path('product_print/', product_print, name='product_print'),
     path('product_print/<int:pk>/', product_print, name='product_print_one'),
-    path('all_account_order_list_pdf/<int:pk>/', all_account_order_list_pdf, name='all_account_order_list_pdf'),
 
     # GlP KARDEX
     path('get_kardex_glp/', login_required(get_kardex_glp), name='get_kardex_glp'),
@@ -145,5 +145,6 @@ urlpatterns = [
     path('check_loan_payment/', login_required(check_loan_payment), name='check_loan_payment'),
 
     path('test/', login_required(test), name='test'),
+    path('pdf_get_orders_for_status_account/', login_required(pdf_get_orders_for_status_account), name='pdf_get_orders_for_status_account'),
 ]
 

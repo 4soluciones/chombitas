@@ -8,7 +8,7 @@
 
 
     <div class="container mt-3">
-        <div class="card" id="content">
+        <div class="card mb-3">
             <div class="card-header">
                 <label class="col-form-label col-form-label-lg">Balones llenos</label>
             </div>
@@ -59,7 +59,7 @@
         </div>
 
         {#<div id="elementH"></div>#}
-        <div class="card" id="content">
+        <div class="card">
             <div class="card-header">
                 <label class="col-form-label col-form-label-lg">Estado de cuentas de clientes</label>
             </div>
@@ -114,42 +114,24 @@
                 dom: 'Bfrtip',
                 buttons: [
                     'copy', 'excel',
-                    {
+                    /*{
                         extend: 'pdfHtml5',
                         {#orientation: 'landscape',#}
                         pageSize: 'A4',
                         download: 'open'
-                    },
-                    /*{
+                    },*/
+                    {
                         text: 'PDF',
                         action: function (e, dt, node, config) {
-                            window.open("", '_blank');
+                            window.open("{% url 'sales:pdf_get_orders_for_status_account' %}", '_blank');
                         }
-                    }*/
+                    }
                 ]
             }).draw();
         }
 
         refreshTable();
 
-        {#        $('#printReport').click(function () {#}
-        {#            var doc = new jsPDF({#}
-        {#                orientation: 'landscape'#}
-        {#            });#}
-        {#            var elementHTML = $('#content').html();#}
-        {#            var specialElementHandlers = {#}
-        {#                '#elementH': function (element, renderer) {#}
-        {#                    return true;#}
-        {#                }#}
-        {#            };#}
-        {#            doc.text(20, 20, 'Hello world!');#}
-        {#            doc.fromHTML(elementHTML, 10, 10, {#}
-        {#                'width': 250,#}
-        {#                'elementHandlers': specialElementHandlers#}
-        {#            });#}
-        {##}
-        {#// Save the PDF#}
-        {#            doc.save('sample-document.pdf');#}
-        {#        })#}
+
     </script>
 {% endblock extrajs %}

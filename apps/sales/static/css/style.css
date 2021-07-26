@@ -807,3 +807,18 @@ tr td.td-green { background-color: #6dec6d; }
 /*.green:hover {*/
 /*    background-color: darkGreen;*/
 /*}*/
+
+.text-vertical{
+    float: right!important;
+    width: 14px;
+}
+
+.text-rotate{
+    transform: rotate(-90deg);
+    bottom: 40px;
+    left: 0;
+    right: 0;
+    position: absolute;
+    top: 40px;
+}
+

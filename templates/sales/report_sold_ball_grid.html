@@ -1,4 +1,4 @@
-<table class="table table-bordered">
+<table class="table table-bordered" id="report-sold-ball">
     <thead>
     <tr class="text-white text-uppercase">
 {#        <td class="bg-primary align-middle text-center col-form-label p-1">#</td>#}
@@ -79,3 +79,11 @@
     </tr>
     </tfoot>
 </table>
+
+<button class="btn btn-success" id="printReportExcel">EXCEL</button>
+
+<script type="text/javascript">
+    $('#printReportExcel').click(function () {
+                $("#report-sold-ball").table2excel({filename: "Reporte_fierros_vendidos.xls"});
+            });
+</script>

@@ -62,7 +62,7 @@
             let _client_id = $('#id_client').val();
             let _start_date = $('#id-start-date').val();
             let _end_date = $('#id-end-date').val();
-
+            $('#tbl-orders').empty();
             $.ajax({
                 url: '/sales/sold_ball_request/',
                 async: true,
