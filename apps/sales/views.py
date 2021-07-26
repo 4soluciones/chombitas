@@ -4993,7 +4993,7 @@ def status_account(request):
             .values('pilot__id', 'subsidiary__id').annotate(max=Max('id'))
 
         distribution_mobil_set = DistributionMobil.objects.filter(
-            id__in=[q['max'] for q in queryset], distributiondetail__isnull=False
+            id__in=[q['max'] for q in queryset]
         ).prefetch_related(
             Prefetch(
                 'distributiondetail_set',
