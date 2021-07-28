@@ -45,11 +45,22 @@ class ProductList(View):
     template_name = 'sales/product_list.html'
 
     def get_queryset(self):
+
+        last_kardex = Kardex.objects.filter(product_store=OuterRef('id')).order_by('-id')[:1]
+
         return self.model.objects.filter(
             is_enabled=True
         ).select_related('product_family', 'product_brand', 'product_subcategory__product_category').prefetch_related(
             Prefetch(
                 'productstore_set', queryset=ProductStore.objects.select_related('subsidiary_store__subsidiary')
+                    .annotate(
+                        last_remaining_quantity=Subquery(last_kardex.values('remaining_quantity'))
+                    )
+                    # .annotate(
+                    #     last_kardex=Subquery(
+                    #         Kardex.objects.filter(product_store=OuterRef('id'), id='last_id').values('remaining_quantity')[:1], output_field=models.DecimalField()
+                    #     )
+                # )
             ),
             Prefetch(
                 'productdetail_set', queryset=ProductDetail.objects.select_related('unit')
