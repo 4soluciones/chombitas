@@ -7,172 +7,117 @@
     <div class="card">
 
         <div class="card-header">
-            <h5 class="card-title">Productos</h5>
+            <label class="col-form-label col-form-label-lg">Productos</label>
             <h6 class="card-subtitle text-muted">Edición - Inventario inicial - kardex - Presentaciones.</h6>
         </div>
 
-        <div class="card-body">
+        <div class="card-body overflow-auto">
+<div class="container-fluid rem-120 p-0">
+    <div class="row bg-secondary text-white m-0">
+                <div class="col border py-3 d-flex justify-content-center align-items-center">#</div>
+                <div class="col border py-3 d-flex justify-content-center align-items-center table-warning text-dark">Nombre</div>
+                <div class="col border py-3 d-flex justify-content-center align-items-center">Subcategoria</div>
+                <div class="col border py-3 d-flex justify-content-center align-items-center">Categoria</div>
+                <div class="col-1 border py-3 d-flex justify-content-center align-items-center">Detalles</div>
+                <div class="col-2 border py-3 d-flex justify-content-center align-items-center">Stock en sedes</div>
+                <div class="col-3 border py-3 d-flex justify-content-center align-items-center">Unidades</div>
+                <div class="col-2 border py-3 d-flex justify-content-center align-items-center">Insumos/Receta</div>
+                <div class="col-1 border py-3 d-flex justify-content-center align-items-center">UPDATE</div>
+            </div>
+</div>
+<div class="container-fluid table-like rem-120 p-0">
 
-            <div class="table-responsive dataTables_wrapper ">
+            {% for product in products %}
+            <div class="row w-100 border-top border-dark m-0">
+                <div class="col border id d-flex justify-content-center align-items-center" data-sort-value="original-order">{{ product.id }}</div>
+                <div class="col border text-break search-field name d-flex justify-content-center align-items-center table-warning">{{ product.name }}</div>
+                <div class="col border text-break search-field subcategory d-flex justify-content-center align-items-center">{{ product.product_subcategory.name }}</div>
+                <div class="col border text-break search-field category d-flex justify-content-center align-items-center">{{ product.product_subcategory.product_category.name }}</div>
+                <div class="col-1 border details">
+                    <address class="text-left">
+                        <strong>Codigo: {{ product.code }}</strong><br>
+                        Stock Minimo: <i>{{ product.stock_min }}</i><br>
+                        Stock Maximo: <i>{{ product.stock_max }}</i><br>
+                        Familia, {{ product.product_family.name }}<br>
+                        Marca, {{ product.product_brand.name }}<br>
+                    </address>
+                </div>
+                <div class="col-2 border stock d-flex flex-column">
+                    <div class="row flex-fill">
+                        <div class="col-4 d-flex justify-content-center align-items-center">Sede</div>
+                        <div class="col-4 border-left d-flex justify-content-center align-items-center">Almacen</div>
+                        <div class="col-4 border-left d-flex justify-content-center align-items-center">Stock</div>
+                    </div>
+                    {% for product_store in product.productstore_set.all %}
+                    <div class="row flex-fill">
+                        <div class="col-4 border-top d-flex justify-content-center align-items-center">{{ product_store.subsidiary_store.subsidiary.name }}</div>
+                        <div class="col-4 border-left border-top d-flex justify-content-center align-items-center">{{ product_store.subsidiary_store.name }}</div>
+                        <div class="col-4 border-left border-top d-flex justify-content-center align-items-center">{{ product_store.stock|safe }}{% if product.id == 9 %} ({{product_store.conversion_mml_g_stock|floatformat:2}} gl){% endif %}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="col-3 border units d-flex flex-column">
+                    <div class="row flex-fill">
+                        <div class="col-3 d-flex justify-content-center align-items-center">Unidad (Abrev.)</div>
+                        <div class="col-3 border-left d-flex justify-content-center align-items-center">Unidad</div>
+                        <div class="col-3 border-left d-flex justify-content-center align-items-center">P.U</div>
+                        <div class="col-3 border-left d-flex justify-content-center align-items-center">Cant. Min</div>
+                    </div>
+                    {% for product_detail in product.productdetail_set.all %}
+                    <div class="row flex-fill">
+                        <div class="col-3 border-top d-flex justify-content-center align-items-center">{{ product_detail.unit.name }}</div>
+                        <div class="col-3 border-left border-top d-flex justify-content-center align-items-center">{{ product_detail.unit.description }}</div>
+                        <div class="col-3 border-left border-top d-flex justify-content-center align-items-center">{{ product_detail.price_sale|safe }}</div>
+                        <div class="col-3 border-left border-top d-flex justify-content-center align-items-center">{{ product_detail.quantity_minimum|safe }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="col-2 border recipes d-flex flex-column">
 
-                <table id="product-data-grid" class="table table-bordered table-striped" cellspacing="0" width="100%">
-                    <thead>
-                    <tr class="text-center">
-                        <th>#</th>
-                        <th class="th-sm">Nombre</th>
-                        <th class="th-sm">Detalles</th>
-                        <th class="th-sm">Stock en sedes</th>
-                        <th class="th-sm">Unidades</th>
-                        <th class="th-sm">Insumos/Receta</th>
-                        <th class="th-sm">Imagen</th>
-                        <th class="th-sm">UPDATE</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-
-                    {% for product in products %}
-                        <tr class="text-center">
-                            <td class="align-middle">{{ product.id }}</td>
-                            <td class="align-middle font-weight-bolder">{{ product.name }}</td>
-                            <td class="align-middle">
-
-                                <address class="text-left">
-                                    <strong>Codigo: {{ product.code }}</strong><br>
-                                    Stock Minimo: <i>{{ product.stock_min }}</i><br>
-                                    Stock Maximo: <i>{{ product.stock_max }}</i><br>
-                                    Familia, {{ product.product_family.name }}<br>
-                                    Marca, {{ product.product_brand.name }}<br>
-                                </address>
-
-                            </td>
-                            <td class="p-0">
-                                {% if product.productstore_set.all.count > 0 %}
-                                    <table class="table table-sm text-uppercase small">
-                                        <thead>
-                                        <th>Sede</th>
-                                        <th>Almacen</th>
-                                        <th>Stock</th>
-                                        </thead>
-                                        <tbody>
-                                        {% for product_store in product.productstore_set.all %}
-                                            <tr class="{% if product_store.subsidiary_store.subsidiary.id == subsidiary.id %}text-danger font-weight-bolder{% endif %}">
-                                                <td>{{ product_store.subsidiary_store.subsidiary.name }}</td>
-                                                <td>{{ product_store.subsidiary_store.name }}</td>
-                                                <td>{{ product_store.get_stock_with_dot }}{% if product.id == 9 %} ({{product_store.conversion_mml_g_stock|floatformat:2}} gl){% else %}{% endif %}</td>
-                                            </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-                                {% endif %}
-
-                            </td>
-                            <td class="p-0">
-                                {% if product.productdetail_set.all.count > 0 %}
-                                    <table class="table table-sm text-uppercase small">
-                                        <thead>
-                                        <th>Unidad (Abrev.)</th>
-                                        <th>Unidad</th>
-                                        <th>P.U</th>
-                                        <th>Cant. Min</th>
-                                        </thead>
-                                        <tbody>
-                                        {% for product_detail in product.productdetail_set.all %}
-                                            <tr>
-                                                <td class="text-primary font-weight-bolder">{{ product_detail.unit.name }}</td>
-                                                <td>{{ product_detail.unit.description }}</td>
-                                                <td>{{ product_detail.get_price_sale_with_dot }}</td>
-                                                <td>{{ product_detail.get_quantity_minimum_with_dot }}</td>
-                                            </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-                                {% endif %}
-                            </td>
-
-                            <td class="p-0">
-                                {% if product.recipes.all.count > 0 %}
-                                    <div class="container">
-                                        <div class="row text-uppercase">
-                                            <div class="col-3 border">Insumo (Prod.)</div>
-                                            <div class="col-3 border">Cant.</div>
-                                            <div class="col-3 border">Unidad</div>
-                                            <div class="col-3 border">P.U</div>
-                                        </div>
-                                        {% for product_recipe in product.recipes.all %}
-{#                                            <tr>#}
-{#                                                <td class="text-primary font-weight-bolder">{{ product_recipe.product_input.name }}</td>#}
-{#                                                <td>{{ product_recipe.get_quantity_with_dot }}</td>#}
-{#                                                <td>{{ product_recipe.unit.description }}</td>#}
-{#                                                <td>{{ product_recipe.get_price_with_dot }}</td>#}
-{#                                            </tr>#}
-                                        <div class="row">
-                                            <div class="col-3 border text-primary">{{ product_recipe.product_input.name }}</div>
-                                            <div class="col-3 border">{{ product_recipe.get_quantity_with_dot }}</div>
-                                            <div class="col-3 border">{{ product_recipe.unit.description }}</div>
-                                            <div class="col-3 border">{{ product_recipe.get_price_with_dot }}</div>
-                                        </div>
-                                        {% endfor %}
-                                    </div>
-
-                                {% endif %}
-
-                            </td>
-
-                            <td>
-                                <img src="{{ product.photo.url }}" width="100px">
-                            </td>
-
-                            <td>
-
-
-                                <!-- Example single danger button -->
-                                <div class="btn-group">
-                                    <button type="button" class="btn btn-danger dropdown-toggle" data-toggle="dropdown"
-                                            aria-haspopup="true" aria-expanded="false">
-                                        Action
-                                    </button>
-                                    <div class="dropdown-menu bg-danger text-light">
-
-
-                                        <a class="dropdown-item"
-                                           onclick="showModalEdition('{% url 'sales:json_product_edit' product.id %}')">
-                                            <i class="fas fa-edit"></i> Editar</a>
-                                        <a class="dropdown-item quantity-on-hand" pk="{{ product.id }}">
-                                            <i class="fas fa-sync-alt"></i> Inventario inicial (Cantidad a la mano)</a>
-                                        <a class="dropdown-item get-kardex" pk="{{ product.id }}">
-                                            <i class="fas fa-sync-alt"></i> Ver kardex</a>
-                                        <a class="dropdown-item get-product-detail" pk="{{ product.id }}">
-                                            <i class="fas fa-sync-alt"></i> Ver presentaciones</a>
-                                        <a href="{% url 'sales:product_print_one' product.id %}" target="print"
-                                           class="dropdown-item text-light"><span class="fa fa-print"></span> print</a>
-                                        <a class="dropdown-item btn-product-recipe" pk="{{ product.id }}">
-                                            <i class="fas fa-adjust"></i> Recetas</a>
-                                    </div>
-                                </div>
-
-
-                            </td>
-
-                        </tr>
+                    <div class="row flex-fill">
+                        <div class="col-3 d-flex justify-content-center align-items-center">Insumo (Prod.)</div>
+                        <div class="col-3 border-left d-flex justify-content-center align-items-center">Cant.</div>
+                        <div class="col-3 border-left d-flex justify-content-center align-items-center">Unidad</div>
+                        <div class="col-3 border-left d-flex justify-content-center align-items-center">P.U</div>
+                    </div>
+                    {% for product_recipe in product.recipes.all %}
+                    <div class="row flex-fill">
+                        <div class="col-3 border-top d-flex justify-content-center align-items-center">{{ product_recipe.product_input.name }}</div>
+                        <div class="col-3 border-left border-top d-flex justify-content-center align-items-center">{{ product_recipe.quantity|safe }}</div>
+                        <div class="col-3 border-left border-top d-flex justify-content-center align-items-center">{{ product_recipe.unit.description }}</div>
+                        <div class="col-3 border-left border-top d-flex justify-content-center align-items-center">{{ product_recipe.price|safe }}</div>
+                    </div>
                     {% endfor %}
 
+                </div>
+                <div class="col-1 border update d-flex justify-content-center align-items-center">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-danger dropdown-toggle" data-toggle="dropdown"
+                                aria-haspopup="true" aria-expanded="false">
+                            Action
+                        </button>
+                        <div class="dropdown-menu bg-danger text-light">
 
-                    </tbody>
-                    <tfoot>
-                    <tr class="text-center">
-                        <th>#</th>
-                        <th class="th-sm">Nombre</th>
-                        <th class="th-sm">Detalles</th>
-                        <th class="th-sm">Stock en sedes</th>
-                        <th class="th-sm">Unidades</th>
-                        <th class="th-sm">Insumos/Receta</th>
-                        <th class="th-sm">Imagen</th>
-                        <th class="th-sm">UPDATE</th>
-                    </tr>
-                    </tfoot>
-                </table>
 
+                            <a class="dropdown-item"
+                               onclick="showModalEdition('{% url 'sales:json_product_edit' product.id %}')">
+                                <i class="fas fa-edit"></i> Editar</a>
+                            <a class="dropdown-item quantity-on-hand" pk="{{ product.id }}">
+                                <i class="fas fa-sync-alt"></i> Inventario inicial (Cantidad a la mano)</a>
+                            <a class="dropdown-item get-kardex" pk="{{ product.id }}">
+                                <i class="fas fa-sync-alt"></i> Ver kardex</a>
+                            <a class="dropdown-item get-product-detail" pk="{{ product.id }}">
+                                <i class="fas fa-sync-alt"></i> Ver presentaciones</a>
+                            <a href="{% url 'sales:product_print_one' product.id %}" target="print"
+                               class="dropdown-item text-light"><span class="fa fa-print"></span> print</a>
+                            <a class="dropdown-item btn-product-recipe" pk="{{ product.id }}">
+                                <i class="fas fa-adjust"></i> Recetas</a>
+                        </div>
+                    </div>
+                </div>
             </div>
+            {% endfor %}
+</div>
 
         </div>
 
