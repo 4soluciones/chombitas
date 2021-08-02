@@ -39,9 +39,15 @@
     {% endfor %}
     </tbody>
     <tfoot>
-    <tr>
-        <td class="col-form-label col-form-label-lg align-middle text-center" colspan="7">Suma Total:</td>
-        <td class="col-form-label col-form-label-lg align-middle text-center">{{ sum_all_total|safe }}</td>
+    <tr class="bg-success">
+        <td class="col-form-label col-form-label-lg align-middle text-right" colspan="7">Monto base:</td>
+        <td class="col-form-label col-form-label-lg align-middle text-left" colspan="5">S/ {{ base_amount|safe }}</td>
+    </tr> <tr class="bg-success">
+        <td class="col-form-label col-form-label-lg align-middle text-right" colspan="7">IGV(18%):</td>
+        <td class="col-form-label col-form-label-lg align-middle text-left" colspan="5">S/ {{ igv|safe }}</td>
+    </tr> <tr class="bg-success">
+        <td class="col-form-label col-form-label-lg align-middle text-right" colspan="7">Monto Total:</td>
+        <td class="col-form-label col-form-label-lg align-middle text-left" colspan="5">S/ {{ sum_all_total|safe }}</td>
     </tr>
     </tfoot>
 </table>

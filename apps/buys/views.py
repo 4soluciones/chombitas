@@ -1811,7 +1811,7 @@ def report_purchases_all(request):
         end_date = str(request.POST.get('end-date'))
 
         purchase_set = Purchase.objects.filter(
-            subsidiary=subsidiary_obj, purchase_date__range=[start_date, end_date], status='S'
+            subsidiary=subsidiary_obj, purchase_date__range=[start_date, end_date], status__in=['S', 'A']
         ).prefetch_related(
             Prefetch(
                 'purchasedetail_set', queryset=PurchaseDetail.objects.select_related('unit', 'product')
@@ -1823,6 +1823,8 @@ def report_purchases_all(request):
             )
         )
 
+        igv = 0
+        base_amount = 0
         sum_all_total = 0
         purchase_dict = []
         for p in purchase_set.all():
@@ -1856,10 +1858,15 @@ def report_purchases_all(request):
 
             purchase_dict.append(item_purchase)
 
+        base_amount = float(sum_all_total) / 1.18
+        igv = float(sum_all_total) - base_amount
+
         tpl = loader.get_template('buys/report_purchases_all_grid.html')
         context = ({
             'purchase_set': purchase_dict,
             'sum_all_total': round(float(sum_all_total), 2),
+            'base_amount': round(float(base_amount), 2),
+            'igv': round(float(igv), 2),
         })
         return JsonResponse({
             'grid': tpl.render(context, request),
