@@ -52,6 +52,7 @@ def save_purchase(request):
         # print(data_purchase)
 
         provider_id = str(data_purchase["ProviderId"])
+        type_bill = str(data_purchase["Type_bill"])
         date = str(data_purchase["Date"])
         invoice = str(data_purchase["Invoice"])
         print(data_purchase["truck"])
@@ -77,6 +78,7 @@ def save_purchase(request):
             subsidiary=subsidiary_obj,
             truck=truck_obj,
             status=status,
+            type_bill=type_bill,
         )
         purchase_obj.save()
 

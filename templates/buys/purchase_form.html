@@ -108,7 +108,8 @@
                     "Invoice": $('#id_factura').val(),
                     "ProviderId": $('#id_proveedor').val(),
                     "Date": $('#id_fechacompra').val(),
-                    "truck": $('#id-truck').val()
+                    "truck": $('#id-truck').val(),
+                    "Type_bill": $('#id_type_bill').val()
                 };
                 // Recorre cada detalle de producto (son 2 arrays) each -> recorre
 
@@ -136,7 +137,7 @@
                     contentType: 'application/json;charset=UTF-8',
                     headers: {"X-CSRFToken": '{{ csrf_token }}'},
                     success: function (response, textStatus, xhr) {
-                        if (xhr.status == 200) {
+                        if (xhr.status === 200) {
                             toastr.success(response.message, '¡COMPRA REGISTRADA CORRECTAMENTE!');
                             setTimeout(() => {
                                 location.reload();
@@ -181,7 +182,7 @@
 
             });
 
-        })
+        });
 
         //Bonton eliminar fila
         function deleteItem($id) {
@@ -199,5 +200,27 @@
             });
 
         }
+
+        $('#id_type_bill').change(function () {
+
+            let _type = $(this).val();
+
+            if(_type === 'F') {
+                $('#id_factura').removeAttr('readonly')
+            }
+            else if (_type === 'B'){
+                $('#id_factura').attr('readonly', true)
+                $('#id_factura').val('')
+            }
+            else if (_type === 'T'){
+                $('#id_factura').attr('readonly', true)
+                $('#id_factura').val('')
+            }
+
+        });
+
+
+
+
     </script>
 {% endblock extrajs %}

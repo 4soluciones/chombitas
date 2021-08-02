@@ -16,7 +16,7 @@
                                 <option value="{{ o.id }}">{{ o.name }}</option>
                             {% endif %}
                         {% endfor %}
-                        </select>
+                    </select>
                     </td>
                     <td style="width: 10%">
                         <button type="button" id="btn-new"
@@ -41,17 +41,28 @@
                     </td>
                 </tr>
                 <tr>
-                    <td>Numero factura:</td>
-                    <td><input type="text" class="form-control" id="id_factura"
-                               name="factura"
-                               placeholder="Numero factura"
-                               value="{{ employee.person.paternal_last_name }}" required>
+                    <td>Tipo de Documento:</td>
+                    <td style="width: 10%">
+                        <select class="form-control" id="id_type_bill" name="type_bill" required>
+                            <option disabled selected value=""> Seleccione</option>
+                            <option value="T">TICKET</option>
+                            <option value="B">BOLETA</option>
+                            <option value="F">FACTURA</option>
+                        </select>
                     </td>
                     <td>
                         <button type="button" id="btn-detail" class="btn btn-primary btn-block pb-1"
                                 data-toggle="modal"
                                 data-target="#modal-updetail">Detalles
                         </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Numero factura:</td>
+                    <td><input type="text" class="form-control" id="id_factura"
+                               name="factura"
+                               placeholder="Numero factura"
+                               value="" readonly>
                     </td>
                 </tr>
                 <tr>
