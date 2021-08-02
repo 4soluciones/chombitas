@@ -201,26 +201,6 @@
 
         }
 
-        $('#id_type_bill').change(function () {
-
-            let _type = $(this).val();
-
-            if(_type === 'F') {
-                $('#id_factura').removeAttr('readonly')
-            }
-            else if (_type === 'B'){
-                $('#id_factura').attr('readonly', true)
-                $('#id_factura').val('')
-            }
-            else if (_type === 'T'){
-                $('#id_factura').attr('readonly', true)
-                $('#id_factura').val('')
-            }
-
-        });
-
-
-
 
     </script>
 {% endblock extrajs %}

@@ -1,0 +1,47 @@
+<table class="table table-bordered" id="report-payments">
+    <thead>
+    <tr class="text-white bg-dark text-uppercase">
+
+        <td class="col-form-label col-form-label-lg">ID</td>
+        <td class="col-form-label col-form-label-lg">PROVEEDOR</td>
+        <td class="col-form-label col-form-label-lg">FECHA</td>
+        <td class="col-form-label col-form-label-lg">TIPO DE COMPROBANTE</td>
+        <td class="col-form-label col-form-label-lg">NUMERO DE COMPROBANTE</td>
+        <td class="col-form-label col-form-label-lg">ESTADO</td>
+        <td class="col-form-label col-form-label-lg">PLACA</td>
+        <td class="col-form-label col-form-label-lg">TOTAL</td>
+        <td class="col-form-label col-form-label-lg">PRODUCTO</td>
+        <td class="col-form-label col-form-label-lg">UNIDAD</td>
+        <td class="col-form-label col-form-label-lg">CANTIDAD</td>
+        <td class="col-form-label col-form-label-lg">PRECIO</td>
+    </tr>
+    </thead>
+    <tbody>
+    {% for p in purchase_set %}
+    <tr class="tbl-row">
+        <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ p.purchase_detail_count }}">{{ p.id }}</td>
+        <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ p.purchase_detail_count }}">{{ p.supplier }}</td>
+        <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ p.purchase_detail_count }}">{{ p.purchase_date|date:"Y-m-d"}}</td>
+        <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ p.purchase_detail_count }}">{{ p.type_bill }}</td>
+        <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ p.purchase_detail_count }}">{{ p.bill_number }}</td>
+        <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ p.purchase_detail_count }}">{{ p.status }}</td>
+        <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ p.purchase_detail_count }}">{{ p.truck }}</td>
+        <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ p.purchase_detail_count }}">{{ p.sum_total|safe }}</td>
+        {% for pd in p.purchase_detail_set %}
+            {% if not forloop.first %}<tr>
+            {% endif %}
+            <td class="col-form-label col-form-label-lg align-middle text-center">{{ pd.product }}</td>
+            <td class="col-form-label col-form-label-lg align-middle text-center">{{ pd.unit }}</td>
+            <td class="col-form-label col-form-label-lg align-middle text-center">{{ pd.quantity }}</td>
+            <td class="col-form-label col-form-label-lg align-middle text-center">{{ pd.price_unit|safe }}</td>
+        </tr>
+        {% endfor %}
+    {% endfor %}
+    </tbody>
+    <tfoot>
+    <tr>
+        <td class="col-form-label col-form-label-lg align-middle text-center" colspan="7">Suma Total:</td>
+        <td class="col-form-label col-form-label-lg align-middle text-center">{{ sum_all_total|safe }}</td>
+    </tr>
+    </tfoot>
+</table>

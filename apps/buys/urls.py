@@ -61,4 +61,6 @@ urlpatterns = [
     # Report Graphic
     path('get_report_graphic_glp/', get_report_graphic_glp, name='get_report_graphic_glp'),
 
+    # Report Buys
+    path('report_purchases_all/', report_purchases_all, name='report_purchases_all'),
 ]

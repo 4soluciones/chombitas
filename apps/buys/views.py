@@ -6,7 +6,7 @@ from http import HTTPStatus
 
 from django.contrib.auth.models import User
 from django.core import serializers
-from django.db.models import Q, Sum, F
+from django.db.models import Q, Sum, F, Prefetch, Subquery, OuterRef
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.template import loader
@@ -1791,3 +1791,104 @@ def get_report_graphic_glp(request):
             return render(request, 'buys/report_graphic_glp.html', {
                 'date_now': date_now,
             })
+
+
+def report_purchases_all(request):
+    user_id = request.user.id
+    user_obj = User.objects.get(id=user_id)
+    subsidiary_obj = get_subsidiary_by_user(user_obj)
+
+    if request.method == 'GET':
+        mydate = datetime.now()
+        formatdate = mydate.strftime("%Y-%m-%d")
+
+        return render(request, 'buys/report_purchases_all.html', {
+            'formatdate': formatdate,
+        })
+
+    elif request.method == 'POST':
+        start_date = str(request.POST.get('start-date'))
+        end_date = str(request.POST.get('end-date'))
+
+        purchase_set = Purchase.objects.filter(
+            subsidiary=subsidiary_obj, purchase_date__range=[start_date, end_date], status='S'
+        ).prefetch_related(
+            Prefetch(
+                'purchasedetail_set', queryset=PurchaseDetail.objects.select_related('unit', 'product')
+            )
+        ).select_related('supplier', 'truck').annotate(
+            sum_total=Subquery(
+                PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).annotate(
+                    return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
+            )
+        )
+
+        sum_all_total = 0
+        purchase_dict = []
+        for p in purchase_set.all():
+            license_plate = ''
+            if p.truck is not None:
+                license_plate = p.truck.license_plate
+
+            item_purchase = {
+                'id': p.id,
+                'supplier': p.supplier.name,
+                'purchase_date': p.purchase_date,
+                'type_bill': p.get_type_bill_display(),
+                'bill_number': p.bill_number,
+                'status': p.get_status_display(),
+                'truck': license_plate,
+                'purchase_detail_set': [],
+                'purchase_detail_count': p.purchasedetail_set.count(),
+                'sum_total': round(float(p.sum_total), 2),
+            }
+            sum_all_total += p.sum_total
+
+            for pd in p.purchasedetail_set.all():
+                item_purchases_detail = {
+                    'id': pd.product.name,
+                    'product': pd.product.name,
+                    'quantity': str(pd.quantity),
+                    'unit': pd.unit.name,
+                    'price_unit': round(float(pd.price_unit), 2),
+                }
+                item_purchase.get('purchase_detail_set').append(item_purchases_detail)
+
+            purchase_dict.append(item_purchase)
+
+        tpl = loader.get_template('buys/report_purchases_all_grid.html')
+        context = ({
+            'purchase_set': purchase_dict,
+            'sum_all_total': round(float(sum_all_total), 2),
+        })
+        return JsonResponse({
+            'grid': tpl.render(context, request),
+        }, status=HTTPStatus.OK)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

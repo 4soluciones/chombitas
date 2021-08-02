@@ -31,7 +31,7 @@ from apps.sales.number_to_letters import numero_a_letras, numero_a_moneda
 from django.db.models import Min, Sum, Max, Q, F, Prefetch, Subquery, OuterRef, Value
 from django.db.models.functions import Greatest
 
-from ..buys.models import PurchaseDetail
+from ..buys.models import PurchaseDetail, Purchase
 from apps.sales.funtions import *
 
 
@@ -5126,13 +5126,25 @@ def check_loan_payment(request):
 def test(request):
     if request.method == 'GET':
         client_id = 'T'
-        start_date = '2021-01-01'
-        end_date = '2021-07-19'
+        start_date = '2021-05-01'
+        end_date = '2021-08-02'
 
+        purchase_set = Purchase.objects.filter(
+            subsidiary=1, purchase_date__range=[start_date, end_date],
+        ).prefetch_related(
+            Prefetch(
+                'purchasedetail_set', queryset=PurchaseDetail.objects.select_related('unit', 'product')
+            )
+        ).select_related('supplier', 'truck').annotate(
+            sum_total=Subquery(
+                PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).annotate(
+                    return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
+            )
+        )
 
-        tpl = loader.get_template('sales/report_sold_ball_grid.html')
+        tpl = loader.get_template('buys/report_purchases_all_grid.html')
         context = ({
-
+            'purchase_set': purchase_set
         })
 
         return render(request, 'sales/test.html', {
