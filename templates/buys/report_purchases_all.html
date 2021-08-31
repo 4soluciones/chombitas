@@ -29,14 +29,14 @@
                            name="end-date"
                            value="{{ formatdate }}">
 
-                    <label for="id_truck_plate" class="my-1 mr-2">Placa:</label>
-                        <select id="id_truck_plate" name="truck-plate"
-                                class="form-control">
-                            <option selected value="0">Seleccione Placa..</option>
-                            {% for t in truck_set %}
-                                <option value="{{ t.id }}">{{ t.license_plate }}</option>
-                            {% endfor %}
-                        </select>
+{#                    <label for="id_truck_plate" class="my-1 mr-2">Placa:</label>#}
+{#                        <select id="id_truck_plate" name="truck-plate"#}
+{#                                class="form-control">#}
+{#                            <option selected value="0">Seleccione Placa..</option>#}
+{#                            {% for t in truck_set %}#}
+{#                                <option value="{{ t.id }}">{{ t.license_plate }}</option>#}
+{#                            {% endfor %}#}
+{#                        </select>#}
                     <button type="submit" class="btn btn-blue my-1 ml-2" id="btn-search">
                         <i class="fas fa-search-dollar"></i> Buscar
                     </button>

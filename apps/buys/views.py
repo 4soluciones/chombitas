@@ -1811,11 +1811,10 @@ def report_purchases_all(request):
     elif request.method == 'POST':
         start_date = str(request.POST.get('start-date'))
         end_date = str(request.POST.get('end-date'))
-        truck_id = int(request.POST.get('truck-plate'))
 
         purchase_set = Purchase.objects.filter(
             subsidiary=subsidiary_obj, purchase_date__range=[start_date, end_date],
-            status__in=['S', 'A'], truck__id=truck_id, type_bill='F'
+            status__in=['S', 'A'], type_bill='F'
         ).prefetch_related(
             Prefetch(
                 'purchasedetail_set', queryset=PurchaseDetail.objects.select_related('unit', 'product')
