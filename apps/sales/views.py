@@ -2358,15 +2358,15 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
     tpl = loader.get_template('sales/account_order_list.html')
     context = ({
         'dictionary': dictionary,
-        'sum_total': sum_total,
-        'sum_total_repay_loan': sum_total_repay_loan,
-        'sum_total_repay_loan_with_vouchers': sum_total_repay_loan_with_vouchers,
-        'sum_total_return_loan': sum_total_return_loan,
-        'sum_total_remaining_repay_loan': sum_total_remaining_repay_loan,
-        'sum_total_remaining_repay_loan_ball': sum_total_remaining_repay_loan_ball,
-        'sum_total_remaining_return_loan': sum_total_remaining_return_loan,
-        'sum_total_ball_changes': sum_total_ball_changes,
-        'sum_total_cash_flow_spending': sum_total_cash_flow_spending,
+        'sum_total': '{:,}'.format(round(float(sum_total), 2)),
+        'sum_total_repay_loan': '{:,}'.format(round(float(sum_total_repay_loan), 2)),
+        'sum_total_repay_loan_with_vouchers': '{:,}'.format(round(float(sum_total_repay_loan_with_vouchers), 2)),
+        'sum_total_return_loan': '{:,}'.format(round(float(sum_total_return_loan), 2)),
+        'sum_total_remaining_repay_loan': '{:,}'.format(round(float(sum_total_remaining_repay_loan), 2)),
+        'sum_total_remaining_repay_loan_ball': '{:,}'.format(round(float(sum_total_remaining_repay_loan_ball), 2)),
+        'sum_total_remaining_return_loan': '{:,}'.format(round(float(sum_total_remaining_return_loan), 2)),
+        'sum_total_ball_changes': '{:,}'.format(round(float(sum_total_ball_changes), 2)),
+        'sum_total_cash_flow_spending': '{:,}'.format(round(float(sum_total_cash_flow_spending), 2)),
         'is_pdf': is_pdf,
         'client_obj': client_obj,
     })
@@ -4409,7 +4409,7 @@ def report_payments_by_client(request):
                     'date': lpg['operation_date'],
                     'loan_payment_dict': loan_payment_dict,
                     'loan_payment_count': len(loan_payment_dict),
-                    'sum': round(lpg['sum'], 2),  # Agrupado de pagos por fecha
+                    'sum': '{:,}'.format(round(lpg['sum'], 2)),  # Agrupado de pagos por fecha
                     'rows': rows,
                     'orders': len(order_dict),
                     'lps': lps,
@@ -5099,7 +5099,7 @@ def status_account(request):
             'pilot_dict': pilot_dict,
             'sum_total': sum_total,
             'client_dict': client_dict,
-            'summary_sum_total_remaining_repay_loan': summary_sum_total_remaining_repay_loan,
+            'summary_sum_total_remaining_repay_loan': '{:,}'.format(round(float(summary_sum_total_remaining_repay_loan), 2)),
             'summary_sum_total_remaining_return_loan': summary_sum_total_remaining_return_loan,
             'acm_sum_5': acm_sum_5,
             'acm_sum_10': acm_sum_10,

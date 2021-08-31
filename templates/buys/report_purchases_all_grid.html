@@ -9,6 +9,8 @@
         <td class="col-form-label col-form-label-lg">NUMERO DE COMPROBANTE</td>
         <td class="col-form-label col-form-label-lg">ESTADO</td>
         <td class="col-form-label col-form-label-lg">PLACA</td>
+        <td class="col-form-label col-form-label-lg">SUBTOTAL</td>
+        <td class="col-form-label col-form-label-lg">IGV</td>
         <td class="col-form-label col-form-label-lg">TOTAL</td>
         <td class="col-form-label col-form-label-lg">PRODUCTO</td>
         <td class="col-form-label col-form-label-lg">UNIDAD</td>
@@ -26,6 +28,8 @@
         <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ p.purchase_detail_count }}">{{ p.bill_number }}</td>
         <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ p.purchase_detail_count }}">{{ p.status }}</td>
         <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ p.purchase_detail_count }}">{{ p.truck }}</td>
+        <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ p.purchase_detail_count }}">{{ p.base_amount|safe }}</td>
+        <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ p.purchase_detail_count }}">{{ p.igv|safe }}</td>
         <td class="col-form-label col-form-label-lg align-middle text-center" rowspan="{{ p.purchase_detail_count }}">{{ p.sum_total|safe }}</td>
         {% for pd in p.purchase_detail_set %}
             {% if not forloop.first %}<tr>

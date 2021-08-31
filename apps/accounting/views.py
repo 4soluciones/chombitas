@@ -960,11 +960,11 @@ def get_bank_control_list(request):
         context = ({
             'cash_flow_set': cash_flow_set,
             'has_rows': has_rows,
-            'inputs': inputs,
-            'outputs': outputs,
+            'inputs': '{:,}'.format(round(float(inputs), 2)),
+            'outputs': '{:,}'.format(round(float(outputs), 2)),
             'transfers': transfers,
             # 'current_balance': Cash.objects.get(id=id_cash).current_balance()
-            'current_balance': current_balance
+            'current_balance': '{:,}'.format(round(float(current_balance), 2)),
         })
         return JsonResponse({
             'grid': tpl.render(context, request),

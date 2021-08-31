@@ -333,7 +333,7 @@
 
 
                 {% empty %}
-                    <td colspan="23" rowspan="0">SIN DETALLES</td>
+                    <td colspan="24" rowspan="0">SIN DETALLES</td>
                     </tr>
 
                 {% endfor %}
@@ -342,16 +342,16 @@
         {% if not is_pdf %}
             <tfoot>{% endif %}
         <tr class="colcount ">
-            <td colspan="24" class="colcount"></td>
-            <td class="align-middle text-primary text-right">{{ sum_total|floatformat:2 }}</td>
-            <td class="align-middle text-primary text-right">{{ sum_total_repay_loan|floatformat:2 }}</td>
-            <td class="align-middle text-danger text-right">{{ sum_total_cash_flow_spending|floatformat:2 }}</td>
-            <td class="align-middle text-primary text-right">{{ sum_total_repay_loan_with_vouchers|floatformat:2 }}</td>
-            <td class="align-middle text-primary text-right">{{ sum_total_return_loan|floatformat:2 }}</td>
-            <td class="align-middle text-info text-right">{{ sum_total_remaining_repay_loan_ball|floatformat:2 }}</td>
-            <td class="align-middle text-primary text-right">{{ sum_total_remaining_repay_loan|floatformat:2 }}</td>
-            <td class="align-middle text-primary text-right">{{ sum_total_remaining_return_loan|floatformat:2 }}</td>
-            <td class="align-middle text-warning text-right">{{ sum_total_ball_changes|floatformat:2 }}</td>
+            <td colspan="25" class="colcount"></td>
+            <td class="align-middle text-primary text-right">{{ sum_total }}</td>
+            <td class="align-middle text-primary text-right">{{ sum_total_repay_loan }}</td>
+            <td class="align-middle text-danger text-right">{{ sum_total_cash_flow_spending }}</td>
+            <td class="align-middle text-primary text-right">{{ sum_total_repay_loan_with_vouchers }}</td>
+            <td class="align-middle text-primary text-right">{{ sum_total_return_loan }}</td>
+            <td class="align-middle text-info text-right">{{ sum_total_remaining_repay_loan_ball }}</td>
+            <td class="align-middle text-primary text-right">{{ sum_total_remaining_repay_loan }}</td>
+            <td class="align-middle text-primary text-right">{{ sum_total_remaining_return_loan }}</td>
+            <td class="align-middle text-warning text-right">{{ sum_total_ball_changes }}</td>
         </tr>
         {% if not is_pdf %}</tfoot>{% endif %}
     </table>

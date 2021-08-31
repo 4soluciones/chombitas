@@ -49,7 +49,7 @@
 
 {% block extrajs %}
     <script type="text/javascript">
-    loader = '<div class="container">' +
+        loader = '<div class="container">' +
             '<div class="row">' +
             '<div class="col-md-12">' +
             '<div class="loader">' +
@@ -105,5 +105,64 @@
             $('#search-form').modal('hide');
 
         });
+
+        $(function () {
+            $('#distribution-grid-list').bootstrapTable({
+                //pagination: true,
+                showFooter: false,
+                //search: true,
+                showExport: true,
+                //filter: true,
+                //showRefresh:true,
+                showPrint: true,
+                //showColumns: true,
+                showFullScreen: true,
+                //pageList:[10, 25, 50, 100, 'All'],
+                //showPaginationSwitch: true,
+                exportDataType: 'all',
+                exportTypes: ['pdf', 'excel', 'xlsx', 'txt', 'json', 'xml'],
+                //exportFooter: true,
+
+                exportOptions: {
+                    fileName: 'tableAllMass',
+                    buttons: [{
+                        {#extend: 'excel',#}
+                        {#text: 'Export Search Results',#}
+                        className: 'btn btn-primary',
+                    }],
+                    type: 'pdf',
+                    className: 'btn btn-primary',
+                    jspdf: {
+                        orientation: 'l',
+                        format: 'bestfit', //a3, bestfit
+                        margins: {left: 10, right: 10, top: 20, bottom: 20},
+                        autotable: {
+                            styles: {
+                                fillColor: '#fff',
+                                textColor: '#343a40',
+                                fontSize: 10,
+                                valign: 'middle',
+                                lineWidth: 0.02,
+                                lineColor: '#343a40'
+                            },
+                            tableLineColor: '#409EFF',
+                            tableWidth: 'wrap', // auto
+                            theme: 'grid',
+                            //tableExport: {onBeforeAutotable: DoBeforeAutotable, onCellData: DoCellData}
+
+                        }
+                    }
+                },
+                ignoreRow: [],
+
+            });
+
+            $('#printReportExcel').click(function () {
+                $("#distribution-grid-list").table2excel({filename: "Employees.xls"});
+            });
+
+        });
+
+
     </script>
 {% endblock extrajs %}

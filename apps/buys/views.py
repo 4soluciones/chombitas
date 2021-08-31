@@ -1797,6 +1797,7 @@ def report_purchases_all(request):
     user_id = request.user.id
     user_obj = User.objects.get(id=user_id)
     subsidiary_obj = get_subsidiary_by_user(user_obj)
+    truck_set = Truck.objects.all().order_by('license_plate')
 
     if request.method == 'GET':
         mydate = datetime.now()
@@ -1804,14 +1805,17 @@ def report_purchases_all(request):
 
         return render(request, 'buys/report_purchases_all.html', {
             'formatdate': formatdate,
+            'truck_set': truck_set,
         })
 
     elif request.method == 'POST':
         start_date = str(request.POST.get('start-date'))
         end_date = str(request.POST.get('end-date'))
+        truck_id = int(request.POST.get('truck-plate'))
 
         purchase_set = Purchase.objects.filter(
-            subsidiary=subsidiary_obj, purchase_date__range=[start_date, end_date], status__in=['S', 'A']
+            subsidiary=subsidiary_obj, purchase_date__range=[start_date, end_date],
+            status__in=['S', 'A'], truck__id=truck_id, type_bill='F'
         ).prefetch_related(
             Prefetch(
                 'purchasedetail_set', queryset=PurchaseDetail.objects.select_related('unit', 'product')
@@ -1832,6 +1836,9 @@ def report_purchases_all(request):
             if p.truck is not None:
                 license_plate = p.truck.license_plate
 
+            base_amount = float(p.sum_total) / float(1.18)
+            igv = float(p.sum_total) - float(base_amount)
+
             item_purchase = {
                 'id': p.id,
                 'supplier': p.supplier.name,
@@ -1842,6 +1849,8 @@ def report_purchases_all(request):
                 'truck': license_plate,
                 'purchase_detail_set': [],
                 'purchase_detail_count': p.purchasedetail_set.count(),
+                'base_amount': round(float(base_amount), 2),
+                'igv': round(float(igv), 2),
                 'sum_total': round(float(p.sum_total), 2),
             }
             sum_all_total += p.sum_total
@@ -1864,31 +1873,13 @@ def report_purchases_all(request):
         tpl = loader.get_template('buys/report_purchases_all_grid.html')
         context = ({
             'purchase_set': purchase_dict,
-            'sum_all_total': round(float(sum_all_total), 2),
-            'base_amount': round(float(base_amount), 2),
-            'igv': round(float(igv), 2),
+            'sum_all_total': '{:,}'.format(round(float(sum_all_total), 2)),
+            'base_amount': '{:,}'.format(round(float(base_amount), 2)),
+            'igv': '{:,}'.format(round(float(igv), 2)),
         })
         return JsonResponse({
             'grid': tpl.render(context, request),
         }, status=HTTPStatus.OK)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

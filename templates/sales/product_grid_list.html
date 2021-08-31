@@ -16,7 +16,7 @@
     <div class="row bg-secondary text-white m-0">
                 <div class="col border py-3 d-flex justify-content-center align-items-center">#</div>
                 <div class="col border py-3 d-flex justify-content-center align-items-center table-warning text-dark">Nombre</div>
-                <div class="col border py-3 d-flex justify-content-center align-items-center">Subcategoria</div>
+{#                <div class="col border py-3 d-flex justify-content-center align-items-center">Subcategoria</div>#}
                 <div class="col border py-3 d-flex justify-content-center align-items-center">Categoria</div>
                 <div class="col-1 border py-3 d-flex justify-content-center align-items-center">Detalles</div>
                 <div class="col-3 border d-flex flex-column">
@@ -62,7 +62,7 @@
             <div class="row w-100 border-top border-dark m-0">
                 <div class="col border id d-flex justify-content-center align-items-center" data-sort-value="original-order">{{ product.id }}</div>
                 <div class="col border text-break search-field name d-flex justify-content-center align-items-center table-warning">{{ product.name }}</div>
-                <div class="col border text-break search-field subcategory d-flex justify-content-center align-items-center">{{ product.product_subcategory.name }}</div>
+{#                <div class="col border text-break search-field subcategory d-flex justify-content-center align-items-center">{{ product.product_subcategory.name }}</div>#}
                 <div class="col border text-break search-field category d-flex justify-content-center align-items-center">{{ product.product_subcategory.product_category.name }}</div>
                 <div class="col-1 border details">
                     <address class="text-left">
@@ -77,7 +77,7 @@
 
                     {% for product_store in product.productstore_set.all %}
                     <div class="row flex-fill">
-                        <div class="col-4 border-top d-flex justify-content-center align-items-center">{{ product_store.subsidiary_store.subsidiary.name }}</div>
+                        <div class="col-4 border-top d-flex justify-content-center align-items-center text-center">{{ product_store.subsidiary_store.subsidiary.name }}</div>
                         <div class="col-4 border-left border-top d-flex justify-content-center align-items-center">{{ product_store.subsidiary_store.name }}</div>
                         <div class="col-2 border-left border-top d-flex justify-content-center align-items-center">{{ product_store.stock|safe }}{% if product.id == 9 %} ({{product_store.conversion_mml_g_stock|floatformat:2}} gl){% endif %}</div>
                         <div class="col-2 border-left border-top d-flex justify-content-center align-items-center">{{ product_store.last_remaining_quantity|default:"-"|safe }}</div>

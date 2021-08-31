@@ -79,14 +79,14 @@
                             <td class="align-middle text-center">{{ value.client_id }}</td>
                             <td class="align-middle text-center">{{ value.client_names }}</td>
                             <td class="align-middle text-center bg-warning text-dark">{{ value.sum_total_remaining_repay_loan|safe|floatformat:2 }}</td>
-                            <td class="align-middle text-center bg-dark text-white">{{ value.sum_total_remaining_return_loan|safe|floatformat:0 }}</td>
+                            <td class="align-middle text-center bg-dark text-white">{{ value.sum_total_remaining_return_loan|floatformat:0 }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
                     <tfoot>
                     <tr class="">
                         <td class="align-middle text-center" colspan="2">SUMA TOTAL</td>
-                        <td class="align-middle text-center bg-warning text-dark">{{ summary_sum_total_remaining_repay_loan|safe|floatformat:2 }}</td>
+                        <td class="align-middle text-center bg-warning text-dark">{{ summary_sum_total_remaining_repay_loan }}</td>
                         <td class="align-middle text-center bg-dark text-white">{{ summary_sum_total_remaining_return_loan|safe|floatformat:0 }}</td>
                     </tr>
                     </tfoot>
