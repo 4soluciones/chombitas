@@ -1,7 +1,7 @@
 {% extends 'home.html' %}
 
 {% block title %}
-    coronasoft.dev | Reporte de Compras Totales
+    coronasoft.dev | Reporte de Cuadro de Compras y Ventas Comparativo
 {% endblock title %}
 
 {% block body %}
@@ -10,7 +10,7 @@
         <div class="card">
 
             <div class="card-header">
-                <label class="col-form-label col-form-label-lg">Reporte de Compras Totales</label>
+                <label class="col-form-label col-form-label-lg">Reporte de Cuadro de Compras y Ventas Comparativo</label>
             </div>
 
             <div class="card-body">
@@ -29,14 +29,6 @@
                            name="end-date"
                            value="{{ formatdate }}">
 
-                    {#                    <label for="id_truck_plate" class="my-1 mr-2">Placa:</label>#}
-                    {#                        <select id="id_truck_plate" name="truck-plate"#}
-                    {#                                class="form-control">#}
-                    {#                            <option selected value="0">Seleccione Placa..</option>#}
-                    {#                            {% for t in truck_set %}#}
-                    {#                                <option value="{{ t.id }}">{{ t.license_plate }}</option>#}
-                    {#                            {% endfor %}#}
-                    {#                        </select>#}
                     <button type="submit" class="btn btn-blue my-1 ml-2" id="btn-search">
                         <i class="fas fa-search-dollar"></i> Buscar
                     </button>
@@ -47,26 +39,40 @@
         </div>
 
         <div class="card">
-            <div class="card-body table-responsive" id="tbl-purchases"></div>
+            <div class="card-body table-responsive" id="tbl-comparative"></div>
         </div>
     </div>
-
 
 {% endblock body %}
 
 {% block extrajs %}
 
+
     <script type="text/javascript">
 
+        loader = '<div class="container">' +
+            '<div class="row">' +
+            '<div class="col-md-12">' +
+            '<div class="loader">' +
+            '<p>Cargando...</p>' +
+            '<div class="loader-inner"></div>' +
+            '<div class="loader-inner"></div>' +
+            '<div class="loader-inner"></div>' +
+            '</div>' +
+            '</div>' +
+            '</div>' +
+            '</div>';
 
         $('#search-form').submit(function (event) {
             event.preventDefault();
             let data = new FormData($('#search-form').get(0));
 
             $('#btn-search').attr("disabled", "true");
+            $('#tbl-pays').empty();
+            $('#tbl-pays').html(loader);
 
             $.ajax({
-                url: '/buys/report_purchases_all/',
+                url: '/sales/comparative_sales_and_purchases_report/',
                 type: "POST",
                 data: data,
                 cache: false,
@@ -75,7 +81,7 @@
                 success: function (response, textStatus, xhr) {
                     if (xhr.status === 200) {
                         toastr.success(response['message'], '¡Bien hecho!');
-                        $('#tbl-purchases').html(response.grid);
+                        $('#tbl-comparative').html(response.grid);
                     }
                 },
                 error: function (jqXhr, textStatus, xhr) {
@@ -87,18 +93,7 @@
             $('#btn-search').removeAttr("disabled", "false");
         });
 
-        function humanizeNumber(n) {
-            n = n.toString()
-            while (true) {
-                let n2 = n.replace(/(\d)(\d{3})($|,|\.)/g, '$1,$2$3')
-                if (n === n2) break
-                n = n2
-            }
-            return n
-        }
-
-        console.log(humanizeNumber(3659.66))
-
     </script>
+
 
 {% endblock extrajs %}

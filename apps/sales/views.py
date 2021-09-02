@@ -28,10 +28,15 @@ from django.db import DatabaseError, IntegrityError
 from django.core import serializers
 from apps.sales.views_SUNAT import send_bill_nubefact, send_receipt_nubefact
 from apps.sales.number_to_letters import numero_a_letras, numero_a_moneda
+from django.utils import timezone
 from django.db.models import Min, Sum, Max, Q, F, Prefetch, Subquery, OuterRef, Value
 from django.db.models.functions import Greatest
+from django.db.models.functions import (
+    ExtractDay, ExtractMonth, ExtractQuarter, ExtractWeek,
+    ExtractWeekDay, ExtractIsoYear, ExtractYear,
+)
 
-from ..buys.models import PurchaseDetail, Purchase
+from ..buys.models import PurchaseDetail, Purchase, RequirementDetail_buys
 from apps.sales.funtions import *
 
 
@@ -45,7 +50,6 @@ class ProductList(View):
     template_name = 'sales/product_list.html'
 
     def get_queryset(self):
-
         last_kardex = Kardex.objects.filter(product_store=OuterRef('id')).order_by('-id')[:1]
 
         return self.model.objects.filter(
@@ -54,12 +58,12 @@ class ProductList(View):
             Prefetch(
                 'productstore_set', queryset=ProductStore.objects.select_related('subsidiary_store__subsidiary')
                     .annotate(
-                        last_remaining_quantity=Subquery(last_kardex.values('remaining_quantity'))
-                    )
-                    # .annotate(
-                    #     last_kardex=Subquery(
-                    #         Kardex.objects.filter(product_store=OuterRef('id'), id='last_id').values('remaining_quantity')[:1], output_field=models.DecimalField()
-                    #     )
+                    last_remaining_quantity=Subquery(last_kardex.values('remaining_quantity'))
+                )
+                # .annotate(
+                #     last_kardex=Subquery(
+                #         Kardex.objects.filter(product_store=OuterRef('id'), id='last_id').values('remaining_quantity')[:1], output_field=models.DecimalField()
+                #     )
                 # )
             ),
             Prefetch(
@@ -4492,7 +4496,7 @@ def report_ball_all_mass(request):
             queryset=DistributionDetail.objects.filter(
                 status='C', type__in=['L', 'V'], product__id__in=products_in_ball
             ).select_related('product').only(
-                'id', 'type', 'distribution_mobil', 'quantity',  'product__id', 'product__name')
+                'id', 'type', 'distribution_mobil', 'quantity', 'product__id', 'product__name')
         )
     ).only('id', 'subsidiary__id', 'subsidiary__name')
 
@@ -4577,7 +4581,7 @@ def report_ball_all_mass(request):
                     queryset=GuideDetail.objects.filter(
                         type__in=[1, 2], product__id__in=products_in_ball
                     ).select_related('product').only(
-                        'id','guide__id', 'type', 'quantity', 'product__id', 'product__name'
+                        'id', 'guide__id', 'type', 'quantity', 'product__id', 'product__name'
                     )
                 )
             ).only('id', 'programming')
@@ -4734,7 +4738,7 @@ def report_ball_all_mass(request):
         order__type__in=['R', 'V'],
     ).select_related('order__subsidiary', 'product').prefetch_related(
         Prefetch('loanpayment_set', queryset=LoanPayment.objects.only('id', 'order_detail__id', 'quantity'))
-    ).only('id', 'quantity_sold', 'order__subsidiary__id', 'order__subsidiary__name', 'product__id', 'product__name',)
+    ).only('id', 'quantity_sold', 'order__subsidiary__id', 'order__subsidiary__name', 'product__id', 'product__name', )
 
     for od in order_detail_set:
         subsidiary_key = od.order.subsidiary.id
@@ -5016,7 +5020,7 @@ def status_account(request):
                         queryset=ProductDetail.objects.select_related('unit'), to_attr='rates'
                     )
                 )
-            ),           # Prefetch('distributiondetail_set__product__productdetail_set', to_attr='rates')
+            ),  # Prefetch('distributiondetail_set__product__productdetail_set', to_attr='rates')
         ).select_related('pilot').select_related('truck')
 
         for dm in distribution_mobil_set:
@@ -5099,7 +5103,8 @@ def status_account(request):
             'pilot_dict': pilot_dict,
             'sum_total': sum_total,
             'client_dict': client_dict,
-            'summary_sum_total_remaining_repay_loan': '{:,}'.format(round(float(summary_sum_total_remaining_repay_loan), 2)),
+            'summary_sum_total_remaining_repay_loan': '{:,}'.format(
+                round(float(summary_sum_total_remaining_repay_loan), 2)),
             'summary_sum_total_remaining_return_loan': summary_sum_total_remaining_return_loan,
             'acm_sum_5': acm_sum_5,
             'acm_sum_10': acm_sum_10,
@@ -5120,6 +5125,89 @@ def check_loan_payment(request):
 
         return JsonResponse({
             'message': 'ok',
+        })
+
+
+def comparative_sales_and_purchases_report(request):
+    if request.method == 'GET':
+        if request.method == 'GET':
+            mydate = datetime.now()
+            formatdate = mydate.strftime("%Y-%m-%d")
+
+            return render(request, 'sales/comparative_sales_and_purchases_report.html', {
+                'formatdate': formatdate,
+            })
+
+    elif request.method == 'POST':
+        start_date = str(request.POST.get('start-date'))
+        end_date = str(request.POST.get('end-date'))
+        user_id = request.user.id
+        user_obj = User.objects.get(id=user_id)
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+        my_date = datetime.now()
+        req_quantity_kg = 0
+        req_amount_pen = 0
+        month_dict = []
+        sum_10kg = 0
+        sum_5kg = 0
+        sum_45kg = 0
+        sum_15kg = 0
+        sum = 0
+        sum_total_all_balls = 0
+
+        for i in range(1, 13):
+
+            order = Order.objects.filter(create_at__month=i,
+                                         create_at__year=my_date.year,
+                                         type__in=['V', 'R'],
+                                         subsidiary=subsidiary_obj)
+            for o in order:
+
+                _order_detail = o.orderdetail_set.all()
+
+                ball_5kg = get_quantity_ball_5kg(_order_detail)
+                ball_10kg = get_quantity_ball_10kg(_order_detail)
+                ball_45kg = get_quantity_ball_45kg(_order_detail)
+                ball_15kg = get_quantity_ball_15kg(_order_detail)
+
+                s10 = ball_10kg.get('g') + ball_10kg.get('gbc') + ball_10kg.get('bg')
+                s5 = ball_5kg.get('g') + ball_5kg.get('gbc') + ball_5kg.get('bg')
+                s45 = ball_45kg.get('g') + ball_45kg.get('gbc') + ball_45kg.get('bg')
+                s15 = ball_15kg.get('g') + ball_15kg.get('gbc') + ball_15kg.get('bg')
+
+                sum_10kg = sum_10kg + s10
+                sum_5kg = sum_5kg + s5
+                sum_45kg = sum_45kg + s45
+                sum_15kg = sum_15kg + s15
+
+            sum_total_all_balls = float(sum_10kg) + (float(sum_5kg) * 0.5) + (float(sum_45kg) * 4.5) + (float(sum_15kg) * 1.5)
+
+            req_quantity_kg = RequirementDetail_buys.objects.filter(
+                requirement_buys__approval_date__month=i,
+                requirement_buys__approval_date__year=my_date.year,
+                requirement_buys__status='2',
+                requirement_buys__subsidiary=subsidiary_obj).aggregate(Sum('quantity'))
+
+            req_amount_pen = RequirementDetail_buys.objects.filter(
+                requirement_buys__approval_date__month=i,
+                requirement_buys__approval_date__year=my_date.year,
+                requirement_buys__status='2',
+                requirement_buys__subsidiary=subsidiary_obj).aggregate(Sum('amount_pen'))
+
+            item = {
+                'month': i,
+                'req_quantity_kg': req_quantity_kg,
+                'req_amount_pen': req_amount_pen,
+                'sum_total_all_balls': sum_total_all_balls,
+            }
+            month_dict.append(item)
+
+        tpl = loader.get_template('sales/comparative_sales_and purchases_grid.html')
+        context = ({
+            'month_dict': month_dict,
+        })
+        return JsonResponse({
+            'grid': tpl.render(context, request),
         })
 
 

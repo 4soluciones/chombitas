@@ -1,0 +1,79 @@
+<table class="table table-bordered" id="report-comparative">
+    <thead>
+    <tr class="text-white bg-dark text-uppercase">
+        <td class="col-form-label col-form-label-lg">MESES</td>
+        <td class="col-form-label col-form-label-lg" colspan="2">COMPRAS DE GLP EN KG Y SOLES</td>
+        <td class="col-form-label col-form-label-lg" colspan="3">VENTAS EN 10 KG Y EN SOLES</td>
+        <td class="col-form-label col-form-label-lg" colspan="2">INGRESOS DE GLP EN KG Y DE UNIDADES (BOTELLAS)</td>
+    </tr>
+    <tr class="text-white bg-dark text-uppercase">
+        <td class="col-form-label col-form-label-lg"></td>
+        <td class="col-form-label col-form-label-lg">KG</td>
+        <td class="col-form-label col-form-label-lg">S/</td>
+        <td class="col-form-label col-form-label-lg">10KG</td>
+        <td class="col-form-label col-form-label-lg">KG</td>
+        <td class="col-form-label col-form-label-lg">S/</td>
+        <td class="col-form-label col-form-label-lg">KG</td>
+        <td class="col-form-label col-form-label-lg">UNIDADES</td>
+    </tr>
+    </thead>
+    <tbody>
+    <tr class="text-white bg-dark text-uppercase">
+        <td class="col-form-label col-form-label-lg">ENERO</td>
+        <td class="col-form-label col-form-label-lg">1</td>
+        <td class="col-form-label col-form-label-lg">1</td>
+    </tr>
+    <tr class="text-white bg-dark text-uppercase">
+        <td class="col-form-label col-form-label-lg">FEBRERO</td>
+        <td class="col-form-label col-form-label-lg">2</td>
+        <td class="col-form-label col-form-label-lg">2</td>
+    </tr>
+    <tr class="text-white bg-dark text-uppercase">
+        <td class="col-form-label col-form-label-lg">MARZO</td>
+        <td class="col-form-label col-form-label-lg">3</td>
+        <td class="col-form-label col-form-label-lg">3</td>
+    </tr>
+    <tr class="text-white bg-dark text-uppercase">
+        <td class="col-form-label col-form-label-lg">APRIL</td>
+        <td class="col-form-label col-form-label-lg">4</td>
+        <td class="col-form-label col-form-label-lg">4</td>
+    </tr>
+    <tr class="text-white bg-dark text-uppercase">
+        <td class="col-form-label col-form-label-lg">MAYO</td>
+        <td class="col-form-label col-form-label-lg">5</td>
+        <td class="col-form-label col-form-label-lg">5</td>
+    </tr>
+    <tr class="text-white bg-dark text-uppercase">
+        <td class="col-form-label col-form-label-lg">JUNIO</td>
+        <td class="col-form-label col-form-label-lg">6</td>
+        <td class="col-form-label col-form-label-lg">6</td>
+    </tr>
+    <tr class="text-white bg-dark text-uppercase">
+        <td class="col-form-label col-form-label-lg">JULIO</td>
+        <td class="col-form-label col-form-label-lg">7</td>
+        <td class="col-form-label col-form-label-lg">7</td>
+    </tr>
+    <tr class="text-white bg-dark text-uppercase">
+        <td class="col-form-label col-form-label-lg">AGOSTO</td>
+        <td class="col-form-label col-form-label-lg">8</td>
+        <td class="col-form-label col-form-label-lg">8</td>
+    </tr>
+    <tr class="text-white bg-dark text-uppercase">
+        <td class="col-form-label col-form-label-lg">SETIEMBRE</td>
+        <td class="col-form-label col-form-label-lg">9</td>
+        <td class="col-form-label col-form-label-lg">9</td>
+    </tr>
+    </tbody>
+
+    {#    <tr class="tbl-row">#}
+    {#        <td class="col-form-label col-form-label-lg align-middle text-center">{{ total_quantity }}</td>#}
+    {#        <td class="col-form-label col-form-label-lg align-middle text-center">{{ total_amount_pen }}</td>#}
+    {#    </tr>#}
+</table>
+<ul>
+    {% for month in month_dict %}
+        <li>
+            {{ month }}
+        </li>
+    {% endfor %}
+</ul>

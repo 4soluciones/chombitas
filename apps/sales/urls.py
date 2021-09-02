@@ -146,5 +146,9 @@ urlpatterns = [
 
     path('test/', login_required(test), name='test'),
     path('pdf_get_orders_for_status_account/', login_required(pdf_get_orders_for_status_account), name='pdf_get_orders_for_status_account'),
+
+    # comparative_sales_and_purchases_report
+    path('comparative_sales_and_purchases_report/', login_required(comparative_sales_and_purchases_report), name='comparative_sales_and_purchases_report'),
+
 ]
 
