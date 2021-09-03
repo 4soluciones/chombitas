@@ -18,51 +18,19 @@
     </tr>
     </thead>
     <tbody>
-    <tr class="text-white bg-dark text-uppercase">
-        <td class="col-form-label col-form-label-lg">ENERO</td>
-        <td class="col-form-label col-form-label-lg">1</td>
-        <td class="col-form-label col-form-label-lg">1</td>
-    </tr>
-    <tr class="text-white bg-dark text-uppercase">
-        <td class="col-form-label col-form-label-lg">FEBRERO</td>
-        <td class="col-form-label col-form-label-lg">2</td>
-        <td class="col-form-label col-form-label-lg">2</td>
-    </tr>
-    <tr class="text-white bg-dark text-uppercase">
-        <td class="col-form-label col-form-label-lg">MARZO</td>
-        <td class="col-form-label col-form-label-lg">3</td>
-        <td class="col-form-label col-form-label-lg">3</td>
-    </tr>
-    <tr class="text-white bg-dark text-uppercase">
-        <td class="col-form-label col-form-label-lg">APRIL</td>
-        <td class="col-form-label col-form-label-lg">4</td>
-        <td class="col-form-label col-form-label-lg">4</td>
-    </tr>
-    <tr class="text-white bg-dark text-uppercase">
-        <td class="col-form-label col-form-label-lg">MAYO</td>
-        <td class="col-form-label col-form-label-lg">5</td>
-        <td class="col-form-label col-form-label-lg">5</td>
-    </tr>
-    <tr class="text-white bg-dark text-uppercase">
-        <td class="col-form-label col-form-label-lg">JUNIO</td>
-        <td class="col-form-label col-form-label-lg">6</td>
-        <td class="col-form-label col-form-label-lg">6</td>
-    </tr>
-    <tr class="text-white bg-dark text-uppercase">
-        <td class="col-form-label col-form-label-lg">JULIO</td>
-        <td class="col-form-label col-form-label-lg">7</td>
-        <td class="col-form-label col-form-label-lg">7</td>
-    </tr>
-    <tr class="text-white bg-dark text-uppercase">
-        <td class="col-form-label col-form-label-lg">AGOSTO</td>
-        <td class="col-form-label col-form-label-lg">8</td>
-        <td class="col-form-label col-form-label-lg">8</td>
-    </tr>
-    <tr class="text-white bg-dark text-uppercase">
-        <td class="col-form-label col-form-label-lg">SETIEMBRE</td>
-        <td class="col-form-label col-form-label-lg">9</td>
-        <td class="col-form-label col-form-label-lg">9</td>
-    </tr>
+
+    {% for month in month_dict %}
+        <tr class="text-white bg-dark text-uppercase">
+            <td class="col-form-label col-form-label-lg">{{ month.month_names }}</td>
+            <td class="col-form-label col-form-label-lg">{{ month.req_quantity_kg.quantity__sum }}</td>
+            <td class="col-form-label col-form-label-lg">{{ month.req_amount_pen.amount_pen__sum }}</td>
+            <td class="col-form-label col-form-label-lg">{{ month.sum_total_all_balls }}</td>
+            <td class="col-form-label col-form-label-lg">{{ month.sum_total_all_balls2 }}</td>
+            <td class="col-form-label col-form-label-lg">{{ month.sum_total_orders }}</td>
+            <td class="col-form-label col-form-label-lg">{{ month.glp_kg }}</td>
+            <td class="col-form-label col-form-label-lg">{{ month.glp_unit }}</td>
+        </tr>
+    {% endfor %}
     </tbody>
 
     {#    <tr class="tbl-row">#}
@@ -71,9 +39,5 @@
     {#    </tr>#}
 </table>
 <ul>
-    {% for month in month_dict %}
-        <li>
-            {{ month }}
-        </li>
-    {% endfor %}
+
 </ul>

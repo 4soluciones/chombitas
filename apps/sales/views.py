@@ -7,6 +7,7 @@ from django.forms.models import model_to_dict
 from django.http import JsonResponse, HttpResponse
 from http import HTTPStatus
 from .format_dates import validate
+from django.db.models import Q
 from .models import *
 from .forms import *
 from apps.hrm.models import Subsidiary, District, DocumentType, Employee, Worker
@@ -1722,7 +1723,7 @@ def get_dict_orders_by_units(order_set, is_pdf=False, is_unit=True):
         total_45kg = 0
         total_15kg = 0
         total = 0
-        for o in order_set.filter(subsidiary_store__subsidiary_id=s['id']):
+        for o in order_set.filter(subsidiary_store__subsidiary_id=s['id']).order_by(o.create_at):
             _order_detail = o.orderdetail_set.all()
             ball_5kg = get_quantity_ball_5kg(_order_detail)
             ball_10kg = get_quantity_ball_10kg(_order_detail)
@@ -1738,7 +1739,8 @@ def get_dict_orders_by_units(order_set, is_pdf=False, is_unit=True):
             total_5kg = total_5kg + s5
             total_45kg = total_45kg + s45
             total_15kg = total_15kg + s15
-            total = total + o.total
+            # total = total + o.total
+            total = total + (_order_detail.price_unit * _order_detail.quantity_sold)
 
         subsidiary['total'] = total
         subsidiary['total_10kg'] = total_10kg
@@ -5128,19 +5130,24 @@ def check_loan_payment(request):
         })
 
 
+def sum_quantity_by_order_detail(month=None, product_id=None):
+    subsidiaries = [1, 2, 3, 4, 6]
+    my_date = datetime.now()
+    order_detail_set = OrderDetail.objects.filter(
+        order__subsidiary__id__in=subsidiaries,
+        order__create_at__month=month,
+        order__create_at__year=my_date.year,
+        order__type__in=['R', 'V'],
+        product__id=product_id
+    ).filter(~Q(unit__name='B')).annotate(
+        sum=Sum('quantity_sold')
+    ).aggregate(Sum('sum'))
+
+    return order_detail_set['sum__sum']
+
+
 def comparative_sales_and_purchases_report(request):
     if request.method == 'GET':
-        if request.method == 'GET':
-            mydate = datetime.now()
-            formatdate = mydate.strftime("%Y-%m-%d")
-
-            return render(request, 'sales/comparative_sales_and_purchases_report.html', {
-                'formatdate': formatdate,
-            })
-
-    elif request.method == 'POST':
-        start_date = str(request.POST.get('start-date'))
-        end_date = str(request.POST.get('end-date'))
         user_id = request.user.id
         user_obj = User.objects.get(id=user_id)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
@@ -5152,35 +5159,64 @@ def comparative_sales_and_purchases_report(request):
         sum_5kg = 0
         sum_45kg = 0
         sum_15kg = 0
+        glp_kg = 0
+        glp_unit = 0
         sum = 0
         sum_total_all_balls = 0
+        subsidiaries = [1, 2, 3, 4, 6]
+        products = [1, 2, 3, 12]
+
+        month_names = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SETIEMBRE', 'OCT',
+                       'NOV', 'DIC']
 
         for i in range(1, 13):
 
-            order = Order.objects.filter(create_at__month=i,
-                                         create_at__year=my_date.year,
-                                         type__in=['V', 'R'],
-                                         subsidiary=subsidiary_obj)
-            for o in order:
+            sum_5kg = sum_quantity_by_order_detail(month=i, product_id=2)
+            sum_10kg = sum_quantity_by_order_detail(month=i, product_id=1)
+            sum_15kg = sum_quantity_by_order_detail(month=i, product_id=12)
+            sum_45kg = sum_quantity_by_order_detail(month=i, product_id=3)
 
-                _order_detail = o.orderdetail_set.all()
+            if sum_5kg is not None:
+                float_sum_5kg = float(sum_5kg)
+            else:
+                float_sum_5kg = 0
+            if sum_10kg is not None:
+                float_sum_10kg = float(sum_10kg)
+            else:
+                float_sum_10kg = 0
+            if sum_15kg is not None:
+                float_sum_15kg = float(sum_15kg)
+            else:
+                float_sum_15kg = 0
+            if sum_45kg is not None:
+                float_sum_45kg = float(sum_45kg)
+            else:
+                float_sum_45kg = 0
 
-                ball_5kg = get_quantity_ball_5kg(_order_detail)
-                ball_10kg = get_quantity_ball_10kg(_order_detail)
-                ball_45kg = get_quantity_ball_45kg(_order_detail)
-                ball_15kg = get_quantity_ball_15kg(_order_detail)
+            sum_total_all_balls = float_sum_10kg + (float_sum_5kg * 0.5) + (float_sum_15kg * 1.5) + (
+                    float_sum_45kg * 4.5)
 
-                s10 = ball_10kg.get('g') + ball_10kg.get('gbc') + ball_10kg.get('bg')
-                s5 = ball_5kg.get('g') + ball_5kg.get('gbc') + ball_5kg.get('bg')
-                s45 = ball_45kg.get('g') + ball_45kg.get('gbc') + ball_45kg.get('bg')
-                s15 = ball_15kg.get('g') + ball_15kg.get('gbc') + ball_15kg.get('bg')
+            order_set = Order.objects.filter(create_at__month=i,
+                                             create_at__year=my_date.year,
+                                             type__in=['V', 'R'], subsidiary__in=subsidiaries,
+                                             ).prefetch_related(
+                Prefetch(
+                    'orderdetail_set', queryset=OrderDetail.objects.select_related('unit', 'product')
+                )
+            ).annotate(
+                sum_10=Subquery(
+                    OrderDetail.objects.filter(order_id=OuterRef('id')).annotate(
+                        return_sum_10=Sum(F('quantity_sold') * F('price_unit'))
+                    ).values('return_sum_10')[:1]
+                )
+            ).aggregate(Sum('sum_10'))
 
-                sum_10kg = sum_10kg + s10
-                sum_5kg = sum_5kg + s5
-                sum_45kg = sum_45kg + s45
-                sum_15kg = sum_15kg + s15
+            sum_total_orders = order_set['sum_10__sum']
 
-            sum_total_all_balls = float(sum_10kg) + (float(sum_5kg) * 0.5) + (float(sum_45kg) * 4.5) + (float(sum_15kg) * 1.5)
+            if sum_total_all_balls is not None:
+                float_sum_total_all_balls = float(sum_total_all_balls)
+            else:
+                float_sum_total_all_balls = 0
 
             req_quantity_kg = RequirementDetail_buys.objects.filter(
                 requirement_buys__approval_date__month=i,
@@ -5196,9 +5232,14 @@ def comparative_sales_and_purchases_report(request):
 
             item = {
                 'month': i,
+                'month_names': month_names[i - 1],
                 'req_quantity_kg': req_quantity_kg,
                 'req_amount_pen': req_amount_pen,
                 'sum_total_all_balls': sum_total_all_balls,
+                'sum_total_all_balls2': float_sum_total_all_balls / 0.1,
+                'sum_total_orders': sum_total_orders,
+                'glp_kg': glp_kg,
+                'glp_unit': glp_unit,
             }
             month_dict.append(item)
 
@@ -5206,7 +5247,8 @@ def comparative_sales_and_purchases_report(request):
         context = ({
             'month_dict': month_dict,
         })
-        return JsonResponse({
+
+        return render(request, 'sales/comparative_sales_and_purchases_report.html', {
             'grid': tpl.render(context, request),
         })
 

@@ -39,7 +39,9 @@
         </div>
 
         <div class="card">
-            <div class="card-body table-responsive" id="tbl-comparative"></div>
+            <div class="card-body table-responsive" id="tbl-comparative">
+                {{ grid }}
+            </div>
         </div>
     </div>
 
@@ -50,48 +52,48 @@
 
     <script type="text/javascript">
 
-        loader = '<div class="container">' +
-            '<div class="row">' +
-            '<div class="col-md-12">' +
-            '<div class="loader">' +
-            '<p>Cargando...</p>' +
-            '<div class="loader-inner"></div>' +
-            '<div class="loader-inner"></div>' +
-            '<div class="loader-inner"></div>' +
-            '</div>' +
-            '</div>' +
-            '</div>' +
-            '</div>';
-
-        $('#search-form').submit(function (event) {
-            event.preventDefault();
-            let data = new FormData($('#search-form').get(0));
-
-            $('#btn-search').attr("disabled", "true");
-            $('#tbl-pays').empty();
-            $('#tbl-pays').html(loader);
-
-            $.ajax({
-                url: '/sales/comparative_sales_and_purchases_report/',
-                type: "POST",
-                data: data,
-                cache: false,
-                processData: false,
-                contentType: false,
-                success: function (response, textStatus, xhr) {
-                    if (xhr.status === 200) {
-                        toastr.success(response['message'], '¡Bien hecho!');
-                        $('#tbl-comparative').html(response.grid);
-                    }
-                },
-                error: function (jqXhr, textStatus, xhr) {
-                    if (jqXhr.status === 500) {
-                        toastr.error(jqXhr.responseJSON.error, '¡Inconcebible!');
-                    }
-                }
-            });
-            $('#btn-search').removeAttr("disabled", "false");
-        });
+        {#loader = '<div class="container">' +#}
+        {#    '<div class="row">' +#}
+        {#    '<div class="col-md-12">' +#}
+        {#    '<div class="loader">' +#}
+        {#    '<p>Cargando...</p>' +#}
+        {#    '<div class="loader-inner"></div>' +#}
+        {#    '<div class="loader-inner"></div>' +#}
+        {#    '<div class="loader-inner"></div>' +#}
+        {#    '</div>' +#}
+        {#    '</div>' +#}
+        {#    '</div>' +#}
+        {#    '</div>';#}
+        {##}
+        {#$('#search-form').submit(function (event) {#}
+        {#    event.preventDefault();#}
+        {#    let data = new FormData($('#search-form').get(0));#}
+        {##}
+        {#    $('#btn-search').attr("disabled", "true");#}
+        {#    $('#tbl-pays').empty();#}
+        {#    $('#tbl-pays').html(loader);#}
+        {##}
+        {#    $.ajax({#}
+        {#        url: '/sales/comparative_sales_and_purchases_report/',#}
+        {#        type: "POST",#}
+        {#        data: data,#}
+        {#        cache: false,#}
+        {#        processData: false,#}
+        {#        contentType: false,#}
+        {#        success: function (response, textStatus, xhr) {#}
+        {#            if (xhr.status === 200) {#}
+        {#                toastr.success(response['message'], '¡Bien hecho!');#}
+        {#                $('#tbl-comparative').html(response.grid);#}
+        {#            }#}
+        {#        },#}
+        {#        error: function (jqXhr, textStatus, xhr) {#}
+        {#            if (jqXhr.status === 500) {#}
+        {#                toastr.error(jqXhr.responseJSON.error, '¡Inconcebible!');#}
+        {#            }#}
+        {#        }#}
+        {#    });#}
+        {#    $('#btn-search').removeAttr("disabled", "false");#}
+        {# });#}
 
     </script>
 
