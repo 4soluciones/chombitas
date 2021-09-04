@@ -1563,7 +1563,7 @@ def get_dict_order_by_units(order_set, is_pdf=False, is_unit=True):
                 'price_unit': d.price_unit,
                 'multiply': d.multiply,
             }
-            subtotal += d.multiply
+            subtotal += (d.quantity_sold * d.price_unit)
 
         order = {
             'id': o.id,
