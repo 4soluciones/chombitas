@@ -1744,7 +1744,7 @@ def get_dict_orders_by_units(order_set, is_pdf=False, is_unit=True):
             for od in o.orderdetail_set.all():
                 subtotal = od.quantity_sold * od.price_unit
 
-            total = total + subtotal
+        total = total + subtotal
 
         subsidiary['total'] = total
         subsidiary['total_10kg'] = total_10kg
