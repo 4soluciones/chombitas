@@ -1523,8 +1523,10 @@ def get_dict_order_by_units(order_set, is_pdf=False, is_unit=True):
     sum_45kg = 0
     sum_15kg = 0
     sum = 0
+    subtotal = 0
 
     for o in order_set:
+        order_detail = {}
         _order_detail = o.orderdetail_set.all()
         ball_5kg = get_quantity_ball_5kg(_order_detail)
         ball_10kg = get_quantity_ball_10kg(_order_detail)
@@ -1551,6 +1553,18 @@ def get_dict_order_by_units(order_set, is_pdf=False, is_unit=True):
             {'pk': 12, 'name': 'BALON DE 15 KG', 'b': ball_15kg.get('b'), 'g': ball_15kg.get('g'),
              'gbc': ball_15kg.get('gbc'), 'bg': ball_15kg.get('bg'), 'sum': s15},
         ]
+
+        for d in _order_detail:
+            order_detail = {
+                'id': d.id,
+                'product': d.product.name,
+                'unit': d.unit.name,
+                'quantity_sold': d.quantity_sold,
+                'price_unit': d.price_unit,
+                'multiply': d.multiply,
+            }
+            subtotal += d.multiply
+
         order = {
             'id': o.id,
             'status': o.get_status_display(),
@@ -1564,18 +1578,9 @@ def get_dict_order_by_units(order_set, is_pdf=False, is_unit=True):
             'type': o.get_type_display(),
             'details': _order_detail.count()
         }
-        sum = sum + o.total
+        order.get('order_detail_set').append(order_detail)
 
-        for d in _order_detail:
-            order_detail = {
-                'id': d.id,
-                'product': d.product.name,
-                'unit': d.unit.name,
-                'quantity_sold': d.quantity_sold,
-                'price_unit': d.price_unit,
-                'multiply': d.multiply,
-            }
-            order.get('order_detail_set').append(order_detail)
+        sum = sum + subtotal
 
         dictionary.append(order)
 
@@ -1740,11 +1745,11 @@ def get_dict_orders_by_units(order_set, is_pdf=False, is_unit=True):
             total_5kg = total_5kg + s5
             total_45kg = total_45kg + s45
             total_15kg = total_15kg + s15
-            # total = total + o.total
-            for od in o.orderdetail_set.all():
-                subtotal = od.quantity_sold * od.price_unit
-
-        total = total + subtotal
+            total = total + o.total
+        #     for od in o.orderdetail_set.all():
+        #         subtotal = od.quantity_sold * od.price_unit
+        #
+        # total = total + subtotal
 
         subsidiary['total'] = total
         subsidiary['total_10kg'] = total_10kg
