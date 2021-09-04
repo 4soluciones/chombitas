@@ -1723,6 +1723,7 @@ def get_dict_orders_by_units(order_set, is_pdf=False, is_unit=True):
         total_45kg = 0
         total_15kg = 0
         total = 0
+        subtotal = 0
         for o in order_set.filter(subsidiary_store__subsidiary_id=s['id']).order_by(o.create_at):
             _order_detail = o.orderdetail_set.all()
             ball_5kg = get_quantity_ball_5kg(_order_detail)
@@ -1740,7 +1741,10 @@ def get_dict_orders_by_units(order_set, is_pdf=False, is_unit=True):
             total_45kg = total_45kg + s45
             total_15kg = total_15kg + s15
             # total = total + o.total
-            total = total + (_order_detail.price_unit * _order_detail.quantity_sold)
+            for od in o.orderdetail_set.all():
+                subtotal = od.quantity_sold * od.price_unit
+
+            total = total + subtotal
 
         subsidiary['total'] = total
         subsidiary['total_10kg'] = total_10kg
