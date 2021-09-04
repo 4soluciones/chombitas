@@ -1523,10 +1523,10 @@ def get_dict_order_by_units(order_set, is_pdf=False, is_unit=True):
     sum_45kg = 0
     sum_15kg = 0
     sum = 0
-    subtotal = 0
 
     for o in order_set:
         order_detail = {}
+        subtotal = 0
         _order_detail = o.orderdetail_set.all()
         ball_5kg = get_quantity_ball_5kg(_order_detail)
         ball_10kg = get_quantity_ball_10kg(_order_detail)
@@ -1563,7 +1563,7 @@ def get_dict_order_by_units(order_set, is_pdf=False, is_unit=True):
                 'price_unit': d.price_unit,
                 'multiply': d.multiply,
             }
-            subtotal = d.quantity_sold * d.price_unit
+            subtotal += (d.quantity_sold * d.price_unit)
 
         order = {
             'id': o.id,
