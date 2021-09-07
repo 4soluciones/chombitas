@@ -5162,19 +5162,10 @@ def comparative_sales_and_purchases_report(request):
         user_obj = User.objects.get(id=user_id)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
         my_date = datetime.now()
-        req_quantity_kg = 0
-        req_amount_pen = 0
         month_dict = []
-        sum_10kg = 0
-        sum_5kg = 0
-        sum_45kg = 0
-        sum_15kg = 0
-        glp_kg = 0
-        glp_unit = 0
-        sum = 0
-        sum_total_all_balls = 0
         subsidiaries = [1, 2, 3, 4, 6]
         products = [1, 2, 3, 12]
+        float_purchases_sum_total = 0
 
         merge_scope = None
 
@@ -5296,6 +5287,8 @@ def comparative_sales_and_purchases_report(request):
             #
             # # print(programming_invoice_set)
 
+            # -----------------------------------------------------------------------------------------
+
             for pi in kardex_set:
                 my_charge = 0
                 other_charge = 0
@@ -5311,31 +5304,27 @@ def comparative_sales_and_purchases_report(request):
                 _total_travel = _total_travel + 1
                 merge_scope = pi['programming_invoice__requirementBuysProgramming__number_scop']
 
-            # for k in kardex_set:
-            #
-            #     if k.requirement_detail is None:
-            #
-            #         if k.programming_invoice is not None:
-            #             pi = k.programming_invoice
-            #             my_charge = 0
-            #             other_charge = 0
-            #
-            #             my_charge_set = Programminginvoice.objects.filter(
-            #                 requirementBuysProgramming_id=pi.requirementBuysProgramming.id,
-            #                 subsidiary_store_origin=my_subsidiary_store_glp_obj,
-            #                 subsidiary_store_destiny=my_subsidiary_store_insume_obj).values('requirementBuysProgramming').annotate(totals=Sum('quantity'))
-            #             if my_charge_set.count() > 0:
-            #                 my_charge = my_charge_set[0].get('totals')
-            #                 total_charge = total_charge + my_charge
-            #                 total_sum_charge = total_sum_charge + my_charge
-            #
-            #             if merge_scope == pi.requirementBuysProgramming.number_scop:
-            #                 # dictionary.pop(len(dictionary) - 1)
-            #                 total_charge = total_charge - other_charge - my_charge
-            #                 _total_travel = _total_travel - 1
-            #                 total_sum_charge = total_sum_charge - my_charge - other_charge
-            #             _total_travel = _total_travel + 1
-            #             merge_scope = pi.requirementBuysProgramming.number_scop
+            if i >= 8:
+                purchase_set = Purchase.objects.filter(
+                    subsidiary=subsidiary_obj, purchase_date__month=i, purchase_date__year=my_date.year,
+                    status__in=['S', 'A'], type_bill='F'
+                ).prefetch_related(
+                    Prefetch(
+                        'purchasedetail_set', queryset=PurchaseDetail.objects.select_related('unit', 'product')
+                    )
+                ).select_related('supplier', 'truck').annotate(
+                    sum_total=Subquery(
+                        PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).annotate(
+                            return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
+                    )
+                ).aggregate(Sum('sum_total'))
+
+                purchases_sum_total = purchase_set['sum_total__sum']
+
+                if purchases_sum_total is not None:
+                    float_purchases_sum_total = float(purchases_sum_total)
+                else:
+                    float_purchases_sum_total = 0
 
             item = {
                 'month': i,
@@ -5347,6 +5336,7 @@ def comparative_sales_and_purchases_report(request):
                 'sum_total_orders': '{:,}'.format(round(decimal.Decimal(float_sum_total_orders), 2)),
                 'glp_kg': '{:,}'.format(round(total_sum_charge), 2),
                 'glp_unit': _total_travel,
+                'purchases_sum_total': '{:,}'.format(round(decimal.Decimal(float_purchases_sum_total), 2))
             }
             month_dict.append(item)
 

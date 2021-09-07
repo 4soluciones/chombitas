@@ -5,6 +5,7 @@
         <td class="col-form-label col-form-label-lg bg-warning font-weight-bold" colspan="2">COMPRAS DE GLP EN KG Y SOLES</td>
         <td class="col-form-label col-form-label-lg bg-success font-weight-bold" colspan="3">VENTAS EN 10 KG Y EN SOLES</td>
         <td class="col-form-label col-form-label-lg bg-info font-weight-bold" colspan="2">INGRESOS DE GLP EN KG Y DE UNIDADES (BOTELLAS)</td>
+        <td class="col-form-label col-form-label-lg bg-secondary font-weight-bold" colspan="1">GASTOS TOTALES</td>
     </tr>
     <tr class=" text-uppercase text-center">
         <td class="col-form-label col-form-label-lg bg-warning font-weight-bold">KG</td>
@@ -14,6 +15,7 @@
         <td class="col-form-label col-form-label-lg bg-success font-weight-bold">S/</td>
         <td class="col-form-label col-form-label-lg bg-info font-weight-bold">KG</td>
         <td class="col-form-label col-form-label-lg bg-info font-weight-bold">UNIDADES</td>
+        <td class="col-form-label col-form-label-lg bg-secondary font-weight-bold">S/</td>
     </tr>
     </thead>
     <tbody>
@@ -28,6 +30,7 @@
             <td class="col-form-label col-form-label-lg bg-success">{{ month.sum_total_orders }}</td>
             <td class="col-form-label col-form-label-lg bg-info">{{ month.glp_kg }}</td>
             <td class="col-form-label col-form-label-lg bg-info">{{ month.glp_unit }}</td>
+            <td class="col-form-label col-form-label-lg bg-secondary">{{ month.purchases_sum_total }}</td>
         </tr>
     {% endfor %}
     </tbody>
