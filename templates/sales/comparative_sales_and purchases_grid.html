@@ -1,34 +1,33 @@
 <table class="table table-bordered" id="report-comparative">
     <thead>
-    <tr class="text-white bg-dark text-uppercase">
-        <td class="col-form-label col-form-label-lg">MESES</td>
-        <td class="col-form-label col-form-label-lg" colspan="2">COMPRAS DE GLP EN KG Y SOLES</td>
-        <td class="col-form-label col-form-label-lg" colspan="3">VENTAS EN 10 KG Y EN SOLES</td>
-        <td class="col-form-label col-form-label-lg" colspan="2">INGRESOS DE GLP EN KG Y DE UNIDADES (BOTELLAS)</td>
+    <tr class="text-uppercase text-center">
+        <td class="col-form-label col-form-label-lg align-middle text-center font-weight-bold" rowspan="2">MESES</td>
+        <td class="col-form-label col-form-label-lg bg-warning font-weight-bold" colspan="2">COMPRAS DE GLP EN KG Y SOLES</td>
+        <td class="col-form-label col-form-label-lg bg-success font-weight-bold" colspan="3">VENTAS EN 10 KG Y EN SOLES</td>
+        <td class="col-form-label col-form-label-lg bg-info font-weight-bold" colspan="2">INGRESOS DE GLP EN KG Y DE UNIDADES (BOTELLAS)</td>
     </tr>
-    <tr class="text-white bg-dark text-uppercase">
-        <td class="col-form-label col-form-label-lg"></td>
-        <td class="col-form-label col-form-label-lg">KG</td>
-        <td class="col-form-label col-form-label-lg">S/</td>
-        <td class="col-form-label col-form-label-lg">10KG</td>
-        <td class="col-form-label col-form-label-lg">KG</td>
-        <td class="col-form-label col-form-label-lg">S/</td>
-        <td class="col-form-label col-form-label-lg">KG</td>
-        <td class="col-form-label col-form-label-lg">UNIDADES</td>
+    <tr class=" text-uppercase text-center">
+        <td class="col-form-label col-form-label-lg bg-warning font-weight-bold">KG</td>
+        <td class="col-form-label col-form-label-lg bg-warning font-weight-bold">S/</td>
+        <td class="col-form-label col-form-label-lg bg-success font-weight-bold">10KG</td>
+        <td class="col-form-label col-form-label-lg bg-success font-weight-bold">KG</td>
+        <td class="col-form-label col-form-label-lg bg-success font-weight-bold">S/</td>
+        <td class="col-form-label col-form-label-lg bg-info font-weight-bold">KG</td>
+        <td class="col-form-label col-form-label-lg bg-info font-weight-bold">UNIDADES</td>
     </tr>
     </thead>
     <tbody>
 
     {% for month in month_dict %}
-        <tr class="text-white bg-dark text-uppercase">
-            <td class="col-form-label col-form-label-lg">{{ month.month_names }}</td>
-            <td class="col-form-label col-form-label-lg">{{ month.req_quantity_kg.quantity__sum }}</td>
-            <td class="col-form-label col-form-label-lg">{{ month.req_amount_pen.amount_pen__sum }}</td>
-            <td class="col-form-label col-form-label-lg">{{ month.sum_total_all_balls }}</td>
-            <td class="col-form-label col-form-label-lg">{{ month.sum_total_all_balls2 }}</td>
-            <td class="col-form-label col-form-label-lg">{{ month.sum_total_orders }}</td>
-            <td class="col-form-label col-form-label-lg">{{ month.glp_kg }}</td>
-            <td class="col-form-label col-form-label-lg">{{ month.glp_unit }}</td>
+        <tr class="text-uppercase text-center">
+            <td class="col-form-label col-form-label-lg font-weight-bold text-right">{{ month.month_names }}</td>
+            <td class="col-form-label col-form-label-lg bg-warning">{{ month.req_quantity_kg }}</td>
+            <td class="col-form-label col-form-label-lg bg-warning">{{ month.req_amount_pen }}</td>
+            <td class="col-form-label col-form-label-lg bg-success">{{ month.sum_total_all_balls }}</td>
+            <td class="col-form-label col-form-label-lg bg-success">{{ month.sum_total_all_balls2 }}</td>
+            <td class="col-form-label col-form-label-lg bg-success">{{ month.sum_total_orders }}</td>
+            <td class="col-form-label col-form-label-lg bg-info">{{ month.glp_kg }}</td>
+            <td class="col-form-label col-form-label-lg bg-info">{{ month.glp_unit }}</td>
         </tr>
     {% endfor %}
     </tbody>
