@@ -5164,8 +5164,16 @@ def comparative_sales_and_purchases_report(request):
         my_date = datetime.now()
         month_dict = []
         subsidiaries = [1, 2, 3, 4, 6]
-        products = [1, 2, 3, 12]
+
         float_purchases_sum_total = 0
+        sum_float_req_quantity_kg = 0
+        sum_float_req_amount_pen = 0
+        sum_acc_total_all_balls = 0
+        sum_float_sum_total_all_balls = 0
+        sum_acc_total_orders = 0
+        sum_total_sum_charge = 0
+        sum_total_travel = 0
+        sum_float_purchases_sum_total = 0
 
         merge_scope = None
 
@@ -5326,13 +5334,24 @@ def comparative_sales_and_purchases_report(request):
                 else:
                     float_purchases_sum_total = 0
 
+            sum_total_all_balls2 = float_sum_total_all_balls / 0.1
+
+            sum_float_req_quantity_kg += float_req_quantity_kg
+            sum_float_req_amount_pen += float_req_amount_pen
+            sum_acc_total_all_balls += sum_total_all_balls
+            sum_float_sum_total_all_balls += sum_total_all_balls2
+            sum_acc_total_orders += float_sum_total_orders
+            sum_total_sum_charge += total_sum_charge
+            sum_total_travel += _total_travel
+            sum_float_purchases_sum_total += float_purchases_sum_total
+
             item = {
                 'month': i,
                 'month_names': month_names[i - 1],
                 'req_quantity_kg': '{:,}'.format(round(float_req_quantity_kg), 2),
                 'req_amount_pen': '{:,}'.format(round(decimal.Decimal(float_req_amount_pen), 2)),
                 'sum_total_all_balls': '{:,}'.format(round(decimal.Decimal(sum_total_all_balls), 2)),
-                'sum_total_all_balls2': '{:,}'.format(round(decimal.Decimal(float_sum_total_all_balls / 0.1), 2)),
+                'sum_total_all_balls2': '{:,}'.format(round(decimal.Decimal(sum_total_all_balls2), 2)),
                 'sum_total_orders': '{:,}'.format(round(decimal.Decimal(float_sum_total_orders), 2)),
                 'glp_kg': '{:,}'.format(round(total_sum_charge), 2),
                 'glp_unit': _total_travel,
@@ -5343,6 +5362,14 @@ def comparative_sales_and_purchases_report(request):
         tpl = loader.get_template('sales/comparative_sales_and purchases_grid.html')
         context = ({
             'month_dict': month_dict,
+            'sum_float_req_quantity_kg': '{:,}'.format(round(sum_float_req_quantity_kg), 2),
+            'sum_float_req_amount_pen': '{:,}'.format(round(decimal.Decimal(sum_float_req_amount_pen), 2)),
+            'sum_acc_total_all_balls': '{:,}'.format(round(decimal.Decimal(sum_acc_total_all_balls), 2)),
+            'sum_float_sum_total_all_balls': '{:,}'.format(round(decimal.Decimal(sum_float_sum_total_all_balls), 2)),
+            'sum_acc_total_orders': '{:,}'.format(round(decimal.Decimal(sum_acc_total_orders), 2)),
+            'sum_total_sum_charge': '{:,}'.format(round(decimal.Decimal(sum_total_sum_charge), 2)),
+            'sum_total_travel': '{:,}'.format(round(sum_total_travel), 2),
+            'sum_float_purchases_sum_total': '{:,}'.format(round(decimal.Decimal(sum_float_purchases_sum_total), 2)),
         })
 
         return render(request, 'sales/comparative_sales_and_purchases_report.html', {
