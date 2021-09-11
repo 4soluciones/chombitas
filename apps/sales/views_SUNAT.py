@@ -183,8 +183,8 @@ def send_bill_nubefact(order_id, is_demo=False):
             "codigo_producto_sunat": "10000000",  # codigo del producto excel-sunat
             "descripcion": d.product.name,
             "cantidad": float(round(d.quantity_sold)),
-            "valor_unitario": float(round(d.price_unit / decimal.Decimal(1.1800), 2)),  # valor unitario sin IGV
-            "precio_unitario": float(round(d.price_unit / decimal.Decimal(1.1800), 2)),
+            "valor_unitario": float(round(base_amount, 2)),  # valor unitario sin IGV
+            "precio_unitario": float(round(base_amount + igv, 2)),
             "descuento": "",
             "subtotal": float(round(base_amount, 2)),  # resultado del valor unitario por la cantidad menos el descuento
             "tipo_de_igv": 1,  # operacion onerosa
