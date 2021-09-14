@@ -249,7 +249,7 @@ def send_bill_nubefact(order_id, is_demo=False):
         "servicios_region_selva": "",
         "items": items,
     }
-
+    print(params)
     if is_demo:
         _url = 'https://www.pse.pe/api/v1/91900d0da6424013b4cf9a8c4fdf8846b67addc7bbcb41328e137a9c93479e26'
         _authorization = 'eyJhbGciOiJIUzI1NiJ9.IjY1NTJmNDE1NGZhOTQ5ZGU4MjFjYTIwYmE4ZWM4ZDg1MzAxMDRlZmNlNGNjNDcyMGI0ZDU2MGE5ZGQwOGNhMmQi.GNzvsfMsCITQ-xwfK-yl_TQwcLd4F-264wYK19frMXE'
