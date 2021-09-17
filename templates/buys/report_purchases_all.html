@@ -29,25 +29,31 @@
                            name="end-date"
                            value="{{ formatdate }}">
 
-                    {#                    <label for="id_truck_plate" class="my-1 mr-2">Placa:</label>#}
-                    {#                        <select id="id_truck_plate" name="truck-plate"#}
-                    {#                                class="form-control">#}
-                    {#                            <option selected value="0">Seleccione Placa..</option>#}
-                    {#                            {% for t in truck_set %}#}
-                    {#                                <option value="{{ t.id }}">{{ t.license_plate }}</option>#}
-                    {#                            {% endfor %}#}
-                    {#                        </select>#}
                     <button type="submit" class="btn btn-blue my-1 ml-2" id="btn-search">
                         <i class="fas fa-search-dollar"></i> Buscar
                     </button>
 
+{#                    <label for="id_truck_plate" class="my-1 ml-2 mr-2">Placa:</label>#}
+{#                    <select id="id_truck_plate" name="truck-plate"#}
+{#                            class="form-control">#}
+{#                        <option selected value="0">Seleccione Placa..</option>#}
+{#                        {% for t in truck_set2 %}#}
+{#                            <option value="{{ t.truck__id }}">{{ t.truck__license_plate }}</option>#}
+{#                        {% endfor %}#}
+{#                    </select>#}
+{#                    <button type="button" class="btn btn-blue my-1 ml-2" id="btn-filter">#}
+{#                        <i class="fas fa-filter"></i> Filtrar#}
+{#                    </button>#}
                 </form>
 
             </div>
         </div>
 
         <div class="card">
-            <div class="card-body table-responsive" id="tbl-purchases"></div>
+
+            <div class="card-body table-responsive" id="tbl-purchases">
+            </div>
+
         </div>
     </div>
 
@@ -57,6 +63,52 @@
 {% block extrajs %}
 
     <script type="text/javascript">
+
+        /*function ready() {
+            const tablePurchases = document.getElementById('report-payments');
+            const tfootPurchases = tablePurchases.getElementsByTagName('tfoot')[0];
+            const trTfootPurchases = tfootPurchases.getElementsByTagName('tr')[0];
+            trTfootPurchases.className = 'd-none'
+        }*/
+        function filter() {
+            const selectTruck = document.getElementById('truck');
+            const tablePurchases = document.getElementById('report-payments');
+            const tbodyPurchases = tablePurchases.getElementsByTagName('tbody')[0];
+            const tfootPurchases = tablePurchases.getElementsByTagName('tfoot')[0];
+            const trTfootPurchases = document.getElementById('sum');
+
+            selectTruck.addEventListener('change', (e) => {
+                e.preventDefault();
+                let cellTotal = 0
+
+                for (let i = 0; i < tbodyPurchases.rows.length; i++) {
+                    let cell0 = tbodyPurchases.rows[i].cells[0];
+                    cell0.parentNode.className = 'd-none';  // hide
+                }
+                for (let i = 0; i < tbodyPurchases.rows.length; i++) {
+                    let cell5 = tbodyPurchases.rows[i].cells[5];
+                    let cell8 = tbodyPurchases.rows[i].cells[8];
+                    let cell0 = tbodyPurchases.rows[i].cells[0];
+                    let selectTruckValue = selectTruck.options[selectTruck.selectedIndex].text
+                    if (cell5) {
+                        if (cell5.innerText === selectTruckValue) {
+                            cell5.parentNode.className = '';  // show
+
+                            if (cell8) {
+                                cellTotal += parseFloat(cell8.innerText)
+                            }
+
+                            let cells = trTfootPurchases.getElementsByTagName('td');
+                            cells[1].innerText = cellTotal;
+                        }
+                    } else if (selectTruckValue === cell0.parentNode.getAttribute('code')) {
+                        cell0.parentNode.className = ''
+                    }
+
+                }
+
+            });
+        }
 
 
         $('#search-form').submit(function (event) {
@@ -87,7 +139,41 @@
             $('#btn-search').removeAttr("disabled", "false");
         });
 
-        function humanizeNumber(n) {
+        /*$("#btn-filter").click(function (event) {
+            let _truck_id = $('#id_truck_plate').val();
+            event.preventDefault();
+            console.log(_truck_id)
+
+            $.ajax({
+                url: '/buys/get_purchases_by_license_plate/',
+                type: 'GET',
+                async: true,
+                dataType: 'json',
+                data: {
+                    'truck_id': _truck_id,
+                    'start_date': $('#id-start-date'),
+                    'end_date': $('#id-end-date'),
+                },
+                contentType: 'application/json;charset=UTF-8',
+                headers: {"X-CSRFToken": '{{ csrf_token }}'},
+                success: function (response, textStatus, xhr) {
+                    if (xhr.status === 200) {
+                        toastr.success(response['message'], '¡Bien hecho!');
+                        $('#tbl-purchases').html(response.grid);
+                    }
+                },
+                error: function (jqXhr, textStatus, xhr) {
+                    if (jqXhr.status === 500) {
+                        toastr.error(jqXhr.responseJSON.error, '¡Inconcebible!');
+                    }
+                }
+
+            });
+
+        });*/
+
+
+        /*function humanizeNumber(n) {
             n = n.toString()
             while (true) {
                 let n2 = n.replace(/(\d)(\d{3})($|,|\.)/g, '$1,$2$3')
@@ -97,7 +183,7 @@
             return n
         }
 
-        console.log(humanizeNumber(3659.66))
+        console.log(humanizeNumber(3659.66))*/
 
     </script>
 

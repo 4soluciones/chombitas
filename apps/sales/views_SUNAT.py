@@ -167,8 +167,9 @@ def send_bill_nubefact(order_id, is_demo=False):
     igv_total = 0
     for d in details:
         base_total = d.quantity_sold * d.price_unit  # 5 * 20 = 100
-        base_amount = base_total / decimal.Decimal(1.1800)  # 100 / 1.18 = 84.75
-        igv = base_total - base_amount  # 100 - 84.75 = 15.25
+        value_unit = float(d.price_unit / decimal.Decimal(1.1800))
+        base_amount = value_unit * float(d.quantity_sold)  # 100 / 1.18 = 84.75
+        igv = float(base_total) - float(base_amount)  # 100 - 84.75 = 15.25
         sub_total = sub_total + base_amount
         total = total + base_total
         igv_total = igv_total + igv
@@ -183,13 +184,13 @@ def send_bill_nubefact(order_id, is_demo=False):
             "codigo_producto_sunat": "10000000",  # codigo del producto excel-sunat
             "descripcion": d.product.name,
             "cantidad": float(round(d.quantity_sold)),
-            "valor_unitario": float(round(d.price_unit / decimal.Decimal(1.1800), 2)),  # valor unitario sin IGV
-            "precio_unitario": float(round(d.price_unit, 2)),
+            "valor_unitario": value_unit,  # valor unitario sin IGV
+            "precio_unitario": float(d.price_unit),
             "descuento": "",
-            "subtotal": float(round(base_amount, 2)),  # resultado del valor unitario por la cantidad menos el descuento
+            "subtotal": float(base_amount),  # resultado del valor unitario por la cantidad menos el descuento
             "tipo_de_igv": 1,  # operacion onerosa
-            "igv": float(round(igv, 2)),
-            "total": float(round(base_total, 2)),
+            "igv": float(igv),
+            "total": float(base_total),
             "anticipo_regularizacion": 'false',
             "anticipo_documento_serie": "",
             "anticipo_documento_numero": "",
@@ -249,7 +250,6 @@ def send_bill_nubefact(order_id, is_demo=False):
         "servicios_region_selva": "",
         "items": items,
     }
-    print(params)
     if is_demo:
         _url = 'https://www.pse.pe/api/v1/91900d0da6424013b4cf9a8c4fdf8846b67addc7bbcb41328e137a9c93479e26'
         _authorization = 'eyJhbGciOiJIUzI1NiJ9.IjY1NTJmNDE1NGZhOTQ5ZGU4MjFjYTIwYmE4ZWM4ZDg1MzAxMDRlZmNlNGNjNDcyMGI0ZDU2MGE5ZGQwOGNhMmQi.GNzvsfMsCITQ-xwfK-yl_TQwcLd4F-264wYK19frMXE'

@@ -1798,7 +1798,9 @@ def report_purchases_all(request):
     user_obj = User.objects.get(id=user_id)
     subsidiary_obj = get_subsidiary_by_user(user_obj)
     truck_set = Truck.objects.all().order_by('license_plate')
-
+    truck_set2 = Purchase.objects.filter(subsidiary=subsidiary_obj,
+                                         truck__isnull=False).distinct('truck__license_plate').values('truck__id',
+                                                                                                      'truck__license_plate').order_by('truck__license_plate')
     if request.method == 'GET':
         mydate = datetime.now()
         formatdate = mydate.strftime("%Y-%m-%d")
@@ -1806,6 +1808,7 @@ def report_purchases_all(request):
         return render(request, 'buys/report_purchases_all.html', {
             'formatdate': formatdate,
             'truck_set': truck_set,
+            'truck_set2': truck_set2,
         })
 
     elif request.method == 'POST':
@@ -1826,59 +1829,97 @@ def report_purchases_all(request):
             )
         )
 
-        igv = 0
-        base_amount = 0
-        sum_all_total = 0
-        purchase_dict = []
-        for p in purchase_set.all():
-            license_plate = ''
-            if p.truck is not None:
-                license_plate = p.truck.license_plate
+        context = get_all_purchases(purchase_set=purchase_set)
 
-            base_amount = float(p.sum_total) / float(1.18)
-            igv = float(p.sum_total) - float(base_amount)
-
-            item_purchase = {
-                'id': p.id,
-                'supplier': p.supplier.name,
-                'purchase_date': p.purchase_date,
-                'type_bill': p.get_type_bill_display(),
-                'bill_number': p.bill_number,
-                'status': p.get_status_display(),
-                'truck': license_plate,
-                'purchase_detail_set': [],
-                'purchase_detail_count': p.purchasedetail_set.count(),
-                'base_amount': round(float(base_amount), 2),
-                'igv': round(float(igv), 2),
-                'sum_total': round(float(p.sum_total), 2),
-            }
-            sum_all_total += p.sum_total
-
-            for pd in p.purchasedetail_set.all():
-                item_purchases_detail = {
-                    'id': pd.product.name,
-                    'product': pd.product.name,
-                    'quantity': str(pd.quantity),
-                    'unit': pd.unit.name,
-                    'price_unit': round(float(pd.price_unit), 2),
-                }
-                item_purchase.get('purchase_detail_set').append(item_purchases_detail)
-
-            purchase_dict.append(item_purchase)
-
-        base_amount = float(sum_all_total) / 1.18
-        igv = float(sum_all_total) - base_amount
+        purchase_dict = context.get('purchase_set')
+        sum_all_total = context.get('sum_all_total')
+        base_amount = context.get('base_amount')
+        truck_dict = context.get('truck_dict')
+        igv = context.get('igv')
 
         tpl = loader.get_template('buys/report_purchases_all_grid.html')
         context = ({
+            'truck_dict': truck_dict,
             'purchase_set': purchase_dict,
-            'sum_all_total': '{:,}'.format(round(float(sum_all_total), 2)),
-            'base_amount': '{:,}'.format(round(float(base_amount), 2)),
-            'igv': '{:,}'.format(round(float(igv), 2)),
+            'sum_all_total': sum_all_total,
+            'base_amount': base_amount,
+            'igv': igv,
         })
         return JsonResponse({
             'grid': tpl.render(context, request),
         }, status=HTTPStatus.OK)
+
+
+def get_all_purchases(purchase_set):
+
+    sum_all_total = 0
+    purchase_dict = []
+    truck_dict = {}
+    for p in purchase_set.all():
+        license_plate = ''
+        if p.truck is not None:
+            license_plate = p.truck.license_plate
+            truck_dict[p.truck.id] = license_plate
+
+        base_amount = float(p.sum_total) / float(1.18)
+        igv = float(p.sum_total) - float(base_amount)
+        item_purchase = {
+            'id': p.id,
+            'supplier': p.supplier.name,
+            'purchase_date': p.purchase_date,
+            'type_bill': p.get_type_bill_display(),
+            'bill_number': p.bill_number,
+            'status': p.get_status_display(),
+            'truck': license_plate,
+            'purchase_detail_set': [],
+            'purchase_detail_count': p.purchasedetail_set.count(),
+            'base_amount': round(float(base_amount), 2),
+            'igv': round(float(igv), 2),
+            'sum_total': round(float(p.sum_total), 2),
+        }
+        sum_all_total += p.sum_total
+
+        for pd in p.purchasedetail_set.all():
+            item_purchases_detail = {
+                'id': pd.product.name,
+                'product': pd.product.name,
+                'quantity': str(pd.quantity),
+                'unit': pd.unit.name,
+                'price_unit': round(float(pd.price_unit), 2),
+            }
+            item_purchase.get('purchase_detail_set').append(item_purchases_detail)
+
+        purchase_dict.append(item_purchase)
+
+    base_amount = float(sum_all_total) / 1.18
+    igv = float(sum_all_total) - base_amount
+
+    context = ({
+        'purchase_set': purchase_dict,
+        'truck_dict': truck_dict,
+        'sum_all_total': '{:,}'.format(round(float(sum_all_total), 2)),
+        'base_amount': '{:,}'.format(round(float(base_amount), 2)),
+        'igv': '{:,}'.format(round(float(igv), 2)),
+    })
+
+    return context
+
+
+def get_purchases_by_license_plate(request):
+    user_id = request.user.id
+    user_obj = User.objects.get(id=user_id)
+    truck_id = request.GET.get('truck_id', '')
+    start_date = request.GET.get('start_date', '')
+    end_date = request.GET.get('end_date', '')
+    subsidiary_obj = get_subsidiary_by_user(user_obj)
+
+    if request.method == 'GET':
+        mydate = datetime.now()
+        formatdate = mydate.strftime("%Y-%m-%d")
+
+        return render(request, 'buys/report_purchases_by_supplier.html', {
+            'formatdate': formatdate,
+        })
 
 
 def report_purchases_by_supplier(request):

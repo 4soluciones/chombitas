@@ -64,4 +64,5 @@ urlpatterns = [
     # Report Buys
     path('report_purchases_all/', report_purchases_all, name='report_purchases_all'),
     path('report_purchases_by_supplier/', report_purchases_by_supplier, name='report_purchases_by_supplier'),
+    path('get_purchases_by_license_plate/', get_purchases_by_license_plate, name='get_purchases_by_license_plate'),
 ]
