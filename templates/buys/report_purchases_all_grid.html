@@ -19,7 +19,7 @@
         </td>
         <td class="col-form-label col-form-label-lg">SUBTOTAL</td>
         <td class="col-form-label col-form-label-lg">IGV</td>
-        <td class="col-form-label col-form-label-lg">TOTAL</td>
+        <td class="col-form-label col-form-label-lg" style="width: 15px">TOTAL</td>
         <td class="col-form-label col-form-label-lg">PRODUCTO</td>
 {#        <td class="col-form-label col-form-label-lg">UNIDAD</td>#}
         <td class="col-form-label col-form-label-lg">CANTIDAD</td>
@@ -48,16 +48,16 @@
             <td class="col-form-label col-form-label-lg align-middle text-center"
                 rowspan="{{ p.purchase_detail_count }}">{{ p.igv|safe }}</td>
             <td class="col-form-label col-form-label-lg align-middle text-center"
-                rowspan="{{ p.purchase_detail_count }}">{{ p.sum_total|safe }}</td>
+                rowspan="{{ p.purchase_detail_count }}">{{ p.subtotal|safe }}</td>
             {% for pd in p.purchase_detail_set %}
                 {% if not forloop.first %}
                     <tr code="{{ p.truck }}">
                 {% endif %}
-            <td class="col-form-label col-form-label-lg align-middle text-center">{{ pd.product }}</td>
-{#            <td class="col-form-label col-form-label-lg align-middle text-center">{{ pd.unit }}</td>#}
-            <td class="col-form-label col-form-label-lg align-middle text-center">{{ pd.quantity|floatformat:0 }}</td>
-            <td class="col-form-label col-form-label-lg align-middle text-center">{{ pd.price_unit|safe }}</td>
-            </tr>
+                <td class="col-form-label col-form-label-lg align-middle text-center">{{ pd.product }}</td>
+    {#            <td class="col-form-label col-form-label-lg align-middle text-center">{{ pd.unit }}</td>#}
+                <td class="col-form-label col-form-label-lg align-middle text-center">{{ pd.quantity|floatformat:0 }}</td>
+                <td class="col-form-label col-form-label-lg align-middle text-center">{{ pd.price_unit|safe }}</td>
+                </tr>
             {% endfor %}
     {% endfor %}
     </tbody>
@@ -88,6 +88,6 @@
 
 <script type="text/javascript">
     filter();
-    ready();
+    {#ready();#}
 </script>
 

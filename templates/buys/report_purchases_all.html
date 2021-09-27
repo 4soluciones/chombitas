@@ -29,21 +29,28 @@
                            name="end-date"
                            value="{{ formatdate }}">
 
+
+
+                    <label for="id_type_document" class="my-1 ml-2 mr-2">Tipo de Documento:</label>
+                    <select id="id_type_document" name="type-document"
+                            class="form-control">
+                        <option selected value="F">FACTURAS</option>
+                        <option value="T">TODO</option>
+                    </select>
                     <button type="submit" class="btn btn-blue my-1 ml-2" id="btn-search">
                         <i class="fas fa-search-dollar"></i> Buscar
                     </button>
-
-{#                    <label for="id_truck_plate" class="my-1 ml-2 mr-2">Placa:</label>#}
-{#                    <select id="id_truck_plate" name="truck-plate"#}
-{#                            class="form-control">#}
-{#                        <option selected value="0">Seleccione Placa..</option>#}
-{#                        {% for t in truck_set2 %}#}
-{#                            <option value="{{ t.truck__id }}">{{ t.truck__license_plate }}</option>#}
-{#                        {% endfor %}#}
-{#                    </select>#}
-{#                    <button type="button" class="btn btn-blue my-1 ml-2" id="btn-filter">#}
-{#                        <i class="fas fa-filter"></i> Filtrar#}
-{#                    </button>#}
+                    {#                    <label for="id_truck_plate" class="my-1 ml-2 mr-2">Placa:</label>#}
+                    {#                    <select id="id_truck_plate" name="truck-plate"#}
+                    {#                            class="form-control">#}
+                    {#                        <option selected value="0">Seleccione Placa..</option>#}
+                    {#                        {% for t in truck_set2 %}#}
+                    {#                            <option value="{{ t.truck__id }}">{{ t.truck__license_plate }}</option>#}
+                    {#                        {% endfor %}#}
+                    {#                    </select>#}
+                    {#                    <button type="button" class="btn btn-blue my-1 ml-2" id="btn-filter">#}
+                    {#                        <i class="fas fa-filter"></i> Filtrar#}
+                    {#                    </button>#}
                 </form>
 
             </div>
@@ -78,34 +85,43 @@
             const trTfootPurchases = document.getElementById('sum');
 
             selectTruck.addEventListener('change', (e) => {
-                e.preventDefault();
+                let selectTruckValue = selectTruck.options[selectTruck.selectedIndex].text
                 let cellTotal = 0
+                let cells = trTfootPurchases.getElementsByTagName('td');
+                e.preventDefault();
 
-                for (let i = 0; i < tbodyPurchases.rows.length; i++) {
-                    let cell0 = tbodyPurchases.rows[i].cells[0];
-                    cell0.parentNode.className = 'd-none';  // hide
-                }
-                for (let i = 0; i < tbodyPurchases.rows.length; i++) {
-                    let cell5 = tbodyPurchases.rows[i].cells[5];
-                    let cell8 = tbodyPurchases.rows[i].cells[8];
-                    let cell0 = tbodyPurchases.rows[i].cells[0];
-                    let selectTruckValue = selectTruck.options[selectTruck.selectedIndex].text
-                    if (cell5) {
-                        if (cell5.innerText === selectTruckValue) {
-                            cell5.parentNode.className = '';  // show
-
-                            if (cell8) {
-                                cellTotal += parseFloat(cell8.innerText)
-                            }
-
-                            let cells = trTfootPurchases.getElementsByTagName('td');
-                            cells[1].innerText = cellTotal;
-                        }
-                    } else if (selectTruckValue === cell0.parentNode.getAttribute('code')) {
-                        cell0.parentNode.className = ''
+                if (selectTruckValue === 'PLACA') {
+                    for (let i = 0; i < tbodyPurchases.rows.length; i++) {
+                        let cell0 = tbodyPurchases.rows[i].cells[0];
+                        cell0.parentNode.className = '';  // hide
+                        cells[1].innerText = '-';
                     }
+                } else {
+                    for (let i = 0; i < tbodyPurchases.rows.length; i++) {
+                        let cell0 = tbodyPurchases.rows[i].cells[0];
+                        cell0.parentNode.className = 'd-none';  // hide
+                    }
+                    for (let i = 0; i < tbodyPurchases.rows.length; i++) {
+                        let cell5 = tbodyPurchases.rows[i].cells[5];
+                        let cell8 = tbodyPurchases.rows[i].cells[8];
+                        let cell0 = tbodyPurchases.rows[i].cells[0];
 
+
+                        if (cell5) {
+                            if (cell5.innerText === selectTruckValue) {
+                                cell5.parentNode.className = '';  // show
+                                if (cell8) {
+                                    cellTotal += parseFloat(cell8.innerText)
+                                }
+
+                                cells[1].innerText = cellTotal;
+                            }
+                        } else if (selectTruckValue === cell0.parentNode.getAttribute('code')) {
+                            cell0.parentNode.className = ''
+                        }
+                    }
                 }
+
 
             });
         }

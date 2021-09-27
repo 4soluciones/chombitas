@@ -15,7 +15,7 @@ urlpatterns = [
     path('get_detail_purchase_store/', get_detail_purchase_store, name='get_detail_purchase_store'),
     path('get_details_by_purchase/', get_details_by_purchase, name='get_details_by_purchase'),
 
-    path('get_requirement_programming/', get_requirement_programming, name='get_requirement_programming'),
+    path('get_requirement_progrget_programming_by_truck_and_datesamming/', get_requirement_programming, name='get_requirement_programming'),
     path('get_programming_invoice/', get_programming_invoice, name='get_programming_invoice'),
     path('save_detail_purchase_store/', save_detail_purchase_store, name='save_detail_purchase_store'),
     path('get_units_by_product/', get_units_by_product, name='get_units_by_product'),

@@ -937,6 +937,11 @@ def get_programming_by_truck_and_dates(request):
                 programminginvoice__requirement_buys__subsidiary=subsidiary_obj, truck=truck_obj, status='F',
                 programminginvoice__date_arrive__range=(date_initial, date_final)).distinct('number_scop')
 
+            purchase_detail_set = PurchaseDetail.objects.filter(purchase__subsidiary__id=subsidiary_obj.id,
+                                                                purchase__status='A', purchase__truck=truck_obj,
+                                                                purchase__purchase_date__range=(date_initial, date_final)).annotate(
+                total=Sum(F('price_unit') * F('quantity'))).aggregate(Sum('total'))
+
             programming_expense_total_price = ProgrammingExpense.objects.filter(
                 requirementBuysProgramming__programminginvoice__date_arrive__range=(
                     date_initial, date_final), requirementBuysProgramming__truck=truck_obj,
@@ -952,6 +957,7 @@ def get_programming_by_truck_and_dates(request):
             context = ({
                 # 'programmingsinvoice': programminginvoice_obj,
                 'programmings': requirementprogramming_obj,
+                'purchases': round(float(purchase_detail_set['total__sum']), 2),
                 'total_price': programming_expense_total_price['price__sum'],
                 'total_quantity': programming_invoice_total_quantity['quantity__sum'],
             })
@@ -1814,20 +1820,38 @@ def report_purchases_all(request):
     elif request.method == 'POST':
         start_date = str(request.POST.get('start-date'))
         end_date = str(request.POST.get('end-date'))
+        type_document = str(request.POST.get('type-document'))
+        purchase_set = ''
 
-        purchase_set = Purchase.objects.filter(
-            subsidiary=subsidiary_obj, purchase_date__range=[start_date, end_date],
-            status__in=['S', 'A'], type_bill='F'
-        ).prefetch_related(
-            Prefetch(
-                'purchasedetail_set', queryset=PurchaseDetail.objects.select_related('unit', 'product')
-            )
-        ).select_related('supplier', 'truck').annotate(
-            sum_total=Subquery(
-                PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).annotate(
-                    return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
-            )
-        )
+        if type_document == 'F':
+            purchase_set = Purchase.objects.filter(
+                subsidiary=subsidiary_obj, purchase_date__range=[start_date, end_date],
+                status__in=['S', 'A'], type_bill='F'
+            ).prefetch_related(
+                Prefetch(
+                    'purchasedetail_set', queryset=PurchaseDetail.objects.select_related('unit', 'product')
+                )
+            ).select_related('supplier', 'truck').annotate(
+                sum_total=Subquery(
+                    PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).annotate(
+                        return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
+                )
+            ).order_by('purchase_date')
+
+        elif type_document == 'T':
+            purchase_set = Purchase.objects.filter(
+                subsidiary=subsidiary_obj, purchase_date__range=[start_date, end_date],
+                status__in=['S', 'A']
+            ).prefetch_related(
+                Prefetch(
+                    'purchasedetail_set', queryset=PurchaseDetail.objects.select_related('unit', 'product')
+                )
+            ).select_related('supplier', 'truck').annotate(
+                sum_total=Subquery(
+                    PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).annotate(
+                        return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
+                )
+            ).order_by('purchase_date')
 
         context = get_all_purchases(purchase_set=purchase_set)
 
@@ -1855,7 +1879,9 @@ def get_all_purchases(purchase_set):
     sum_all_total = 0
     purchase_dict = []
     truck_dict = {}
+
     for p in purchase_set.all():
+
         license_plate = ''
         if p.truck is not None:
             license_plate = p.truck.license_plate
@@ -1876,9 +1902,10 @@ def get_all_purchases(purchase_set):
             'base_amount': round(float(base_amount), 2),
             'igv': round(float(igv), 2),
             'sum_total': round(float(p.sum_total), 2),
+            'subtotal': 0,
         }
         sum_all_total += p.sum_total
-
+        subtotal = 0
         for pd in p.purchasedetail_set.all():
             item_purchases_detail = {
                 'id': pd.product.name,
@@ -1887,7 +1914,10 @@ def get_all_purchases(purchase_set):
                 'unit': pd.unit.name,
                 'price_unit': round(float(pd.price_unit), 2),
             }
+            subtotal += pd.quantity * pd.price_unit
+
             item_purchase.get('purchase_detail_set').append(item_purchases_detail)
+        item_purchase['subtotal'] = round(float(subtotal), 2)
 
         purchase_dict.append(item_purchase)
 
