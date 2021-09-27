@@ -30,7 +30,6 @@
                            value="{{ formatdate }}">
 
 
-
                     <label for="id_type_document" class="my-1 ml-2 mr-2">Tipo de Documento:</label>
                     <select id="id_type_document" name="type-document"
                             class="form-control">
@@ -39,6 +38,10 @@
                     </select>
                     <button type="submit" class="btn btn-blue my-1 ml-2" id="btn-search">
                         <i class="fas fa-search-dollar"></i> Buscar
+                    </button>
+                    <button type="button" class="btn my-1 ml-2 text-white" id="printReportExcel"
+                            style="background: #00960f">
+                        <i class="far fa-file-excel"></i> Exportar a Excel
                     </button>
                     {#                    <label for="id_truck_plate" class="my-1 ml-2 mr-2">Placa:</label>#}
                     {#                    <select id="id_truck_plate" name="truck-plate"#}
@@ -155,6 +158,14 @@
             $('#btn-search').removeAttr("disabled", "false");
         });
 
+        $(function () {
+
+            $('#printReportExcel').click(function () {
+                $("#report-payments").table2excel({filename: "Compras_totales.xls"});
+            });
+
+        });
+
         /*$("#btn-filter").click(function (event) {
             let _truck_id = $('#id_truck_plate').val();
             event.preventDefault();
@@ -200,6 +211,7 @@
         }
 
         console.log(humanizeNumber(3659.66))*/
+
 
     </script>
 
