@@ -21,8 +21,9 @@
             <td class="bg-info">CANT.</td>
             <td class="bg-info">PREC.</td>
             <td class="bg-info">IMP.</td>
+            <td class="bg-primary">TOTAL</td>
 
-            <td class="bg-info head-spending">GASTOS</td>
+            <td class="bg-danger head-spending">GASTOS</td>
 
             <td class="bg-secondary">FECHA OPERACIÓN</td>
             <td class="bg-secondary">CANTIDAD ENTREGADA BALONES</td>
@@ -37,7 +38,7 @@
             <td class="bg-secondary">TOTAL CANTIDAD CAMBIADA</td>
             <td class="bg-secondary">ACCIÓN</td>
 
-            <td class="bg-primary">TOTAL</td>
+{#            <td class="bg-primary">TOTAL</td>#}
             <td class="bg-primary">TOTAL PAGADO GLP</td>
             <td class="bg-danger">TOTAL GASTOS</td>
             <td class="bg-primary">TOTAL VALES FISE</td>
@@ -107,6 +108,11 @@
                     <td class="align-middle text-center total-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                         rowspan="{{ d.rowspan }}">{{ d.multiply|floatformat:2 }}</td>
                     {#llamar a el modal de expense#}
+                    {% if forloop.first %}
+                        <td class="align-middle text-primary text-right font-weight-bold {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
+                            rowspan="{{ o.rowspan }}">{{ o.subtotal|floatformat:2 }}</td>
+                    {% endif %}
+
                     {% if d.has_spending %}
                         <td class="align-middle text-center body-spending {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">
                             <button type="button"
@@ -184,8 +190,8 @@
 
                             {% if forloop.parentloop.first %}
 
-                                <td class="align-middle text-primary text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
-                                    rowspan="{{ o.rowspan }}">{{ o.subtotal|floatformat:2 }}</td>
+{#                                <td class="align-middle text-primary text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"#}
+{#                                    rowspan="{{ o.rowspan }}">{{ o.subtotal|floatformat:2 }}</td>#}
                                 <td class="align-middle text-primary text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                     rowspan="{{ o.rowspan }}">{{ o.total_repay_loan|floatformat:2 }}</td>
                                 <td class="align-middle text-danger font-weight-bold text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
@@ -267,8 +273,8 @@
 
                                 {% if o.details_count > 0 %}
 
-                                    <td class="align-middle text-primary text-right"
-                                        rowspan="{{ o.rowspan }}">{{ o.subtotal|floatformat:2 }}</td>
+{#                                    <td class="align-middle text-primary text-right"#}
+{#                                        rowspan="{{ o.rowspan }}">{{ o.subtotal|floatformat:2 }}</td>#}
                                     <td class="align-middle text-primary text-right"
                                         rowspan="{{ o.rowspan }}">{{ o.total_repay_loan|floatformat:2 }}</td>
                                     <td class="align-middle text-danger font-weight-bold text-right"
@@ -296,8 +302,8 @@
                             {% endif %}
                         {% else %}
                             {% if o.order_detail_set.0.id == d.id %}
-                                <td class="align-middle text-primary text-right"
-                                    rowspan="{{ o.rowspan }}">{{ o.subtotal|floatformat:2 }}</td><!--TOTAL-->
+{#                                <td class="align-middle text-primary text-right"#}
+{#                                    rowspan="{{ o.rowspan }}">{{ o.subtotal|floatformat:2 }}</td><!--TOTAL-->#}
                                 <td class="align-middle text-primary text-right"
                                     rowspan="{{ o.rowspan }}">{{ o.total_repay_loan|floatformat:2 }}</td>
                                 <!--TOTAL PAGADO GLP-->
