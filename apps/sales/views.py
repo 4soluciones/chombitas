@@ -2234,6 +2234,7 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
 
     dictionary = []
 
+
     for o in order_set:
         if o.orderdetail_set.all().exists():
             order_detail_set = o.orderdetail_set.all()
@@ -2247,6 +2248,7 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                 'order_detail_set': [],
                 'status': o.get_status_display(),
                 'total': o.total,
+                'subtotal': 0,
                 'total_repay_loan': total_repay_loan(order_detail_set=order_detail_set),
                 'total_repay_loan_with_vouchers': total_repay_loan_with_vouchers(order_detail_set=order_detail_set),
                 'total_return_loan': total_return_loan(order_detail_set=order_detail_set),
@@ -2270,6 +2272,8 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                 'pilot': pilot,
             }
             new.get('distribution_mobil').append(distribution_mobil)
+
+            subtotal = 0
 
             for d in order_detail_set:
                 _type = '-'
@@ -2337,6 +2341,8 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                     'rowspan': rowspan,
                     'has_spending': False
                 }
+                subtotal += d.quantity_sold * d.price_unit
+
                 new.get('order_detail_set').append(order_detail)
                 new['rowspan'] = new['rowspan'] + rowspan
 
@@ -2344,7 +2350,7 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                     order_detail['has_spending'] = True
                 else:
                     order_detail['has_spending'] = False
-
+            new['subtotal'] = round(float(subtotal), 2)
             dictionary.append(new)
 
     sum_total = 0
