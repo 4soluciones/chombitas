@@ -2210,6 +2210,7 @@ def order_list(request):
 
 
 def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=None):
+    sum_quantity_total = 0
     order_set = Order.objects.filter(
         client=client_obj, create_at__date__range=[start_date, end_date], type__in=['V', 'R']
     ).prefetch_related(
@@ -2233,7 +2234,6 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
     ).select_related('distribution_mobil__truck', 'distribution_mobil__pilot', 'client').order_by('id')
 
     dictionary = []
-
 
     for o in order_set:
         if o.orderdetail_set.all().exists():
@@ -2362,7 +2362,9 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
     sum_total_remaining_repay_loan_ball = 0
     sum_total_ball_changes = 0
     sum_total_cash_flow_spending = 0
+
     if order_set.exists():
+        sum_quantity_total = 0
         for o in order_set:
             order_detail_set = o.orderdetail_set.all()
             cashflow_set = o.cashflow_set.all()
@@ -2374,8 +2376,13 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
             sum_total_remaining_repay_loan_ball += total_remaining_repay_loan_ball(order_detail_set=order_detail_set)
             sum_total_ball_changes += total_ball_changes(order_detail_set=order_detail_set)
             sum_total_cash_flow_spending += total_cash_flow_spending(cashflow_set=cashflow_set)
+            total_quantity_set = order_detail_set.values('quantity_sold').annotate(totals_quantity=Sum('quantity_sold')).aggregate(Sum('totals_quantity'))
+            sum_quantity_total += total_quantity_set['totals_quantity__sum']
         total_set = order_set.values('client').annotate(totals=Sum('total'))
         sum_total = total_set[0].get('totals')
+
+        # sum_quantity_total = total_quantity_set[0].get('totals_quantity')
+
     tpl = loader.get_template('sales/account_order_list.html')
     context = ({
         'dictionary': dictionary,
@@ -2388,6 +2395,7 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
         'sum_total_remaining_return_loan': '{:,}'.format(round(float(sum_total_remaining_return_loan), 2)),
         'sum_total_ball_changes': '{:,}'.format(round(float(sum_total_ball_changes), 2)),
         'sum_total_cash_flow_spending': '{:,}'.format(round(float(sum_total_cash_flow_spending), 2)),
+        'sum_quantity_total': sum_quantity_total,
         'is_pdf': is_pdf,
         'client_obj': client_obj,
     })

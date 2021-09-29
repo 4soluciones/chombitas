@@ -103,7 +103,7 @@
                     </td>
                     <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">{{ d.type }}</td>
                     <td class="align-middle text-center quantity-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
-                        rowspan="{{ d.rowspan }}">{{ d.quantity_sold }}</td>
+                        rowspan="{{ d.rowspan }}">{{ d.quantity_sold|floatformat:0 }}</td>
                     <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">{{ d.price_unit }}</td>
                     <td class="align-middle text-center total-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                         rowspan="{{ d.rowspan }}">{{ d.multiply|floatformat:2 }}</td>
@@ -130,7 +130,7 @@
 
                         {% if forloop.first %}
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.operation_date|date:"d-m-y" }}</td>
-                            <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.quantity }}</td>
+                            <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.quantity|floatformat:0 }}</td>
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.number_of_vouchers }}</td>
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.price|floatformat:2 }}</td>
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.license_plate }}</td>
@@ -218,7 +218,7 @@
                         {% else %}
                             <tr class="{% if o.is_review %}green{% endif %}">
                                 <td class="align-middle text-center">{{ l.operation_date|date:"d-m-y" }}</td>
-                                <td class="align-middle text-center">{{ l.quantity }}</td>
+                                <td class="align-middle text-center">{{ l.quantity|floatformat:0 }}</td>
                                 <td class="align-middle text-center">{{ l.number_of_vouchers }}</td>
                                 <td class="align-middle text-center">{{ l.price|floatformat:2 }}</td>
                                 <td class="align-middle text-center">{{ l.license_plate }}</td>
@@ -338,7 +338,7 @@
 
 
                 {% empty %}
-                    <td colspan="24" rowspan="0">SIN DETALLES</td>
+                    <td colspan="16" rowspan="0">SIN DETALLES</td>
                     </tr>
 
                 {% endfor %}
@@ -347,8 +347,10 @@
         {% if not is_pdf %}
             <tfoot>{% endif %}
         <tr class="colcount ">
-            <td colspan="25" class="colcount"></td>
-            <td class="align-middle text-primary text-right">{{ sum_total }}</td>
+            <td colspan="9" class="colcount"></td>
+            <td class="align-middle text-primary text-right">{{ sum_quantity_total|floatformat:0 }}</td>
+            <td colspan="16" class="colcount"></td>
+{#            <td class="align-middle text-primary text-right">{{ sum_total }}</td>#}
             <td class="align-middle text-primary text-right">{{ sum_total_repay_loan }}</td>
             <td class="align-middle text-danger text-right">{{ sum_total_cash_flow_spending }}</td>
             <td class="align-middle text-primary text-right">{{ sum_total_repay_loan_with_vouchers }}</td>
