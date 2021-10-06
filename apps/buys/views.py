@@ -1822,12 +1822,13 @@ def report_purchases_all(request):
         end_date = str(request.POST.get('end-date'))
         type_document = str(request.POST.get('type-document'))
         purchase_set = ''
+        subsidiaries = [1, 2, 3, 4, 6]
 
         if type_document == 'F':
             purchase_set = Purchase.objects.filter(
-                subsidiary=subsidiary_obj, purchase_date__range=[start_date, end_date],
+                subsidiary__id__in=subsidiaries, purchase_date__range=[start_date, end_date],
                 status__in=['S', 'A'], type_bill='F'
-            ).prefetch_related(
+            ).select_related('subsidiary').prefetch_related(
                 Prefetch(
                     'purchasedetail_set', queryset=PurchaseDetail.objects.select_related('unit', 'product')
                 )
@@ -1840,9 +1841,9 @@ def report_purchases_all(request):
 
         elif type_document == 'T':
             purchase_set = Purchase.objects.filter(
-                subsidiary=subsidiary_obj, purchase_date__range=[start_date, end_date],
+                subsidiary__id__in=subsidiaries, purchase_date__range=[start_date, end_date],
                 status__in=['S', 'A']
-            ).prefetch_related(
+            ).select_related('subsidiary').prefetch_related(
                 Prefetch(
                     'purchasedetail_set', queryset=PurchaseDetail.objects.select_related('unit', 'product')
                 )
@@ -1903,6 +1904,7 @@ def get_all_purchases(purchase_set):
             'igv': round(float(igv), 2),
             'sum_total': round(float(p.sum_total), 2),
             'subtotal': 0,
+            'subsidiary': p.subsidiary.name
         }
         sum_all_total += p.sum_total
         subtotal = 0

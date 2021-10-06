@@ -3,6 +3,7 @@
     <tr class="text-white bg-dark text-uppercase text-center">
 
         <td class="col-form-label col-form-label-lg">ID</td>
+        <td class="col-form-label col-form-label-lg">SUCURSAL</td>
         <td class="col-form-label col-form-label-lg">PROVEEDOR</td>
         <td class="col-form-label col-form-label-lg">FECHA</td>
         <td class="col-form-label col-form-label-lg" style="width: 5px">TIPO DE COMPROBANTE</td>
@@ -32,6 +33,8 @@
         <tr code="{{ p.truck }}">
             <td class="col-form-label col-form-label-lg align-middle text-center"
                 rowspan="{{ p.purchase_detail_count }}">{{ p.id }}</td>
+            <td class="col-form-label col-form-label-lg align-middle text-center"
+                rowspan="{{ p.purchase_detail_count }}">{{ p.subsidiary }}</td>
             <td class="col-form-label col-form-label-lg align-middle text-center"
                 rowspan="{{ p.purchase_detail_count }}">{{ p.supplier }}</td>
             <td class="col-form-label col-form-label-lg align-middle text-center"
@@ -84,7 +87,6 @@
     </tr>
     </tfoot>
 </table>
-
 
 <script type="text/javascript">
     filter();
