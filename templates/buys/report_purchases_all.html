@@ -105,16 +105,15 @@
                         cell0.parentNode.className = 'd-none';  // hide
                     }
                     for (let i = 0; i < tbodyPurchases.rows.length; i++) {
-                        let cell5 = tbodyPurchases.rows[i].cells[5];
-                        let cell8 = tbodyPurchases.rows[i].cells[8];
+                        let cell6 = tbodyPurchases.rows[i].cells[6];
+                        let cell9 = tbodyPurchases.rows[i].cells[9];
                         let cell0 = tbodyPurchases.rows[i].cells[0];
 
-
-                        if (cell5) {
-                            if (cell5.innerText === selectTruckValue) {
-                                cell5.parentNode.className = '';  // show
-                                if (cell8) {
-                                    cellTotal += parseFloat(cell8.innerText)
+                        if (cell6) {
+                            if (cell6.innerText === selectTruckValue) {
+                                cell6.parentNode.className = '';  // show
+                                if (cell9) {
+                                    cellTotal += parseFloat(cell9.innerText)
                                 }
 
                                 cells[1].innerText = cellTotal;
