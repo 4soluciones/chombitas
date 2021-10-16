@@ -1647,8 +1647,8 @@ def get_salary_pay(request):
     user_obj = User.objects.get(id=user_id)
     subsidiary_obj = get_subsidiary_by_user(user_obj)
     worker_id = request.GET.get('worker_id', '')
-    start_date = request.GET.get('start-date', '')
-    end_date = request.GET.get('end-date', '')
+    month = request.GET.get('month', '')
+    year = request.GET.get('year', '')
     worker_obj = Worker.objects.get(id=int(worker_id))
     cash_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='101')
     cash_deposit_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='104')
@@ -1661,8 +1661,8 @@ def get_salary_pay(request):
         'choices_account': cash_set,
         'choices_account_bank': cash_deposit_set,
         'date': formatdate,
-        'start_date': start_date,
-        'end_date': end_date
+        'month': month,
+        'year': year
     })
 
     return JsonResponse({
@@ -1679,8 +1679,8 @@ def new_payment_salary(request):
         salary_initial = str(request.POST.get('salary_initial'))
         salary_pay = decimal.Decimal(request.POST.get('salary_pay'))
 
-        start_date = str(request.POST.get('date-ini'))
-        end_date = str(request.POST.get('date-fin'))
+        month = int(request.POST.get('month'))
+        year = int(request.POST.get('year'))
 
         transaction_payment_type = str(request.POST.get('transaction_payment_type'))
 
@@ -1708,8 +1708,8 @@ def new_payment_salary(request):
             cashflow_obj.save()
 
             salary_obj = Salary(
-                year=2021,
-                month=10,
+                year=year,
+                month=month,
                 worker=worker_obj,
                 cash_flow=cashflow_obj
             )
@@ -1735,15 +1735,15 @@ def new_payment_salary(request):
             cashflow_obj.save()
 
             salary_obj = Salary(
-                year='2021',
-                month='10',
+                year=year,
+                month=month,
                 worker=worker_obj,
                 cash_flow=cashflow_obj
             )
             salary_obj.save()
 
         return JsonResponse({
-            'message': 'Cambios guardados con exito.',
+            'message': 'Pago guardado con exito.',
             'pay': round(salary_pay, 2),
             'pay_date': formatdate,
             # 'grid': get_dict_purchases(purchases_set),
