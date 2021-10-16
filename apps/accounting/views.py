@@ -2,6 +2,7 @@ from django.db.models.functions import Coalesce
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from apps.hrm.views import get_subsidiary_by_user
+from apps.hrm.models import Worker, WorkerType, Employee
 from apps.buys.models import Purchase, PurchaseDetail
 from apps.sales.models import Subsidiary, SubsidiaryStore, Order, OrderDetail, TransactionPayment, LoanPayment, Supplier
 from django.template import loader, Context
@@ -1509,7 +1510,7 @@ def get_graphic_cash_set_vs_purchase(request):
             # COMPRAS
 
             p = PurchaseDetail.objects.filter(purchase__subsidiary_id=s.id, purchase__status='A',
-                                                   purchase__purchase_date__range=(date_initial, date_final)).values(
+                                              purchase__purchase_date__range=(date_initial, date_final)).values(
                 'purchase__subsidiary__name').annotate(total=Sum(F('price_unit') * F('quantity')))
 
             if p.exists():
@@ -1546,3 +1547,206 @@ def get_graphic_cash_set_vs_purchase(request):
             'success': True,
             'form': tpl.render(context, request),
         })
+
+
+def get_report_employees_salary(request):
+    user_id = request.user.id
+    user_obj = User.objects.get(id=user_id)
+    subsidiary_obj = get_subsidiary_by_user(user_obj)
+
+    if request.method == 'GET':
+        my_date = datetime.now()
+        formatdate = my_date.strftime("%Y-%m-%d")
+        array_month = ((1, 'Enero'), (2, 'Febrero'), (3, 'Marzo'), (4, 'Abril'), (5, 'Mayo'), (6, 'Junio'),
+                       (7, 'Julio'), (8, 'Agosto'), (9, 'Setiembre'),
+                       (10, 'Octubre'), (11, 'Noviembre'), (12, 'Diciembre'))
+        year = my_date.year
+
+        return render(request, 'accounting/get_report_employees_salary.html', {
+            'formatdate': formatdate,
+            'array_month': array_month,
+            'year': year,
+            'subsidiary_obj': subsidiary_obj,
+        })
+
+    elif request.method == 'POST':
+        month = int(request.POST.get('month'))
+        worker_set = Worker.objects.all().order_by('-employee__paternal_last_name')
+        cash_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='101')
+        cash_deposit_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='104')
+
+        context_dict = get_dict_salaries(worker_set=worker_set, month=month)
+        salary_dict = context_dict.get('salary_dict')
+
+        tpl = loader.get_template('accounting/get_report_employees_salary_grid.html')
+        context = ({
+            'workers': worker_set,
+            'choices_account': cash_set,
+            'choices_account_bank': cash_deposit_set,
+            'salary_dict': salary_dict,
+        })
+        return JsonResponse({
+            'grid': tpl.render(context, request),
+            # 'grid': get_dict_salaries(worker_set=worker_set, month=month)
+        }, status=HTTPStatus.OK)
+
+
+def get_dict_salaries(worker_set, month):
+    dict = []
+
+    for w in worker_set:
+
+        names = ''
+        paternal_name = ''
+        maternal_name = ''
+        if w.employee.names is not None:
+            names = w.employee.names.upper()
+        if w.employee.paternal_last_name is not None:
+            paternal_name = w.employee.paternal_last_name.upper()
+        if w.employee.maternal_last_name is not None:
+            maternal_name = w.employee.maternal_last_name.upper()
+
+        new = {
+            'id': w.id,
+            'names': names + ' ' + paternal_name + ' ' + maternal_name,
+            'salary_initial': w.initial_basic_remuneration,
+            'salary_set': []
+        }
+        salary = ''
+        for s in w.salary_set.all():
+            if month == s.month:
+                salary = {
+                    'id': s.id,
+                    'year': s.year,
+                    'month': s.month,
+                    'cash_flow_set': [],
+                    'date': s.created_at
+                }
+                for c in CashFlow.objects.filter(id=s.cash_flow_id):
+                    cod = '-'
+                    if c.operation_code is not None:
+                        cod = c.operation_code
+                    cash_flow = {
+                        'id': c.id,
+                        'salary_pay': round(c.total, 2),
+                        'cash': c.cash.name,
+                        'cod': cod,
+                    }
+                    salary.get('cash_flow_set').append(cash_flow)
+        new.get('salary_set').append(salary)
+        dict.append(new)
+
+    context = ({
+        'salary_dict': dict,
+    })
+    return context
+
+
+def get_salary_pay(request):
+    user_id = request.user.id
+    user_obj = User.objects.get(id=user_id)
+    subsidiary_obj = get_subsidiary_by_user(user_obj)
+    worker_id = request.GET.get('worker_id', '')
+    start_date = request.GET.get('start-date', '')
+    end_date = request.GET.get('end-date', '')
+    worker_obj = Worker.objects.get(id=int(worker_id))
+    cash_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='101')
+    cash_deposit_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='104')
+    mydate = datetime.now()
+    formatdate = mydate.strftime("%Y-%m-%d")
+    tpl = loader.get_template('accounting/new_pay_salary.html')
+    context = ({
+        'choices_payments': TransactionPayment._meta.get_field('type').choices,
+        'worker': worker_obj,
+        'choices_account': cash_set,
+        'choices_account_bank': cash_deposit_set,
+        'date': formatdate,
+        'start_date': start_date,
+        'end_date': end_date
+    })
+
+    return JsonResponse({
+        'grid': tpl.render(context, request),
+
+    }, status=HTTPStatus.OK)
+
+
+def new_payment_salary(request):
+    if request.method == 'POST':
+        user_id = request.user.id
+        user_obj = User.objects.get(id=user_id)
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+        salary_initial = str(request.POST.get('salary_initial'))
+        salary_pay = decimal.Decimal(request.POST.get('salary_pay'))
+
+        start_date = str(request.POST.get('date-ini'))
+        end_date = str(request.POST.get('date-fin'))
+
+        transaction_payment_type = str(request.POST.get('transaction_payment_type'))
+
+        worker_id = int(request.POST.get('worker'))
+        worker_obj = Worker.objects.get(id=worker_id)
+        cash_flow_date = str(request.POST.get('id_date'))
+        cash_flow_transact_date_deposit = str(request.POST.get('id_date_deposit'))
+        date_converter = datetime.strptime(cash_flow_transact_date_deposit, '%Y-%m-%d').date()
+        formatdate = date_converter.strftime("%d-%m-%y")
+
+        if transaction_payment_type == 'E':
+            cash_id = str(request.POST.get('cash_efectivo'))
+            cash_obj = Cash.objects.get(id=cash_id)
+            cash_flow_description = str(request.POST.get('description_cash'))
+
+            cashflow_obj = CashFlow(
+                transaction_date=cash_flow_date,
+                document_type_attached='O',
+                description=cash_flow_description,
+                type='S',
+                total=salary_pay,
+                cash=cash_obj,
+                user=user_obj
+            )
+            cashflow_obj.save()
+
+            salary_obj = Salary(
+                year=2021,
+                month=10,
+                worker=worker_obj,
+                cash_flow=cashflow_obj
+            )
+            salary_obj.save()
+
+        if transaction_payment_type == 'D':
+            cash_flow_description = str(request.POST.get('description_deposit'))
+
+            cash_id = str(request.POST.get('id_cash_deposit'))
+            cash_obj = Cash.objects.get(id=cash_id)
+            code_operation = str(request.POST.get('code_operation'))
+
+            cashflow_obj = CashFlow(
+                transaction_date=cash_flow_transact_date_deposit,
+                document_type_attached='O',
+                description=cash_flow_description,
+                type='R',
+                operation_code=code_operation,
+                total=salary_pay,
+                cash=cash_obj,
+                user=user_obj
+            )
+            cashflow_obj.save()
+
+            salary_obj = Salary(
+                year='2021',
+                month='10',
+                worker=worker_obj,
+                cash_flow=cashflow_obj
+            )
+            salary_obj.save()
+
+        return JsonResponse({
+            'message': 'Cambios guardados con exito.',
+            'pay': round(salary_pay, 2),
+            'pay_date': formatdate,
+            # 'grid': get_dict_purchases(purchases_set),
+
+        }, status=HTTPStatus.OK)
+    return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)

@@ -316,3 +316,18 @@ class CashFlowLog(models.Model):
     class Meta:
         verbose_name = 'Caja reajuste'
         verbose_name_plural = 'Caja reajustes'
+
+
+class Salary(models.Model):
+    id = models.AutoField(primary_key=True)
+    year = models.IntegerField('Año', default=0, null=True, blank=True)
+    month = models.IntegerField('Meses', default=0, null=True, blank=True)
+    worker = models.ForeignKey('hrm.Worker', on_delete=models.SET_NULL, null=True, blank=True)
+    cash_flow = models.ForeignKey('CashFlow', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.id)
+
+
+
