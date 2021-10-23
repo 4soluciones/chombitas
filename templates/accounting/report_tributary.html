@@ -1,0 +1,42 @@
+{% extends 'home.html' %}
+
+{% block title %}
+    coronasoft.dev | Reporte de Cuadro de Compras y Ventas Comparativo
+{% endblock title %}
+
+{% block body %}
+
+    <div class="container-fluid pt-3">
+        <div class="card">
+
+            <div class="card-header text-center">
+                <label class="col-form-label col-form-label-lg text-uppercase font-weight-bold"><h2>Reporte Tributario</h2></label>
+            </div>
+
+            <div class="card">
+                <div class="card-body table-responsive" id="tbl-buys">
+                    {{ grid }}
+                </div>
+            </div>
+{#            <button type="button" class="btn btn-success my-1 ml-2" id="printReportExcel">#}
+{#                <i class="fas fa-file-csv"></i> Excel#}
+{#            </button>#}
+
+        </div>
+    </div>
+
+{% endblock body %}
+
+{% block extrajs %}
+
+
+    <script type="text/javascript">
+
+        {#$('#printReportExcel').click(function () {#}
+        {#    $("#tbl-comparative").table2excel({filename: "Comparative.xls"});#}
+        {# });#}
+
+    </script>
+
+
+{% endblock extrajs %}

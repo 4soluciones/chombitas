@@ -56,4 +56,7 @@ urlpatterns = [
     path('get_report_employees_salary/', login_required(get_report_employees_salary), name='get_report_employees_salary'),
     path('get_salary_pay/', login_required(get_salary_pay), name='get_salary_pay'),
     path('new_payment_salary/', login_required(new_payment_salary), name='new_payment_salary'),
+
+    # Tributes
+    path('report_tributary/', login_required(report_tributary), name='report_tributary'),
 ]

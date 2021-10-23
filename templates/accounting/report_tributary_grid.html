@@ -1,0 +1,35 @@
+<table class="table table-bordered" id="report-comparative">
+    <thead>
+    <tr class="text-uppercase text-center">
+        <td class="col-form-label col-form-label-lg align-middle text-center font-weight-bold">MESES</td>
+        <td class="col-form-label col-form-label-lg bg-warning font-weight-bold">BASE IMPONIBLE COMPRAS</td>
+        <td class="col-form-label col-form-label-lg bg-warning font-weight-bold">IGV TOTAL COMPRAS</td>
+        <td class="col-form-label col-form-label-lg bg-warning font-weight-bold">TOTAL COMPRAS</td>
+        <td class="col-form-label col-form-label-lg bg-success font-weight-bold">BASE IMPONIBLE VENTAS</td>
+        <td class="col-form-label col-form-label-lg bg-success font-weight-bold">IGV TOTAL VENTAS</td>
+        <td class="col-form-label col-form-label-lg bg-success font-weight-bold">TOTAL VENTAS</td>
+    </tr>
+    </thead>
+    <tbody>
+    {% for b in buys_dict %}
+        <tr class="text-uppercase text-center">
+            <td class="col-form-label col-form-label-lg font-weight-bold text-right">{{ b.month_names }}</td>
+            <td class="col-form-label col-form-label-lg bg-warning">{{ b.purchase_base_total }}</td>
+            <td class="col-form-label col-form-label-lg bg-warning">{{ b.purchase_igv_total }}</td>
+            <td class="col-form-label col-form-label-lg bg-warning">{{ b.purchases_sum_total }}</td>
+            <td class="col-form-label col-form-label-lg bg-success">
+                <input class="form-control form-control-sm decimal" type="text"value="">
+            </td>
+            <td class="col-form-label col-form-label-lg bg-success">
+                <input class="form-control form-control-sm decimal" type="text"value="">
+            </td>
+            <td class="col-form-label col-form-label-lg bg-success">
+                <input class="form-control form-control-sm decimal" type="text"value="">
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<ul>
+
+</ul>

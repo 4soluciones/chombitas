@@ -5326,7 +5326,7 @@ def comparative_sales_and_purchases_report(request):
                 _total_travel = _total_travel + 1
                 merge_scope = pi['programming_invoice__requirementBuysProgramming__number_scop']
 
-            if i >= 8:
+            if i >= 8 and my_date.year > 2020:
                 purchase_set = Purchase.objects.filter(
                     subsidiary=subsidiary_obj, purchase_date__month=i, purchase_date__year=my_date.year,
                     status__in=['S', 'A'], type_bill='F'

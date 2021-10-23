@@ -330,4 +330,24 @@ class Salary(models.Model):
         return str(self.id)
 
 
+class Tributes(models.Model):
+    id = models.AutoField(primary_key=True)
+    year = models.IntegerField('Año', default=0, null=True, blank=True)
+    month = models.IntegerField('Meses', default=0, null=True, blank=True)
+    base_total_purchase = models.DecimalField('Total base mponible Compras', max_digits=10, decimal_places=2, default=0)
+    igv_total_purchase = models.DecimalField('Total IGV compras', max_digits=10, decimal_places=2, default=0)
+    total_purchase = models.DecimalField('Total compras', max_digits=10, decimal_places=2, default=0)
+    base_total_sales = models.DecimalField('Total base ventas', max_digits=10, decimal_places=2, default=0)
+    igv_total_sales = models.DecimalField('Total IGV ventas', max_digits=10, decimal_places=2, default=0)
+    total_total_sales = models.DecimalField('Total ventas', max_digits=10, decimal_places=2, default=0)
+
+    def __str__(self):
+        return str(self.id)
+
+
+
+
+
+
+
 
