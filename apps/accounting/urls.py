@@ -59,4 +59,5 @@ urlpatterns = [
 
     # Tributes
     path('report_tributary/', login_required(report_tributary), name='report_tributary'),
+    path('save_register_tributary/', login_required(save_register_tributary), name='save_register_tributary'),
 ]

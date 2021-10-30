@@ -8,28 +8,41 @@
         <td class="col-form-label col-form-label-lg bg-success font-weight-bold">BASE IMPONIBLE VENTAS</td>
         <td class="col-form-label col-form-label-lg bg-success font-weight-bold">IGV TOTAL VENTAS</td>
         <td class="col-form-label col-form-label-lg bg-success font-weight-bold">TOTAL VENTAS</td>
+        <td class="col-form-label col-form-label-lg bg-success font-weight-bold">GUARDAR</td>
+        <td class="col-form-label col-form-label-lg bg-success font-weight-bold">EDITAR</td>
     </tr>
     </thead>
     <tbody>
-    {% for b in buys_dict %}
+    {% for t in tribute_dict %}
         <tr class="text-uppercase text-center">
-            <td class="col-form-label col-form-label-lg font-weight-bold text-right">{{ b.month_names }}</td>
-            <td class="col-form-label col-form-label-lg bg-warning">{{ b.purchase_base_total }}</td>
-            <td class="col-form-label col-form-label-lg bg-warning">{{ b.purchase_igv_total }}</td>
-            <td class="col-form-label col-form-label-lg bg-warning">{{ b.purchases_sum_total }}</td>
-            <td class="col-form-label col-form-label-lg bg-success">
-                <input class="form-control form-control-sm decimal" type="text"value="">
+            <td class="col-form-label col-form-label-lg font-weight-bold text-right month" month="{{ t.month }}">{{ t.month_names }}</td>
+            <td class="col-form-label col-form-label-lg bg-warning purchase-base-total">{{ t.purchase_base_total }}</td>
+            <td class="col-form-label col-form-label-lg bg-warning purchase-igv-total">{{ t.purchase_igv_total }}</td>
+            <td class="col-form-label col-form-label-lg bg-warning purchase-total">{{ t.purchases_sum_total }}</td>
+            <td class="col-form-label col-form-label-lg bg-success sale-base-total">
+                <input type="text" class="form-control text-right" id="id-sale-subtotal"
+                       name="sale-sub-total" value="{{ t.sale_base_total }}" min="0"
+                       placeholder="" readonly>
+            </td>
+            <td class="col-form-label col-form-label-lg bg-success sale-igv-total">
+                <input type="text" class="form-control text-right" id="id-sale-igv"
+                       name="sale-igv" value="{{ t.sale_igv_total }}" min="0"
+                       placeholder="" readonly>
+            </td>
+            <td class="col-form-label col-form-label-lg bg-success sale-total">
+                <input type="text" class="form-control text-right" id="id-sale-total"
+                       name="sale-total" value="{{ t.sales_sum_total }}" min="0"
+                       placeholder="Escribir monto total de venta...">
             </td>
             <td class="col-form-label col-form-label-lg bg-success">
-                <input class="form-control form-control-sm decimal" type="text"value="">
+                <button type="button" class="btn btn-link text-dark btn-save"><i class="fas fa-save btn-lg"></i></button>
+
             </td>
             <td class="col-form-label col-form-label-lg bg-success">
-                <input class="form-control form-control-sm decimal" type="text"value="">
+                <button type="button" class="btn btn-link text-dark btn-edit"><i class="fa fa-pencil-alt btn-lg"></i></button>
             </td>
         </tr>
     {% endfor %}
     </tbody>
 </table>
-<ul>
 
-</ul>

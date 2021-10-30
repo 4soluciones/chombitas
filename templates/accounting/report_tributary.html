@@ -10,7 +10,8 @@
         <div class="card">
 
             <div class="card-header text-center">
-                <label class="col-form-label col-form-label-lg text-uppercase font-weight-bold"><h2>Reporte Tributario</h2></label>
+                <label class="col-form-label col-form-label-lg text-uppercase font-weight-bold"><h2>Reporte
+                    Tributario</h2></label>
             </div>
 
             <div class="card">
@@ -18,9 +19,9 @@
                     {{ grid }}
                 </div>
             </div>
-{#            <button type="button" class="btn btn-success my-1 ml-2" id="printReportExcel">#}
-{#                <i class="fas fa-file-csv"></i> Excel#}
-{#            </button>#}
+            {#            <button type="button" class="btn btn-success my-1 ml-2" id="printReportExcel">#}
+            {#                <i class="fas fa-file-csv"></i> Excel#}
+            {#            </button>#}
 
         </div>
     </div>
@@ -32,9 +33,66 @@
 
     <script type="text/javascript">
 
+        $('.btn-save').click(function () {
+
+            let btn = $(this);
+            let _tr = $(this).parent('td').parent('tr')
+            let _base_buy_total = _tr.find('td.purchase-base-total').text().replace(',', '')
+            let _igv_buy_total = _tr.find('td.purchase-igv-total').text().replace(',', '')
+            let _total_buy = _tr.find('td.purchase-total').text().replace(',', '')
+            let _base_sale_total = _tr.find('td.sale-base-total input').val().replace(',', '')
+            let _igv_sale_total = _tr.find('td.sale-igv-total input').val().replace(',', '')
+            let _total_sale = _tr.find('td.sale-total input').val().replace(',', '')
+            let _month = _tr.find('td.month').attr('month')
+            console.log('btn', btn)
+            console.log('tr', _tr)
+            console.log('_base_buy_total', _base_buy_total)
+            console.log('_igv_buy_total', _igv_buy_total)
+            console.log('_total_buy', _total_buy)
+            console.log('_base_sale_total', _base_sale_total)
+            console.log('_igv_sale_total', _igv_sale_total)
+            console.log('_total_sale', _total_sale)
+            console.log('month', _month)
+
+            $.ajax({
+                url: '/accounting/save_register_tributary/',
+                async: true,
+                dataType: 'json',
+                type: 'GET',
+                data: {
+                    'base_buy_total': _base_buy_total,
+                    'igv_buy_total': _igv_buy_total,
+                    'total_buy': _total_buy,
+                    'base_sale_total': _base_sale_total,
+                    'igv_sale_total': _igv_sale_total,
+                    'total_sale': _total_sale,
+                    'month': _month,
+                },
+                success: function (response, textStatus, xhr) {
+                    if (xhr.status === 200) {
+                        toastr.success(response['message'], '¡Bien hecho!');
+                    }
+                },
+                fail: function (response) {
+                    console.log("error");
+                }
+            });
+        });
+
         {#$('#printReportExcel').click(function () {#}
         {#    $("#tbl-comparative").table2excel({filename: "Comparative.xls"});#}
         {# });#}
+
+        $('#id-sale-total').keyup(function () {
+
+            let sale_total = $('#id-sale-total').val();
+            let sale_base_total = sale_total / 1.18
+            let sale_igv = sale_total - sale_base_total
+
+            $("#id-sale-subtotal").val(sale_base_total.toFixed(2));
+            $("#id-sale-igv").val(sale_igv.toFixed(2));
+        });
+
 
     </script>
 
