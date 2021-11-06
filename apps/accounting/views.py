@@ -1829,9 +1829,9 @@ def report_tributary(request):
                     'month': i,
                     'month_names': month_names[i - 1],
 
-                    'purchase_base_total': '{:,}'.format(round(decimal.Decimal(purchase_igv_total), 2)),
-                    'purchase_igv_total': '{:,}'.format(round(decimal.Decimal(purchases_sum_total), 2)),
-                    'purchases_sum_total': '{:,}'.format(round(decimal.Decimal(purchase_base_total), 2)),
+                    'purchase_base_total': '{:,}'.format(round(decimal.Decimal(purchase_base_total), 2)),
+                    'purchase_igv_total': '{:,}'.format(round(decimal.Decimal(purchase_igv_total), 2)),
+                    'purchases_sum_total': '{:,}'.format(round(decimal.Decimal(purchases_sum_total), 2)),
 
                     'sale_base_total': '{:,}'.format(round(decimal.Decimal(sales_base_total), 2)),
                     'sale_igv_total': '{:,}'.format(round(decimal.Decimal(sales_igv_total), 2)),

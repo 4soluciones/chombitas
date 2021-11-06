@@ -15,6 +15,7 @@ from apps.sales.models import Product, SubsidiaryStore, ProductStore, ProductDet
 from apps.sales.views import kardex_ouput, kardex_input, kardex_initial, calculate_minimum_unit, Supplier
 from apps.hrm.models import Subsidiary
 import json
+from django.db import DatabaseError, IntegrityError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.fields.files import ImageFieldFile
 from django.template import loader
@@ -1851,13 +1852,22 @@ def save_fuel_programming(request):
 
 def get_stock_by_product_type(request):
     if request.method == 'GET':
+        data = {}
         id_product = request.GET.get('id_product_', '')
-        id_type = int(request.GET.get('id_type_', ''))
+        id_type = request.GET.get('id_type_', '')
+
+        if id_type == '':
+            data['error'] = "Ingrese un tipo."
+            response = JsonResponse(data)
+            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+            return response
+
         product_obj = Product.objects.get(pk=int(id_product))
         user = request.user.id
         user_obj = User.objects.get(id=user)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
-        if id_type == 1:
+        product_store_obj = ''
+        if int(id_type) == 1:
             subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='I').first()
             subcategory_obj = ProductSubcategory.objects.get(name='FIERRO', product_category__name='FIERRO')
             product_recipe_obj = ProductRecipe.objects.filter(product=product_obj,
@@ -1865,13 +1875,13 @@ def get_stock_by_product_type(request):
             product_obj = product_recipe_obj.first().product_input
             product_store_obj = ProductStore.objects.get(product__id=product_obj.id,
                                                          subsidiary_store=subsidiary_store_obj)
-        if id_type == 2:
+        if int(id_type) == 2:
             subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='V').first()
             product_store_obj = ProductStore.objects.get(product__id=id_product, subsidiary_store=subsidiary_store_obj)
-        if id_type == 3:
+        if int(id_type) == 3:
             subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='R').first()
             product_store_obj = ProductStore.objects.get(product__id=id_product, subsidiary_store=subsidiary_store_obj)
-        if id_type == 4:
+        if int(id_type) == 4:
             subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='R').first()
             subcategory_obj = ProductSubcategory.objects.get(name='FIERRO', product_category__name='FIERRO')
             product_recipe_obj = ProductRecipe.objects.filter(product=product_obj,

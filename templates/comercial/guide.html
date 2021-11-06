@@ -155,7 +155,7 @@
                                             placeholder="20498189637"></td>
                         <td class="">Nombre o Razon Social:</td>
                         <td class=""><input type="text" class="form-control" id="id_client" name="client"
-                                            placeholder="AREQUIPA EXPRESO MARVISUR EIRL"></td>
+                                            placeholder="RAZON SOCIAL"></td>
                         <td class="" colspan="1">
                             Conductor:
                         </td>
@@ -272,7 +272,7 @@
                 return false;
             }
 
-            if (quantity == 0) {
+            if (quantity === 0) {
                 alert("La cantidad debe ser mayor a 0");
                 return false;
             }
@@ -298,12 +298,12 @@
                 '<td class="align-middle text-center"> ' + "<button type='button' onclick='deleteItem("+id_product+"," + '"'+_id_type+'"' + ")' " +
                 "class='btn btn-danger delete-detail'><i class='fa fa-trash'></i></button>" + "</td>" +
                 '</tr>'
-
             {#'<td class="text-center">' + '<button type="button" onclick="deleteItem(' + id_product + ')" class="btn btn-danger delete-detail"><i class="fa fa-trash"></i></button>' + '</td>' +#}
-
             );
             counterStrike();
             toastr.info('Producto agregado con exito.', '¡Mensaje!');
+            $('#id_product').val('0').trigger('change')
+            $('#id_unit').val('0').trigger('change')
         });
 /*
         function deleteItem($id) {
@@ -375,7 +375,7 @@
                 contentType: 'application/json;charset=UTF-8',
                 headers: {"X-CSRFToken": '{{ csrf_token }}'},
                 success: function (response, textStatus, xhr) {
-                    if (xhr.status == 200) {
+                    if (xhr.status === 200) {
                         toastr.success(response.message, '¡GUIA REGISTRADA CORRECTAMENTE!');
                          // Simulate a mouse click:
                         window.location.href = "/comercial/print_programming_guide/"+response.programming+"/";

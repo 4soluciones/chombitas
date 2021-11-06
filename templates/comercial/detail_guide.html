@@ -31,13 +31,13 @@
                         <td class="align-middle">Unidad</td>
                         <td style="width: 300px" class="align-middle">
                             <select class="form-control" disabled id="id_unit" name="unit">
-                            <option disabled selected value="">Seleccione</option>
+                            <option disabled selected value="0">Seleccione</option>
                         </select>
                         </td>
                         <td class="align-middle">Stock</td>
                         <td class="align-middle">
                             <input type="text" readonly class="form-control" id="id_stock" name="stock"
-                               placeholder="stock">
+                               placeholder="0">
                             <input type="hidden" value="" id="id_product_store">
                         </td>
                         <td class="align-middle">Cantidad</td>
@@ -135,11 +135,11 @@
 
     });
    $('#id_type').change(function () {
-        if ($('#id_product').val() == '0') {
+        if ($('#id_product').val() === '0') {
             alert('Por favor elija un producto');
             return false;
         }
-        if ($('#id_type').val() == '0') {
+        if ($('#id_type').val() === '0') {
             alert('Seleccione el tipo por favor');
             return false;
         }
@@ -161,22 +161,22 @@
                 console.log("error");
             }
         });
-        if (_id_type == 1){
+        if (_id_type === 1){
              setSelectedOptionByText('BALON');
         }
         else
         {
-            if (_id_type == 2){
+            if (_id_type === 2){
               setSelectedOptionByText('BALON + GLP');
             }
             else
             {
-                if (_id_type == 3){
+                if (_id_type === 3){
                   setSelectedOptionByText('BALON + GLP');
                 }
                 else
                 {
-                    if (_id_type == 4){
+                    if (_id_type === 4){
                       setSelectedOptionByText('BALON');
                     }
                 }
@@ -186,7 +186,7 @@
 
     function setSelectedOptionByText(text) {
         let matchingOption = $("select#id_unit option").filter(function () {
-            return $(this).text() == text;
+            return $(this).text() === text;
         });
         matchingOption.prop('selected', true);
     }
