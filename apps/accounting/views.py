@@ -1762,6 +1762,7 @@ def report_tributary(request):
         tribute_dict = []
         purchase_igv_total = 0
         purchase_base_total = 0
+        difference_igv = 0
         mydate = datetime.now()
         formatdate = mydate.strftime("%Y-%m-%d")
         # month = int(request.POST.get('month'))
@@ -1825,6 +1826,8 @@ def report_tributary(request):
                     purchase_igv_total = purchase_igv_total
                     purchases_sum_total = float_purchases_sum_total
 
+                difference_igv = sales_igv_total - purchase_igv_total
+
                 item = {
                     'month': i,
                     'month_names': month_names[i - 1],
@@ -1836,6 +1839,8 @@ def report_tributary(request):
                     'sale_base_total': '{:,}'.format(round(decimal.Decimal(sales_base_total), 2)),
                     'sale_igv_total': '{:,}'.format(round(decimal.Decimal(sales_igv_total), 2)),
                     'sales_sum_total': '{:,}'.format(round(decimal.Decimal(sales_sum_total), 2)),
+
+                    'difference_igv': '{:,}'.format(round(decimal.Decimal(difference_igv), 2)),
                 }
                 tribute_dict.append(item)
 

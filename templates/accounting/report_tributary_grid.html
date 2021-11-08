@@ -9,7 +9,8 @@
         <td class="col-form-label col-form-label-lg bg-success font-weight-bold">IGV TOTAL VENTAS</td>
         <td class="col-form-label col-form-label-lg bg-success font-weight-bold">TOTAL VENTAS</td>
         <td class="col-form-label col-form-label-lg bg-success font-weight-bold">GUARDAR</td>
-        <td class="col-form-label col-form-label-lg bg-success font-weight-bold">EDITAR</td>
+        <td class="col-form-label col-form-label-lg bg-warning font-weight-bold">DIFERENCIA IGV</td>
+{#        <td class="col-form-label col-form-label-lg bg-success font-weight-bold">EDITAR</td>#}
     </tr>
     </thead>
     <tbody>
@@ -38,9 +39,10 @@
                 <button type="button" class="btn btn-link text-dark btn-save"><i class="fas fa-save btn-lg"></i></button>
 
             </td>
-            <td class="col-form-label col-form-label-lg bg-success">
-                <button type="button" class="btn btn-link text-dark btn-edit"><i class="fa fa-pencil-alt btn-lg"></i></button>
-            </td>
+            <td class="col-form-label col-form-label-lg bg-warning purchase-total">{{ t.difference_igv }}</td>
+{#            <td class="col-form-label col-form-label-lg bg-success">#}
+{#                <button type="button" class="btn btn-link text-dark btn-edit"><i class="fa fa-pencil-alt btn-lg"></i></button>#}
+{#            </td>#}
         </tr>
     {% endfor %}
     </tbody>
