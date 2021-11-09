@@ -237,7 +237,7 @@
                 data: {'programming': _programming_id},
                 success: function (response) {
 
-                    console.log(response);
+                    {#console.log(response);#}
                     $('#id_origin').addClass('text-primary').val(response.origin);
                     $('#id_destiny').addClass('text-primary').val(response.destiny);
                     $('#id_departure_date').addClass('text-primary').val(response.departure_date);
@@ -364,7 +364,7 @@
 
             });
 
-            console.log(JSON.stringify(guides));
+            {#console.log(JSON.stringify(guides));#}
 
             $.ajax({
                 url: '/comercial/create_guide/',

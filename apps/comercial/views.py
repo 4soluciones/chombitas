@@ -455,19 +455,19 @@ def get_programming_guide(request):
 def get_quantity_product(request):
     if request.method == 'GET':
         id_product = request.GET.get('pk', '')
-        print(id_product)
+        # print(id_product)
         product_obj = Product.objects.get(pk=int(id_product))
-        print(product_obj)
+        # print(product_obj)
         user = request.user.id
         user_obj = User.objects.get(id=user)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
-        print(subsidiary_obj)
+        # print(subsidiary_obj)
         subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='V').first()
-        print(subsidiary_store_obj)
+        # print(subsidiary_store_obj)
         product_store_obj = ProductStore.objects.get(product__id=id_product, subsidiary_store=subsidiary_store_obj)
-        print(product_store_obj)
+        # print(product_store_obj)
         units_obj = Unit.objects.filter(productdetail__product=product_obj)
-        print(units_obj)
+        # print(units_obj)
         serialized_units = serializers.serialize('json', units_obj)
         return JsonResponse({
             'quantity': product_store_obj.stock,
@@ -1894,6 +1894,7 @@ def get_stock_by_product_type(request):
             'quantity': product_store_obj.stock,
             'id_product_store': product_store_obj.id
         }, status=HTTPStatus.OK)
+    return JsonResponse({'error': True, 'message': 'Error de peticion.'})
 
 
 def get_distribution_query(request):
