@@ -44,15 +44,15 @@
             let _igv_sale_total = _tr.find('td.sale-igv-total input').val().replace(',', '')
             let _total_sale = _tr.find('td.sale-total input').val().replace(',', '')
             let _month = _tr.find('td.month').attr('month')
-            console.log('btn', btn)
-            console.log('tr', _tr)
-            console.log('_base_buy_total', _base_buy_total)
-            console.log('_igv_buy_total', _igv_buy_total)
-            console.log('_total_buy', _total_buy)
-            console.log('_base_sale_total', _base_sale_total)
-            console.log('_igv_sale_total', _igv_sale_total)
-            console.log('_total_sale', _total_sale)
-            console.log('month', _month)
+            {#console.log('btn', btn)#}
+            {#console.log('tr', _tr)#}
+            {#console.log('_base_buy_total', _base_buy_total)#}
+            {#console.log('_igv_buy_total', _igv_buy_total)#}
+            {#console.log('_total_buy', _total_buy)#}
+            {#console.log('_base_sale_total', _base_sale_total)#}
+            {#console.log('_igv_sale_total', _igv_sale_total)#}
+            {#console.log('_total_sale', _total_sale)#}
+            {#console.log('month', _month)#}
 
             $.ajax({
                 url: '/accounting/save_register_tributary/',
@@ -83,7 +83,8 @@
         {#    $("#tbl-comparative").table2excel({filename: "Comparative.xls"});#}
         {# });#}
 
-        $('#id-sale-total').keyup(function () {
+        /*$('#id-sale-total').keyup(function () {
+
 
             let sale_total = $('#id-sale-total').val();
             let sale_base_total = sale_total / 1.18
@@ -91,6 +92,18 @@
 
             $("#id-sale-subtotal").val(sale_base_total.toFixed(2));
             $("#id-sale-igv").val(sale_igv.toFixed(2));
+        });*/
+
+        $('.sale-total').keyup(function () {
+
+            let _tr = $(this).parent('tr')
+            let sale_total = $(this).find('#id-sale-total').val()
+            let sale_base_total = sale_total / Number(1.18)
+            let sale_igv = sale_total - sale_base_total
+
+            _tr.find('.sale-base-total input#id-sale-subtotal').val(sale_base_total.toFixed(2));
+            _tr.find('.sale-igv-total input#id-sale-igv').val(sale_igv.toFixed(2));
+
         });
 
 
