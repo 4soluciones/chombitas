@@ -1577,13 +1577,14 @@ def get_report_employees_salary(request):
 
         context_dict = get_dict_salaries(worker_set=worker_set, month=month)
         salary_dict = context_dict.get('salary_dict')
-
+        total_salary = context_dict.get('total_salary')
         tpl = loader.get_template('accounting/get_report_employees_salary_grid.html')
         context = ({
             'workers': worker_set,
             'choices_account': cash_set,
             'choices_account_bank': cash_deposit_set,
             'salary_dict': salary_dict,
+            'total_salary': '{:,}'.format(round(float(total_salary), 2)),
         })
         return JsonResponse({
             'grid': tpl.render(context, request),
@@ -1593,7 +1594,7 @@ def get_report_employees_salary(request):
 
 def get_dict_salaries(worker_set, month):
     dict = []
-
+    total_salary = 0
     for w in worker_set:
 
         names = ''
@@ -1613,6 +1614,7 @@ def get_dict_salaries(worker_set, month):
             'salary_set': []
         }
         salary = ''
+
         for s in w.salary_set.all():
             if month == s.month:
                 salary = {
@@ -1630,14 +1632,17 @@ def get_dict_salaries(worker_set, month):
                         'id': c.id,
                         'salary_pay': round(c.total, 2),
                         'cash': c.cash.name,
+                        'date_pay': c.transaction_date,
                         'cod': cod,
                     }
+                    total_salary += c.total
                     salary.get('cash_flow_set').append(cash_flow)
         new.get('salary_set').append(salary)
         dict.append(new)
 
     context = ({
         'salary_dict': dict,
+        'total_salary': total_salary,
     })
     return context
 

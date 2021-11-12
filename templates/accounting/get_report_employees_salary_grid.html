@@ -29,8 +29,8 @@
                 </button>
             </td>
             {% for s in w.salary_set %}
-                <td class="col-form-label col-form-label-lg align-middle text-center">{{ s.date|date:"d-m-y" }}</td>
                 {% for c in s.cash_flow_set %}
+                    <td class="col-form-label col-form-label-lg align-middle text-center">{{ c.date_pay|date:"d-m-y" }}</td>
                     <td class="col-form-label col-form-label-lg align-middle text-center pay-row">S/ {{ c.salary_pay|safe }}</td>
                     <td class="col-form-label col-form-label-lg align-middle text-center">{{ c.cash }}</td>
                     <td class="col-form-label col-form-label-lg align-middle text-center">{{ c.cod }}</td>
@@ -42,6 +42,13 @@
     {% endfor %}
 
     </tbody>
+    <tfoot>
+        <tr class="text-white bg-dark text-uppercase text-center">
+            <td class="col-form-label col-form-label-lg" colspan="5">total remuneraciones</td>
+            <td class="col-form-label col-form-label-lg" colspan="1">S/ {{ total_salary }}</td>
+{#            <td class="text-center" colspan="2"></td>#}
+        </tr>
+    </tfoot>
 </table>
 
 <script type="text/javascript">
