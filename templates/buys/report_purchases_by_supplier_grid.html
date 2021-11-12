@@ -8,7 +8,7 @@
     </thead>
     <tbody>
     {% for p in purchase_dict %}
-        <tr class="tbl-row">
+        <tr class="tbl-row" pk="{{ p.supplier_id }}">
         <td class="col-form-label col-form-label-lg align-middle text-left">{{ p.supplier_name }}</td>
         <td class="col-form-label col-form-label-lg align-middle text-left">{{ p.business_name }}</td>
         <td class="col-form-label col-form-label-lg align-middle text-center">S/ {{ p.total }}</td>
