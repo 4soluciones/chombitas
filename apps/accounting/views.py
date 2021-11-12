@@ -1870,25 +1870,49 @@ def save_register_tributary(request):
 
         month = int(request.GET.get('month', ''))
 
-        base_buy_total = float(decimal.Decimal(request.GET.get('base_buy_total', '')))
-        igv_buy_total = float(decimal.Decimal(request.GET.get('igv_buy_total', '')))
-        total_buy = float(decimal.Decimal(request.GET.get('total_buy', '')))
+        total_buy = request.GET.get('total_buy', '').replace(',', '')
+        total_buy_decimal = decimal.Decimal(total_buy)
+
+        base_buy_total = request.GET.get('base_buy_total', '').replace(',', '')
+        base_buy_total_decimal = decimal.Decimal(base_buy_total)
+
+        igv_buy_total = request.GET.get('igv_buy_total', '').replace(',', '')
+        igv_buy_total_decimal = decimal.Decimal(igv_buy_total)
+
+        float_base_buy_total = float(base_buy_total_decimal)
+        float_igv_buy_total = float(igv_buy_total_decimal)
+        float_total_buy = float(total_buy_decimal)
 
         base_sale_total = float(decimal.Decimal(request.GET.get('base_sale_total', '')))
         igv_sale_total = float(decimal.Decimal(request.GET.get('igv_sale_total', '')))
         total_sale = float(decimal.Decimal(request.GET.get('total_sale', '')))
 
-        tribute_obj = Tributes(
-            year=year,
-            month=month,
-            base_total_purchase=base_buy_total,
-            igv_total_purchase=igv_buy_total,
-            total_purchase=total_buy,
-            base_total_sales=base_sale_total,
-            igv_total_sales=igv_sale_total,
-            total_total_sales=total_sale
-        )
-        tribute_obj.save()
+        tribute_exist_set = Tributes.objects.filter(month=month)
+        if tribute_exist_set.exists():
+            tribute_exist_obj = tribute_exist_set.first()
+            
+            tribute_exist_obj.base_total_purchase = float_base_buy_total
+            tribute_exist_obj.igv_total_purchase = float_igv_buy_total
+            tribute_exist_obj.total_purchase = float_total_buy
+
+            tribute_exist_obj.base_total_sales = base_sale_total
+            tribute_exist_obj.igv_total_sales = igv_sale_total
+            tribute_exist_obj.total_total_sales = total_sale
+
+            tribute_exist_obj.save()
+
+        else:
+            tribute_obj = Tributes(
+                year=year,
+                month=month,
+                base_total_purchase=float_base_buy_total,
+                igv_total_purchase=float_igv_buy_total,
+                total_purchase=float_total_buy,
+                base_total_sales=base_sale_total,
+                igv_total_sales=igv_sale_total,
+                total_total_sales=total_sale
+            )
+            tribute_obj.save()
 
         return JsonResponse({
             'success': True,
