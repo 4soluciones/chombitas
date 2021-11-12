@@ -1973,7 +1973,7 @@ def report_purchases_by_supplier(request):
         sum_total = 0
         purchase_detail_set = PurchaseDetail.objects.filter(purchase__subsidiary__id=subsidiary_obj.id,
             purchase__status='A',purchase__purchase_date__range=[start_date, end_date]).values(
-                    'purchase__supplier__name', 'purchase__supplier__business_name', 'purchase__supplier__id').exclude(purchase__supplier__id__in=[1, 364, 369]).annotate(total=Sum(F('price_unit') * F('quantity'))).order_by('-total')
+                    'purchase__supplier__name', 'purchase__supplier__business_name', 'purchase__supplier__id').exclude(purchase__supplier__id__in=[1, 363, 364, 369]).annotate(total=Sum(F('price_unit') * F('quantity'))).order_by('-total')
 
         for p in purchase_detail_set:
             supplier_id = p['purchase__supplier__id']
