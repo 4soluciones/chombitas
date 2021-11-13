@@ -204,6 +204,19 @@ class ProductStore(models.Model):
 
 
 class Supplier(models.Model):
+    SECTOR_CHOICES = (('N', 'NO ESPECIFICA'),
+                      ('L', 'LLANTAS'),
+                      ('P', 'PINTURA'),
+                      ('PR', 'PRECINTO'),
+                      ('R', 'REPUESTO'),
+                      ('C', 'COMBUSTIBLE'),
+                      ('G', 'GLP'),
+                      ('S', 'SEGUROS'),
+                      ('SU', 'SUNAT'),
+                      ('LU', 'LUBRICANTES'),
+                      ('LA', 'LAVADO'),
+                      ('M', 'MANTENIMIENTO'),
+                      ('O', 'OTROS'),)
     id = models.AutoField(primary_key=True)
     name = models.CharField('Nombre', max_length=200, unique=True)
     business_name = models.CharField('Razon social', max_length=45, null=True, blank=True)
@@ -218,6 +231,7 @@ class Supplier(models.Model):
         'Numero de documento del contacto', max_length=15, null=True, blank=True)
     contact_phone = models.CharField('Telefono del contacto', max_length=45, null=True, blank=True)
     is_enabled = models.BooleanField('Habilitado', default=True)
+    sector = models.CharField('Tipo de Rubro', max_length=2, choices=SECTOR_CHOICES, default='N', )
 
     def __str__(self):
         return self.name

@@ -44,8 +44,20 @@ class ProductStoreAdmin(admin.ModelAdmin):
     get_subsidiary.short_description = 'Sede'  # Renames column head
 
 
+class SupplierAdmin(admin.ModelAdmin):
+    ordering = ('id',)
+    list_display = (
+        'id', 'name', 'business_name', 'sector'
+    )
+    list_editable = [
+        'name', 'business_name', 'sector'
+    ]
+
+
+admin.site.register(models.Supplier, SupplierAdmin)
+
 # admin.site.register(models.ProductStore, ProductStoreAdmin)
-admin.site.register(models.Supplier)
+# admin.site.register(models.Supplier)
 admin.site.register(models.ProductSupplier)
 admin.site.register(models.Client)
 # admin.site.register(models.LegalClient)
