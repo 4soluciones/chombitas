@@ -50,7 +50,7 @@ urlpatterns = [
 
     # ReportLab
     path('guide_print/', guide_print, name='guide_print'),
-    path('print_programming_guide/<int:pk>/', print_programming_guide, name='print_programming_guide'),
+    path('print_programming_guide/<int:pk>/<int:guide>/', print_programming_guide, name='print_programming_guide'),
     path('get_input_note/<int:pk>/', get_input_note, name='get_input_note'),
     path('get_output_note/<int:pk>/', get_output_note, name='get_output_note'),
     path('print_ticket/<int:pk>/', print_ticket, name='print_ticket'),

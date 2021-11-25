@@ -480,7 +480,7 @@ def create_guide(request):
     if request.method == 'GET':
         guides_request = request.GET.get('guides', '')
         data_guides = json.loads(guides_request)
-
+        print(data_guides)
         user_id = request.user.id
         user_obj = User.objects.get(pk=int(user_id))
         serial = str(data_guides["Serial"])
@@ -525,10 +525,11 @@ def create_guide(request):
             store_id = int(detail['Store'])
 
             kardex_ouput(store_id, quantity, guide_detail_obj=new_detail_guide_obj)
-    return JsonResponse({
-        'message': 'Se guardo la guia correctamente.',
-        'programming': programming_obj.id
-    }, status=HTTPStatus.OK)
+        return JsonResponse({
+            'message': 'Se guardo la guia correctamente.',
+            'programming': programming_obj.id,
+            'guide': guide_obj.id
+        }, status=HTTPStatus.OK)
 
 
 def guide_detail_list(request):
@@ -1892,7 +1893,8 @@ def get_stock_by_product_type(request):
 
         return JsonResponse({
             'quantity': product_store_obj.stock,
-            'id_product_store': product_store_obj.id
+            'id_product_store': product_store_obj.id,
+            'product_store_name': product_store_obj.subsidiary_store.name
         }, status=HTTPStatus.OK)
     return JsonResponse({'error': True, 'message': 'Error de peticion.'})
 

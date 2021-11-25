@@ -39,6 +39,7 @@
                             <input type="text" readonly class="form-control" id="id_stock" name="stock"
                                    placeholder="0">
                             <input type="hidden" value="" id="id_product_store">
+                            <input type="hidden" value="" id="product_store_name">
                         </td>
                         <td class="align-middle">Cantidad</td>
                         <td class="align-middle"><input type="number" class="form-control" id="id_quantity"
@@ -101,10 +102,10 @@
 
 
     $('#id_product').on('select2:select', function (e) {
-        if ($('#id_product').val() == '0') {
-            alert('Elija un producto');
-            return false;
-        }
+        {#if ($('#id_product').val() === '0') {#}
+        {#    alert('Elija un producto');#}
+        {#    return false;#}
+        {# }#}
 
         let data = e.params.data;
         let search = data['id'];
@@ -120,6 +121,7 @@
                 {#$('#id_stock').val(response['quantity']);#}
                 {#$('#id_product_store').val(response['id_product_store']);#}
                 let units = JSON.parse(response['units']);
+                {#console.log(response)#}
                 units.forEach(
                     element =>
                         $('#id_unit').append(
@@ -137,18 +139,18 @@
     });
     $('#id_type').change(function () {
         {#console.log($('#id_type').val())#}
-        if ($('#id_product').val() === '0') {
-            alert('Por favor elija un producto');
-            return false;
-        }
-        if ($('#id_type').val() === '0') {
-            alert('Seleccione el tipo por favor');
-            return false;
-        }
-        if ($('#id_type').val() === null) {
-            toastr.warning('Seleccione un tipo', 'Error de Datos');
-            return false;
-        }
+        {#if ($('#id_product').val() === '0') {#}
+        {#    alert('Por favor elija un producto');#}
+        {#    return false;#}
+        {# }#}
+        {#if ($('#id_type').val() === '0') {#}
+        {#    alert('Seleccione el tipo por favor');#}
+        {#    return false;#}
+        {# }#}
+        {#if ($('#id_type').val() === null) {#}
+        {#    toastr.warning('Seleccione un tipo', 'Error de Datos');#}
+        {#    return false;#}
+        {# }#}
         let _id_product = $('#id_product').val();
         let _id_type = $(this).val();
         $('#id_stock').val('');
@@ -162,10 +164,11 @@
             success: function (response) {
                 $('#id_stock').val(response['quantity']);
                 $('#id_product_store').val(response['id_product_store']);
+                $('#product_store_name').val(response['product_store_name']);
             },
             error: function (jqXhr, textStatus, xhr) { // provide a bit more info about the error to the console
                 if (jqXhr.status === 500) {
-                    toastr.error(jqXhr.responseJSON.error, '¡Error de consulta!');
+                    {#toastr.error(jqXhr.responseJSON.error, '¡Error de consulta!');#}
                 } else {
                     if (textStatus === 'timeout') {
 

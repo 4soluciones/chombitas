@@ -466,7 +466,7 @@ def myFirstPage(request):
     return response
 
 
-def print_programming_guide(request, pk=None):
+def print_programming_guide(request, pk=None, guide=None):
 
     # A5
 
@@ -476,7 +476,7 @@ def print_programming_guide(request, pk=None):
     mi = 1 * cm
 
     programming_obj = Programming.objects.get(id=pk)
-    guide_obj = Guide.objects.filter(programming=programming_obj).first()
+    guide_obj = Guide.objects.filter(programming=programming_obj, id=guide).first()
 
     reportlab.rl_config.TTFSearchPath.append(str(settings.BASE_DIR) + '/static/fonts')
     # pdfmetrics.registerFont(TTFont('Square', 'square.ttf'))
@@ -619,20 +619,31 @@ def print_programming_guide(request, pk=None):
 
     # details
     canvas.setFillColor(white)
-    canvas.roundRect(ml, mi + 0 - 12, 536, 77, 4, stroke=1, fill=1)
+    canvas.roundRect(ml, mi + 0 - 25, 536, 90, 4, stroke=1, fill=1)
+    # canvas.roundRect(ml, mi + 0 - 12, 536, 77, 4, stroke=1, fill=1)
 
-    canvas.line(ml, mi + 0 + 0, ml + 536, mi + 0 + 0)  # fixed
-    canvas.line(ml, mi + 0 + 12, ml + 536, mi + 0 + 12)
-    canvas.line(ml, mi + 0 + 24, ml + 536, mi + 0 + 24)
-    canvas.line(ml, mi + 0 + 36, ml + 536, mi + 0 + 36)
-    canvas.line(ml, mi + 0 + 48, ml + 536, mi + 0 + 48)
-    canvas.line(ml + 50, mi + 0, ml + 50, mi + 0 + 65)  # vertical
-    canvas.line(ml + 50 + 280, mi + 0, ml + 50 + 280, mi + 0 + 65)  # vertical
-    canvas.line(ml + 50 + 280 + 70, mi + 0, ml + 50 + 280 + 70, mi + 0 + 65)  # vertical
-    canvas.line(ml + 50 + 280 + 70 + 70, mi + 0, ml + 50 + 280 + 70 + 70, mi + 0 + 65)  # vertical
+    canvas.line(ml, mi + 0 - 20, ml + 536, mi + 0 - 20)  # fixed
+    canvas.line(ml, mi + 0 - 10, ml + 536, mi + 0 - 10)
+    canvas.line(ml, mi + 0 + 0, ml + 536, mi + 0 + 0)
+    canvas.line(ml, mi + 0 + 10, ml + 536, mi + 0 + 10)
+    canvas.line(ml, mi + 0 + 20, ml + 536, mi + 0 + 20)
+    canvas.line(ml, mi + 0 + 30, ml + 536, mi + 0 + 30)
+    canvas.line(ml, mi + 0 + 40, ml + 536, mi + 0 + 40)
+    canvas.line(ml, mi + 0 + 50, ml + 536, mi + 0 + 50)
 
-    canvas.roundRect(ml, mi + 0 - 60, 100, 45, 4, stroke=1, fill=1)
-    canvas.roundRect(ml + 100 + 3, mi + 0 - 60, 433, 45, 4, stroke=1, fill=1)
+    # canvas.line(ml, mi + 0 + 0, ml + 536, mi + 0 + 0)  # fixed
+    # canvas.line(ml, mi + 0 + 12, ml + 536, mi + 0 + 12)
+    # canvas.line(ml, mi + 0 + 24, ml + 536, mi + 0 + 24)
+    # canvas.line(ml, mi + 0 + 36, ml + 536, mi + 0 + 36)
+    # canvas.line(ml, mi + 0 + 48, ml + 536, mi + 0 + 48)
+
+    canvas.line(ml + 50, mi - 20, ml + 50, mi + 0 + 65)  # vertical
+    canvas.line(ml + 50 + 280, mi - 20, ml + 50 + 280, mi + 0 + 65)  # vertical
+    canvas.line(ml + 50 + 280 + 70, mi - 20, ml + 50 + 280 + 70, mi + 0 + 65)  # vertical
+    canvas.line(ml + 50 + 280 + 70 + 70, mi - 20, ml + 50 + 280 + 70 + 70, mi + 0 + 65)  # vertical
+
+    canvas.roundRect(ml, mi + 0 - 60, 100, 30, 4, stroke=1, fill=1)
+    canvas.roundRect(ml + 100 + 3, mi + 0 - 60, 433, 30, 4, stroke=1, fill=1)
 
     canvas.setFillColor(black)
     canvas.drawString(ml + 6 + 15, mi + 0 + 48 + 6, 'ITEM')
@@ -652,11 +663,11 @@ def print_programming_guide(request, pk=None):
         unit_measure1 = str(guide_obj.guidedetail_set.all()[0].unit_measure.description)
         weight1 = str(guide_obj.guidedetail_set.all()[0].weight)
 
-    canvas.drawString(ml + 6 + 15, mi + 0 + 36 + 3, item1)
-    canvas.drawString(ml + 6 + 100 + 50, mi + 0 + 36 + 3, description1)
-    canvas.drawString(ml + 6 + 0 + 50 + 280, mi + 0 + 36 + 3, quantity1)
-    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70, mi + 0 + 36 + 3, unit_measure1)
-    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70 + 70, mi + 0 + 36 + 3, weight1)
+    canvas.drawString(ml + 6 + 15, mi + 0 + 39 + 3, item1)
+    canvas.drawString(ml + 6 + 100 + 50, mi + 0 + 39 + 3, description1)
+    canvas.drawString(ml + 6 + 0 + 50 + 280, mi + 0 + 39 + 3, quantity1)
+    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70, mi + 0 + 39 + 3, unit_measure1)
+    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70 + 70, mi + 0 + 39 + 3, weight1)
 
     item2 = ''
     description2 = ''
@@ -670,11 +681,11 @@ def print_programming_guide(request, pk=None):
         unit_measure2 = str(guide_obj.guidedetail_set.all()[1].unit_measure.description)
         weight2 = str(guide_obj.guidedetail_set.all()[1].weight)
 
-    canvas.drawString(ml + 6 + 15, mi + 0 + 24 + 3, item2)
-    canvas.drawString(ml + 6 + 100 + 50, mi + 0 + 24 + 3, description2)
-    canvas.drawString(ml + 6 + 0 + 50 + 280, mi + 0 + 24 + 3, quantity2)
-    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70, mi + 0 + 24 + 3, unit_measure2)
-    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70 + 70, mi + 0 + 24 + 3, weight2)
+    canvas.drawString(ml + 6 + 15, mi + 0 + 29 + 3, item2)
+    canvas.drawString(ml + 6 + 100 + 50, mi + 0 + 29 + 3, description2)
+    canvas.drawString(ml + 6 + 0 + 50 + 280, mi + 0 + 29 + 3, quantity2)
+    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70, mi + 0 + 29 + 3, unit_measure2)
+    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70 + 70, mi + 0 + 29 + 3, weight2)
 
     item3 = ''
     description3 = ''
@@ -688,11 +699,11 @@ def print_programming_guide(request, pk=None):
         unit_measure3 = str(guide_obj.guidedetail_set.all()[2].unit_measure.description)
         weight3 = str(guide_obj.guidedetail_set.all()[2].weight)
 
-    canvas.drawString(ml + 6 + 15, mi + 0 + 12 + 3, item3)
-    canvas.drawString(ml + 6 + 100 + 50, mi + 0 + 12 + 3, description3)
-    canvas.drawString(ml + 6 + 0 + 50 + 280, mi + 0 + 12 + 3, quantity3)
-    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70, mi + 0 + 12 + 3, unit_measure3)
-    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70 + 70, mi + 0 + 12 + 3, weight3)
+    canvas.drawString(ml + 6 + 15, mi + 0 + 19 + 3, item3)
+    canvas.drawString(ml + 6 + 100 + 50, mi + 0 + 19 + 3, description3)
+    canvas.drawString(ml + 6 + 0 + 50 + 280, mi + 0 + 19 + 3, quantity3)
+    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70, mi + 0 + 19 + 3, unit_measure3)
+    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70 + 70, mi + 0 + 19 + 3, weight3)
 
     item4 = ''
     description4 = ''
@@ -706,23 +717,80 @@ def print_programming_guide(request, pk=None):
         unit_measure4 = str(guide_obj.guidedetail_set.all()[3].unit_measure.description)
         weight4 = str(guide_obj.guidedetail_set.all()[3].weight)
 
-    canvas.drawString(ml + 6 + 15, mi + 0 + 0 + 3, item4)
-    canvas.drawString(ml + 6 + 100 + 50, mi + 0 + 0 + 3, description4)
-    canvas.drawString(ml + 6 + 0 + 50 + 280, mi + 0 + 0 + 3, quantity4)
-    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70, mi + 0 + 0 + 3, unit_measure4)
-    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70 + 70, mi + 0 + 0 + 3, weight4)
+    canvas.drawString(ml + 6 + 15, mi + 0 + 9 + 3, item4)
+    canvas.drawString(ml + 6 + 100 + 50, mi + 0 + 9 + 3, description4)
+    canvas.drawString(ml + 6 + 0 + 50 + 280, mi + 0 + 9 + 3, quantity4)
+    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70, mi + 0 + 9 + 3, unit_measure4)
+    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70 + 70, mi + 0 + 9 + 3, weight4)
 
-    canvas.drawString(ml + 100 + 3 + 6, mi + 0 - 60 + 6 + 20, 'MOTIVO DEL')
-    canvas.drawString(ml + 100 + 3 + 6, mi + 0 - 60 + 6 + 10, 'TRASLADO')
+    item5 = ''
+    description5 = ''
+    quantity5 = ''
+    unit_measure5 = ''
+    weight5 = ''
 
-    canvas.drawString(ml + 100 + 3 + 6 + 60, mi + 0 - 60 + 6 + 28, 'Venta')
-    canvas.drawString(ml + 100 + 3 + 6 + 60, mi + 0 - 60 + 6 + 13, 'Venta sujeta a')
-    canvas.drawString(ml + 100 + 3 + 6 + 60, mi + 0 - 60 + 6 - 2, 'Compra')
+    if guide_obj.guidedetail_set.count() > 4:
+        item5 = str(guide_obj.guidedetail_set.all()[4].id)
+        description5 = str(guide_obj.guidedetail_set.all()[4].product.name)
+        quantity5 = str(guide_obj.guidedetail_set.all()[4].quantity)
+        unit_measure5 = str(guide_obj.guidedetail_set.all()[4].unit_measure.description)
+        weight5 = str(guide_obj.guidedetail_set.all()[4].weight)
+
+    canvas.drawString(ml + 6 + 15, mi + 0 - 1 + 3, item5)
+    canvas.drawString(ml + 6 + 100 + 50, mi + 0 - 1 + 3, description5)
+    canvas.drawString(ml + 6 + 0 + 50 + 280, mi + 0 - 1 + 3, quantity5)
+    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70, mi + 0 - 1 + 3, unit_measure5)
+    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70 + 70, mi + 0 - 1 + 3, weight5)
+
+    item6 = ''
+    description6 = ''
+    quantity6 = ''
+    unit_measure6 = ''
+    weight6 = ''
+
+    if guide_obj.guidedetail_set.count() > 5:
+        item6 = str(guide_obj.guidedetail_set.all()[5].id)
+        description6 = str(guide_obj.guidedetail_set.all()[5].product.name)
+        quantity6 = str(guide_obj.guidedetail_set.all()[5].quantity)
+        unit_measure6 = str(guide_obj.guidedetail_set.all()[5].unit_measure.description)
+        weight6 = str(guide_obj.guidedetail_set.all()[5].weight)
+
+    canvas.drawString(ml + 6 + 15, mi + 0 - 11 + 3, item6)
+    canvas.drawString(ml + 6 + 100 + 50, mi + 0 - 11 + 3, description6)
+    canvas.drawString(ml + 6 + 0 + 50 + 280, mi + 0 - 11 + 3, quantity6)
+    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70, mi + 0 - 11 + 3, unit_measure6)
+    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70 + 70, mi + 0 - 11 + 3, weight6)
+
+    item7 = ''
+    description7 = ''
+    quantity7 = ''
+    unit_measure7 = ''
+    weight7 = ''
+
+    if guide_obj.guidedetail_set.count() > 6:
+        item7 = str(guide_obj.guidedetail_set.all()[6].id)
+        description7 = str(guide_obj.guidedetail_set.all()[6].product.name)
+        quantity7 = str(guide_obj.guidedetail_set.all()[6].quantity)
+        unit_measure7 = str(guide_obj.guidedetail_set.all()[6].unit_measure.description)
+        weight7 = str(guide_obj.guidedetail_set.all()[6].weight)
+
+    canvas.drawString(ml + 6 + 15, mi + 0 - 21 + 3, item7)
+    canvas.drawString(ml + 6 + 100 + 50, mi + 0 - 21 + 3, description7)
+    canvas.drawString(ml + 6 + 0 + 50 + 280, mi + 0 - 21 + 3, quantity7)
+    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70, mi + 0 - 21 + 3, unit_measure7)
+    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70 + 70, mi + 0 - 21 + 3, weight7)
+
+    canvas.drawString(ml + 100 + 3 + 6, mi + 0 - 70 + 6 + 20, 'MOTIVO DEL')
+    canvas.drawString(ml + 100 + 3 + 6, mi + 0 - 70 + 6 + 10, 'TRASLADO')
+
+    canvas.drawString(ml + 100 + 3 + 6 + 60, mi + 0 - 73 + 6 + 28, 'Venta')
+    canvas.drawString(ml + 100 + 3 + 6 + 60, mi + 0 - 72 + 6 + 13, 'Venta sujeta a')
+
     canvas.acroForm.checkbox(
         name='CB0',
         checked=False,
-        x=ml + 100 + 3 + 6 + 120, y=mi + 0 - 60 + 6 + 25,
-        size=10,
+        x=ml + 100 + 3 + 6 + 120, y=mi + 0 - 71 + 6 + 25,
+        size=7,
         borderWidth=1,
         borderColor=black,
         fillColor=white,
@@ -731,32 +799,22 @@ def print_programming_guide(request, pk=None):
     canvas.acroForm.checkbox(
         name='CB02',
         checked=False,
-        x=ml + 100 + 3 + 6 + 120, y=mi + 0 - 60 + 6 + 10,
-        size=10,
-        borderWidth=1,
-        borderColor=black,
-        fillColor=white,
-        textColor=black,
-        forceBorder=False)
-    canvas.acroForm.checkbox(
-        name='CB03',
-        checked=False,
-        x=ml + 100 + 3 + 6 + 120, y=mi + 0 - 60 + 6 - 5,
-        size=10,
+        x=ml + 100 + 3 + 6 + 120, y=mi + 0 - 71 + 6 + 10,
+        size=7,
         borderWidth=1,
         borderColor=black,
         fillColor=white,
         textColor=black,
         forceBorder=False)
 
-    canvas.drawString(ml + 100 + 3 + 6 + 140, mi + 0 - 60 + 6 + 28, 'Consignación')
-    canvas.drawString(ml + 100 + 3 + 6 + 140, mi + 0 - 60 + 6 + 13, 'Devolución')
-    canvas.drawString(ml + 100 + 3 + 6 + 140, mi + 0 - 60 + 6 - 2, 'Entre establecimientos')
+    canvas.drawString(ml + 100 + 3 + 6 + 140, mi + 0 - 73 + 6 + 28, 'Consignación')
+    canvas.drawString(ml + 100 + 3 + 6 + 140, mi + 0 - 73 + 6 + 13, 'Devolución')
+
     canvas.acroForm.checkbox(
         name='CB04',
         checked=False,
-        x=ml + 100 + 3 + 6 + 230, y=mi + 0 - 60 + 6 + 25,
-        size=10,
+        x=ml + 100 + 3 + 6 + 230, y=mi + 0 - 71 + 6 + 25,
+        size=7,
         borderWidth=1,
         borderColor=black,
         fillColor=white,
@@ -765,8 +823,46 @@ def print_programming_guide(request, pk=None):
     canvas.acroForm.checkbox(
         name='CB05',
         checked=False,
-        x=ml + 100 + 3 + 6 + 230, y=mi + 0 - 60 + 6 + 10,
-        size=10,
+        x=ml + 100 + 3 + 6 + 230, y=mi + 0 - 71 + 6 + 10,
+        size=7,
+        borderWidth=1,
+        borderColor=black,
+        fillColor=white,
+        textColor=black,
+        forceBorder=False)
+
+    canvas.drawString(ml + 100 + 3 + 6 + 250, mi + 0 - 73 + 6 + 28, 'Para transformación')
+    canvas.drawString(ml + 100 + 3 + 6 + 250, mi + 0 - 73 + 6 + 13, 'Entre establecimientos')
+
+    canvas.acroForm.checkbox(
+        name='CB03',
+        checked=False,
+        x=ml + 100 + 3 + 6 + 335, y=mi + 0 - 71 + 6 + 25,
+        size=7,
+        borderWidth=1,
+        borderColor=black,
+        fillColor=white,
+        textColor=black,
+        forceBorder=False)
+
+    canvas.acroForm.checkbox(
+        name='CB07',
+        checked=False,
+        x=ml + 100 + 3 + 6 + 335, y=mi + 0 - 71 + 6 + 10,
+        size=7,
+        borderWidth=1,
+        borderColor=black,
+        fillColor=white,
+        textColor=black,
+        forceBorder=False)
+    canvas.drawString(ml + 100 + 3 + 6 + 350, mi + 0 - 73 + 6 + 28, 'Zona primaria')
+    canvas.drawString(ml + 100 + 3 + 6 + 350, mi + 0 - 73 + 6 + 13, 'Compra')
+
+    canvas.acroForm.checkbox(
+        name='CB8',
+        checked=False,
+        x=ml + 100 + 3 + 6 + 410, y=mi + 0 - 71 + 6 + 25,
+        size=7,
         borderWidth=1,
         borderColor=black,
         fillColor=white,
@@ -775,35 +871,14 @@ def print_programming_guide(request, pk=None):
     canvas.acroForm.checkbox(
         name='CB06',
         checked=False,
-        x=ml + 100 + 3 + 6 + 230, y=mi + 0 - 60 + 6 - 5,
-        size=10,
+        x=ml + 100 + 3 + 6 + 410, y=mi + 0 - 71 + 6 + 10,
+        size=7,
         borderWidth=1,
         borderColor=black,
         fillColor=white,
         textColor=black,
         forceBorder=False)
-    canvas.drawString(ml + 100 + 3 + 6 + 250, mi + 0 - 60 + 6 + 28, 'Para transformación')
-    canvas.acroForm.checkbox(
-        name='CB07',
-        checked=False,
-        x=ml + 100 + 3 + 6 + 330, y=mi + 0 - 60 + 6 + 25,
-        size=10,
-        borderWidth=1,
-        borderColor=black,
-        fillColor=white,
-        textColor=black,
-        forceBorder=False)
-    canvas.drawString(ml + 100 + 3 + 6 + 350, mi + 0 - 60 + 6 + 28, 'Zona primaria')
-    canvas.acroForm.checkbox(
-        name='CB8',
-        checked=False,
-        x=ml + 100 + 3 + 6 + 410, y=mi + 0 - 60 + 6 + 25,
-        size=10,
-        borderWidth=1,
-        borderColor=black,
-        fillColor=white,
-        textColor=black,
-        forceBorder=False)
+
     canvas.showPage()
     canvas.save()
     r = HttpResponse(content_type='application/pdf')

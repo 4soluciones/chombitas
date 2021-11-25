@@ -128,7 +128,9 @@
                                             placeholder="0"></td>
                         <td class="border-top-0" colspan="1">
                             {#                            <button type="button" id="btn-new" class="btn btn-primary btn-block">Nuevo</button>#}
-                            <button type="button" disabled class="btn btn-primary btn-block"><span class="fa fa-print"></span> Imprimir</button>
+                            <button type="button" disabled class="btn btn-primary btn-block"><span
+                                    class="fa fa-print"></span> Imprimir
+                            </button>
                         </td>
                     </tr>
 
@@ -181,10 +183,11 @@
                             <thead>
                             <tr class="bg-light" style="height: 50px;">
                                 <th class="align-middle text-center">#</th>
-                                <th class="align-middle text-center">Descripcion</th>
+                                <th class="align-middle text-center">Descripción</th>
                                 <th class="align-middle text-center">Cantidad</th>
                                 <th class="align-middle text-center">Unidad</th>
                                 <th class="align-middle text-center">Tipo</th>
+                                <th class="align-middle text-center">Almacen</th>
                                 <th class="align-middle text-center">Eliminar</th>
                             </tr>
                             </thead>
@@ -255,7 +258,24 @@
             });
         });
 
+        $("#btn-detail").click(function (){
+            clean_detail()
+        });
+
+        function clean_detail() {
+
+            $('#id_product').val('0').trigger('change');
+            $('#id_unit').val('0').trigger('change');
+            $('#id_type').val('0').trigger('change');
+            $('#id_stock').val('0');
+            $('#id_quantity').val('0');
+            $('#id_product_store').val('0');
+            $('#product_store_name').val('0');
+
+        }
+
         $("#id_add").click(function () {
+
 
             let id_product = $('#id_product').val();
             let name_product = $('#id_product option:selected').text();
@@ -263,22 +283,36 @@
             let name_unit = $('#id_unit option:selected').text();
             let quantity = parseInt($('#id_quantity').val());
             let product_store = $('#id_product_store').val();
+            let product_store_name = $('#product_store_name').val();
             let stock = parseInt($('#id_stock').val());
             let _id_type = $('#id_type').val();
             let _type = $('#id_type option:selected').text();
 
+            {#console.log('quantity', quantity)#}
+            {#console.log('stock', stock)#}
+            {#console.log('id_unit', id_unit)#}
+            {#console.log('name_unit', name_unit)#}
+
             if (quantity > stock) {
-                alert("No hay stock Suficiente. Favor revisar ");
+                toastr.warning('NO HAY STOCK SUFICIENTE. FAVOR REVISAR', '¡MENSAJE!');
                 return false;
             }
 
-            if (quantity === 0) {
-                alert("La cantidad debe ser mayor a 0");
+            if (isNaN(quantity) || quantity === 0) {
+                toastr.warning('LA CANTIDAD DEBE SER MAYOR A 0', '¡MENSAJE!');
+                return false;
+            }
+            if (isNaN(stock)) {
+                toastr.warning('SIN STOCK, FAVOR REVISAR EL ALMACEN', '¡MENSAJE!');
+                return false;
+            }
+            if (isNaN(product_store)) {
+                toastr.warning('NO EXISTE ALMACEN, FAVOR REVISAR', '¡MENSAJE!');
                 return false;
             }
             if ($("#id_table_detail tr[product=" + id_product + "][ty=" + _id_type + "]").length) {
-              toastr.warning('EL PRODUCTO CON ESTE TIPO YA SE ENCUENTRA EN EL REGISTRO', '¡MENSAJE!');
-              return false;
+                toastr.warning('EL PRODUCTO CON ESTE TIPO YA SE ENCUENTRA EN EL REGISTRO', '¡MENSAJE!');
+                return false;
             }
 
             /*
@@ -290,29 +324,32 @@
 
             $('#id_table_detail').append(
                 '<tr product="' + id_product + '" store_p="' + product_store + '" ty="' + _id_type + '">' +
-                '<td class="align-middle">' + '</td>' +
-                '<td class="align-middle">' + name_product + '</td>' +
-                '<td class="align-middle item-quantity">' + quantity + '</td>' +
-                '<td class="align-middle item-unit" pu="' + id_unit + '">' + name_unit + '</td>' +
-                '<td class="align-middle item-type">' + _type + '</td>' +
-                '<td class="align-middle text-center"> ' + "<button type='button' onclick='deleteItem("+id_product+"," + '"'+_id_type+'"' + ")' " +
+                '<td class="align-middle text-center">' + '</td>' +
+                '<td class="align-middle text-center">' + name_product + '</td>' +
+                '<td class="align-middle text-center item-quantity">' + quantity + '</td>' +
+                '<td class="align-middle text-center item-unit" pu="' + id_unit + '">' + name_unit + '</td>' +
+                '<td class="align-middle text-center item-type">' + _type + '</td>' +
+                '<td class="align-middle text-center item-store">' + product_store_name + '</td>' +
+                '<td class="align-middle text-center"> ' + "<button type='button' onclick='deleteItem(" + id_product + "," + '"' + _id_type + '"' + ")' " +
                 "class='btn btn-danger delete-detail'><i class='fa fa-trash'></i></button>" + "</td>" +
                 '</tr>'
-            {#'<td class="text-center">' + '<button type="button" onclick="deleteItem(' + id_product + ')" class="btn btn-danger delete-detail"><i class="fa fa-trash"></i></button>' + '</td>' +#}
+                {#'<td class="text-center">' + '<button type="button" onclick="deleteItem(' + id_product + ')" class="btn btn-danger delete-detail"><i class="fa fa-trash"></i></button>' + '</td>' +#}
             );
             counterStrike();
             toastr.info('Producto agregado con exito.', '¡Mensaje!');
-            $('#id_product').val('0').trigger('change')
-            $('#id_unit').val('0').trigger('change')
+            clean_detail()
+            {#$('#id_product').val('0').trigger('change');#}
+            {#$('#id_unit').val('0').trigger('change');#}
         });
-/*
-        function deleteItem($id) {
-            $('#id_table_detail').find("tr[product=" + $id + "]").remove();
+
+        /*
+                function deleteItem($id) {
+                    $('#id_table_detail').find("tr[product=" + $id + "]").remove();
+                    counterStrike();
+                }*/
+        function deleteItem($p, $t) {
+            $('#id_table_detail').find('tr[product="' + $p + '"][ty="' + $t + '"]').remove();
             counterStrike();
-        }*/
-        function deleteItem($p,$t) {
-        $('#id_table_detail').find('tr[product="' + $p + '"][ty="' + $t + '"]').remove();
-        counterStrike();
         }
 
         function counterStrike() {
@@ -337,6 +374,12 @@
             let minimal_cost = 0;
             event.preventDefault();
 
+            let store_p = $("#id_table_detail tr").attr('store_p');
+
+            if (isNaN(store_p)) {
+                 toastr.warning('EL PRODUCTO NO CUENTA CON ALMACEN FAVOR DE VOLVER A AGREGARLO', '¡MENSAJE!');
+                return false;
+            }
 
             let guides = {
                 "Details": [],
@@ -347,8 +390,6 @@
                 "Programming": $('#programmingLabel').attr('programming'),
 
             };
-
-
             // Recorre cada detalle de producto (son 2 arrays) each -> recorre
 
             $("#id_table_detail tr").each(function () {
@@ -364,7 +405,7 @@
 
             });
 
-            {#console.log(JSON.stringify(guides));#}
+            console.log(JSON.stringify(guides));
 
             $.ajax({
                 url: '/comercial/create_guide/',
@@ -377,8 +418,8 @@
                 success: function (response, textStatus, xhr) {
                     if (xhr.status === 200) {
                         toastr.success(response.message, '¡GUIA REGISTRADA CORRECTAMENTE!');
-                         // Simulate a mouse click:
-                        window.location.href = "/comercial/print_programming_guide/"+response.programming+"/";
+                        // Simulate a mouse click:
+                        window.location.href = "/comercial/print_programming_guide/" + response.programming + "/" + response.guide + "/";
                         setTimeout(() => {
                             location.reload();
                         }, 2000);
