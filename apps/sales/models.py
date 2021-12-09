@@ -216,6 +216,7 @@ class Supplier(models.Model):
                       ('LU', 'LUBRICANTES'),
                       ('LA', 'LAVADO'),
                       ('M', 'MANTENIMIENTO'),
+                      ('PE', 'PEAJES'),
                       ('O', 'OTROS'),)
     id = models.AutoField(primary_key=True)
     name = models.CharField('Nombre', max_length=200, unique=True)
