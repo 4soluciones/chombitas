@@ -1,5 +1,6 @@
 <div class="card-header text-center text-uppercase bg-light font-weight-bold">
     <h2> {{ client_obj }} </h2>
+    <label>Deuda Pendiente: {{ difference_debt }}</label>
 </div>
 <div class="" id="grid-dictionary" style="overflow:scroll;width: 100%;height: 45em">
     <table class="table table-sm table-bordered" id="table-dictionary" style="border-collapse: collapse;">
@@ -25,11 +26,12 @@
 
             <td class="bg-danger head-spending">GASTOS</td>
 
-            <td class="bg-secondary">FECHA OPERACIÓN</td>
+{#            <td class="bg-secondary">FECHA OPERACIÓN</td>#}
             <td class="bg-secondary">CANTIDAD ENTREGADA BALONES</td>
             <td class="bg-secondary">CANTIDAD VALES FISE</td>
             <td class="bg-secondary">MONTO PAGADO</td>
             <td class="bg-secondary">PLACA</td>
+            <td class="bg-secondary">FECHA OPERACIÓN</td>
             <td class="bg-secondary">TIPO PAGO</td>
             <td class="bg-secondary">TOTAL CANTIDAD ENTREGADA BALONES</td>
             <td class="bg-secondary">TOTAL CANTIDAD VALES FISE</td>
@@ -90,7 +92,7 @@
                 {% for d in o.order_detail_set %}
 
                     <td class="align-middle text-center product-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}"
-                        dpk="{{ d.product_id }}">{{ d.product }}</td>
+                        dpk="{{ d.product_id }}">{{ d.code }}</td>
                     <td class="align-middle text-center unit-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">
                         {% if d.unit == 'G' %}
                             <span class="text-danger font-weight-bolder">GLP</span>
@@ -110,7 +112,7 @@
                     {#llamar a el modal de expense#}
                     {% if forloop.first %}
                         <td class="align-middle text-primary text-right font-weight-bold {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
-                            rowspan="{{ o.rowspan }}">{{ o.subtotal|floatformat:2 }}</td>
+                            rowspan="{{ o.rowspan }}">{{ o.subtotal|safe }}</td>
                     {% endif %}
 
                     {% if d.has_spending %}
@@ -129,11 +131,12 @@
                     {% for l in d.loan_payment_set %}
 
                         {% if forloop.first %}
-                            <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.operation_date|date:"d-m-y" }}</td>
+
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.quantity|floatformat:0 }}</td>
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.number_of_vouchers }}</td>
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.price|floatformat:2 }}</td>
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.license_plate }}</td>
+                            <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.operation_date|date:"d-m-y" }}</td>
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">
                                 {{ l.type }}
                                 {% if l.cash_flow %}
@@ -217,11 +220,12 @@
                             </tr>
                         {% else %}
                             <tr class="{% if o.is_review %}green{% endif %}">
-                                <td class="align-middle text-center">{{ l.operation_date|date:"d-m-y" }}</td>
+
                                 <td class="align-middle text-center">{{ l.quantity|floatformat:0 }}</td>
                                 <td class="align-middle text-center">{{ l.number_of_vouchers }}</td>
                                 <td class="align-middle text-center">{{ l.price|floatformat:2 }}</td>
                                 <td class="align-middle text-center">{{ l.license_plate }}</td>
+                                <td class="align-middle text-center">{{ l.operation_date|date:"d-m-y" }}</td>
                                 <td class="align-middle text-center">
                                     {{ l.type }}
                                     {% if l.cash_flow %}

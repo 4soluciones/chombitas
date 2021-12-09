@@ -2326,6 +2326,7 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                     'id': d.id,
                     'product_id': d.product.id,
                     'product': d.product.name,
+                    'code': d.product.code,
                     'unit': d.unit.name,
                     'type': _type,
                     'quantity_sold': d.quantity_sold,
@@ -2362,6 +2363,7 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
     sum_total_remaining_repay_loan_ball = 0
     sum_total_ball_changes = 0
     sum_total_cash_flow_spending = 0
+    difference_debt = 0
 
     if order_set.exists():
         sum_quantity_total = 0
@@ -2378,6 +2380,8 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
             sum_total_cash_flow_spending += total_cash_flow_spending(cashflow_set=cashflow_set)
             total_quantity_set = order_detail_set.values('quantity_sold').annotate(totals_quantity=Sum('quantity_sold')).aggregate(Sum('totals_quantity'))
             sum_quantity_total += total_quantity_set['totals_quantity__sum']
+            difference_debt = sum_total_remaining_repay_loan - sum_total_repay_loan
+
         total_set = order_set.values('client').annotate(totals=Sum('total'))
         sum_total = total_set[0].get('totals')
 
@@ -2396,6 +2400,7 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
         'sum_total_ball_changes': '{:,}'.format(round(float(sum_total_ball_changes), 2)),
         'sum_total_cash_flow_spending': '{:,}'.format(round(float(sum_total_cash_flow_spending), 2)),
         'sum_quantity_total': sum_quantity_total,
+        'difference_debt': '{:,}'.format(round(float(difference_debt), 2)),
         'is_pdf': is_pdf,
         'client_obj': client_obj,
     })
