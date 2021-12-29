@@ -1,30 +1,30 @@
 <div class="card-header text-center text-uppercase bg-light font-weight-bold">
     <h2> {{ client_obj }} </h2>
-    <label>Deuda Pendiente: {{ difference_debt }}</label>
+    <label>Deuda Pendiente: S/ {{ difference_debt }}</label>
 </div>
 <div class="" id="grid-dictionary" style="overflow:scroll;width: 100%;height: 45em">
     <table class="table table-sm table-bordered" id="table-dictionary" style="border-collapse: collapse;">
         {% if not is_pdf %}
             <thead>{% endif %}
         <tr class="text-white small text-uppercase">
-            <td class="bg-primary">#</td>
-            <td class="bg-primary">ID</td>
-            <td class="bg-primary">TIPO</td>
+            <td class="bg-primary noExl">#</td>
+            <td class="bg-primary noExl">ID</td>
+            <td class="bg-primary noExl">TIPO</td>
             {#        <td class="bg-primary">CLIENTE</td>#}
-            <td class="bg-success">PLACA</td>
-            <td class="bg-success">RESPONSABLE</td>
+            <td class="bg-success noExl">PLACA</td>
+            <td class="bg-success noExl">RESPONSABLE</td>
             <td class="bg-primary">FECHA</td>
             {#        <td class="bg-primary">ESTADO</td>#}
 
             <td class="bg-info">PROD.</td>
-            <td class="bg-info">UND</td>
+            <td class="bg-info noExl">UND</td>
             <td class="bg-info">CALIDAD</td>
-            <td class="bg-info">CANT.</td>
+            <td class="bg-info noExl">CANT.</td>
             <td class="bg-info">PREC.</td>
             <td class="bg-info">IMP.</td>
             <td class="bg-primary">TOTAL</td>
 
-            <td class="bg-danger head-spending">GASTOS</td>
+            <td class="bg-danger head-spending noExl">GASTOS</td>
 
 {#            <td class="bg-secondary">FECHA OPERACIÓN</td>#}
             <td class="bg-secondary">CANTIDAD ENTREGADA BALONES</td>
@@ -38,7 +38,7 @@
             <td class="bg-secondary">TOTAL PAGADO GLP</td>
             <td class="bg-secondary">TOTAL PAGADO BALONES</td>
             <td class="bg-secondary">TOTAL CANTIDAD CAMBIADA</td>
-            <td class="bg-secondary">ACCIÓN</td>
+            <td class="bg-secondary noExl">ACCIÓN</td>
 
 {#            <td class="bg-primary">TOTAL</td>#}
             <td class="bg-primary">TOTAL PAGADO GLP</td>
@@ -56,13 +56,13 @@
         {% for o in dictionary %}
             <tr info="{{ o.id }}" class="{% if o.is_review %}green{% endif %}">
 
-                <td class="align-middle text-center rowspan" rowspan="{{ o.rowspan }}">
+                <td class="align-middle text-center rowspan noExl" rowspan="{{ o.rowspan }}">
                     <input type="checkbox" class="check-sales" value="S">
                 </td>
-                <td class="align-middle text-center id-obj" rowspan="{{ o.rowspan }}">{{ o.id }}</td>
-                <td class="align-middle text-center" rowspan="{{ o.rowspan }}">
+                <td class="align-middle text-center id-obj noExl" rowspan="{{ o.rowspan }}">{{ o.id }}</td>
+                <td class="align-middle text-center noExl" rowspan="{{ o.rowspan }}">
                     {% if o.type == 'VENTA' %}
-                        <span class="text-success font-weight-bolder">{{ o.type }}</span>
+                        <span class="text-success font-weight-bolder ">{{ o.type }}</span>
                     {% else %}
                         <span class="text-dark font-weight-bolder">{{ o.type }}</span>
                     {% endif %}
@@ -82,9 +82,9 @@
                     {% endif %}
                 </td>
                 {#            <td class="align-middle text-center" rowspan="{{ o.rowspan }}">{{ o.client }}</td>#}
-                <td class="align-middle text-center plate"
+                <td class="align-middle text-center plate noExl"
                     rowspan="{{ o.rowspan }}">{{ o.distribution_mobil.0.license_plate }}</td>
-                <td class="align-middle text-center pilot"
+                <td class="align-middle text-center pilot noExl"
                     rowspan="{{ o.rowspan }}">{{ o.distribution_mobil.0.pilot }}</td>
                 <td class="align-middle text-center" rowspan="{{ o.rowspan }}">{{ o.date|date:"d-m-y" }}</td>
                 {#            <td class="align-middle text-center" rowspan="{{ o.rowspan }}">{{ o.status }}</td>#}
@@ -93,7 +93,7 @@
 
                     <td class="align-middle text-center product-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}"
                         dpk="{{ d.product_id }}">{{ d.code }}</td>
-                    <td class="align-middle text-center unit-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">
+                    <td class="align-middle text-center unit-obj noExl {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">
                         {% if d.unit == 'G' %}
                             <span class="text-danger font-weight-bolder">GLP</span>
                         {% elif d.unit == 'B' %}
@@ -104,7 +104,7 @@
                         {% endif %}
                     </td>
                     <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">{{ d.type }}</td>
-                    <td class="align-middle text-center quantity-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
+                    <td class="align-middle text-center quantity-obj noExl {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                         rowspan="{{ d.rowspan }}">{{ d.quantity_sold|floatformat:0 }}</td>
                     <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">{{ d.price_unit }}</td>
                     <td class="align-middle text-center total-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
@@ -116,7 +116,7 @@
                     {% endif %}
 
                     {% if d.has_spending %}
-                        <td class="align-middle text-center body-spending {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">
+                        <td class="align-middle text-center body-spending noExl {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">
                             <button type="button"
                                     class="btn btn-outline-danger btn-sm btn-block btn-expense"
                                     data-toggle="modal"
@@ -124,7 +124,7 @@
                             </button>
                         </td>
                     {% else %}
-                        <td class="align-middle text-success text-center body-spending {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">
+                        <td class="align-middle text-success text-center body-spending noExl {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">
                         </td>
                     {% endif %}
 
@@ -157,7 +157,7 @@
 
                             <td class="align-middle text-success text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                 rowspan="{{ d.rowspan }}">{{ d.ball_changes }}</td>
-                            <td class="align-top text-success text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">
+                            <td class="align-top text-success text-center noExl {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">
 
                                 {% if d.unit == 'G' %}
                                     <button type="button"
@@ -239,7 +239,7 @@
 
                     {% empty %}
                         <td class="align-middle text-primary text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" colspan="11">SIN PAGOS</td>
-                        <td class=" {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">
+                        <td class=" noExl {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">
                             {% if d.unit == 'G' %}
                                 <button type="button"
                                         class="btn btn-success btn-sm btn-block btn-payment"
@@ -351,9 +351,9 @@
         {% if not is_pdf %}
             <tfoot>{% endif %}
         <tr class="colcount ">
-            <td colspan="9" class="colcount"></td>
+            <td colspan="9" class="colcount-quantity"></td>
             <td class="align-middle text-primary text-right">{{ sum_quantity_total|floatformat:0 }}</td>
-            <td colspan="16" class="colcount"></td>
+            <td colspan="16" class="colcount-total"></td>
 {#            <td class="align-middle text-primary text-right">{{ sum_total }}</td>#}
             <td class="align-middle text-primary text-right">{{ sum_total_repay_loan }}</td>
             <td class="align-middle text-danger text-right">{{ sum_total_cash_flow_spending }}</td>
@@ -477,6 +477,10 @@
     });
 
     $("#table-to-excel").click(function () {
+
+        $('.colcount-quantity').prop('colspan', 3)
+        $('.colcount-total').prop('colspan', 13)
+
         $("#table-dictionary").table2excel({
             // exclude CSS class
             exclude: ".noExl",
@@ -486,6 +490,12 @@
             preserveColors: true
 
         });
+         setTimeout(() => {
+            $('.colcount-quantity').prop('colspan', 9)
+            $('.colcount-total').prop('colspan', 16)
+        }, 1000);
+
+
     });
 
     $("#get-pdf").on("click", function () {
