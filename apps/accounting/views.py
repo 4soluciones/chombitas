@@ -65,6 +65,7 @@ def get_dict_purchases(purchases_set):
     sum_total_loan_pay = 0
     sum_total_difference = 0
     transaction_date = ''
+    operation_code = '-'
 
     for p in purchases_set:
         if p.purchasedetail_set.count() > 0:
@@ -91,6 +92,7 @@ def get_dict_purchases(purchases_set):
             if cash_flow_set.exists():
                 cash_flow_obj = cash_flow_set.first()
                 transaction_date = cash_flow_obj.transaction_date
+                operation_code = cash_flow_obj.operation_code
 
             for lp in p.loanpayment_set.all():
                 sum_loan_payment = sum_loan_payment + lp.price
@@ -99,6 +101,7 @@ def get_dict_purchases(purchases_set):
                     'quantity': lp.quantity,
                     # 'date': lp.create_at,
                     'date': transaction_date,
+                    'operation_code': operation_code,
                     'price': lp.price,
                     'type': lp.type
                 }
@@ -246,7 +249,8 @@ def new_payment_purchase(request):
             transaction_payment_obj = TransactionPayment(
                 payment=purchase_pay,
                 type=transaction_payment_type,
-                loan_payment=loan_payment_obj
+                loan_payment=loan_payment_obj,
+                operation_code=code_operation
             )
             transaction_payment_obj.save()
 
