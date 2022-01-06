@@ -64,6 +64,7 @@ def get_dict_purchases(purchases_set):
     sum_total = 0
     sum_total_loan_pay = 0
     sum_total_difference = 0
+    transaction_date = ''
 
     for p in purchases_set:
         if p.purchasedetail_set.count() > 0:
@@ -85,12 +86,19 @@ def get_dict_purchases(purchases_set):
             }
             loan_payment = ''
             sum_loan_payment = 0
+
+            cash_flow_set = CashFlow.objects.filter(purchase_id=p.id)
+            if cash_flow_set.exists():
+                cash_flow_obj = cash_flow_set.first()
+                transaction_date = cash_flow_obj.transaction_date
+
             for lp in p.loanpayment_set.all():
                 sum_loan_payment = sum_loan_payment + lp.price
                 loan_payment = {
                     'id': lp.id,
                     'quantity': lp.quantity,
-                    'date': lp.create_at,
+                    # 'date': lp.create_at,
+                    'date': transaction_date,
                     'price': lp.price,
                     'type': lp.type
                 }
