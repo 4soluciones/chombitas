@@ -2000,6 +2000,55 @@ def report_purchases_by_supplier(request):
         }, status=HTTPStatus.OK)
 
 
+def get_purchases_by_provider_category(request):
+    user_id = request.user.id
+    user_obj = User.objects.get(id=user_id)
+    subsidiary_obj = get_subsidiary_by_user(user_obj)
+
+    if request.method == 'GET':
+        mydate = datetime.now()
+        formatdate = mydate.strftime("%Y-%m-%d")
+
+        return render(request, 'buys/report_purchases_by_provider_category.html', {
+            'formatdate': formatdate,
+            'category_set': Supplier._meta.get_field('sector').choices,
+        })
+
+    elif request.method == 'POST':
+        start_date = str(request.POST.get('start-date'))
+        end_date = str(request.POST.get('end-date'))
+        category_id = str(request.POST.get('category'))
+        purchase_dict = []
+        sum_total = 0
+        purchase_detail_set = PurchaseDetail.objects.filter(purchase__subsidiary__id=subsidiary_obj.id,
+                                                            purchase__supplier__sector=category_id,
+                                                            purchase__status='A',
+                                                            purchase__purchase_date__range=[start_date, end_date]).values('purchase__supplier__id', 'purchase__supplier__name', 'purchase__supplier__business_name').exclude(purchase__supplier__id__in=[1, 363, 364, 369]).annotate(total=Sum(F('price_unit') * F('quantity'))).order_by('-total')
+
+        for p in purchase_detail_set:
+            supplier_id = p['purchase__supplier__id']
+            supplier_name = p['purchase__supplier__name']
+            business_name = p['purchase__supplier__business_name']
+            total = round(decimal.Decimal(p['total']), 2)
+            item_purchase = {
+                'supplier_id': supplier_id,
+                'supplier_name': supplier_name,
+                'business_name': business_name,
+                'total': '{:,}'.format(total)
+            }
+            purchase_dict.append(item_purchase)
+
+            sum_total += total
+
+        tpl = loader.get_template('buys/report_purchases_by_provider_category_grid.html')
+        context = ({
+            'purchase_dict': purchase_dict,
+            'sum_total': '{:,}'.format(round(decimal.Decimal(sum_total), 2)),
+        })
+        return JsonResponse({
+            'grid': tpl.render(context, request),
+        }, status=HTTPStatus.OK)
+
 
 
 
