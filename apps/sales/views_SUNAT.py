@@ -231,7 +231,7 @@ def send_bill_nubefact(order_id, is_demo=False):
         # "percepcion_base_imponible": float(total),
         # "total_percepcion": float(total_perceptron),
         # "total_incluido_percepcion": float(total_with_perceptron),
-        "percepcion_tipo": 0,
+        "percepcion_tipo": "",
         "percepcion_base_imponible": "",
         "total_percepcion": "",
         "total_incluido_percepcion": "",
