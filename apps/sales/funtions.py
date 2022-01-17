@@ -48,7 +48,6 @@ def return_loan(loan_payment_set=None):
     response = 0
 
     for lp in loan_payment_set:
-
         response += lp.quantity
 
     return response
@@ -125,7 +124,8 @@ def ball_changes(ballchange_set=None):
 def total_cash_flow_spending(cashflow_set=None):
     response = 0
     for cf in cashflow_set:
-        response = response + cf.total
+        if cf.type == 'S':
+            response = response + cf.total
     return response
 
 
