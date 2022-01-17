@@ -13,16 +13,37 @@
                 <label class="col-form-label col-form-label-lg text-uppercase font-weight-bold"><h2>Reporte
                     Tributario</h2></label>
             </div>
+            <div class="card-body">
+                <form class="form-inline" id="search-form" method="POST">
+                    {% csrf_token %}
 
-            <div class="card">
-                <div class="card-body table-responsive" id="tbl-buys">
-                    {{ grid }}
-                </div>
+                    <form class="form-inline">
+                        <label class="my-1 mr-2" for="id-year">Seleccione año:</label>
+                        <select class="form-control" id="id_year" name="year">
+                            <option value="0">Seleccione</option>
+                            <option value="2021">2021</option>
+                            <option value="2022">2022</option>
+                            <option value="2022">2023</option>
+                            <option value="2022">2024</option>
+                        </select>
+                        <button type="submit" class="btn btn-blue my-1 ml-2" id="btn-search">
+                            <i class="fas fa-search-dollar"></i> Buscar
+                        </button>
+
+                    </form>
+
+                </form>
+
             </div>
+
             {#            <button type="button" class="btn btn-success my-1 ml-2" id="printReportExcel">#}
             {#                <i class="fas fa-file-csv"></i> Excel#}
             {#            </button>#}
 
+        </div>
+        <div class="card">
+            <div class="card-body table-responsive" id="tbl-buys">
+            </div>
         </div>
     </div>
 
@@ -33,78 +54,35 @@
 
     <script type="text/javascript">
 
-        $('.btn-save').click(function () {
+        $('#search-form').submit(function (event) {
+            event.preventDefault();
+            let data = new FormData($('#search-form').get(0));
 
-            let btn = $(this);
-            let _tr = $(this).parent('td').parent('tr')
-            let _base_buy_total = _tr.find('td.purchase-base-total').text().replace(',', '')
-            let _igv_buy_total = _tr.find('td.purchase-igv-total').text().replace(',', '')
-            let _total_buy = _tr.find('td.purchase-total').text().replace(',', '')
-            let _base_sale_total = _tr.find('td.sale-base-total input').val().replace(',', '')
-            let _igv_sale_total = _tr.find('td.sale-igv-total input').val().replace(',', '')
-            let _total_sale = _tr.find('td.sale-total input').val().replace(',', '')
-            let _month = _tr.find('td.month').attr('month')
-            {#console.log('btn', btn)#}
-            {#console.log('tr', _tr)#}
-            {#console.log('_base_buy_total', _base_buy_total)#}
-            {#console.log('_igv_buy_total', _igv_buy_total)#}
-            {#console.log('_total_buy', _total_buy)#}
-            {#console.log('_base_sale_total', _base_sale_total)#}
-            {#console.log('_igv_sale_total', _igv_sale_total)#}
-            {#console.log('_total_sale', _total_sale)#}
-            {#console.log('month', _month)#}
+            $('#btn-search').attr("disabled", "true");
 
             $.ajax({
-                url: '/accounting/save_register_tributary/',
-                async: true,
-                dataType: 'json',
-                type: 'GET',
-                data: {
-                    'base_buy_total': _base_buy_total,
-                    'igv_buy_total': _igv_buy_total,
-                    'total_buy': _total_buy,
-                    'base_sale_total': _base_sale_total,
-                    'igv_sale_total': _igv_sale_total,
-                    'total_sale': _total_sale,
-                    'month': _month,
-                },
+                url: '/accounting/report_tributary/',
+                type: "POST",
+                data: data,
+                cache: false,
+                processData: false,
+                contentType: false,
                 success: function (response, textStatus, xhr) {
                     if (xhr.status === 200) {
-                        toastr.success(response['message'], '¡Bien hecho!');
+                        {#toastr.success(response['message'], '¡Bien hecho!');#}
+                        $('#tbl-buys').html(response.grid);
                     }
                 },
-                fail: function (response) {
-                    console.log("error");
+                error: function (jqXhr, textStatus, xhr) {
+                    if (jqXhr.status === 500) {
+                        toastr.error(jqXhr.responseJSON.error, '¡Inconcebible!');
+                    }
                 }
             });
+            $('#btn-search').removeAttr("disabled", "false");
         });
 
-        {#$('#printReportExcel').click(function () {#}
-        {#    $("#tbl-comparative").table2excel({filename: "Comparative.xls"});#}
-        {# });#}
 
-        /*$('#id-sale-total').keyup(function () {
-
-
-            let sale_total = $('#id-sale-total').val();
-            let sale_base_total = sale_total / 1.18
-            let sale_igv = sale_total - sale_base_total
-
-            $("#id-sale-subtotal").val(sale_base_total.toFixed(2));
-            $("#id-sale-igv").val(sale_igv.toFixed(2));
-        });*/
-
-        $('.sale-total').keyup(function () {
-
-            let _tr = $(this).parent('tr')
-            let sale_total = $(this).find('#id-sale-total').val()
-            let sale_base_total = sale_total / Number(1.18)
-            let sale_igv = sale_total - sale_base_total
-
-            _tr.find('.sale-base-total input#id-sale-subtotal').val(sale_base_total.toFixed(2));
-            _tr.find('.sale-igv-total input#id-sale-igv').val(sale_igv.toFixed(2));
-
-        });
 
 
     </script>

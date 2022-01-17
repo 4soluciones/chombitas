@@ -1773,9 +1773,18 @@ def report_tributary(request):
     if request.method == 'GET':
         user_id = request.user.id
         user_obj = User.objects.get(id=user_id)
+        my_date = datetime.now()
         subsidiary_obj = get_subsidiary_by_user(user_obj)
-        subsidiaries = [1, 2, 3, 4, 6]
+        formatdate = my_date.strftime("%Y-%m-%d")
 
+        return render(request, 'accounting/report_tributary.html', {
+            'formatdate': formatdate,
+            'subsidiary_obj': subsidiary_obj,
+        })
+
+    elif request.method == 'POST':
+        subsidiaries = [1, 2, 3, 4, 6]
+        year = int(request.POST.get('year'))
         tribute_dict = []
         purchase_igv_total = 0
         purchase_base_total = 0
@@ -1784,7 +1793,7 @@ def report_tributary(request):
         formatdate = mydate.strftime("%Y-%m-%d")
         # month = int(request.POST.get('month'))
         # year = int(request.POST.get('year'))
-        year = mydate.year
+        # year = mydate.year
 
         month_names = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SETIEMBRE', 'OCTUBRE',
                        'NOVIEMBRE', 'DICIEMBRE']
@@ -1794,8 +1803,76 @@ def report_tributary(request):
 
         for i in range(1, 13):
 
-            if i >= 8 and year > 2020:
+            if year == 2021:
 
+                if i >= 8:
+
+                    sales_base_total = 0
+                    sales_igv_total = 0
+                    sales_sum_total = 0
+
+                    tribute_set = Tributes.objects.filter(month=i, year=year)
+
+                    if tribute_set.exists():
+
+                        tribute_obj = tribute_set.first()
+
+                        purchase_base_total = tribute_obj.base_total_purchase
+                        purchase_igv_total = tribute_obj.igv_total_purchase
+                        purchases_sum_total = tribute_obj.total_purchase
+
+                        sales_base_total = tribute_obj.base_total_sales
+                        sales_igv_total = tribute_obj.igv_total_sales
+                        sales_sum_total = tribute_obj.total_total_sales
+
+                    else:
+                        purchase_set = Purchase.objects.filter(
+                            subsidiary__id__in=subsidiaries, purchase_date__month=i, purchase_date__year=year,
+                            status__in=['S', 'A'], type_bill='F'
+                        ).select_related('subsidiary').prefetch_related(
+                            Prefetch(
+                                'purchasedetail_set', queryset=PurchaseDetail.objects.select_related('unit', 'product')
+                            )
+                        ).select_related('supplier', 'truck').annotate(
+                            sum_total=Subquery(
+                                PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).annotate(
+                                    return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
+                            )
+                        ).aggregate(Sum('sum_total'))
+
+                        purchases_sum_total = purchase_set['sum_total__sum']
+
+                        if purchases_sum_total is not None:
+                            float_purchases_sum_total = float(purchases_sum_total)
+                        else:
+                            float_purchases_sum_total = 0
+
+                        purchase_base_total = float(decimal.Decimal(float_purchases_sum_total) / decimal.Decimal(1.18))
+                        purchase_igv_total = float(float_purchases_sum_total - purchase_base_total)
+
+                        purchase_base_total = purchase_base_total
+                        purchase_igv_total = purchase_igv_total
+                        purchases_sum_total = float_purchases_sum_total
+
+                    difference_igv = sales_igv_total - purchase_igv_total
+
+                    item = {
+                        'month': i,
+                        'month_names': month_names[i - 1],
+
+                        'purchase_base_total': '{:,}'.format(round(decimal.Decimal(purchase_base_total), 2)),
+                        'purchase_igv_total': '{:,}'.format(round(decimal.Decimal(purchase_igv_total), 2)),
+                        'purchases_sum_total': '{:,}'.format(round(decimal.Decimal(purchases_sum_total), 2)),
+
+                        'sale_base_total': '{:,}'.format(round(decimal.Decimal(sales_base_total), 2)),
+                        'sale_igv_total': '{:,}'.format(round(decimal.Decimal(sales_igv_total), 2)),
+                        'sales_sum_total': '{:,}'.format(round(decimal.Decimal(sales_sum_total), 2)),
+
+                        'difference_igv': '{:,}'.format(round(decimal.Decimal(difference_igv), 2)),
+                    }
+                    tribute_dict.append(item)
+
+            else:
                 sales_base_total = 0
                 sales_igv_total = 0
                 sales_sum_total = 0
@@ -1866,9 +1943,9 @@ def report_tributary(request):
             'tribute_dict': tribute_dict,
         })
 
-        return render(request, 'accounting/report_tributary.html', {
+        return JsonResponse({
             'grid': tpl.render(context, request),
-        })
+        }, status=HTTPStatus.OK)
 
 
 def save_register_tributary(request):
@@ -1902,7 +1979,7 @@ def save_register_tributary(request):
         tribute_exist_set = Tributes.objects.filter(month=month)
         if tribute_exist_set.exists():
             tribute_exist_obj = tribute_exist_set.first()
-            
+
             tribute_exist_obj.base_total_purchase = float_base_buy_total
             tribute_exist_obj.igv_total_purchase = float_igv_buy_total
             tribute_exist_obj.total_purchase = float_total_buy
@@ -1931,20 +2008,3 @@ def save_register_tributary(request):
             'message': 'Se registro correctamente.',
         })
     return JsonResponse({'error': True, 'message': 'Error de peticion.'})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
