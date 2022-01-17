@@ -29,7 +29,7 @@
 {#            <td class="bg-secondary">FECHA OPERACIÓN</td>#}
             <td class="bg-secondary">CANTIDAD ENTREGADA BALONES</td>
             <td class="bg-secondary">CANTIDAD VALES FISE</td>
-            <td class="bg-secondary">MONTO PAGADO</td>
+{#            <td class="bg-secondary">MONTO PAGADO</td>#}
             <td class="bg-secondary">PLACA</td>
             <td class="bg-secondary">FECHA OPERACIÓN</td>
             <td class="bg-secondary">TIPO PAGO</td>
@@ -134,7 +134,7 @@
 
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.quantity|floatformat:0 }}</td>
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.number_of_vouchers }}</td>
-                            <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.price|floatformat:2 }}</td>
+{#                            <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.price|floatformat:2 }}</td>#}
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.license_plate }}</td>
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.operation_date|date:"d-m-y" }}</td>
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">
@@ -223,7 +223,7 @@
 
                                 <td class="align-middle text-center">{{ l.quantity|floatformat:0 }}</td>
                                 <td class="align-middle text-center">{{ l.number_of_vouchers }}</td>
-                                <td class="align-middle text-center">{{ l.price|floatformat:2 }}</td>
+{#                                <td class="align-middle text-center">{{ l.price|floatformat:2 }}</td>#}
                                 <td class="align-middle text-center">{{ l.license_plate }}</td>
                                 <td class="align-middle text-center">{{ l.operation_date|date:"d-m-y" }}</td>
                                 <td class="align-middle text-center">
@@ -238,7 +238,7 @@
                         {% endif %}
 
                     {% empty %}
-                        <td class="align-middle text-primary text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" colspan="11">SIN PAGOS</td>
+                        <td class="align-middle text-primary text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" colspan="10">SIN PAGOS</td>
                         <td class=" noExl {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">
                             {% if d.unit == 'G' %}
                                 <button type="button"

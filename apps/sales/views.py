@@ -2806,7 +2806,7 @@ def new_loan_payment(request):
                                     loan_payment_obj = LoanPayment(
                                         price=unit_price_with_discount,
                                         quantity=quantity,
-                                        discount=_discount,
+                                        discount=0.00,
                                         product=detail_obj.product,
                                         order_detail=detail_obj,
                                         operation_date=_operation_date
@@ -2855,7 +2855,7 @@ def new_loan_payment(request):
                                     loan_payment_obj = LoanPayment(
                                         price=unit_price_with_discount,
                                         quantity=quantity,
-                                        discount=_discount,
+                                        discount=0.00,
                                         product=detail_obj.product,
                                         order_detail=detail_obj,
                                         operation_date=_operation_date
