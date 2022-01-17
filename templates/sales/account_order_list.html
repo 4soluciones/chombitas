@@ -19,7 +19,7 @@
             <td class="bg-info">PROD.</td>
             <td class="bg-info noExl">UND</td>
             <td class="bg-info">CALIDAD</td>
-            <td class="bg-info noExl">CANT.</td>
+            <td class="bg-info">CANT.</td>
             <td class="bg-info">PREC.</td>
             <td class="bg-info">IMP.</td>
             <td class="bg-primary">TOTAL</td>
@@ -104,7 +104,7 @@
                         {% endif %}
                     </td>
                     <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">{{ d.type }}</td>
-                    <td class="align-middle text-center quantity-obj noExl {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
+                    <td class="align-middle text-center quantity-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                         rowspan="{{ d.rowspan }}">{{ d.quantity_sold|floatformat:0 }}</td>
                     <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}" rowspan="{{ d.rowspan }}">{{ d.price_unit }}</td>
                     <td class="align-middle text-center total-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
