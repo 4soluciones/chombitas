@@ -136,7 +136,7 @@
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.number_of_vouchers }}</td>
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">
                                 {% if  d.unit != 'B' %}
-                                    {{ l.price|floatformat:2 }}
+                                    {{ l.price }}
                                 {% endif %}
                             </td>
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.license_plate }}</td>
@@ -231,7 +231,7 @@
                                 <td class="align-middle text-center">{{ l.number_of_vouchers }}</td>
                                 <td class="align-middle text-center">
                                     {% if  d.unit != 'B' %}
-                                        {{ l.price|floatformat:2 }}
+                                        {{ l.price }}
                                     {% endif %}
                                 </td>
                                 <td class="align-middle text-center">{{ l.license_plate }}</td>

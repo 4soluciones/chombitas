@@ -2306,7 +2306,7 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                         'number_of_vouchers': _number_of_vouchers,
                         'date': lp.create_at,
                         'operation_date': lp.operation_date,
-                        'price': lp.price,
+                        'price': '{:,}'.format(lp.price.quantize(decimal.Decimal('0.00'), rounding=decimal.ROUND_HALF_EVEN)),
                         'type': _payment_type,
                         'cash_flow': _cash_flow,
                         'license_plate': truck_,
