@@ -202,24 +202,24 @@
 {#                                <td class="align-middle text-primary text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"#}
 {#                                    rowspan="{{ o.rowspan }}">{{ o.subtotal|floatformat:2 }}</td>#}
                                 <td class="align-middle text-primary text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_repay_loan|floatformat:2 }}</td>
+                                    rowspan="{{ o.rowspan }}">{{ o.total_repay_loan }}</td>
                                 <td class="align-middle text-danger font-weight-bold text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_spending|floatformat:2 }}</td>
+                                    rowspan="{{ o.rowspan }}">{{ o.total_spending }}</td>
                                 <td class="align-middle text-primary text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_repay_loan_with_vouchers|floatformat:2 }}</td>
+                                    rowspan="{{ o.rowspan }}">{{ o.total_repay_loan_with_vouchers }}</td>
                                 <td class="align-middle text-primary text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_return_loan|floatformat:2 }}</td>
+                                    rowspan="{{ o.rowspan }}">{{ o.total_return_loan }}</td>
 
                                 <td class="align-middle text-info font-weight-bold text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan_ball|floatformat:2 }}</td>
+                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan_ball }}</td>
 
                                 <td class="align-middle text-primary text-right total-remaining-repay-loan-obj pay-loan-rest {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan|floatformat:2 }}</td>
+                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan }}</td>
                                 <td class="align-middle text-primary text-right total-remaining-return-loan-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_return_loan|floatformat:2 }}</td>
+                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_return_loan }}</td>
 
                                 <td class="align-middle text-warning font-weight-bold text-right {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_ball_changes|floatformat:2 }}</td>
+                                    rowspan="{{ o.rowspan }}">{{ o.total_ball_changes }}</td>
 
                             {% endif %}
 
@@ -292,24 +292,24 @@
 {#                                    <td class="align-middle text-primary text-right"#}
 {#                                        rowspan="{{ o.rowspan }}">{{ o.subtotal|floatformat:2 }}</td>#}
                                     <td class="align-middle text-primary text-right"
-                                        rowspan="{{ o.rowspan }}">{{ o.total_repay_loan|floatformat:2 }}</td>
+                                        rowspan="{{ o.rowspan }}">{{ o.total_repay_loan }}</td>
                                     <td class="align-middle text-danger font-weight-bold text-right"
-                                        rowspan="{{ o.rowspan }}">{{ o.total_spending|floatformat:2 }}</td>
+                                        rowspan="{{ o.rowspan }}">{{ o.total_spending }}</td>
                                     <td class="align-middle text-primary text-right"
-                                        rowspan="{{ o.rowspan }}">{{ o.total_repay_loan_with_vouchers|floatformat:2 }}</td>
+                                        rowspan="{{ o.rowspan }}">{{ o.total_repay_loan_with_vouchers }}</td>
                                     <td class="align-middle text-primary text-right"
-                                        rowspan="{{ o.rowspan }}">{{ o.total_return_loan|floatformat:2 }}</td>
+                                        rowspan="{{ o.rowspan }}">{{ o.total_return_loan }}</td>
 
                                     <td class="align-middle text-info font-weight-bold text-right"
-                                        rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan_ball|floatformat:2 }}</td>
+                                        rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan_ball }}</td>
 
 
                                     <td class="align-middle text-primary text-right total-remaining-repay-loan-obj pay-loan-rest"
-                                        rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan|floatformat:2 }}</td>
+                                        rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan }}</td>
                                     <td class="align-middle text-primary text-right total-remaining-return-loan-obj"
-                                        rowspan="{{ o.rowspan }}">{{ o.total_remaining_return_loan|floatformat:2 }}</td>
+                                        rowspan="{{ o.rowspan }}">{{ o.total_remaining_return_loan }}</td>
                                     <td class="align-middle text-warning font-weight-bold text-right"
-                                        rowspan="{{ o.rowspan }}">{{ o.total_ball_changes|floatformat:2 }}</td>
+                                        rowspan="{{ o.rowspan }}">{{ o.total_ball_changes }}</td>
 
                                 {% endif %}
 
@@ -319,32 +319,32 @@
                         {% else %}
                             {% if o.order_detail_set.0.id == d.id %}
 {#                                <td class="align-middle text-primary text-right"#}
-{#                                    rowspan="{{ o.rowspan }}">{{ o.subtotal|floatformat:2 }}</td><!--TOTAL-->#}
+{#                                    rowspan="{{ o.rowspan }}">{{ o.subtotal }}</td><!--TOTAL-->#}
                                 <td class="align-middle text-primary text-right"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_repay_loan|floatformat:2 }}</td>
+                                    rowspan="{{ o.rowspan }}">{{ o.total_repay_loan }}</td>
                                 <!--TOTAL PAGADO GLP-->
                                 <td class="align-middle text-danger font-weight-bold text-right"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_spending|floatformat:2 }}</td>
+                                    rowspan="{{ o.rowspan }}">{{ o.total_spending }}</td>
                                 <!--TOTAL GASTOS-->
                                 <td class="align-middle text-primary text-right"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_repay_loan_with_vouchers|floatformat:2 }}</td>
+                                    rowspan="{{ o.rowspan }}">{{ o.total_repay_loan_with_vouchers }}</td>
                                 <!--TOTAL VALES FISE-->
                                 <td class="align-middle text-primary text-right"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_return_loan|floatformat:2 }}</td>
+                                    rowspan="{{ o.rowspan }}">{{ o.total_return_loan }}</td>
                                 <!--TOTAL BALONES DEVUELTOS-->
 
                                 <td class="align-middle text-primary font-weight-bold text-right"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan_ball|floatformat:2 }}</td>
+                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan_ball }}</td>
                                 <!-- PAGO FALTANTE BALONES-->
 
                                 <td class="align-middle text-primary text-right total-remaining-repay-loan-obj pay-loan-rest"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan|floatformat:2 }}</td>
+                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan }}</td>
                                 <!--PAGO FALTANTE GLP-->
                                 <td class="align-middle text-primary text-right total-remaining-return-loan-obj"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_return_loan|floatformat:2 }}</td>
+                                    rowspan="{{ o.rowspan }}">{{ o.total_remaining_return_loan }}</td>
                                 <!--FALTANTES BALONES-->
                                 <td class="align-middle text-warning font-weight-bold text-right"
-                                    rowspan="{{ o.rowspan }}">{{ o.total_ball_changes|floatformat:2 }}</td>
+                                    rowspan="{{ o.rowspan }}">{{ o.total_ball_changes }}</td>
                                 <!--CANTIDAD DE BALONES CAMBIADOS-->
                             {% endif %}
                         {% endif %}
@@ -365,7 +365,7 @@
         <tr class="colcount ">
             <td colspan="9" class="colcount-quantity"></td>
             <td class="align-middle text-primary text-right">{{ sum_quantity_total|floatformat:0 }}</td>
-            <td colspan="15" class="colcount-total"></td>
+            <td colspan="16" class="colcount-total"></td>
 {#            <td class="align-middle text-primary text-right">{{ sum_total }}</td>#}
             <td class="align-middle text-primary text-right">{{ sum_total_repay_loan }}</td>
             <td class="align-middle text-danger text-right">{{ sum_total_cash_flow_spending }}</td>
