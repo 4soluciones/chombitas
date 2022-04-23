@@ -128,6 +128,7 @@ urlpatterns = [
     path('get_report_sales_subsidiary/', login_required(get_report_sales_subsidiary), name='get_report_sales_subsidiary'),
 
     # is_review
+    path('check_review_pay/', login_required(check_review_pay), name='check_review_pay'),
     path('check_review/', login_required(check_review), name='check_review'),
     path('sold_ball/', login_required(sold_ball), name='sold_ball'),
     path('sold_ball_request/', login_required(sold_ball_request), name='sold_ball_request'),

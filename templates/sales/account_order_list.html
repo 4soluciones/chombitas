@@ -148,6 +148,21 @@
                                 {% if l.cash_flow %}
                                     <br>{{ l.cash_flow.cash.name }}
                                     <br>{{ l.cash_flow.operation_code }}
+
+                                    {% if l.is_review_pay %}
+                                        <div class="form-check form-switch">
+                                            <label class="form-check-label" for="id_is_review_pay{{ l.id }}">
+                                            <input class="form-check-input review-pay red-input" type="checkbox" lp_id="{{ l.id }}" id="id_is_review_pay{{ l.id }}" checked>
+                                            <span class="review-text-pay text-success">Pago revisado</span></label>
+                                        </div>
+                                    {% else %}
+                                        <div class="form-check form-switch">
+                                            <label class="form-check-label" for="id_is_review_pay{{ l.id }}">
+                                            <input class="form-check-input review-pay red-input" type="checkbox" lp_id="{{ l.id }}" id="id_is_review_pay{{ l.id }}">
+                                            <span class="review-text-pay text-success">No revisado</span></label>
+                                        </div>
+                                    {% endif %}
+
                                 {% endif %}
                             </td>
                             <td class="align-middle text-success text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
@@ -243,6 +258,21 @@
                                     {% if l.cash_flow %}
                                         <br>{{ l.cash_flow.cash.name }}
                                         <br>{{ l.cash_flow.operation_code }}
+
+                                        {% if l.is_review_pay %}
+                                        <div class="form-check form-switch">
+                                            <label class="form-check-label" for="id_is_review_pay{{ l.id }}">
+                                            <input class="form-check-input review-pay red-input" type="checkbox" lp_id="{{ l.id }}" id="id_is_review_pay{{ l.id }}" checked>
+                                            <span class="review-text-pay text-success">Pago revisado</span></label>
+                                        </div>
+                                    {% else %}
+                                        <div class="form-check form-switch">
+                                            <label class="form-check-label" for="id_is_review_pay{{ l.id }}">
+                                            <input class="form-check-input review-pay red-input" type="checkbox" lp_id="{{ l.id }}" id="id_is_review_pay{{ l.id }}">
+                                            <span class="review-text-pay text-success">No revisado</span></label>
+                                        </div>
+                                    {% endif %}
+
                                     {% endif %}
                                 </td>
 
@@ -399,6 +429,14 @@
     {% endif %}
 
 </div>
+
+<style>
+    .red-input {
+    accent-color: #e9a1a1;
+    height: 15px; /* not needed */
+    width: 15px; /* not needed */
+}
+</style>
 
 <script type="text/javascript">
 

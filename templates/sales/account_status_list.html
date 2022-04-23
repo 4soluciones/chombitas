@@ -206,8 +206,8 @@
             let _client_id = $('#id_client').val();
             let _start_date = $('#id-start-date').val();
             let _end_date = $('#id-end-date').val();
-            console.log(_start_date)
-            console.log(_end_date)
+            //console.log(_start_date)
+            //console.log(_end_date)
 
             $('#table-order').empty();
             $('#table-order').html(loader);
@@ -435,7 +435,7 @@
 
             let $row = $(this).closest('tr');
             let $o_id = $row.attr('info');
-            console.log($o_id);
+            // console.log($o_id);
             // What row index is the clicked row?
             let row = $row.index(); // Subtract heading row
 
@@ -506,6 +506,97 @@
 
             }
         });
+
+        $(document).on('click', '.review-pay', function () {
+
+            let lp_id = $(this).attr("lp_id")
+            let _input = $(this)
+
+             if (this.checked) {
+                 $.ajax({
+                    url: '/sales/check_review_pay/',
+                    async: true,
+                    dataType: 'json',
+                    type: 'GET',
+                    data: {
+                        'lp_id': lp_id,
+                    },
+                    success: function (response) {
+                        _input.siblings('span.review-text-pay').text('Pago revisado')
+                    },
+                    fail: function (response) {
+                        console.log("error");
+                    }
+                });
+             }
+             else{
+                 $.ajax({
+                    url: '/sales/check_review_pay/',
+                    async: true,
+                    dataType: 'json',
+                    type: 'GET',
+                    data: {
+                        'lp_id': lp_id,
+                    },
+                    success: function (response) {
+                        _input.siblings('span.review-text-pay').text('No revisado')
+                    },
+                    fail: function (response) {
+                        console.log("error");
+                    }
+                });
+             }
+
+            /*if ($row.hasClass("green")) {
+                $row.removeClass('green');
+
+                {#console.log("false");#}
+                let pk = $row.attr("info");
+                $('td.td-green.o-' + pk).removeClass('td-green').removeClass('o-' + pk);
+
+                $row.find('td span.review-text').text('No revisado');
+                $.ajax({
+                    url: '/sales/check_review/',
+                    async: true,
+                    dataType: 'json',
+                    type: 'GET',
+                    data: {
+                        'pk': pk,
+                    },
+                    success: function (response) {
+                        {#$('#lending').html(response.grid);#}
+                    },
+                    fail: function (response) {
+                        console.log("error");
+                    }
+                });
+            } else {
+                $row.addClass('green');
+                $row.find('td span.review-text').text('Pago revisado');
+                {#console.log("true")#}
+                {#console.log($row.attr("info"))#}
+                let pk = $row.attr("info")
+                $.ajax({
+                    url: '/sales/check_review/',
+                    async: true,
+                    dataType: 'json',
+                    type: 'GET',
+                    data: {
+                        'pk': pk,
+                    },
+                    success: function (response) {
+                        {#$('#lending').html(response.grid);#}
+                    },
+                    fail: function (response) {
+                        console.log("error");
+                    }
+                });
+
+            }*/
+        });
+
+
+
 
     </script>
 {% endblock extrajs %}

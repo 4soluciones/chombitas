@@ -2310,6 +2310,7 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                         'type': _payment_type,
                         'cash_flow': _cash_flow,
                         'license_plate': truck_,
+                        'is_review_pay': lp.is_check
                     }
                     loan_payment_set.append(loan_payment)
 
@@ -4173,6 +4174,22 @@ def check_review(request):
         else:
             order_obj.is_review = False
             order_obj.save()
+
+        return JsonResponse({
+            'success': True,
+        })
+
+
+def check_review_pay(request):
+    if request.method == 'GET':
+        lp_id = request.GET.get('lp_id', '')
+        loan_payment_obj = LoanPayment.objects.get(id=lp_id)
+        if loan_payment_obj.is_check is False:
+            loan_payment_obj.is_check = True
+            loan_payment_obj.save()
+        else:
+            loan_payment_obj.is_check = False
+            loan_payment_obj.save()
 
         return JsonResponse({
             'success': True,
