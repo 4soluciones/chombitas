@@ -1583,20 +1583,26 @@ def get_report_employees_salary(request):
 
     elif request.method == 'POST':
         month = int(request.POST.get('month'))
+        year = int(request.POST.get('year'))
         worker_set = Worker.objects.filter(situation__in=[1, 2, 3]).order_by('-employee__paternal_last_name')
         cash_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='101')
         cash_deposit_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='104')
 
-        context_dict = get_dict_salaries(worker_set=worker_set, month=month)
+        context_dict = get_dict_salaries(worker_set=worker_set, month=month, year=year)
         salary_dict = context_dict.get('salary_dict')
         total_salary = context_dict.get('total_salary')
+        if total_salary > 0:
+            decimal_total_salary = '{:,}'.format(total_salary.quantize(decimal.Decimal('0.00'), rounding=decimal.ROUND_HALF_EVEN)),
+        else:
+            decimal_total_salary = total_salary
         tpl = loader.get_template('accounting/get_report_employees_salary_grid.html')
         context = ({
             'workers': worker_set,
             'choices_account': cash_set,
             'choices_account_bank': cash_deposit_set,
             'salary_dict': salary_dict,
-            'total_salary': '{:,}'.format(round(float(total_salary), 2)),
+            'total_salary': decimal_total_salary,
+            'month': month
         })
         return JsonResponse({
             'grid': tpl.render(context, request),
@@ -1604,7 +1610,7 @@ def get_report_employees_salary(request):
         }, status=HTTPStatus.OK)
 
 
-def get_dict_salaries(worker_set, month):
+def get_dict_salaries(worker_set, month, year):
     dict = []
     total_salary = 0
     for w in worker_set:
@@ -1622,34 +1628,62 @@ def get_dict_salaries(worker_set, month):
         new = {
             'id': w.id,
             'names': names + ' ' + paternal_name + ' ' + maternal_name,
-            'salary_initial': w.initial_basic_remuneration,
-            'salary_set': []
+            'salary_initial': '{:,}'.format(w.initial_basic_remuneration.quantize(decimal.Decimal('0.00'), rounding=decimal.ROUND_HALF_EVEN)),
+            'salary_set': [],
+            'salary_reward_set': []
         }
         salary = ''
+        salary_reward = ''
 
         for s in w.salary_set.all():
-            if month == s.month:
-                salary = {
-                    'id': s.id,
-                    'year': s.year,
-                    'month': s.month,
-                    'cash_flow_set': [],
-                    'date': s.created_at
-                }
-                for c in CashFlow.objects.filter(id=s.cash_flow_id):
-                    cod = '-'
-                    if c.operation_code is not None:
-                        cod = c.operation_code
-                    cash_flow = {
-                        'id': c.id,
-                        'salary_pay': round(c.total, 2),
-                        'cash': c.cash.name,
-                        'date_pay': c.transaction_date,
-                        'cod': cod,
+            if month == s.month and year == s.year:
+                if s.type == 'S':
+                    salary = {
+                        'id': s.id,
+                        'year': s.year,
+                        'month': s.month,
+                        'cash_flow_set': [],
+                        'date': s.created_at,
+                        'type': s.type
                     }
-                    total_salary += c.total
-                    salary.get('cash_flow_set').append(cash_flow)
+                    for c in CashFlow.objects.filter(id=s.cash_flow_id):
+                        cod = '-'
+                        if c.operation_code is not None:
+                            cod = c.operation_code
+                        cash_flow_salary = {
+                            'id': c.id,
+                            'salary_pay': '{:,}'.format(c.total.quantize(decimal.Decimal('0.00'), rounding=decimal.ROUND_HALF_EVEN)),
+                            'cash': c.cash.name,
+                            'date_pay': c.transaction_date,
+                            'cod': cod,
+                        }
+                        total_salary += c.total
+                        salary.get('cash_flow_set').append(cash_flow_salary)
+                elif s.type == 'G':
+                    salary_reward = {
+                        'id': s.id,
+                        'year': s.year,
+                        'month': s.month,
+                        'cash_flow_set': [],
+                        'date': s.created_at,
+                        'type': s.type
+                    }
+                    for c in CashFlow.objects.filter(id=s.cash_flow_id):
+                        cod = '-'
+                        if c.operation_code is not None:
+                            cod = c.operation_code
+                        cash_flow_reward = {
+                            'id': c.id,
+                            'salary_pay': '{:,}'.format(c.total.quantize(decimal.Decimal('0.00'), rounding=decimal.ROUND_HALF_EVEN)),
+                            'cash': c.cash.name,
+                            'date_pay': c.transaction_date,
+                            'cod': cod,
+                        }
+                        total_salary += c.total
+                        salary_reward.get('cash_flow_set').append(cash_flow_reward)
+
         new.get('salary_set').append(salary)
+        new.get('salary_reward_set').append(salary_reward)
         dict.append(new)
 
     context = ({
@@ -1664,6 +1698,7 @@ def get_salary_pay(request):
     user_obj = User.objects.get(id=user_id)
     subsidiary_obj = get_subsidiary_by_user(user_obj)
     worker_id = request.GET.get('worker_id', '')
+    type_pay = request.GET.get('type', '')
     month = request.GET.get('month', '')
     year = request.GET.get('year', '')
     worker_obj = Worker.objects.get(id=int(worker_id))
@@ -1679,7 +1714,8 @@ def get_salary_pay(request):
         'choices_account_bank': cash_deposit_set,
         'date': formatdate,
         'month': month,
-        'year': year
+        'year': year,
+        'type': type_pay
     })
 
     return JsonResponse({
@@ -1694,6 +1730,7 @@ def new_payment_salary(request):
         user_obj = User.objects.get(id=user_id)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
         salary_initial = str(request.POST.get('salary_initial'))
+        type_pay = str(request.POST.get('type'))
         salary_pay = decimal.Decimal(request.POST.get('salary_pay'))
 
         month = int(request.POST.get('month'))
@@ -1728,7 +1765,8 @@ def new_payment_salary(request):
                 year=year,
                 month=month,
                 worker=worker_obj,
-                cash_flow=cashflow_obj
+                cash_flow=cashflow_obj,
+                type=type_pay
             )
             salary_obj.save()
 
@@ -1755,7 +1793,8 @@ def new_payment_salary(request):
                 year=year,
                 month=month,
                 worker=worker_obj,
-                cash_flow=cashflow_obj
+                cash_flow=cashflow_obj,
+                type=type_pay
             )
             salary_obj.save()
 

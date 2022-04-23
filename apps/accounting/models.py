@@ -319,12 +319,14 @@ class CashFlowLog(models.Model):
 
 
 class Salary(models.Model):
+    TYPE_CHOICES = (('S', 'Salario'),  ('G', 'Gratificacion'),)
     id = models.AutoField(primary_key=True)
     year = models.IntegerField('Año', default=0, null=True, blank=True)
     month = models.IntegerField('Meses', default=0, null=True, blank=True)
     worker = models.ForeignKey('hrm.Worker', on_delete=models.SET_NULL, null=True, blank=True)
     cash_flow = models.ForeignKey('CashFlow', on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    type = models.CharField('Tipo de Pago', max_length=1, choices=TYPE_CHOICES, default='S', )
 
     def __str__(self):
         return str(self.id)

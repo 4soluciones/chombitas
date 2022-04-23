@@ -9,6 +9,7 @@
     <input type="hidden" id="id_quantity" name="quantity" value="{{ detail_purchase.count }}">
     <input type="hidden" id="id_month" name="month" value="{{ month }}">
     <input type="hidden" id="id_year" name="year" value="{{ year }}">
+    <input type="hidden" id="id_type" name="type" value="{{ type }}">
 
     <table class="table table-sm pay-options">
 
@@ -102,7 +103,7 @@
                            id="id_description"
                            name="description_cash"
                            autocomplete="off"
-                           value="PAGO AL EMPLEADO: {{ worker.employee.names|upper }} {{ worker.employee.paternal_last_name|upper }} {{ worker.employee.maternal_last_name|upper }}"
+                           value="{% if type == 'S' %}PAGO DE SUELDO{% else %}PAGO DE GRATIFICACIÓN{% endif %} AL EMPLEADO: {{ worker.employee.names|upper }} {{ worker.employee.paternal_last_name|upper }} {{ worker.employee.maternal_last_name|upper }}"
                            class="form-control form-control-sm text-uppercase">
                 </td>
 
@@ -146,7 +147,7 @@
                            class="form-control form-control-sm"
                            id="id_description_deposit"
                            name="description_deposit"
-                           value="DEPOSITO AL EMPLEADO: {{ worker.employee.names|upper }} {{ worker.employee.paternal_last_name|upper }} {{ worker.employee.maternal_last_name|upper }}">
+                           value="{% if type == 'S' %}DEPÓSITO DE SUELDO{% else %}DEPÓSITPO DE GRATIFICACIÓN{% endif %} {{ worker.employee.names|upper }} {{ worker.employee.paternal_last_name|upper }} {{ worker.employee.maternal_last_name|upper }}">
                 </td>
                 <td class="border-top-0 border-bottom border-right align-middle" style="width: 20%">
                     <input type="text"
