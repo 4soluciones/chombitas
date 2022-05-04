@@ -151,5 +151,7 @@ urlpatterns = [
     # comparative_sales_and_purchases_report
     path('comparative_sales_and_purchases_report/', login_required(comparative_sales_and_purchases_report), name='comparative_sales_and_purchases_report'),
 
+    # purchase_report_by_category
+    path('purchase_report_by_category/', login_required(purchase_report_by_category), name='purchase_report_by_category'),
 ]
 

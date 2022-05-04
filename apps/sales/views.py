@@ -2249,12 +2249,19 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                 'status': o.get_status_display(),
                 'total': o.total,
                 'subtotal': 0,
-                'total_repay_loan': '{:,}'.format(total_remaining_repay_loan(order_detail_set=order_detail_set).quantize(decimal.Decimal('0.00'), rounding=decimal.ROUND_HALF_EVEN)),
+                'total_repay_loan': '{:,}'.format(
+                    total_remaining_repay_loan(order_detail_set=order_detail_set).quantize(decimal.Decimal('0.00'),
+                                                                                           rounding=decimal.ROUND_HALF_EVEN)),
                 'total_repay_loan_with_vouchers': total_repay_loan_with_vouchers(order_detail_set=order_detail_set),
-                'total_return_loan': '{:,}'.format(round(float(total_return_loan(order_detail_set=order_detail_set)), 2)),
-                'total_remaining_repay_loan': '{:,}'.format(total_remaining_repay_loan(order_detail_set=order_detail_set).quantize(decimal.Decimal('0.00'), rounding=decimal.ROUND_HALF_EVEN)),
-                'total_remaining_repay_loan_ball': '{:,}'.format(round(float(total_remaining_repay_loan_ball(order_detail_set=order_detail_set)), 2)),
-                'total_remaining_return_loan': '{:,}'.format(round(float(total_remaining_return_loan(order_detail_set=order_detail_set)), 2)),
+                'total_return_loan': '{:,}'.format(
+                    round(float(total_return_loan(order_detail_set=order_detail_set)), 2)),
+                'total_remaining_repay_loan': '{:,}'.format(
+                    total_remaining_repay_loan(order_detail_set=order_detail_set).quantize(decimal.Decimal('0.00'),
+                                                                                           rounding=decimal.ROUND_HALF_EVEN)),
+                'total_remaining_repay_loan_ball': '{:,}'.format(
+                    round(float(total_remaining_repay_loan_ball(order_detail_set=order_detail_set)), 2)),
+                'total_remaining_return_loan': '{:,}'.format(
+                    round(float(total_remaining_return_loan(order_detail_set=order_detail_set)), 2)),
                 'total_ball_changes': total_ball_changes(order_detail_set=order_detail_set),
                 'total_spending': '{:,}'.format(round(float(total_cash_flow_spending(cashflow_set=cashflow_set))), 2),
                 'details_count': order_detail_set.count(),
@@ -2306,7 +2313,8 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                         'number_of_vouchers': _number_of_vouchers,
                         'date': lp.create_at,
                         'operation_date': lp.operation_date,
-                        'price': '{:,}'.format(lp.price.quantize(decimal.Decimal('0.00'), rounding=decimal.ROUND_HALF_EVEN)),
+                        'price': '{:,}'.format(
+                            lp.price.quantize(decimal.Decimal('0.00'), rounding=decimal.ROUND_HALF_EVEN)),
                         'type': _payment_type,
                         'cash_flow': _cash_flow,
                         'license_plate': truck_,
@@ -2333,7 +2341,8 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                     'quantity_sold': d.quantity_sold,
                     'price_unit': d.price_unit,
                     'multiply': d.multiply,
-                    'return_loan': '{:,}'.format(round(float(return_loan(loan_payment_set=d.loanpayment_set.all())), 2)),
+                    'return_loan': '{:,}'.format(
+                        round(float(return_loan(loan_payment_set=d.loanpayment_set.all())), 2)),
                     'repay_loan': '{:,}'.format(round(float(repay_loan(loan_payment_set=d.loanpayment_set.all())), 2)),
                     'repay_loan_ball': repay_loan_ball(loan_payment_set=d.loanpayment_set.all()),
                     'repay_loan_with_vouchers': repay_loan_with_vouchers(loan_payment_set=d.loanpayment_set.all()),
@@ -2379,7 +2388,8 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
             sum_total_remaining_repay_loan_ball += total_remaining_repay_loan_ball(order_detail_set=order_detail_set)
             sum_total_ball_changes += total_ball_changes(order_detail_set=order_detail_set)
             sum_total_cash_flow_spending += total_cash_flow_spending(cashflow_set=cashflow_set)
-            total_quantity_set = order_detail_set.values('quantity_sold').annotate(totals_quantity=Sum('quantity_sold')).aggregate(Sum('totals_quantity'))
+            total_quantity_set = order_detail_set.values('quantity_sold').annotate(
+                totals_quantity=Sum('quantity_sold')).aggregate(Sum('totals_quantity'))
 
             sum_quantity_total += total_quantity_set['totals_quantity__sum']
             difference_debt = sum_total_remaining_repay_loan - sum_total_repay_loan
@@ -5309,16 +5319,25 @@ def comparative_sales_and_purchases_report(request):
             total_charge = 0
 
             kardex_set = Kardex.objects.filter(product_store=product_store_obj).filter(
-                Q(programming_invoice__date_arrive__month=i,programming_invoice__date_arrive__year=my_date.year,) | Q(requirement_detail__requirement_buys__approval_date__month=i, requirement_detail__requirement_buys__approval_date__year=my_date.year), programming_invoice__id__isnull=False, requirement_detail__isnull=True
-            ).distinct('programming_invoice__requirementBuysProgramming','programming_invoice__quantity', 'programming_invoice__requirementBuysProgramming__number_scop', 'create_at').select_related(
+                Q(programming_invoice__date_arrive__month=i, programming_invoice__date_arrive__year=my_date.year, ) | Q(
+                    requirement_detail__requirement_buys__approval_date__month=i,
+                    requirement_detail__requirement_buys__approval_date__year=my_date.year),
+                programming_invoice__id__isnull=False, requirement_detail__isnull=True
+            ).distinct('programming_invoice__requirementBuysProgramming', 'programming_invoice__quantity',
+                       'programming_invoice__requirementBuysProgramming__number_scop', 'create_at').select_related(
                 'programming_invoice'
             ).annotate(
                 sum_total=Subquery(
-                    Programminginvoice.objects.filter(requirementBuysProgramming_id=OuterRef('programming_invoice__requirementBuysProgramming_id')).filter(subsidiary_store_origin=my_subsidiary_store_glp_obj, subsidiary_store_destiny=my_subsidiary_store_insume_obj).annotate(
+                    Programminginvoice.objects.filter(requirementBuysProgramming_id=OuterRef(
+                        'programming_invoice__requirementBuysProgramming_id')).filter(
+                        subsidiary_store_origin=my_subsidiary_store_glp_obj,
+                        subsidiary_store_destiny=my_subsidiary_store_insume_obj).annotate(
                         return_sum_total=Sum(F('quantity'))
                     )
                 )
-            ).values('programming_invoice__requirementBuysProgramming','programming_invoice__requirementBuysProgramming__number_scop', 'programming_invoice__quantity').order_by('create_at')
+            ).values('programming_invoice__requirementBuysProgramming',
+                     'programming_invoice__requirementBuysProgramming__number_scop',
+                     'programming_invoice__quantity').order_by('create_at')
 
             # print(kardex_set)
 
@@ -5412,6 +5431,81 @@ def comparative_sales_and_purchases_report(request):
         return render(request, 'sales/comparative_sales_and_purchases_report.html', {
             'grid': tpl.render(context, request),
         })
+
+
+def purchase_report_by_category(request):
+    if request.method == 'GET':
+        user_id = request.user.id
+        user_obj = User.objects.get(id=user_id)
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+        my_date = datetime.now()
+        formatdate = my_date.strftime("%Y-%m-%d")
+
+        return render(request, 'sales/report_purchases_by_category.html', {
+            'formatdate': formatdate,
+        })
+
+    elif request.method == 'POST':
+
+        year = str(request.POST.get('year'))
+
+        month_names = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SETIEMBRE', 'OCTUBRE',
+                       'NOVIEMBRE', 'DICIEMBRE']
+        sector_set = ['N', 'L', 'P', 'PR', 'R', 'C', 'G', 'S', 'SU', 'LU', 'LA', 'M', 'PE', 'O']
+        sector_choices = ['NO ESPECIFICA', 'LLANTAS', 'PINTURA', 'PRECINTO', 'REPUESTO', 'COMBUSTIBLE', 'GLP',
+                          'SEGUROS', 'SUNAT', 'LUBRICANTES', 'LAVADO', 'MANTENIMIENTO', 'PEAJES', 'OTROS']
+
+        purchase_dict = []
+
+        for i in range(1, 13):
+
+            month_item = {
+                'month': i,
+                'month_names': month_names[i - 1],
+                'sector_list': []
+            }
+
+            for s in range(len(sector_set)):
+
+                purchase_set = Purchase.objects.filter(
+                    purchase_date__month=i, purchase_date__year=year, supplier__sector=sector_set[s],
+                    status='A'
+                ).prefetch_related(
+                    Prefetch(
+                        'purchasedetail_set', queryset=PurchaseDetail.objects.select_related('unit', 'product')
+                    )
+                ).select_related('supplier').annotate(
+                    sum_total=Subquery(
+                        PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).annotate(
+                            return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
+                    )
+                ).aggregate(Sum('sum_total'))
+
+                purchases_sum_total = purchase_set['sum_total__sum']
+
+                if purchases_sum_total is not None:
+                    float_purchases_sum_total = float(purchases_sum_total)
+                else:
+                    float_purchases_sum_total = 0
+
+                item = {
+                    'sector': s,
+                    'sector_name': sector_choices[s],
+                    'purchases_sum_total': '{:,}'.format(round(decimal.Decimal(float_purchases_sum_total), 2))
+                }
+                month_item.get('sector_list').append(item)
+
+            purchase_dict.append(month_item)
+
+        # print(purchase_dict)
+        tpl = loader.get_template('sales/report_purchases_by_category_grid.html')
+        context = ({
+            'purchase_dict': purchase_dict,
+        })
+
+        return JsonResponse({
+            'grid': tpl.render(context, request),
+        }, status=HTTPStatus.OK)
 
 
 def test(request):

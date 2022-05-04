@@ -1971,19 +1971,28 @@ def report_purchases_by_supplier(request):
         end_date = str(request.POST.get('end-date'))
         purchase_dict = []
         sum_total = 0
-        purchase_detail_set = PurchaseDetail.objects.filter(purchase__subsidiary__id=subsidiary_obj.id,
+
+        purchase_detail_set = PurchaseDetail.objects.filter(
             purchase__status='A',purchase__purchase_date__range=[start_date, end_date]).values(
-                    'purchase__supplier__name', 'purchase__supplier__business_name', 'purchase__supplier__id').exclude(purchase__supplier__id__in=[1, 363, 364, 369]).annotate(total=Sum(F('price_unit') * F('quantity'))).order_by('-total')
+            'purchase__supplier__name',
+            'purchase__supplier__business_name',
+            'purchase__supplier__sector',
+            'purchase__supplier__id').exclude(purchase__supplier__id__in=[1, 363, 364, 369]).annotate(total=Sum(F('price_unit') * F('quantity'))).order_by('-total')
 
         for p in purchase_detail_set:
             supplier_id = p['purchase__supplier__id']
             supplier_name = p['purchase__supplier__name']
             business_name = p['purchase__supplier__business_name']
+            sector_choices = ['NO ESPECIFICA', 'LLANTAS', 'PINTURA', 'PRECINTO', 'REPUESTO', 'COMBUSTIBLE', 'GLP',
+                              'SEGUROS', 'SUNAT', 'LUBRICANTES', 'LAVADO', 'MANTENIMIENTO', 'PEAJES', 'OTROS']
+
+            category_name = p['purchase__supplier__sector']
             total = round(decimal.Decimal(p['total']), 2)
             item_purchase = {
                 'supplier_id': supplier_id,
                 'supplier_name': supplier_name,
                 'business_name': business_name,
+                'category_name': category_name,
                 'total': '{:,}'.format(total)
             }
             purchase_dict.append(item_purchase)
