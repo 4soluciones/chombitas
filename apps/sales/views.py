@@ -5456,13 +5456,19 @@ def purchase_report_by_category(request):
                           'SEGUROS', 'SUNAT', 'LUBRICANTES', 'LAVADO', 'MANTENIMIENTO', 'PEAJES', 'OTROS']
 
         purchase_dict = []
+        sum_float_purchases_sum_total = 0
+        float_purchases_sum_total = 0
+        float_total_month = 0
+
 
         for i in range(1, 13):
 
+            sum_total_month = 0
             month_item = {
                 'month': i,
                 'month_names': month_names[i - 1],
-                'sector_list': []
+                'sector_list': [],
+                'total_month': sum_total_month
             }
 
             for s in range(len(sector_set)):
@@ -5495,12 +5501,16 @@ def purchase_report_by_category(request):
                 }
                 month_item.get('sector_list').append(item)
 
+                sum_total_month += float_purchases_sum_total
+            month_item['total_month'] = '{:,}'.format(round(decimal.Decimal(sum_total_month), 2))
+
             purchase_dict.append(month_item)
 
         # print(purchase_dict)
         tpl = loader.get_template('sales/report_purchases_by_category_grid.html')
         context = ({
             'purchase_dict': purchase_dict,
+            'sum_float_purchases_sum_total': sum_float_purchases_sum_total,
         })
 
         return JsonResponse({
