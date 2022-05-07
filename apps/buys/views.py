@@ -1983,10 +1983,31 @@ def report_purchases_by_supplier(request):
             supplier_id = p['purchase__supplier__id']
             supplier_name = p['purchase__supplier__name']
             business_name = p['purchase__supplier__business_name']
-            sector_choices = ['NO ESPECIFICA', 'LLANTAS', 'PINTURA', 'PRECINTO', 'REPUESTO', 'COMBUSTIBLE', 'GLP',
-                              'SEGUROS', 'SUNAT', 'LUBRICANTES', 'LAVADO', 'MANTENIMIENTO', 'PEAJES', 'OTROS']
 
-            category_name = p['purchase__supplier__sector']
+            sector_dict = {
+                'N': 'NO ESPECIFICA',
+                'L': 'NO LLANTAS',
+                'P': 'PINTURA',
+                'PR': 'PRECINTO',
+                'R': 'REPUESTO',
+                'C': 'COMBUSTIBLE',
+                'G': 'GLP',
+                'S': 'SEGUROS',
+                'SU': 'SUNAT',
+                'LU': 'LUBRICANTES',
+                'LA': 'LAVADO',
+                'M': 'MANTENIMIENTO',
+                'PE': 'PEAJES',
+                'O': 'OTROS',
+            }
+
+            # x = np.where(ar-r == 4)
+
+            # print(x)
+            # print(sector_dict)
+            # print(sector_dict['N'])
+
+            category_name = sector_dict[p['purchase__supplier__sector']]
             total = round(decimal.Decimal(p['total']), 2)
             item_purchase = {
                 'supplier_id': supplier_id,
