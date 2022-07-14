@@ -142,7 +142,7 @@
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.license_plate }}</td>
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.operation_date|date:"d-m-y" }}</td>
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">
-                                {% if l.type != 'Deposito' %}
+                                {% if l.type != 'Deposito'  %}
                                     {{ l.type }}
                                 {% endif %}
                                 {% if l.cash_flow %}

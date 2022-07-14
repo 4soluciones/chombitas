@@ -131,9 +131,9 @@ def total_cash_flow_spending(cashflow_set=None):
 
 def get_cash_flow(order=None, transactionpayment=None):
     response = None
-    if transactionpayment.type == 'D':
+    if transactionpayment.type == 'D' or transactionpayment.type == 'E':
         for cf in order.cashflow_set.all():
-            if cf.type == 'D':
+            if cf.type == 'D' or cf.type == 'E':
                 response = cf
                 break
     return response
