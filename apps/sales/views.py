@@ -1217,6 +1217,7 @@ def generate_receipt_random(request):
                                            unit=unit_obj,
                                            status='V')
             detail_order_obj.save()
+            
             r = send_receipt_nubefact(order_obj.id, is_demo)
             codigo_hash = r.get('codigo_hash')
             if codigo_hash:
