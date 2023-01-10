@@ -426,6 +426,8 @@ def send_receipt_nubefact(order_id, is_demo=False):
         }
     else:
         result = response.json()
+        print("result", result)
+        print("response", response)
         context = {
             'errors': result.get("errors"),
             'codigo': result.get("codigo"),
