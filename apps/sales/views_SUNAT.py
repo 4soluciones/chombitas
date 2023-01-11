@@ -409,7 +409,7 @@ def send_receipt_nubefact(order_id, is_demo=False):
         "Content-Type": 'application/json'
     }
     response = requests.post(url, json=params, headers=headers)
-
+    print("response", response)
     if response.status_code == 200:
         result = response.json()
 
