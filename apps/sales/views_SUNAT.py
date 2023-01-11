@@ -408,30 +408,38 @@ def send_receipt_nubefact(order_id, is_demo=False):
         "Authorization": _authorization,
         "Content-Type": 'application/json'
     }
-    response = requests.post(url, json=params, headers=headers)
-    print("response", response)
-    if response.status_code == 200:
-        result = response.json()
+    try:
+        response = requests.post(url, json=params, headers=headers, timeout=5)
+        # print("response", response)
+        if response.status_code == 200:
+            result = response.json()
 
+            context = {
+                'tipo_de_comprobante': result.get("tipo_de_comprobante"),
+                'serie': result.get("serie"),
+                'numero': result.get("numero"),
+                'aceptada_por_sunat': result.get("aceptada_por_sunat"),
+                'sunat_description': result.get("sunat_description"),
+                'enlace_del_pdf': result.get("enlace_del_pdf"),
+                'cadena_para_codigo_qr': result.get("cadena_para_codigo_qr"),
+                'codigo_hash': result.get("codigo_hash"),
+                'params': params
+            }
+        else:
+            # print("response", response)
+            # print("result", result)
+            result = response.json()
+            context = {
+                'errors': result.get("errors"),
+                'codigo': result.get("codigo"),
+            }
+
+    except requests.ReadTimeout:
+        print("READ NUBEFACT")
         context = {
-            'tipo_de_comprobante': result.get("tipo_de_comprobante"),
-            'serie': result.get("serie"),
-            'numero': result.get("numero"),
-            'aceptada_por_sunat': result.get("aceptada_por_sunat"),
-            'sunat_description': result.get("sunat_description"),
-            'enlace_del_pdf': result.get("enlace_del_pdf"),
-            'cadena_para_codigo_qr': result.get("cadena_para_codigo_qr"),
-            'codigo_hash': result.get("codigo_hash"),
-            'params': params
+            'errors': True
         }
-    else:
-        print("response", response)
-        # print("result", result)
-        result = response.json()
-        context = {
-            'errors': result.get("errors"),
-            'codigo': result.get("codigo"),
-        }
+
     return context
 
 

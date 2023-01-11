@@ -1171,6 +1171,7 @@ def create_order_detail(request):
 
 @csrf_exempt
 def generate_receipt_random(request):
+    global data
     if request.method == 'POST':
         product = request.POST.get('create_product')
         truck = request.POST.get('id_truck')
@@ -1198,7 +1199,15 @@ def generate_receipt_random(request):
         quantity_min = 1
         limit = 100
         quantity_max = math.floor(limit / price)
+        send_dict = []
+
         for x in range(1, counter, 1):
+
+            # item_dict = {
+            #     'quantity': random.randint(quantity_min, quantity_max),
+            #     'total': decimal.Decimal(quantity * price)
+            # }
+
             quantity = random.randint(quantity_min, quantity_max)
             total = decimal.Decimal(quantity * price)
 
