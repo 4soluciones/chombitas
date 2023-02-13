@@ -14,6 +14,9 @@ from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
 from .number_to_letters import numero_a_moneda
 from apps.comercial.models import DistributionMobil, Truck
+from urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
+import time
 
 
 def send_bill(order_id):
@@ -408,39 +411,77 @@ def send_receipt_nubefact(order_id, is_demo=False):
         "Authorization": _authorization,
         "Content-Type": 'application/json'
     }
-    try:
-        response = requests.post(url, json=params, headers=headers, timeout=5)
-        # print("response", response)
-        if response.status_code == 200:
-            result = response.json()
+    context = 'Max retries exceeded'
+    max_retries = 3
+    retry_count = 0
+    while retry_count < max_retries:
+        try:
+            response = requests.post(url, json=params, headers=headers)
 
-            context = {
-                'tipo_de_comprobante': result.get("tipo_de_comprobante"),
-                'serie': result.get("serie"),
-                'numero': result.get("numero"),
-                'aceptada_por_sunat': result.get("aceptada_por_sunat"),
-                'sunat_description': result.get("sunat_description"),
-                'enlace_del_pdf': result.get("enlace_del_pdf"),
-                'cadena_para_codigo_qr': result.get("cadena_para_codigo_qr"),
-                'codigo_hash': result.get("codigo_hash"),
-                'params': params
-            }
-        else:
-            # print("response", response)
-            # print("result", result)
-            result = response.json()
-            context = {
-                'errors': result.get("errors"),
-                'codigo': result.get("codigo"),
-            }
+            if response.status_code == 200:
+                result = response.json()
 
-    except requests.ReadTimeout:
-        print("READ NUBEFACT")
-        context = {
-            'errors': True
-        }
-
+                context = {
+                    'tipo_de_comprobante': result.get("tipo_de_comprobante"),
+                    'serie': result.get("serie"),
+                    'numero': result.get("numero"),
+                    'aceptada_por_sunat': result.get("aceptada_por_sunat"),
+                    'sunat_description': result.get("sunat_description"),
+                    'enlace_del_pdf': result.get("enlace_del_pdf"),
+                    'cadena_para_codigo_qr': result.get("cadena_para_codigo_qr"),
+                    'codigo_hash': result.get("codigo_hash"),
+                    'params': params
+                }
+            else:
+                # print("response", response)
+                # print("result", result)
+                result = response.json()
+                context = {
+                    'errors': result.get("errors"),
+                    'codigo': result.get("codigo"),
+                }
+            break
+        except requests.exceptions.RequestException as e:
+            retry_count += 1
+            if retry_count == max_retries:
+                raise Exception("Max retries exceeded")
+            time.sleep(2)
     return context
+
+    # try:
+    #     response = requests.post(url, json=params, headers=headers, timeout=5)
+    #     # print("response", response)
+    #     if response.status_code == 200:
+    #         result = response.json()
+    #
+    #         context = {
+    #             'tipo_de_comprobante': result.get("tipo_de_comprobante"),
+    #             'serie': result.get("serie"),
+    #             'numero': result.get("numero"),
+    #             'aceptada_por_sunat': result.get("aceptada_por_sunat"),
+    #             'sunat_description': result.get("sunat_description"),
+    #             'enlace_del_pdf': result.get("enlace_del_pdf"),
+    #             'cadena_para_codigo_qr': result.get("cadena_para_codigo_qr"),
+    #             'codigo_hash': result.get("codigo_hash"),
+    #             'params': params
+    #         }
+    #     else:
+    #         # print("response", response)
+    #         # print("result", result)
+    #         result = response.json()
+    #         context = {
+    #             'errors': result.get("errors"),
+    #             'codigo': result.get("codigo"),
+    #         }
+    #
+    # except requests.ReadTimeout:
+    #     print("READ NUBEFACT")
+    #     time.sleep(5)
+    #     context = {
+    #         'errors': True
+    #     }
+
+    # return context
 
 
 def get_correlative(truck_id, type):
