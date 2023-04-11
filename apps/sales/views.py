@@ -1197,7 +1197,7 @@ def generate_receipt_random(request):
 
         counter = int(request.POST.get('counter')) + 1
         quantity_min = 1
-        limit = 100
+        limit = 70 # antes estaba en 100
         quantity_max = math.floor(limit / price)
         send_dict = []
 
