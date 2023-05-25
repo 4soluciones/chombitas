@@ -2384,7 +2384,6 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
     sum_total_ball_changes = 0
     sum_total_cash_flow_spending = 0
     difference_debt = 0
-
     if order_set.exists():
         sum_quantity_total = 0
         for o in order_set:
@@ -2400,7 +2399,8 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
             sum_total_cash_flow_spending += total_cash_flow_spending(cashflow_set=cashflow_set)
             total_quantity_set = order_detail_set.values('quantity_sold').annotate(
                 totals_quantity=Sum('quantity_sold')).aggregate(Sum('totals_quantity'))
-
+            if total_quantity_set['totals_quantity__sum'] is None:
+                total_quantity_set['totals_quantity__sum'] = decimal.Decimal(0.00)
             sum_quantity_total += total_quantity_set['totals_quantity__sum']
             difference_debt = sum_total_remaining_repay_loan - sum_total_repay_loan
 
