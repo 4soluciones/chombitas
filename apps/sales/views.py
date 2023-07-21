@@ -20,14 +20,16 @@ import json
 import decimal
 import math
 import random
+import requests
+import concurrent.futures
 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.fields.files import ImageFieldFile
 from django.template import loader
 from datetime import datetime, timedelta
-from django.db import DatabaseError, IntegrityError
+from django.db import DatabaseError, IntegrityError, transaction
 from django.core import serializers
-from apps.sales.views_SUNAT import send_bill_nubefact, send_receipt_nubefact
+from apps.sales.views_SUNAT import send_bill_nubefact, send_receipt_nubefact, correlative_receipt
 from apps.sales.number_to_letters import numero_a_letras, numero_a_moneda
 from django.utils import timezone
 from django.db.models import Min, Sum, Max, Q, F, Prefetch, Subquery, OuterRef, Value
@@ -1169,6 +1171,99 @@ def create_order_detail(request):
     }, status=HTTPStatus.OK)
 
 
+# @csrf_exempt
+# def generate_receipt_random(request):
+#     global data
+#     if request.method == 'POST':
+#         product = request.POST.get('create_product')
+#         truck = request.POST.get('id_truck')
+#         client = request.POST.get('id_client_name')
+#         date = request.POST.get('date')
+#         is_demo = False
+#         value_is_demo = 'P'
+#         if request.POST.get('demo') == '0':
+#             is_demo = True
+#             value_is_demo = 'D'
+#
+#         price = decimal.Decimal(request.POST.get('price'))
+#         truck_obj = Truck.objects.get(id=int(truck))
+#         client_obj = Client.objects.get(pk=int(client))
+#         user_id = request.user.id
+#         user_obj = User.objects.get(id=user_id)
+#         product_obj = Product.objects.get(id=int(product))
+#         unit = product_obj.calculate_minimum_unit_id()
+#         unit_obj = Unit.objects.get(id=unit)
+#         subsidiary_obj = get_subsidiary_by_user(user_obj)
+#         subsidiary_store_sales_obj = SubsidiaryStore.objects.get(
+#             subsidiary=subsidiary_obj, category='V')
+#
+#         counter = int(request.POST.get('counter')) + 1
+#         quantity_min = 1
+#         limit = 70  # antes estaba en 100
+#         quantity_max = math.floor(limit / price)
+#         send_dict = []
+#
+#         for x in range(1, counter, 1):
+#
+#             # item_dict = {
+#             #     'quantity': random.randint(quantity_min, quantity_max),
+#             #     'total': decimal.Decimal(quantity * price)
+#             # }
+#
+#             quantity = random.randint(quantity_min, quantity_max)
+#             total = decimal.Decimal(quantity * price)
+#
+#             order_obj = Order(type='E',
+#                               client=client_obj,
+#                               user=user_obj,
+#                               total=total,
+#                               subsidiary_store=subsidiary_store_sales_obj,
+#                               truck=truck_obj,
+#                               create_at=date)
+#             order_obj.save()
+#             detail_order_obj = OrderDetail(order=order_obj,
+#                                            product=product_obj,
+#                                            quantity_sold=quantity,
+#                                            price_unit=price,
+#                                            unit=unit_obj,
+#                                            status='V')
+#             detail_order_obj.save()
+#
+#             r = send_receipt_nubefact(order_obj.id, is_demo)
+#             codigo_hash = r.get('codigo_hash')
+#             if codigo_hash:
+#                 order_bill_obj = OrderBill(order=order_obj,
+#                                            serial=r.get('serie'),
+#                                            type=r.get('tipo_de_comprobante'),
+#                                            sunat_status=r.get('aceptada_por_sunat'),
+#                                            sunat_description=r.get('sunat_description'),
+#                                            user=user_obj,
+#                                            sunat_enlace_pdf=r.get('enlace_del_pdf'),
+#                                            code_qr=r.get('cadena_para_codigo_qr'),
+#                                            code_hash=r.get('codigo_hash'),
+#                                            n_receipt=r.get('numero'),
+#                                            status='E',
+#                                            created_at=order_obj.create_at,
+#                                            is_demo=value_is_demo
+#                                            )
+#                 order_bill_obj.save()
+#             else:
+#                 objects_to_delete = OrderDetail.objects.filter(order=order_obj)
+#                 objects_to_delete.delete()
+#                 order_obj.delete()
+#                 if r.get('errors'):
+#                     data = {'error': str(r.get('errors'))}
+#                 elif r.get('error'):
+#                     data = {'error': str(r.get('error'))}
+#                 response = JsonResponse(data)
+#                 response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+#                 return response
+#
+#         return JsonResponse({
+#             'msg_sunat': 'Boletas enviadas correctamente',
+#         }, status=HTTPStatus.OK)
+
+
 @csrf_exempt
 def generate_receipt_random(request):
     global data
@@ -1197,69 +1292,194 @@ def generate_receipt_random(request):
 
         counter = int(request.POST.get('counter')) + 1
         quantity_min = 1
-        limit = 70 # antes estaba en 100
+        limit = 70  # antes estaba en 100
         quantity_max = math.floor(limit / price)
-        send_dict = []
 
-        for x in range(1, counter, 1):
+        serial = truck_obj.serial
+        n_receipt = correlative_receipt(truck_obj)
+        n_initial = n_receipt
+        with transaction.atomic():
+            for x in range(1, counter):
+                quantity = random.randint(quantity_min, quantity_max)
+                total = decimal.Decimal(quantity * price)
 
-            # item_dict = {
-            #     'quantity': random.randint(quantity_min, quantity_max),
-            #     'total': decimal.Decimal(quantity * price)
-            # }
+                order_obj = Order(
+                    type='E',
+                    client=client_obj,
+                    user=user_obj,
+                    total=total,
+                    truck=truck_obj,
+                    create_at=date
+                )
+                order_obj.save()
 
-            quantity = random.randint(quantity_min, quantity_max)
-            total = decimal.Decimal(quantity * price)
+                detail_obj = OrderDetail(
+                    order=order_obj,
+                    product=product_obj,
+                    quantity_sold=quantity,
+                    price_unit=price,
+                    unit=unit_obj,
+                    status='V'
+                )
+                detail_obj.save()
 
-            order_obj = Order(type='E',
-                              client=client_obj,
-                              user=user_obj,
-                              total=total,
-                              subsidiary_store=subsidiary_store_sales_obj,
-                              truck=truck_obj,
-                              create_at=date)
-            order_obj.save()
-            detail_order_obj = OrderDetail(order=order_obj,
-                                           product=product_obj,
-                                           quantity_sold=quantity,
-                                           price_unit=price,
-                                           unit=unit_obj,
-                                           status='V')
-            detail_order_obj.save()
-            
-            r = send_receipt_nubefact(order_obj.id, is_demo)
-            codigo_hash = r.get('codigo_hash')
-            if codigo_hash:
                 order_bill_obj = OrderBill(order=order_obj,
-                                           serial=r.get('serie'),
-                                           type=r.get('tipo_de_comprobante'),
-                                           sunat_status=r.get('aceptada_por_sunat'),
-                                           sunat_description=r.get('sunat_description'),
+                                           serial='B' + serial[:3],
+                                           type='2',
                                            user=user_obj,
-                                           sunat_enlace_pdf=r.get('enlace_del_pdf'),
-                                           code_qr=r.get('cadena_para_codigo_qr'),
-                                           code_hash=r.get('codigo_hash'),
-                                           n_receipt=r.get('numero'),
+                                           n_receipt=n_receipt,
                                            status='E',
                                            created_at=order_obj.create_at,
-                                           is_demo=value_is_demo
+                                           is_demo='P'
                                            )
                 order_bill_obj.save()
-            else:
-                objects_to_delete = OrderDetail.objects.filter(order=order_obj)
-                objects_to_delete.delete()
-                order_obj.delete()
-                if r.get('errors'):
-                    data = {'error': str(r.get('errors'))}
-                elif r.get('error'):
-                    data = {'error': str(r.get('error'))}
-                response = JsonResponse(data)
-                response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
-                return response
+                n_receipt += 1
+
+        dictionary = get_data_send_sunat(date, 'B' + serial[:3], n_initial, n_receipt)
+        print(len(dictionary))
+        # print(dictionary)
+        print(n_initial)
+        print(n_receipt)
+
+        url = 'https://api.pse.pe/api/v1/cb5a9c35389844faa6368c0ffd4bdeb075e3c1dc4b564813ac1d5f8aba523921'
+        _authorization = 'eyJhbGciOiJIUzI1NiJ9.IjQzZmJiZWQ0ZjNmNDQ3M2E5NjEyY2U1ZjVlODk0YzQxMGU3YWM1OTRjZGFiNGU5ODhjNDdlMmE2NDljN2ZkOGMi.FQyoaAcuUyGUelMLI_ttscd3GI_4XyOoMiomAgTmoDQ'
+        headers = {
+            "Authorization": _authorization,
+            "Content-Type": 'application/json'
+        }
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+            results = []
+            for key in sorted(dictionary.keys()):
+                data = dictionary[key]
+                resultado = executor.submit(send_request, url, headers, data)
+                results.append(resultado)
+            # resultados = {executor.submit(send_request, url, headers, dictionary[i]): i for i in range(0, total_page)}
+            try:
+                for r in concurrent.futures.as_completed(results):
+                    response = r.result()
+                    # result += r.result()
+                    # print(response)
+            except Exception as e:
+                print('It failed :(', e.__class__.__name__)
 
         return JsonResponse({
             'msg_sunat': 'Boletas enviadas correctamente',
+            'rows': len(dictionary),
         }, status=HTTPStatus.OK)
+
+    return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)
+
+
+def get_data_from_api(session, url, obj, headers):
+    # a list of employee's data
+    return session.post(url, data=json.dumps(obj), headers=headers)
+
+
+def send_request(url, headers, obj):
+    response = requests.post(url, headers=headers, json=obj)
+    # print('response.text', response.text)
+    return response.text
+
+
+def get_data_send_sunat(date, serial, n_i, n_f):
+    dictionary = {}
+
+    order_bill_set = OrderBill.objects.filter(created_at__date=date, n_receipt__gte=n_i, n_receipt__lte=n_f,
+                                              serial=serial, type='2').select_related('order').order_by('n_receipt')
+    for o in order_bill_set:
+
+        _value = str(o.serial) + '-' + str(o.n_receipt)
+        index = 1
+        sub_total = 0
+        total = 0
+        igv_total = 0
+        items = []
+        detail_set = OrderDetail.objects.filter(order__id=o.order.id).select_related('order', 'unit', 'product', 'order__orderbill')
+
+        for d in detail_set:
+            base_total = d.quantity_sold * d.price_unit
+            base_amount = base_total / decimal.Decimal(1.1800)
+            igv = base_total - base_amount
+            sub_total = sub_total + base_amount
+            total = total + base_total
+            igv_total = igv_total + igv
+
+            item = {
+                "item": index,
+                "unidad_de_medida": 'NIU',
+                "codigo": "001",  #
+                "codigo_producto_sunat": "10000000",
+                "descripcion": d.product.name,
+                "cantidad": float(round(d.quantity_sold)),
+                "valor_unitario": float(round((base_amount / d.quantity_sold), 4)),
+                "precio_unitario": float(round(d.price_unit, 4)),
+                "descuento": "",
+                "subtotal": float(round(base_amount, 4)),
+                "tipo_de_igv": 1,
+                "igv": float(round(igv, 4)),
+                "total": float(round(base_total, 4)),
+                "anticipo_regularizacion": 'false',
+                "anticipo_documento_serie": "",
+                "anticipo_documento_numero": "",
+            }
+            items.append(item)
+            index = index + 1
+
+        dictionary[_value] = {
+            "operacion": "generar_comprobante",
+            "tipo_de_comprobante": 2,
+            "serie": o.serial,
+            "numero": o.n_receipt,
+            "sunat_transaction": 1,
+            "cliente_tipo_de_documento": 1,
+            "cliente_numero_de_documento": o.order.client.clienttype_set.last().document_number,
+            "cliente_denominacion":  o.order.client.names,
+            "cliente_direccion": '',
+            "cliente_email": '',
+            "cliente_email_1": "",
+            "cliente_email_2": "",
+            "fecha_de_emision": o.order.create_at.strftime("%d-%m-%Y"),
+            "fecha_de_vencimiento": "",
+            "moneda": 1,
+            "tipo_de_cambio": "",
+            "porcentaje_de_igv": 18.00,
+            "descuento_global": "",
+            "total_descuento": "",
+            "total_anticipo": "",
+            "total_gravada": float(round(sub_total, 2)),
+            "total_inafecta": "",
+            "total_exonerada": "",
+            "total_igv": float(round(igv_total, 2)),
+            "total_gratuita": "",
+            "total_otros_cargos": "",
+            "total": float(round(total, 2)),
+            "percepcion_tipo": "",
+            "percepcion_base_imponible": "",
+            "total_percepcion": "",
+            "total_incluido_percepcion": "",
+            "total_impuestos_bolsas": "",
+            "detraccion": 'false',
+            "observaciones": "",
+            "documento_que_se_modifica_tipo": "",
+            "documento_que_se_modifica_serie": "",
+            "documento_que_se_modifica_numero": "",
+            "tipo_de_nota_de_credito": "",
+            "tipo_de_nota_de_debito": "",
+            "enviar_automaticamente_a_la_sunat": 'true',
+            "enviar_automaticamente_al_cliente": 'false',
+            "codigo_unico": "",
+            "condiciones_de_pago": "",
+            "medio_de_pago": "",
+            "placa_vehiculo": "",
+            "orden_compra_servicio": "",
+            "tabla_personalizada_codigo": "",
+            "formato_de_pdf": "",
+            "items": items,
+        }
+        # dictionary.append(params)
+
+    return dictionary
 
 
 def calculate_minimum_unit(quantity, unit_obj, product_obj):
@@ -3051,12 +3271,15 @@ def generate_receipt(request):
     SubsidiaryStore_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='V').first()
     product_store_set = ProductStore.objects.filter(subsidiary_store=SubsidiaryStore_obj)
     products_set = Product.objects.filter(productstore__in=product_store_set)
-    clients = Client.objects.all()
+    clients = Client.objects.filter(id=95)
+    mydate = datetime.now()
+    formatdate = mydate.strftime("%Y-%m-%d")
 
     return render(request, 'sales/receipt_random.html', {
         'trucks': truck_set,
         'products_set': products_set,
-        'clients': clients
+        'clients': clients,
+        'date_now': formatdate
     })
 
 

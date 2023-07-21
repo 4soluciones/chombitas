@@ -1,5 +1,7 @@
 # from django.contrib.sites import requests
 import requests
+from django.db.models import Max
+from django.db.models.functions import Coalesce
 from django.http import JsonResponse
 from http import HTTPStatus
 from .models import *
@@ -499,3 +501,10 @@ def get_correlative(truck_id, type):
         return new_n_receipt
     else:
         return 1
+
+
+def correlative_receipt(truck_obj):
+    serial = 'B' + truck_obj.serial[:3]
+    number = OrderBill.objects.filter(serial=serial, type='2').aggregate(
+        r=Coalesce(Max('n_receipt'), 0)).get('r')
+    return number + 1
