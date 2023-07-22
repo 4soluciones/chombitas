@@ -1335,11 +1335,11 @@ def generate_receipt_random(request):
                 order_bill_obj.save()
                 n_receipt += 1
 
-        dictionary = get_data_send_sunat(date, 'B' + serial[:3], n_initial, n_receipt)
+        dictionary = get_data_send_sunat(date, 'B' + serial[:3], n_initial, n_receipt - 1)
         print(len(dictionary))
         # print(dictionary)
         print(n_initial)
-        print(n_receipt)
+        print(n_receipt - 1)
 
         url = 'https://api.pse.pe/api/v1/cb5a9c35389844faa6368c0ffd4bdeb075e3c1dc4b564813ac1d5f8aba523921'
         _authorization = 'eyJhbGciOiJIUzI1NiJ9.IjQzZmJiZWQ0ZjNmNDQ3M2E5NjEyY2U1ZjVlODk0YzQxMGU3YWM1OTRjZGFiNGU5ODhjNDdlMmE2NDljN2ZkOGMi.FQyoaAcuUyGUelMLI_ttscd3GI_4XyOoMiomAgTmoDQ'
@@ -1395,7 +1395,8 @@ def get_data_send_sunat(date, serial, n_i, n_f):
         total = 0
         igv_total = 0
         items = []
-        detail_set = OrderDetail.objects.filter(order__id=o.order.id).select_related('order', 'unit', 'product', 'order__orderbill')
+        detail_set = OrderDetail.objects.filter(order__id=o.order.id).select_related('order', 'unit', 'product',
+                                                                                     'order__orderbill')
 
         for d in detail_set:
             base_total = d.quantity_sold * d.price_unit
@@ -1434,7 +1435,7 @@ def get_data_send_sunat(date, serial, n_i, n_f):
             "sunat_transaction": 1,
             "cliente_tipo_de_documento": 1,
             "cliente_numero_de_documento": o.order.client.clienttype_set.last().document_number,
-            "cliente_denominacion":  o.order.client.names,
+            "cliente_denominacion": o.order.client.names,
             "cliente_direccion": '',
             "cliente_email": '',
             "cliente_email_1": "",
@@ -5692,7 +5693,6 @@ def purchase_report_by_category(request):
         sum_float_purchases_sum_total = 0
         float_purchases_sum_total = 0
         float_total_month = 0
-
 
         for i in range(1, 13):
 
