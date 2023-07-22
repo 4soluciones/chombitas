@@ -1336,6 +1336,7 @@ def generate_receipt_random(request):
                 n_receipt += 1
 
         dictionary = get_data_send_sunat(date, 'B' + serial[:3], n_initial, n_receipt - 1)
+        print('B' + serial[:3])
         print(len(dictionary))
         # print(dictionary)
         print(n_initial)
@@ -1348,9 +1349,9 @@ def generate_receipt_random(request):
             "Content-Type": 'application/json'
         }
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
             results = []
-            for key in sorted(dictionary.keys()):
+            for key in dictionary.keys():
                 data = dictionary[key]
                 resultado = executor.submit(send_request, url, headers, data)
                 results.append(resultado)
