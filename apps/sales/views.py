@@ -7,7 +7,7 @@ from django.forms.models import model_to_dict
 from django.http import JsonResponse, HttpResponse
 from http import HTTPStatus
 from .format_dates import validate
-from django.db.models import Q
+from django.db.models import Q, Count
 from .models import *
 from .forms import *
 from apps.hrm.models import Subsidiary, District, DocumentType, Employee, Worker
@@ -2314,7 +2314,7 @@ def orders_manufacture(request):
         user_obj = User.objects.get(id=user_id)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
         manufactures = Manufacture.objects.filter(
-            subsidiary=subsidiary_obj, manufactureaction__date__year=2023, manufactureaction__status='1').order_by('id').select_related('subsidiary').prefetch_related(
+            subsidiary=subsidiary_obj, manufactureaction__date__year=2023).select_related('subsidiary').prefetch_related(
             Prefetch(
                 'manufacturedetail_set', queryset=ManufactureDetail.objects.select_related('product_manufacture').prefetch_related(
                     Prefetch(
@@ -2323,9 +2323,15 @@ def orders_manufacture(request):
                 )
             ),
             Prefetch(
-                'manufactureaction_set', queryset=ManufactureAction.objects.filter(status='1').select_related('user')
+                'manufactureaction_set', queryset=ManufactureAction.objects.select_related('user')
             )
-        )
+        ).annotate(
+            counter=Count('manufactureaction')
+        ).annotate(
+            last_value=Subquery(
+                ManufactureAction.objects.filter(manufacture_id=OuterRef('id')).order_by('-id').values('status')[:1]
+        )).filter(counter__lt=4, last_value__in=['1', '2', '3', '4'])
+
         status = ManufactureAction._meta.get_field('status').choices
 
         return render(request, 'sales/manufacture_list.html', {
