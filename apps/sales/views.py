@@ -1171,100 +1171,100 @@ def create_order_detail(request):
     }, status=HTTPStatus.OK)
 
 
-# @csrf_exempt
-# def generate_receipt_random(request):
-#     global data
-#     if request.method == 'POST':
-#         product = request.POST.get('create_product')
-#         truck = request.POST.get('id_truck')
-#         client = request.POST.get('id_client_name')
-#         date = request.POST.get('date')
-#         is_demo = False
-#         value_is_demo = 'P'
-#         if request.POST.get('demo') == '0':
-#             is_demo = True
-#             value_is_demo = 'D'
-#
-#         price = decimal.Decimal(request.POST.get('price'))
-#         truck_obj = Truck.objects.get(id=int(truck))
-#         client_obj = Client.objects.get(pk=int(client))
-#         user_id = request.user.id
-#         user_obj = User.objects.get(id=user_id)
-#         product_obj = Product.objects.get(id=int(product))
-#         unit = product_obj.calculate_minimum_unit_id()
-#         unit_obj = Unit.objects.get(id=unit)
-#         subsidiary_obj = get_subsidiary_by_user(user_obj)
-#         subsidiary_store_sales_obj = SubsidiaryStore.objects.get(
-#             subsidiary=subsidiary_obj, category='V')
-#
-#         counter = int(request.POST.get('counter')) + 1
-#         quantity_min = 1
-#         limit = 70  # antes estaba en 100
-#         quantity_max = math.floor(limit / price)
-#         send_dict = []
-#
-#         for x in range(1, counter, 1):
-#
-#             # item_dict = {
-#             #     'quantity': random.randint(quantity_min, quantity_max),
-#             #     'total': decimal.Decimal(quantity * price)
-#             # }
-#
-#             quantity = random.randint(quantity_min, quantity_max)
-#             total = decimal.Decimal(quantity * price)
-#
-#             order_obj = Order(type='E',
-#                               client=client_obj,
-#                               user=user_obj,
-#                               total=total,
-#                               subsidiary_store=subsidiary_store_sales_obj,
-#                               truck=truck_obj,
-#                               create_at=date)
-#             order_obj.save()
-#             detail_order_obj = OrderDetail(order=order_obj,
-#                                            product=product_obj,
-#                                            quantity_sold=quantity,
-#                                            price_unit=price,
-#                                            unit=unit_obj,
-#                                            status='V')
-#             detail_order_obj.save()
-#
-#             r = send_receipt_nubefact(order_obj.id, is_demo)
-#             codigo_hash = r.get('codigo_hash')
-#             if codigo_hash:
-#                 order_bill_obj = OrderBill(order=order_obj,
-#                                            serial=r.get('serie'),
-#                                            type=r.get('tipo_de_comprobante'),
-#                                            sunat_status=r.get('aceptada_por_sunat'),
-#                                            sunat_description=r.get('sunat_description'),
-#                                            user=user_obj,
-#                                            sunat_enlace_pdf=r.get('enlace_del_pdf'),
-#                                            code_qr=r.get('cadena_para_codigo_qr'),
-#                                            code_hash=r.get('codigo_hash'),
-#                                            n_receipt=r.get('numero'),
-#                                            status='E',
-#                                            created_at=order_obj.create_at,
-#                                            is_demo=value_is_demo
-#                                            )
-#                 order_bill_obj.save()
-#             else:
-#                 objects_to_delete = OrderDetail.objects.filter(order=order_obj)
-#                 objects_to_delete.delete()
-#                 order_obj.delete()
-#                 if r.get('errors'):
-#                     data = {'error': str(r.get('errors'))}
-#                 elif r.get('error'):
-#                     data = {'error': str(r.get('error'))}
-#                 response = JsonResponse(data)
-#                 response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
-#                 return response
-#
-#         return JsonResponse({
-#             'msg_sunat': 'Boletas enviadas correctamente',
-#         }, status=HTTPStatus.OK)
-
-
 @csrf_exempt
+def generate_receipt_random(request):
+    global data
+    if request.method == 'POST':
+        product = request.POST.get('create_product')
+        truck = request.POST.get('id_truck')
+        client = request.POST.get('id_client_name')
+        date = request.POST.get('date')
+        is_demo = False
+        value_is_demo = 'P'
+        if request.POST.get('demo') == '0':
+            is_demo = True
+            value_is_demo = 'D'
+
+        price = decimal.Decimal(request.POST.get('price'))
+        truck_obj = Truck.objects.get(id=int(truck))
+        client_obj = Client.objects.get(pk=int(client))
+        user_id = request.user.id
+        user_obj = User.objects.get(id=user_id)
+        product_obj = Product.objects.get(id=int(product))
+        unit = product_obj.calculate_minimum_unit_id()
+        unit_obj = Unit.objects.get(id=unit)
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+        subsidiary_store_sales_obj = SubsidiaryStore.objects.get(
+            subsidiary=subsidiary_obj, category='V')
+
+        counter = int(request.POST.get('counter')) + 1
+        quantity_min = 1
+        limit = 70  # antes estaba en 100
+        quantity_max = math.floor(limit / price)
+        send_dict = []
+
+        for x in range(1, counter, 1):
+
+            # item_dict = {
+            #     'quantity': random.randint(quantity_min, quantity_max),
+            #     'total': decimal.Decimal(quantity * price)
+            # }
+
+            quantity = random.randint(quantity_min, quantity_max)
+            total = decimal.Decimal(quantity * price)
+
+            order_obj = Order(type='E',
+                              client=client_obj,
+                              user=user_obj,
+                              total=total,
+                              subsidiary_store=subsidiary_store_sales_obj,
+                              truck=truck_obj,
+                              create_at=date)
+            order_obj.save()
+            detail_order_obj = OrderDetail(order=order_obj,
+                                           product=product_obj,
+                                           quantity_sold=quantity,
+                                           price_unit=price,
+                                           unit=unit_obj,
+                                           status='V')
+            detail_order_obj.save()
+
+            r = send_receipt_nubefact(order_obj.id, is_demo)
+            codigo_hash = r.get('codigo_hash')
+            if codigo_hash:
+                order_bill_obj = OrderBill(order=order_obj,
+                                           serial=r.get('serie'),
+                                           type=r.get('tipo_de_comprobante'),
+                                           sunat_status=r.get('aceptada_por_sunat'),
+                                           sunat_description=r.get('sunat_description'),
+                                           user=user_obj,
+                                           sunat_enlace_pdf=r.get('enlace_del_pdf'),
+                                           code_qr=r.get('cadena_para_codigo_qr'),
+                                           code_hash=r.get('codigo_hash'),
+                                           n_receipt=r.get('numero'),
+                                           status='E',
+                                           created_at=order_obj.create_at,
+                                           is_demo=value_is_demo
+                                           )
+                order_bill_obj.save()
+            else:
+                objects_to_delete = OrderDetail.objects.filter(order=order_obj)
+                objects_to_delete.delete()
+                order_obj.delete()
+                if r.get('errors'):
+                    data = {'error': str(r.get('errors'))}
+                elif r.get('error'):
+                    data = {'error': str(r.get('error'))}
+                response = JsonResponse(data)
+                response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+                return response
+
+        return JsonResponse({
+            'msg_sunat': 'Boletas enviadas correctamente',
+        }, status=HTTPStatus.OK)
+
+
+'''@csrf_exempt
 def generate_receipt_random(request):
     global data
     if request.method == 'POST':
@@ -1369,7 +1369,7 @@ def generate_receipt_random(request):
             'rows': len(dictionary),
         }, status=HTTPStatus.OK)
 
-    return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)
+    return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)'''
 
 
 def get_data_from_api(session, url, obj, headers):
