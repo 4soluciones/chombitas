@@ -2313,7 +2313,19 @@ def orders_manufacture(request):
         user_id = request.user.id
         user_obj = User.objects.get(id=user_id)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
-        manufactures = Manufacture.objects.filter(subsidiary=subsidiary_obj)
+        manufactures = Manufacture.objects.filter(
+            subsidiary=subsidiary_obj, manufactureaction__date__year=2023, manufactureaction__status='1').order_by('id').select_related('subsidiary').prefetch_related(
+            Prefetch(
+                'manufacturedetail_set', queryset=ManufactureDetail.objects.select_related('product_manufacture').prefetch_related(
+                    Prefetch(
+                        'manufacturerecipe_set', queryset=ManufactureRecipe.objects.select_related('product_input')
+                    )
+                )
+            ),
+            Prefetch(
+                'manufactureaction_set', queryset=ManufactureAction.objects.filter(status='1').select_related('user')
+            )
+        )
         status = ManufactureAction._meta.get_field('status').choices
 
         return render(request, 'sales/manufacture_list.html', {
