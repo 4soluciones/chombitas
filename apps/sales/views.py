@@ -2315,7 +2315,7 @@ def orders_manufacture(request):
         subsidiary_obj = get_subsidiary_by_user(user_obj)
         date_now = datetime.now()
         manufactures = Manufacture.objects.filter(
-            subsidiary=subsidiary_obj, manufactureaction__date__year=date_now.year).select_related('subsidiary').prefetch_related(
+            subsidiary=subsidiary_obj, manufactureaction__date__year=2024).select_related('subsidiary').prefetch_related(
             Prefetch(
                 'manufacturedetail_set', queryset=ManufactureDetail.objects.select_related('product_manufacture').prefetch_related(
                     Prefetch(
