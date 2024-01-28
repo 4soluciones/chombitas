@@ -101,7 +101,14 @@ urlpatterns = [
     path('advancement_client/', login_required(get_advancement_client), name='advancement_client'),
     path('save_advancement_client/', save_advancement_client, name='save_advancement_client'),
 
+    path('get_distribution_expense/', get_distribution_expense, name='get_distribution_expense'),
+    path('save_distribution_expense/', save_distribution_expense, name='save_distribution_expense'),
+
+    path('get_distribution_deposit/', get_distribution_deposit, name='get_distribution_deposit'),
+    path('save_distribution_deposit/', save_distribution_deposit, name='save_distribution_deposit'),
+
     # reports
+    path('get_monthly_distribution_by_licence_plate/', login_required(get_monthly_distribution_by_licence_plate), name='get_monthly_distribution_by_licence_plate'),
     path('get_distribution_query/', login_required(get_distribution_query), name='get_distribution_query'),
     path('list_output_distribution/', login_required(get_output_distributions), name='list_output_distribution'),
     path('report_guide_by_plate/', login_required(report_guide_by_plate), name='report_guide_by_plate'),

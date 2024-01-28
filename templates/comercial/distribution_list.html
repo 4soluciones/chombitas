@@ -29,7 +29,7 @@
 
 
 
-        <div class="table-responsive" id="table-distribution_list"></div>
+        <div class="" id="table-distribution_list"></div>
     </div>
 
 
@@ -152,8 +152,8 @@
 
             });
         });***/
-        $('#id_date_distribution').change(function () {
-            let _search = $(this).val();
+        function getDistributionList(){
+            let _search = $('#id_date_distribution').val();
             $('#table-distribution_list').empty();
             $.ajax({
                 url: '/comercial/get_distribution_list/',
@@ -165,7 +165,11 @@
                     $('#table-distribution_list').html(response['grid']);
                 },
             });
+        }
+        $('#id_date_distribution').change(function () {
+            getDistributionList();
         });
+
         $(document).on('click', '.btn-client-advancement', function () {
             let search = $(this).attr('pk');
             $.ajax({
@@ -181,8 +185,42 @@
                     console.log(response);
                 }
             });
-
         });
+
+        $(document).on('click', '.btn-expense', function () {
+            let search = $(this).attr('pk');
+            $.ajax({
+                url: '/comercial/get_distribution_expense/',
+                dataType: 'json',
+                type: 'GET',
+                data: {'pk': search},
+                success: function (response) {
+                    $('#modal-distribution').html(response.form);
+                    $('#modal-distribution').modal('show');
+                },
+                fail: function (response) {
+                    console.log(response);
+                }
+            });
+        });
+
+        $(document).on('click', '.btn-deposit', function () {
+            let search = $(this).attr('pk');
+            $.ajax({
+                url: '/comercial/get_distribution_deposit/',
+                dataType: 'json',
+                type: 'GET',
+                data: {'pk': search},
+                success: function (response) {
+                    $('#modal-distribution').html(response.form);
+                    $('#modal-distribution').modal('show');
+                },
+                fail: function (response) {
+                    console.log(response);
+                }
+            });
+        });
+
        $(document).on('click', 'table#table-dictionary tbody#details-recovered tr td.item-btn button.btn-recovered', function (event) {
        event.preventDefault();
         let row = $(this).parent('td').parent('tr')

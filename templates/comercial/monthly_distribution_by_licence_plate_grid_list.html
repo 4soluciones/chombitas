@@ -1,0 +1,204 @@
+
+
+<style>
+    .text-rotated-90{
+        transform: rotate(180deg);
+        white-space: nowrap;
+        writing-mode: vertical-rl;
+        padding: 0;
+        line-height: 0.9;
+    }
+</style>
+
+
+
+<table class="table table-sm table-bordered" id="excel-data-grid">
+    <thead>
+    <tr>
+        <td class="align-middle text-center table-info" rowspan="2">FECHA</td>
+
+            <td class="text-center font-weight-bold" colspan="5">10KG</td>
+            <td class="table-warning text-center" colspan="{{ header_b10|length }}">PRECIOS</td>
+        <td class="align-middle text-center table-info" rowspan="2"><span class="text-rotated-90">TOTAL<br/>VENTA S/</span></td>
+            <td class="text-center" colspan="4">FIERROS</td>
+
+            <td class="text-center font-weight-bold" colspan="5">5KG</td>
+            <td class="table-warning text-center" colspan="{{ header_b5|length }}">PRECIOS</td>
+        <td class="align-middle text-center table-info" rowspan="2"><span class="text-rotated-90">TOTAL<br/>VENTA S/</span></td>
+            <td class="text-center" colspan="4">FIERROS</td>
+
+            <td class="text-center font-weight-bold" colspan="5">45KG</td>
+            <td class="table-warning text-center" colspan="{{ header_b45|length }}">PRECIOS</td>
+        <td class="align-middle text-center table-info" rowspan="2"><span class="text-rotated-90">TOTAL<br/>VENTA S/</span></td>
+            <td class="text-center" colspan="4">FIERROS</td>
+
+        <td class="align-middle text-center table-info  font-weight-bold" rowspan="2"><span class="text-rotated-90">TOTAL<br/>VENTA DEL<br/>DIA S/</span></td>
+
+        <td class="text-center" colspan="5">GASTOS</td>
+        <td class="align-middle text-center table-danger  font-weight-bold" rowspan="2"><span class="text-rotated-90">TOTAL<br/>DEPOSITAR S/</span></td>
+            <td class="text-center" colspan="4">MOVIMIENTO DE EFECTIVO</td>
+
+    </tr>
+    <tr>
+            <td class="align-middle text-center"><span class="text-rotated-90">LLENO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">VACIO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">CAMBIOS</span></td>
+            <td class="align-middle text-center table-success"><span class="text-rotated-90">VENTA</span></td>
+            <td class="align-middle text-center table-primary"><span class="text-rotated-90">QUEDA<br/>LLENOS</span></td>
+            {% for pb10 in header_b10 %}
+                <td class="align-middle text-center table-warning"><span class="text-rotated-90">{{ pb10|safe }}</span></td>
+            {% empty %}
+                <td class="align-middle text-center table-warning"></td>
+            {% endfor %}
+            <td class="align-middle text-center"><span class="text-rotated-90">PRESTADOS</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">RECUPERADOS</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">ADELANTADOS</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">DEBE<br/>FIERROS</span></td>
+
+
+            <td class="align-middle text-center"><span class="text-rotated-90">LLENO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">VACIO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">CAMBIOS</span></td>
+            <td class="align-middle text-center table-success"><span class="text-rotated-90">VENTA</span></td>
+            <td class="align-middle text-center table-primary"><span class="text-rotated-90">QUEDA<br/>LLENOS</span></td>
+            {% for pb5 in header_b5 %}
+                <td class="align-middle text-center table-warning"><span class="text-rotated-90">{{ pb5|safe }}</span></td>
+            {% empty %}
+                <td class="align-middle text-center table-warning"></td>
+            {% endfor %}
+            <td class="align-middle text-center"><span class="text-rotated-90">PRESTADOS</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">RECUPERADOS</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">ADELANTADOS</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">DEBE<br/>FIERROS</span></td>
+
+
+            <td class="align-middle text-center"><span class="text-rotated-90">LLENO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">VACIO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">CAMBIOS</span></td>
+            <td class="align-middle text-center table-success"><span class="text-rotated-90">VENTA</span></td>
+            <td class="align-middle text-center table-primary"><span class="text-rotated-90">QUEDA<br/>LLENOS</span></td>
+            {% for pb45 in header_b45 %}
+                <td class="align-middle text-center table-warning"><span class="text-rotated-90">{{ pb45|safe }}</span></td>
+            {% empty %}
+                <td class="align-middle text-center table-warning"></td>
+            {% endfor %}
+            <td class="align-middle text-center"><span class="text-rotated-90">PRESTADOS</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">RECUPERADOS</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">ADELANTADOS</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">DEBE<br/>FIERROS</span></td>
+
+            <td class="align-middle text-center"><span class="text-rotated-90">PETROLEO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">VIATICO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">FERIADO Y SUELDO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">MANTENIMIENTO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">OTROS GASTOS</span></td>
+
+            <td class="align-middle text-center"><span class="text-rotated-90">DEPOSITO<br/>Y/O<br/>EFECTIVO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">SALDO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">ENT. BANC</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">FECHA</span></td>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td class="align-middle text-center table-info">SALDO</td>
+
+        <td colspan="3"></td>
+        <td class="align-middle text-center table-success"></td>
+        <td class="align-middle text-center table-primary">{{ initial_remaining_in_the_car_bg10 }}</td>
+        <td class="align-middle text-center table-warning" colspan="{{ header_b10|length }}"></td>
+        <td class="align-middle text-center table-info"></td>
+        <td colspan="3"></td>
+        <td>{{ initial_remaining_borrowed_b10 }}</td>
+
+        <td colspan="3"></td>
+        <td class="align-middle text-center table-success"></td>
+        <td class="align-middle text-center table-primary">{{ initial_remaining_in_the_car_bg5 }}</td>
+        <td class="align-middle text-center table-warning" colspan="{{ header_b5|length }}"></td>
+        <td class="align-middle text-center table-info"></td>
+        <td colspan="3"></td>
+        <td>{{ initial_remaining_borrowed_b5 }}</td>
+
+        <td colspan="3"></td>
+        <td class="align-middle text-center table-success"></td>
+        <td class="align-middle text-center table-primary">{{ initial_remaining_in_the_car_bg45 }}</td>
+        <td class="align-middle text-center table-warning" colspan="{{ header_b45|length }}"></td>
+        <td class="align-middle text-center table-info"></td>
+        <td colspan="3"></td>
+        <td>{{ initial_remaining_borrowed_b45 }}</td>
+
+        <td class="align-middle text-center table-info"></td>
+        <td colspan="5"></td>
+        <td class="align-middle text-center table-danger"></td>
+        <td colspan="4"></td>
+    </tr>
+
+{% for distribution in distributions %}
+
+    <tr>
+        <td class="align-middle text-center table-info">{{ distribution.date }}</td>
+
+        <td>{{ distribution.B10.extracted_bg }}</td>
+        <td>{{ distribution.B10.returned_b }}</td>
+        <td>{{ distribution.B10.ruined_returned_bg }}</td>
+        <td class="align-middle text-center table-success">{{ distribution.B10.quantity_sold }}</td>
+        <td class="align-middle text-center table-primary">{{ distribution.B10.in_the_car_bg }}</td>
+
+        {% for key, value in distribution.B10.prices.items  %}
+            <td class="align-middle text-center table-warning">{{ value.quantity }}</td>
+        {% endfor %}
+
+        <td class="align-middle text-center table-info">{{ distribution.B10.total_sales }}</td>
+        <td>{{ distribution.B10.quantity_sold_b }}</td>
+        <td>{{ distribution.B10.recovered_b }}</td>
+        <td>{{ distribution.B10.advanced_b }}</td>
+        <td>{{ distribution.B10.remaining_borrowed_b }}</td>
+
+        <td>{{ distribution.B5.extracted_bg }}</td>
+        <td>{{ distribution.B5.returned_b }}</td>
+        <td>{{ distribution.B5.ruined_returned_bg }}</td>
+        <td class="align-middle text-center table-success">{{ distribution.B5.quantity_sold }}</td>
+        <td class="align-middle text-center table-primary">{{ distribution.B5.in_the_car_bg }}</td>
+        {% for key, value in distribution.B5.prices.items  %}
+            <td class="align-middle text-center table-warning">{{ value.quantity }}</td>
+        {% endfor %}
+        <td class="align-middle text-center table-info">{{ distribution.B5.total_sales }}</td>
+        <td>{{ distribution.B5.quantity_sold_b }}</td>
+        <td>{{ distribution.B5.recovered_b }}</td>
+        <td>{{ distribution.B5.advanced_b }}</td>
+        <td>{{ distribution.B5.remaining_borrowed_b }}</td>
+
+        <td>{{ distribution.B45.extracted_bg }}</td>
+        <td>{{ distribution.B45.returned_b }}</td>
+        <td>{{ distribution.B45.ruined_returned_bg }}</td>
+        <td class="align-middle text-center table-success">{{ distribution.B45.quantity_sold }}</td>
+        <td class="align-middle text-center table-primary">{{ distribution.B45.in_the_car_bg }}</td>
+        {% for key, value in distribution.B45.prices.items  %}
+            <td class="align-middle text-center table-warning">{{ value.quantity }}</td>
+        {% endfor %}
+        <td class="align-middle text-center table-info">{{ distribution.B45.total_sales }}</td>
+        <td>{{ distribution.B45.quantity_sold_b }}</td>
+        <td>{{ distribution.B45.recovered_b }}</td>
+        <td>{{ distribution.B45.advanced_b }}</td>
+        <td>{{ distribution.B45.remaining_borrowed_b }}</td>
+
+        <td class="align-middle text-center table-info font-weight-bold">{{ distribution.total_sold_by_date }}</td>
+
+        <td>{{ distribution.expense_1 }}</td>
+        <td>{{ distribution.expense_2 }}</td>
+        <td>{{ distribution.expense_3 }}</td>
+        <td>{{ distribution.expense_4 }}</td>
+        <td>{{ distribution.expense_5 }}</td>
+
+        <td class="align-middle text-center table-danger font-weight-bold">{{ distribution.total_to_deposit }}</td>
+
+        <td>{{ distribution.deposited }}</td>
+        <td>{{ distribution.balance }}</td>
+        <td>{{ distribution.bank }}</td>
+        <td>{{ distribution.date_deposit }}</td>
+
+    </tr>
+{% endfor %}
+
+    </tbody>
+</table>
