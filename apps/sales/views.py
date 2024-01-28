@@ -2501,13 +2501,13 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                 'total': o.total,
                 'subtotal': 0,
                 'total_repay_loan': '{:,}'.format(
-                    total_remaining_repay_loan(order_detail_set=order_detail_set).quantize(decimal.Decimal('0.00'),
+                    decimal.Decimal(total_remaining_repay_loan(order_detail_set=order_detail_set)).quantize(decimal.Decimal('0.00'),
                                                                                            rounding=decimal.ROUND_HALF_EVEN)),
                 'total_repay_loan_with_vouchers': total_repay_loan_with_vouchers(order_detail_set=order_detail_set),
                 'total_return_loan': '{:,}'.format(
                     round(float(total_return_loan(order_detail_set=order_detail_set)), 2)),
                 'total_remaining_repay_loan': '{:,}'.format(
-                    total_remaining_repay_loan(order_detail_set=order_detail_set).quantize(decimal.Decimal('0.00'),
+                    decimal.Decimal(total_remaining_repay_loan(order_detail_set=order_detail_set)).quantize(decimal.Decimal('0.00'),
                                                                                            rounding=decimal.ROUND_HALF_EVEN)),
                 'total_remaining_repay_loan_ball': '{:,}'.format(
                     round(float(total_remaining_repay_loan_ball(order_detail_set=order_detail_set)), 2)),
