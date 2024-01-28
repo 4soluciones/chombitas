@@ -109,6 +109,9 @@ urlpatterns = [
 
     # reports
     path('get_monthly_distribution_by_licence_plate/', login_required(get_monthly_distribution_by_licence_plate), name='get_monthly_distribution_by_licence_plate'),
+    path('get_credits_from_clients_by_subsidiary/', login_required(get_credits_from_clients_by_subsidiary), name='get_credits_from_clients_by_subsidiary'),
+    path('get_expenses_by_licence_plate/', login_required(get_expenses_by_licence_plate), name='get_expenses_by_licence_plate'),
+
     path('get_distribution_query/', login_required(get_distribution_query), name='get_distribution_query'),
     path('list_output_distribution/', login_required(get_output_distributions), name='list_output_distribution'),
     path('report_guide_by_plate/', login_required(report_guide_by_plate), name='report_guide_by_plate'),

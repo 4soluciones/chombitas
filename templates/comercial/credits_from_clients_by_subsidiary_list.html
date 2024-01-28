@@ -1,45 +1,28 @@
 {% extends 'home.html' %}
 
 {% block title %}
-    Comercial | Reporte por vendedor
+    Comercial | Grafico de creditos por cliente
 {% endblock title %}
 
 {% block body %}
     <div class="container-fluid mt-3">
-
-    <p class="h1">Reporte por vendedor</p>
-
+    <p class="h1">Grafico de creditos por cliente</p>
         <div class="card">
             <div class="card-body">
-            <h5 class="card-title">Filtros</h5>
+                <h5 class="card-title">Filtros</h5>
                 <form class="form-inline" id="search-form" method="POST">
                     {% csrf_token %}
 
-                    <label class="my-1 mr-2" for="id-year">AÑO :</label>
-                    <select class="custom-select my-1 mr-sm-2" id="id-year" name="year" required>
 
-                        {% for y in year_set %}
-                            <option {% if current_year == y %}selected{% endif %} value="{{ y }}">{{ y }}</option>
-                        {% endfor %}
 
-                    </select>
+                    <label class="my-1 mr-2" for="id-subsidiary">SEDE :</label>
+                    <input type="text" class="form-control" id="id-subsidiary" value="{{ subsidiary_obj.name }}" readonly/>
 
-                    <label class="my-1 mr-2" for="id-month">MES :</label>
-                    <select class="custom-select my-1 mr-sm-2" id="id-month" name="month" required>
-
-                        {% for m in month_set %}
-                            <option {% if current_month == forloop.counter %}selected{% endif %} value="{{ forloop.counter }}">{{ m }}</option>
-                        {% endfor %}
-
-                    </select>
-
-                    <label class="my-1 mr-2" for="id-truck">PLACA :</label>
-                    <select class="custom-select my-1 mr-sm-2" id="id-truck" name="truck" required>
+                    <label class="my-1 mr-2" for="id-type-debt">TIPO DEUDA :</label>
+                    <select class="custom-select my-1 mr-sm-2" id="id-type-debt" name="type-debt" required>
                         <option value="" disabled selected>SELECCIONE...</option>
-                        {% for t in truck_set %}
-                            <option value="{{ t.pk }}">{{ t.license_plate }}
-                                - {{ t.distributionmobil_set.count }}</option>
-                        {% endfor %}
+                        <option value="E">PAGO FALTANTE (EFECTIVO)</option>
+                        <option value="F">CANTIDAD FALTANTE (FIERROS)</option>
                     </select>
 
                     <button type="submit" class="btn btn-info my-1">
@@ -51,7 +34,7 @@
                     </a>
                 </form>
 
-                <div id="distribution-grid-list">{% include "comercial/monthly_distribution_by_licence_plate_grid_list.html" %}</div>
+                <div id="credit-grid-list"></div>
             </div>
         </div>
     </div>
@@ -66,7 +49,7 @@
                 // exclude CSS class
                 exclude: ".noExl",
                 name: "Worksheet vouchers",
-                filename: "reporte_mensual_de_repartidor",//do not include extension
+                filename: "reporte_de_creditos",//do not include extension
                 fileext: ".xlsx", // file extension
                 preserveColors: true
 
@@ -78,7 +61,7 @@
             let _data = new FormData($('#search-form').get(0));
             $("#btn-search").attr("disabled", "true");
             $.ajax({
-                url: '/comercial/get_monthly_distribution_by_licence_plate/',
+                url: '/comercial/get_credits_from_clients_by_subsidiary/',
                 type: "POST",
                 data: _data,
                 cache: false,
@@ -87,7 +70,7 @@
                 success: function (response, textStatus, xhr) {
                     console.log(response);
                     if (xhr.status === 200) {
-                        $('#distribution-grid-list').html(response.grid);
+                        $('#credit-grid-list').html(response.grid);
                         toastr.info(response['message'], '¡Bien hecho!');
                     }
                 },

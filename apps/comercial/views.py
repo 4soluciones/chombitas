@@ -35,6 +35,7 @@ from .. import sales
 from ..accounting.models import CashFlow, Cash
 from ..buys.models import Purchase
 from ..hrm.views import get_subsidiary_by_user
+from ..sales.funtions import get_orders_for_status_account
 
 
 class Index(TemplateView):
@@ -1981,6 +1982,138 @@ def get_previous_debt_for_in_the_car_balls(distribution_mobil_set=None, truck_id
     return remaining_in_the_car_bg
 
 
+def get_credits_from_clients_by_subsidiary(request):
+    if request.method == 'GET':
+        user_id = request.user.id
+        user_obj = User.objects.get(pk=int(user_id))
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+
+        return render(request, 'comercial/credits_from_clients_by_subsidiary_list.html', {
+            'subsidiary_obj': subsidiary_obj
+        })
+    elif request.method == 'POST':
+        type_debt = str(request.POST.get('type-debt'))
+        user_id = request.user.id
+        user_obj = User.objects.get(id=user_id)
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+        d = get_orders_for_status_account(subsidiary_obj=subsidiary_obj)
+        client_dict = d['client_dict']
+        summary_sum_total_remaining_repay_loan = d['summary_sum_total_remaining_repay_loan']
+        summary_sum_total_remaining_return_loan = d['summary_sum_total_remaining_return_loan']
+        array_p_p = []
+
+        if len(client_dict) > 0:
+
+            for k, st in client_dict.items():
+                client_name = st['client_names']
+                if type_debt == "E":
+                    total = float(round(st['sum_total_remaining_repay_loan'], 2))
+                else:
+                    total = float(round(st['sum_total_remaining_return_loan'], 0))
+                purchase_dict = {
+                    'label': client_name,
+                    'y': total
+                }
+                array_p_p.append(purchase_dict)
+            tpl = loader.get_template('comercial/credits_from_clients_by_subsidiary_grid_list.html')
+            context = ({
+                'type_debt': type_debt,
+                'client_dict': client_dict,
+                'summary_sum_total_remaining_repay_loan': round(summary_sum_total_remaining_repay_loan, 2),
+                'summary_sum_total_remaining_return_loan': round(summary_sum_total_remaining_return_loan),
+                'array_p_p': array_p_p,
+                'subsidiary_obj': subsidiary_obj,
+            })
+
+            return JsonResponse({
+                'grid': tpl.render(context)
+            }, status=HTTPStatus.OK)
+        else:
+            data = {'error': "No hay operaciones registradas"}
+            response = JsonResponse(data)
+            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+            return response
+
+
+def get_expenses_by_licence_plate(request):
+    if request.method == 'GET':
+        truck_set = Truck.objects.filter(distributionmobil__isnull=False).distinct('license_plate').order_by(
+            'license_plate')
+        my_date = datetime.now()
+        formatdate = my_date.strftime("%Y-%m-%d")
+        return render(request, 'comercial/expenses_by_licence_plate_list.html', {
+            'formatdate': formatdate,
+            'truck_set': truck_set
+        })
+    elif request.method == 'POST':
+        truck_id = int(request.POST.get('truck'))
+        start_date = str(request.POST.get('start-date'))
+        end_date = str(request.POST.get('end-date'))
+
+        base_query_set = CashFlow.objects.filter(
+            transaction_date__date__range=[start_date, end_date], distribution_mobil__isnull=False, type='S'
+        )
+        if truck_id > 0:
+            base_query_set = base_query_set.filter(distribution_mobil__truck__id=truck_id)
+
+        pilots = list(base_query_set.values_list('distribution_mobil__pilot__id', flat=True).distinct())
+
+        if pilots:
+            grouped_by_pilot = defaultdict(
+                lambda: {
+                    'pilot_id': '', 'pilot_name': '',
+                    'expense_1': 0, 'expense_2': 0, 'expense_3': 0, 'expense_4': 0, 'expense_5': 0, 'total_expenses': 0,
+                    'date_expense_1': "", 'date_expense_2': "", 'date_expense_3': "", 'date_expense_4': "",
+                    'date_expense_5': ""
+                }
+            )
+
+            for pilot_id in pilots:
+                data_obj = grouped_by_pilot[pilot_id]
+                pilot_obj = Employee.objects.get(id=pilot_id)
+                data_obj['pilot_id'] = pilot_id
+                data_obj['pilot_name'] = pilot_obj.full_name()
+                total_expenses = 0
+                for expense in base_query_set:
+                    if expense.description == "PETROLEO":
+                        data_obj["expense_1"] += round(expense.total, 1)
+                        date_str = expense.transaction_date.strftime('%d-%b').upper()
+                        data_obj['date_expense_1'] = date_str.replace('JAN', 'ENE')
+                    if expense.description == "VIATICO":
+                        data_obj["expense_2"] += round(expense.total, 1)
+                        date_str = expense.transaction_date.strftime('%d-%b').upper()
+                        data_obj['date_expense_2'] = date_str.replace('JAN', 'ENE')
+                    if expense.description == "FERIADO Y SUELDO":
+                        data_obj["expense_3"] += round(expense.total, 1)
+                        date_str = expense.transaction_date.strftime('%d-%b').upper()
+                        data_obj['date_expense_3'] = date_str.replace('JAN', 'ENE')
+                    if expense.description == "MANTENIMIENTO":
+                        data_obj["expense_4"] += round(expense.total, 1)
+                        date_str = expense.transaction_date.strftime('%d-%b').upper()
+                        data_obj['date_expense_4'] = date_str.replace('JAN', 'ENE')
+                    if expense.description == "OTROS GASTOS":
+                        data_obj["expense_5"] += round(expense.total, 1)
+                        date_str = expense.transaction_date.strftime('%d-%b').upper()
+                        data_obj['date_expense_5'] = date_str.replace('JAN', 'ENE')
+                    total_expenses += round(expense.total, 1)
+                data_obj['total_expenses'] = total_expenses
+
+            pilots_with_expenses = list(grouped_by_pilot.values())
+
+            tpl = loader.get_template('comercial/expenses_by_licence_plate_grid_list.html')
+            context = ({
+                'pilots_with_expenses': pilots_with_expenses,
+            })
+            return JsonResponse({
+                'grid': tpl.render(context)
+            }, status=HTTPStatus.OK)
+        else:
+            data = {'error': "No hay operaciones registradas"}
+            response = JsonResponse(data)
+            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+            return response
+
+
 def get_monthly_distribution_by_licence_plate(request):
     if request.method == 'GET':
         truck_set = Truck.objects.filter(distributionmobil__isnull=False).distinct('license_plate').order_by(
@@ -2166,12 +2299,7 @@ def get_monthly_distribution_by_licence_plate(request):
                         remaining_borrowed_b10 += int(od.quantity_sold)
                     ball["total_sales"] += round(od.quantity_sold * od.price_unit, 1)
                     total_sales_by_date += round(od.quantity_sold * od.price_unit, 1)
-            '''
-            'total_sold_by_date': 0
-            'expense_1': 0, 'expense_2': 0, 'expense_3': 0, 'expense_4': 0, 'expense_5': 0, 'total_to_deposit': 0, 
-                    'deposited': 0, 'balance': 0, 'bank': "", 'date_deposit': ""
 
-            '''
             total_expenses = 0
             for expense in distribution.cashflow_set.filter(type='S'):
                 if expense.description == "PETROLEO":

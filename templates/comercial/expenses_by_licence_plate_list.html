@@ -1,13 +1,14 @@
+
 {% extends 'home.html' %}
 
 {% block title %}
-    Comercial | Reporte por vendedor
+    Comercial | Reporte de gastos por vendedor
 {% endblock title %}
 
 {% block body %}
     <div class="container-fluid mt-3">
 
-    <p class="h1">Reporte por vendedor</p>
+    <p class="h1">Reporte de gastos por vendedor</p>
 
         <div class="card">
             <div class="card-body">
@@ -15,27 +16,15 @@
                 <form class="form-inline" id="search-form" method="POST">
                     {% csrf_token %}
 
-                    <label class="my-1 mr-2" for="id-year">AÑO :</label>
-                    <select class="custom-select my-1 mr-sm-2" id="id-year" name="year" required>
+                    <label class="my-1 mr-2" for="id-start-date">DESDE :</label>
+                    <input type="date" class="form-control" id="id-start-date" name="start-date" value="{{ formatdate }}" required />
 
-                        {% for y in year_set %}
-                            <option {% if current_year == y %}selected{% endif %} value="{{ y }}">{{ y }}</option>
-                        {% endfor %}
-
-                    </select>
-
-                    <label class="my-1 mr-2" for="id-month">MES :</label>
-                    <select class="custom-select my-1 mr-sm-2" id="id-month" name="month" required>
-
-                        {% for m in month_set %}
-                            <option {% if current_month == forloop.counter %}selected{% endif %} value="{{ forloop.counter }}">{{ m }}</option>
-                        {% endfor %}
-
-                    </select>
+                    <label class="my-1 mr-2" for="id-end-date">HASTA :</label>
+                    <input type="date" class="form-control" id="id-end-date" name="end-date" value="{{ formatdate }}" required />
 
                     <label class="my-1 mr-2" for="id-truck">PLACA :</label>
                     <select class="custom-select my-1 mr-sm-2" id="id-truck" name="truck" required>
-                        <option value="" disabled selected>SELECCIONE...</option>
+                        <option value="0">TODOS</option>
                         {% for t in truck_set %}
                             <option value="{{ t.pk }}">{{ t.license_plate }}
                                 - {{ t.distributionmobil_set.count }}</option>
@@ -51,7 +40,7 @@
                     </a>
                 </form>
 
-                <div id="distribution-grid-list">{% include "comercial/monthly_distribution_by_licence_plate_grid_list.html" %}</div>
+                <div id="expense-grid-list"></div>
             </div>
         </div>
     </div>
@@ -66,7 +55,7 @@
                 // exclude CSS class
                 exclude: ".noExl",
                 name: "Worksheet vouchers",
-                filename: "reporte_mensual_de_repartidor",//do not include extension
+                filename: "reporte_de_gastos_de_repartidor",//do not include extension
                 fileext: ".xlsx", // file extension
                 preserveColors: true
 
@@ -78,7 +67,7 @@
             let _data = new FormData($('#search-form').get(0));
             $("#btn-search").attr("disabled", "true");
             $.ajax({
-                url: '/comercial/get_monthly_distribution_by_licence_plate/',
+                url: '/comercial/get_expenses_by_licence_plate/',
                 type: "POST",
                 data: _data,
                 cache: false,
@@ -87,7 +76,7 @@
                 success: function (response, textStatus, xhr) {
                     console.log(response);
                     if (xhr.status === 200) {
-                        $('#distribution-grid-list').html(response.grid);
+                        $('#expense-grid-list').html(response.grid);
                         toastr.info(response['message'], '¡Bien hecho!');
                     }
                 },

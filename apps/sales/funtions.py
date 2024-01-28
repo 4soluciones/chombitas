@@ -1,4 +1,6 @@
 # from django.db import connection
+import decimal
+
 from django.db import models
 from django.db.models import Min, Sum, Max, Q, F, Prefetch, Subquery, OuterRef, Value
 from django.db.models.functions import Coalesce
@@ -158,15 +160,91 @@ def get_orders_for_status_account(subsidiary_obj=None):
                         Subquery(
                             LoanPayment.objects.filter(order_detail=OuterRef('id')).values(
                                 'order_detail_id').annotate(
-                                return_loan=Coalesce(Sum('quantity'), Value(0))).values('return_loan')[:1],
+                                return_loan=Coalesce(Sum('quantity'), decimal.Decimal(0.00))).values('return_loan')[:1],
                             output_field=models.DecimalField()
-                        ), Value(0)
+                        ), decimal.Decimal(0.00)
                     )
                 ).values('order_id').annotate(
                     amount=Sum(F('quantity_sold') - F('return_loan_sum'))
                 ).values('amount')[:1]
             )
-            , Value(0)
+            , decimal.Decimal(0.00)
+        ),
+        total_remaining_return_loan_b10=Coalesce(
+            Subquery(
+                OrderDetail.objects.filter(
+                    order_id=OuterRef('id'), product_id=1, unit__name='B'
+                ).annotate(
+                    return_loan_sum=Coalesce(
+                        Subquery(
+                            LoanPayment.objects.filter(order_detail=OuterRef('id')).values(
+                                'order_detail_id').annotate(
+                                return_loan=Coalesce(Sum('quantity'), decimal.Decimal(0.00))).values('return_loan')[:1],
+                            output_field=models.DecimalField()
+                        ), decimal.Decimal(0.00)
+                    )
+                ).values('order_id').annotate(
+                    amount=Sum(F('quantity_sold') - F('return_loan_sum'))
+                ).values('amount')[:1]
+            )
+            , decimal.Decimal(0.00)
+        ),
+        total_remaining_return_loan_b5=Coalesce(
+            Subquery(
+                OrderDetail.objects.filter(
+                    order_id=OuterRef('id'), product_id=2, unit__name='B'
+                ).annotate(
+                    return_loan_sum=Coalesce(
+                        Subquery(
+                            LoanPayment.objects.filter(order_detail=OuterRef('id')).values(
+                                'order_detail_id').annotate(
+                                return_loan=Coalesce(Sum('quantity'), decimal.Decimal(0.00))).values('return_loan')[:1],
+                            output_field=models.DecimalField()
+                        ), decimal.Decimal(0.00)
+                    )
+                ).values('order_id').annotate(
+                    amount=Sum(F('quantity_sold') - F('return_loan_sum'))
+                ).values('amount')[:1]
+            )
+            , decimal.Decimal(0.00)
+        ),
+        total_remaining_return_loan_b45=Coalesce(
+            Subquery(
+                OrderDetail.objects.filter(
+                    order_id=OuterRef('id'), product_id=3, unit__name='B'
+                ).annotate(
+                    return_loan_sum=Coalesce(
+                        Subquery(
+                            LoanPayment.objects.filter(order_detail=OuterRef('id')).values(
+                                'order_detail_id').annotate(
+                                return_loan=Coalesce(Sum('quantity'), decimal.Decimal(0.00))).values('return_loan')[:1],
+                            output_field=models.DecimalField()
+                        ), decimal.Decimal(0.00)
+                    )
+                ).values('order_id').annotate(
+                    amount=Sum(F('quantity_sold') - F('return_loan_sum'))
+                ).values('amount')[:1]
+            )
+            , decimal.Decimal(0.00)
+        ),
+        total_remaining_return_loan_b15=Coalesce(
+            Subquery(
+                OrderDetail.objects.filter(
+                    order_id=OuterRef('id'), product_id=12, unit__name='B'
+                ).annotate(
+                    return_loan_sum=Coalesce(
+                        Subquery(
+                            LoanPayment.objects.filter(order_detail=OuterRef('id')).values(
+                                'order_detail_id').annotate(
+                                return_loan=Coalesce(Sum('quantity'), decimal.Decimal(0.00))).values('return_loan')[:1],
+                            output_field=models.DecimalField()
+                        ), decimal.Decimal(0.00)
+                    )
+                ).values('order_id').annotate(
+                    amount=Sum(F('quantity_sold') - F('return_loan_sum'))
+                ).values('amount')[:1]
+            )
+            , decimal.Decimal(0.00)
         )
     ).annotate(
         total_remaining_repay_loan=Coalesce(
@@ -178,17 +256,22 @@ def get_orders_for_status_account(subsidiary_obj=None):
                         Subquery(
                             LoanPayment.objects.filter(order_detail=OuterRef('id'), quantity=0).values(
                                 'order_detail_id').annotate(
-                                repay_loan=Coalesce(Sum('price'), Value(0))).values('repay_loan')[:1],
+                                repay_loan=Coalesce(Sum('price'), decimal.Decimal(0.00))).values('repay_loan')[:1],
                             output_field=models.DecimalField()
-                        ), Value(0)
+                        ), decimal.Decimal(0.00)
                     )
                 ).values('order_id').annotate(
                     amount2=Sum(F('quantity_sold') * F('price_unit') - F('repay_loan_sum'))
                 ).values('amount2')[:1]
             )
-            , Value(0)
+            , decimal.Decimal(0.00)
         )
-    ).values('id', 'client__id', 'client__names', 'total_remaining_return_loan', 'total_remaining_repay_loan')
+    ).values('id', 'client__id', 'client__names',
+             'total_remaining_return_loan_b10',
+             'total_remaining_return_loan_b5',
+             'total_remaining_return_loan_b45',
+             'total_remaining_return_loan_b15',
+             'total_remaining_return_loan', 'total_remaining_repay_loan')
 
     summary_sum_total_remaining_repay_loan = 0
     summary_sum_total_remaining_return_loan = 0
@@ -199,6 +282,10 @@ def get_orders_for_status_account(subsidiary_obj=None):
 
         rpl = o['total_remaining_repay_loan']
         rtl = o['total_remaining_return_loan']
+        b10 = o['total_remaining_return_loan_b10']
+        b5 = o['total_remaining_return_loan_b5']
+        b45 = o['total_remaining_return_loan_b45']
+        b15 = o['total_remaining_return_loan_b15']
 
         if key in client_dict:
             client = client_dict[key]
@@ -206,13 +293,21 @@ def get_orders_for_status_account(subsidiary_obj=None):
             old_rpl = client.get('sum_total_remaining_repay_loan')
             old_rtl = client.get('sum_total_remaining_return_loan')
 
-            client_dict[key]['sum_total_remaining_repay_loan'] = old_rpl + rpl
-            client_dict[key]['sum_total_remaining_return_loan'] = old_rtl + rtl
+            client_dict[key]['b10'] += b10
+            client_dict[key]['b5'] += b5
+            client_dict[key]['b45'] += b45
+            client_dict[key]['b15'] += b15
+            client_dict[key]['sum_total_remaining_repay_loan'] = float(old_rpl) + float(rpl)
+            client_dict[key]['sum_total_remaining_return_loan'] = float(old_rtl) + float(rtl)
 
         else:
             client_dict[key] = {
                 'client_id': o['client__id'],
                 'client_names': o['client__names'],
+                'b10': b10,
+                'b5': b5,
+                'b45': b45,
+                'b15': b15,
                 'sum_total_remaining_repay_loan': rpl,
                 'sum_total_remaining_return_loan': rtl,
             }

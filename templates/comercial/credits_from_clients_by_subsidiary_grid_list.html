@@ -1,0 +1,107 @@
+
+<div class="row">
+    <div class="col-lg-8">
+            <div class="card border border-default my-3">
+
+                <div class="card-body p-0  m-0">
+                    <div class="col-lg-12 col-md-12 p-0  m-0">
+                        <div id="container-credit-client" class="w-100" style="height: 500px;"></div>
+                        <div class="p-2">
+                            <button class="btn btn-success" id="btn-print-chart">Imprimir Grafico</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+    <div class="col-lg-4">
+
+        <div class="card border border-default my-3">
+            <div class="card-body p-0  m-0">
+
+                <table class="table table-sm table-bordered" id="excel-data-grid">
+                    <thead class="thead-light">
+                    <tr>
+                        <th class="align-middle text-center font-weight-bold" {% if type_debt == "F" %}rowspan="2"{% endif %}>ID</th>
+                        <th class="align-middle text-center font-weight-bold" {% if type_debt == "F" %}rowspan="2"{% endif %}>CLIENTE</th>
+
+                            {% if type_debt == "E" %}
+                                <th class="align-middle text-center font-weight-bold">PAGO FALTANTE (EFECTIVO)</th>
+                            {% else %}
+                                <th class="align-middle text-center font-weight-bold" colspan="5">CANTIDAD FALTANTE (FIERROS)</th>
+                            {% endif %}
+                    </tr>
+                    {% if type_debt == "F" %}
+                    <tr>
+                        <th class="align-middle text-center font-weight-bold">10KG</th>
+                        <th class="align-middle text-center font-weight-bold">5KG</th>
+                        <th class="align-middle text-center font-weight-bold">45KG</th>
+                        <th class="align-middle text-center font-weight-bold">15KG</th>
+                        <th class="align-middle text-center font-weight-bold">TOTAL</th>
+                    </tr>
+                    {% endif %}
+                    </thead>
+                    <tbody>
+                    {% for key, client in client_dict.items %}
+                        <tr>
+                            <td>{{ client.client_id }}</td>
+                            <td>{{ client.client_names }}</td>
+                            {% if type_debt == "E" %}<td>S/ {{ client.sum_total_remaining_repay_loan|safe|floatformat:2 }}</td>{% else %}
+                                <td class="text-center">{{ client.b10|safe|floatformat }}</td>
+                                <td class="text-center">{{ client.b5|safe|floatformat }}</td>
+                                <td class="text-center">{{ client.b45|safe|floatformat }}</td>
+                                <td class="text-center">{{ client.b15|safe|floatformat }}</td>
+                                <td class="text-center table-secondary">{{ client.sum_total_remaining_return_loan|safe|floatformat }}</td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                    <tfoot class="thead-light">
+                    <tr>
+                        <th class="font-weight-bold" colspan="2">TOTALES</th>
+                        {% if type_debt == "E" %}<th class="font-weight-bold">S/ {{ summary_sum_total_remaining_repay_loan }}</th>{% else %}
+                            <th colspan="4"></th>
+                            <th class="text-center">{{ summary_sum_total_remaining_return_loan }}</th>
+                        {% endif %}
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+
+
+
+<script>
+    var chart_purchase_suplier = new CanvasJS.Chart("container-credit-client",
+        {
+            title: {
+                text: "CREDITOS EN {{subsidiary_obj.name}}"
+            },
+            legend: {
+                maxWidth: 350,
+                itemWidth: 120
+            },
+            data: [
+                {
+                    type: "pie",
+                    showInLegend: true,
+                    legendText: "{indexLabel}",
+                    toolTipContent: "{y} - #percent %",
+                    indexLabelFormatter: function(e){
+                        return e.dataPoint.label + " " + " - " + " " + {% if type_debt == 'E' %}"S/."{% endif %} + e.dataPoint.y;
+                    },
+                    indexLabelLineThickness: 3,
+                    dataPoints: {{ array_p_p|safe }}
+                }
+            ]
+        });
+    chart_purchase_suplier.render();
+
+        document.getElementById("btn-print-chart").addEventListener("click", function () {
+        chart_purchase_suplier.print();
+    });
+</script>
