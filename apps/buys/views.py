@@ -459,9 +459,11 @@ def save_programming_buys(request):
 def get_units_by_product(request):
     if request.method == 'GET':
         id_product = request.GET.get('ip', '')
-        product_obj = Product.objects.get(pk=int(id_product))
-        units = Unit.objects.filter(productdetail__product=product_obj)
-        units_serialized_obj = serializers.serialize('json', units)
+        units_serialized_obj = None
+        if id_product != '' and int(id_product)>0:
+            product_obj = Product.objects.get(pk=int(id_product))
+            units = Unit.objects.filter(productdetail__product=product_obj)
+            units_serialized_obj = serializers.serialize('json', units)
 
         return JsonResponse({
             'units': units_serialized_obj,
