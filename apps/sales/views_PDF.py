@@ -16,6 +16,8 @@ from reportlab.pdfgen.canvas import Canvas
 # from reportlab.rl_config import defaultPageSize
 from functools import partial
 from reportlab.lib.colors import PCMYKColor, PCMYKColorSep, Color, black, blue, red, pink, green
+
+from chombitas import settings
 from .models import Product, Client, Order, OrderDetail, SubsidiaryStore, ProductStore, Kardex, LoanPayment
 from django.contrib.auth.models import User
 from apps.hrm.views import get_subsidiary_by_user
@@ -38,7 +40,7 @@ styleH = styles['Heading1']
 styles.add(ParagraphStyle(name='Right', alignment=TA_RIGHT, leading=8, fontName='Square', fontSize=8))
 styles.add(ParagraphStyle(name='CenterTitle2', alignment=TA_CENTER, leading=8, fontName='Square-Bold', fontSize=12))
 styles.add(ParagraphStyle(name='Center_Regular', alignment=TA_CENTER, leading=8, fontName='Ticketing', fontSize=10))
-
+reportlab.rl_config.TTFSearchPath.append(str(settings.BASE_DIR) + '/apps/dishes/static/fonts')
 pdfmetrics.registerFont(TTFont('Ticketing', 'ticketing.regular.ttf'))
 pdfmetrics.registerFont(TTFont('Square', 'square-721-condensed-bt.ttf'))
 pdfmetrics.registerFont(TTFont('Square-Bold', 'sqr721bc.ttf'))
