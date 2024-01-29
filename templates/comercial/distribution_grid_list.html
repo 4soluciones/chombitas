@@ -77,17 +77,17 @@
                                         {% endif %}
 
 
-                                        {% if dm.status != 'F' %}
+                                        {% if dm.status == 'F' %}
                                             <a class="dropdown-item btn-expense" pk="{{ dm.id }}"><i
                                                     class="fas fa-edit pr-1"></i> Ingresar gasto </a>
                                         {% endif %}
 
-                                        {% if dm.status != 'F' %}
+                                        {% if dm.status == 'F' %}
                                             <a class="dropdown-item btn-deposit" pk="{{ dm.id }}"><i
                                                     class="fas fa-edit pr-1"></i> Ingresar deposito </a>
                                         {% endif %}
 
-                                        {% if dm.status != 'F' %}
+                                        {% if dm.status == 'F' %}
                                             <a class="dropdown-item btn-update" pk="{{ dm.id }}"><i
                                                     class="fas fa-edit pr-1"></i> Retornar balones </a>
                                         {% endif %}
