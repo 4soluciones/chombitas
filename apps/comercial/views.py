@@ -2182,7 +2182,7 @@ def get_monthly_distribution_by_licence_plate(request):
             # order__distribution_mobil__date_distribution__year=year,
             order__distribution_mobil__date_distribution__range=[start_date_sin_timezone.date(), end_date_sin_timezone.date()],
             order__distribution_mobil__truck__id=truck_id,
-            unit__name__in=['G', 'B']
+            unit__name__in=['G', 'GBC']
         )
 
         header_b10 = list(base_query_set.filter(product__id=1).values_list('price_unit', flat=True).distinct())
@@ -2291,18 +2291,25 @@ def get_monthly_distribution_by_licence_plate(request):
                 for od in order.orderdetail_set.all():
                     product_id = od.product.id
                     ball = None
-
                     value = od.price_unit
-
                     if product_id == 1:  # B10KG
                         ball = distribution_obj["B10"]
+                        if value not in header_b10:
+                            value = 0
                     elif product_id == 2:  # B5KG
                         ball = distribution_obj["B5"]
+                        if value not in header_b5:
+                            value = 0
                     elif product_id == 3:  # B45KG
                         ball = distribution_obj["B45"]
+                        if value not in header_b45:
+                            value = 0
 
-                    ball['prices'][value]["quantity"] += int(od.quantity_sold)
-                    ball['prices'][value]['subtotal'] = ball['prices'][value]['quantity'] * od.price_unit
+                    if value > 0:
+                        ball['prices'][value]["quantity"] += int(od.quantity_sold)
+                        ball['prices'][value]['subtotal'] = ball['prices'][value]['quantity'] * od.price_unit
+                        ball["total_sales"] += round(od.quantity_sold * od.price_unit, 1)
+                        total_sales_by_date += round(od.quantity_sold * od.price_unit, 1)
 
                     if od.unit.name == 'G':
                         ball["quantity_sold_g"] += int(od.quantity_sold)
@@ -2312,8 +2319,7 @@ def get_monthly_distribution_by_licence_plate(request):
                         ball["quantity_sold"] += int(od.quantity_sold)
                         ball["remaining_borrowed_b"] = int(remaining_borrowed_b10) + int(od.quantity_sold)
                         remaining_borrowed_b10 += int(od.quantity_sold)
-                    ball["total_sales"] += round(od.quantity_sold * od.price_unit, 1)
-                    total_sales_by_date += round(od.quantity_sold * od.price_unit, 1)
+
 
             total_expenses = 0
             for expense in distribution.cashflow_set.filter(type='S'):
@@ -2329,8 +2335,8 @@ def get_monthly_distribution_by_licence_plate(request):
                     distribution_obj["expense_5"] += round(expense.total, 1)
                 total_expenses += round(expense.total, 1)
 
-            distribution_obj['total_sold_by_date'] = total_sales_by_date
-            distribution_obj['total_to_deposit'] = total_sales_by_date - total_expenses
+            distribution_obj['total_sold_by_date'] += total_sales_by_date
+            distribution_obj['total_to_deposit'] += (total_sales_by_date - total_expenses)
 
             total_deposited = 0
             bank = []
@@ -2341,7 +2347,7 @@ def get_monthly_distribution_by_licence_plate(request):
                 bank.append(deposit.cash.name)
                 dates_of_deposit.append(str(deposit.transaction_date.date()))
 
-            distribution_obj['balance'] = total_sales_by_date - total_expenses - total_deposited
+            distribution_obj['balance'] += (total_sales_by_date - total_expenses - total_deposited)
 
             bank_without_duplicates = list(set(bank))
             string_of_banks = ", ".join(bank_without_duplicates)
