@@ -78,6 +78,15 @@ class Truck(models.Model):
     def __str__(self):
         return self.license_plate
 
+    def get_pilot(self):
+        distribution_mobil_set = DistributionMobil.objects.filter(truck=self)
+        pilot_name = "SIN CONDUCTOR"
+        if distribution_mobil_set.exists():
+            distribution_mobil_obj = distribution_mobil_set.last()
+            if distribution_mobil_obj.pilot is not None:
+                pilot_name = distribution_mobil_obj.pilot.full_name()
+        return pilot_name
+
     class Meta:
         verbose_name = 'Tracto'
         verbose_name_plural = 'Tractos'

@@ -15,30 +15,17 @@
                 <form class="form-inline" id="search-form" method="POST">
                     {% csrf_token %}
 
-                    <label class="my-1 mr-2" for="id-year">AÑO :</label>
-                    <select class="custom-select my-1 mr-sm-2" id="id-year" name="year" required>
+                    <label class="my-1 mr-2" for="id-start-date">DESDE :</label>
+                    <input type="date" class="form-control" id="id-start-date" name="start-date" value="{{ formatdate }}" required />
 
-                        {% for y in year_set %}
-                            <option {% if current_year == y %}selected{% endif %} value="{{ y }}">{{ y }}</option>
-                        {% endfor %}
-
-                    </select>
-
-                    <label class="my-1 mr-2" for="id-month">MES :</label>
-                    <select class="custom-select my-1 mr-sm-2" id="id-month" name="month" required>
-
-                        {% for m in month_set %}
-                            <option {% if current_month == forloop.counter %}selected{% endif %} value="{{ forloop.counter }}">{{ m }}</option>
-                        {% endfor %}
-
-                    </select>
+                    <label class="my-1 mr-2" for="id-end-date">HASTA :</label>
+                    <input type="date" class="form-control" id="id-end-date" name="end-date" value="{{ formatdate }}" required />
 
                     <label class="my-1 mr-2" for="id-truck">PLACA :</label>
                     <select class="custom-select my-1 mr-sm-2" id="id-truck" name="truck" required>
                         <option value="" disabled selected>SELECCIONE...</option>
                         {% for t in truck_set %}
-                            <option value="{{ t.pk }}">{{ t.license_plate }}
-                                - {{ t.distributionmobil_set.count }}</option>
+                            <option value="{{ t.pk }}">{{ t.license_plate }} -> {{ t.get_pilot }} ({{ t.distributionmobil_set.count }})</option>
                         {% endfor %}
                     </select>
 

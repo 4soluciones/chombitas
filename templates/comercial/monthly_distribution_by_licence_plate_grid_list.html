@@ -20,17 +20,17 @@
             <td class="text-center font-weight-bold" colspan="5">10KG</td>
             <td class="table-warning text-center" colspan="{{ header_b10|length }}">PRECIOS</td>
         <td class="align-middle text-center table-info" rowspan="2"><span class="text-rotated-90">TOTAL<br/>VENTA S/</span></td>
-            <td class="text-center" colspan="4">FIERROS</td>
+            <td class="text-center table-dark text-white" colspan="4">FIERROS</td>
 
             <td class="text-center font-weight-bold" colspan="5">5KG</td>
             <td class="table-warning text-center" colspan="{{ header_b5|length }}">PRECIOS</td>
         <td class="align-middle text-center table-info" rowspan="2"><span class="text-rotated-90">TOTAL<br/>VENTA S/</span></td>
-            <td class="text-center" colspan="4">FIERROS</td>
+            <td class="text-center table-dark text-white" colspan="4">FIERROS</td>
 
             <td class="text-center font-weight-bold" colspan="5">45KG</td>
             <td class="table-warning text-center" colspan="{{ header_b45|length }}">PRECIOS</td>
         <td class="align-middle text-center table-info" rowspan="2"><span class="text-rotated-90">TOTAL<br/>VENTA S/</span></td>
-            <td class="text-center" colspan="4">FIERROS</td>
+            <td class="text-center table-dark text-white" colspan="4">FIERROS</td>
 
         <td class="align-middle text-center table-info  font-weight-bold" rowspan="2"><span class="text-rotated-90">TOTAL<br/>VENTA DEL<br/>DIA S/</span></td>
 
@@ -50,10 +50,10 @@
             {% empty %}
                 <td class="align-middle text-center table-warning"></td>
             {% endfor %}
-            <td class="align-middle text-center"><span class="text-rotated-90">PRESTADOS</span></td>
-            <td class="align-middle text-center"><span class="text-rotated-90">RECUPERADOS</span></td>
-            <td class="align-middle text-center"><span class="text-rotated-90">ADELANTADOS</span></td>
-            <td class="align-middle text-center"><span class="text-rotated-90">DEBE<br/>FIERROS</span></td>
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">PRESTADOS</span></td>
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">RECUPERADOS</span></td>
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">ADELANTADOS</span></td>
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">DEBE<br/>FIERROS</span></td>
 
 
             <td class="align-middle text-center"><span class="text-rotated-90">LLENO</span></td>
@@ -66,10 +66,10 @@
             {% empty %}
                 <td class="align-middle text-center table-warning"></td>
             {% endfor %}
-            <td class="align-middle text-center"><span class="text-rotated-90">PRESTADOS</span></td>
-            <td class="align-middle text-center"><span class="text-rotated-90">RECUPERADOS</span></td>
-            <td class="align-middle text-center"><span class="text-rotated-90">ADELANTADOS</span></td>
-            <td class="align-middle text-center"><span class="text-rotated-90">DEBE<br/>FIERROS</span></td>
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">PRESTADOS</span></td>
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">RECUPERADOS</span></td>
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">ADELANTADOS</span></td>
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">DEBE<br/>FIERROS</span></td>
 
 
             <td class="align-middle text-center"><span class="text-rotated-90">LLENO</span></td>
@@ -82,10 +82,10 @@
             {% empty %}
                 <td class="align-middle text-center table-warning"></td>
             {% endfor %}
-            <td class="align-middle text-center"><span class="text-rotated-90">PRESTADOS</span></td>
-            <td class="align-middle text-center"><span class="text-rotated-90">RECUPERADOS</span></td>
-            <td class="align-middle text-center"><span class="text-rotated-90">ADELANTADOS</span></td>
-            <td class="align-middle text-center"><span class="text-rotated-90">DEBE<br/>FIERROS</span></td>
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">PRESTADOS</span></td>
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">RECUPERADOS</span></td>
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">ADELANTADOS</span></td>
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">DEBE<br/>FIERROS</span></td>
 
             <td class="align-middle text-center"><span class="text-rotated-90">PETROLEO</span></td>
             <td class="align-middle text-center"><span class="text-rotated-90">VIATICO</span></td>
@@ -108,24 +108,24 @@
         <td class="align-middle text-center table-primary">{{ initial_remaining_in_the_car_bg10 }}</td>
         <td class="align-middle text-center table-warning" colspan="{{ header_b10|length }}"></td>
         <td class="align-middle text-center table-info"></td>
-        <td colspan="3"></td>
-        <td>{{ initial_remaining_borrowed_b10 }}</td>
+        <td class="table-dark text-white" colspan="3"></td>
+        <td class="table-dark text-white">{{ initial_remaining_borrowed_b10 }}</td>
 
         <td colspan="3"></td>
         <td class="align-middle text-center table-success"></td>
         <td class="align-middle text-center table-primary">{{ initial_remaining_in_the_car_bg5 }}</td>
         <td class="align-middle text-center table-warning" colspan="{{ header_b5|length }}"></td>
         <td class="align-middle text-center table-info"></td>
-        <td colspan="3"></td>
-        <td>{{ initial_remaining_borrowed_b5 }}</td>
+        <td class="table-dark text-white" colspan="3"></td>
+        <td class="table-dark text-white">{{ initial_remaining_borrowed_b5 }}</td>
 
         <td colspan="3"></td>
         <td class="align-middle text-center table-success"></td>
         <td class="align-middle text-center table-primary">{{ initial_remaining_in_the_car_bg45 }}</td>
         <td class="align-middle text-center table-warning" colspan="{{ header_b45|length }}"></td>
         <td class="align-middle text-center table-info"></td>
-        <td colspan="3"></td>
-        <td>{{ initial_remaining_borrowed_b45 }}</td>
+        <td class="table-dark text-white" colspan="3"></td>
+        <td class="table-dark text-white">{{ initial_remaining_borrowed_b45 }}</td>
 
         <td class="align-middle text-center table-info"></td>
         <td colspan="5"></td>
@@ -149,10 +149,10 @@
         {% endfor %}
 
         <td class="align-middle text-center table-info">{{ distribution.B10.total_sales }}</td>
-        <td>{{ distribution.B10.quantity_sold_b }}</td>
-        <td>{{ distribution.B10.recovered_b }}</td>
-        <td>{{ distribution.B10.advanced_b }}</td>
-        <td>{{ distribution.B10.remaining_borrowed_b }}</td>
+        <td class="table-dark text-white">{{ distribution.B10.quantity_sold_b }}</td>
+        <td class="table-dark text-white">{{ distribution.B10.recovered_b }}</td>
+        <td class="table-dark text-white">{{ distribution.B10.advanced_b }}</td>
+        <td class="table-dark text-white">{{ distribution.B10.remaining_borrowed_b }}</td>
 
         <td>{{ distribution.B5.extracted_bg }}</td>
         <td>{{ distribution.B5.returned_b }}</td>
@@ -163,10 +163,10 @@
             <td class="align-middle text-center table-warning">{{ value.quantity }}</td>
         {% endfor %}
         <td class="align-middle text-center table-info">{{ distribution.B5.total_sales }}</td>
-        <td>{{ distribution.B5.quantity_sold_b }}</td>
-        <td>{{ distribution.B5.recovered_b }}</td>
-        <td>{{ distribution.B5.advanced_b }}</td>
-        <td>{{ distribution.B5.remaining_borrowed_b }}</td>
+        <td class="table-dark text-white">{{ distribution.B5.quantity_sold_b }}</td>
+        <td class="table-dark text-white">{{ distribution.B5.recovered_b }}</td>
+        <td class="table-dark text-white">{{ distribution.B5.advanced_b }}</td>
+        <td class="table-dark text-white">{{ distribution.B5.remaining_borrowed_b }}</td>
 
         <td>{{ distribution.B45.extracted_bg }}</td>
         <td>{{ distribution.B45.returned_b }}</td>
@@ -177,10 +177,10 @@
             <td class="align-middle text-center table-warning">{{ value.quantity }}</td>
         {% endfor %}
         <td class="align-middle text-center table-info">{{ distribution.B45.total_sales }}</td>
-        <td>{{ distribution.B45.quantity_sold_b }}</td>
-        <td>{{ distribution.B45.recovered_b }}</td>
-        <td>{{ distribution.B45.advanced_b }}</td>
-        <td>{{ distribution.B45.remaining_borrowed_b }}</td>
+        <td class="table-dark text-white">{{ distribution.B45.quantity_sold_b }}</td>
+        <td class="table-dark text-white">{{ distribution.B45.recovered_b }}</td>
+        <td class="table-dark text-white">{{ distribution.B45.advanced_b }}</td>
+        <td class="table-dark text-white">{{ distribution.B45.remaining_borrowed_b }}</td>
 
         <td class="align-middle text-center table-info font-weight-bold">{{ distribution.total_sold_by_date }}</td>
 

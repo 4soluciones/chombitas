@@ -2118,26 +2118,40 @@ def get_monthly_distribution_by_licence_plate(request):
     if request.method == 'GET':
         truck_set = Truck.objects.filter(distributionmobil__isnull=False).distinct('license_plate').order_by(
             'license_plate')
+        my_date = datetime.now()
+        formatdate = my_date.strftime("%Y-%m-%d")
         return render(request, 'comercial/monthly_distribution_by_licence_plate_list.html', {
             'month_set': get_spanish_month_names(),
             'current_year': datetime.now().year,
             'current_month': datetime.now().month,
             'year_set': get_consecutive_years(),
+            'formatdate': formatdate,
             'truck_set': truck_set
         })
     elif request.method == 'POST':
         truck_id = int(request.POST.get('truck'))
-        month = int(request.POST.get('month'))
-        year = int(request.POST.get('year'))
+        # month = int(request.POST.get('month'))
+        # year = int(request.POST.get('year'))
+        start_date = str(request.POST.get('start-date'))
+        end_date = str(request.POST.get('end-date'))
 
-        selected_datetime = datetime(year, month, 1)
-        remaining_borrowed_b10 = get_previous_debt_for_borrowed_balls(selected_datetime=selected_datetime, truck_id=truck_id, product__id=1)
-        remaining_borrowed_b5 = get_previous_debt_for_borrowed_balls(selected_datetime=selected_datetime, truck_id=truck_id, product__id=2)
-        remaining_borrowed_b45 = get_previous_debt_for_borrowed_balls(selected_datetime=selected_datetime, truck_id=truck_id, product__id=3)
+        timezone_peru = pytz.timezone('America/Lima')
+
+        start_date_sin_timezone = datetime.strptime(start_date, '%Y-%m-%d')
+        # start_date_con_timezone = timezone.make_aware(start_date_sin_timezone, timezone=timezone_peru)
+        end_date_sin_timezone = datetime.strptime(end_date, '%Y-%m-%d')
+        # end_date_con_timezone = timezone.make_aware(end_date_sin_timezone, timezone=timezone_peru)
+
+
+        # selected_datetime = datetime(year, month, 1)
+        remaining_borrowed_b10 = get_previous_debt_for_borrowed_balls(selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=1)
+        remaining_borrowed_b5 = get_previous_debt_for_borrowed_balls(selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=2)
+        remaining_borrowed_b45 = get_previous_debt_for_borrowed_balls(selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=3)
 
         distribution_mobil_set = DistributionMobil.objects.filter(
-            date_distribution__month=month,
-            date_distribution__year=year,
+            # date_distribution__month=month,
+            # date_distribution__year=year,
+            date_distribution__range=[start_date_sin_timezone.date(), end_date_sin_timezone.date()],
             truck__id=truck_id
         ).annotate(
             previous_distribution_id=Window(expression=Lag('id', default=0), order_by=(F('date_distribution').asc(), F('id').asc()))
@@ -2164,8 +2178,9 @@ def get_monthly_distribution_by_licence_plate(request):
         # 14: "BALONES DE 3 KG"
 
         base_query_set = OrderDetail.objects.filter(
-            order__distribution_mobil__date_distribution__month=month,
-            order__distribution_mobil__date_distribution__year=year,
+            # order__distribution_mobil__date_distribution__month=month,
+            # order__distribution_mobil__date_distribution__year=year,
+            order__distribution_mobil__date_distribution__range=[start_date_sin_timezone.date(), end_date_sin_timezone.date()],
             order__distribution_mobil__truck__id=truck_id,
             unit__name__in=['G', 'B']
         )
