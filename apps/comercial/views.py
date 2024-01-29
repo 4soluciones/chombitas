@@ -1,7 +1,13 @@
+import calendar
 import decimal
+from collections import defaultdict
 from http import HTTPStatus
-from django.db.models import Q, Max, F, Prefetch
+
+import pytz
+from django.db.models import Q, Max, F, Prefetch, Window
+from django.db.models.functions import Lag
 from django.shortcuts import render
+from django.utils import timezone
 from django.views.generic import View, TemplateView, UpdateView, CreateView
 from django.views.decorators.csrf import csrf_exempt
 from .models import *
@@ -11,7 +17,7 @@ from .forms import *
 from django.urls import reverse_lazy
 from apps.sales.models import Product, SubsidiaryStore, ProductStore, ProductDetail, ProductRecipe, \
     ProductSubcategory, ProductSupplier, \
-    TransactionPayment, Order, LoanPayment
+    TransactionPayment, Order, LoanPayment, Kardex
 from apps.sales.views import kardex_ouput, kardex_input, kardex_initial, calculate_minimum_unit, Supplier
 from apps.hrm.models import Subsidiary
 import json
@@ -20,13 +26,16 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.fields.files import ImageFieldFile
 from django.template import loader
 from datetime import datetime
+from datetime import timedelta
 from django.db import DatabaseError, IntegrityError
 from django.core import serializers
 from datetime import date
 # Create your views here.
 from .. import sales
+from ..accounting.models import CashFlow, Cash
 from ..buys.models import Purchase
 from ..hrm.views import get_subsidiary_by_user
+from ..sales.funtions import get_orders_for_status_account
 
 
 class Index(TemplateView):
@@ -1899,6 +1908,475 @@ def get_stock_by_product_type(request):
     return JsonResponse({'error': True, 'message': 'Error de peticion.'})
 
 
+def get_consecutive_years():
+    current_year = datetime.now().year
+    years = [current_year - 1, current_year, current_year + 1]
+    return years
+
+
+def get_spanish_month_names():
+
+    month_names = [
+        'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO',
+        'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+    ]
+
+    return month_names
+
+
+def get_previous_debt_for_borrowed_balls(selected_datetime=None, truck_id=None, product__id=None):
+
+    q = OrderDetail.objects.filter(
+        order__distribution_mobil__date_distribution__lt=selected_datetime.date(),
+        order__distribution_mobil__truck__id=truck_id,
+        unit__name__in=['B'],
+        product__id=product__id
+    ).values('product__id').annotate(sum_quantity_sold_b=Sum(F('quantity_sold'))).values(
+        'sum_quantity_sold_b'
+    )
+
+    q2 = LoanPayment.objects.filter(
+        order_detail__order__distribution_mobil__date_distribution__lt=selected_datetime.date(),
+        order_detail__order__distribution_mobil__truck__id=truck_id,
+        order_detail__unit__name__in=['B'],
+        product__id=product__id
+    ).values('product__id').annotate(sum_quantity_recovered_b=Sum(F('quantity'))).values(
+        'sum_quantity_recovered_b'
+    )
+
+    sum_quantity_sold_b = 0
+    sum_quantity_recovered_b = 0
+
+    if q.exists():
+        result = q[0]
+        sum_quantity_sold_b = result.get('sum_quantity_sold_b', 0)
+
+    if q2.exists():
+        result2 = q2[0]
+        sum_quantity_recovered_b = result2.get('sum_quantity_recovered_b', 0)
+
+    return sum_quantity_sold_b - sum_quantity_recovered_b
+
+
+def get_previous_debt_for_in_the_car_balls(distribution_mobil_set=None, truck_id=None, product__id=None):
+    remaining_in_the_car_bg = 0
+
+    if distribution_mobil_set.exists():
+        last_distribution_set = DistributionMobil.objects.filter(
+            id__lte=distribution_mobil_set[0].id, truck__id=truck_id
+        ).annotate(
+            previous_distribution_id=Window(expression=Lag('id', default=0), order_by=('date_distribution', 'id'))
+        ).order_by('date_distribution', 'id')
+
+        if last_distribution_set.exists():
+
+            last_distribution_detail_set = DistributionDetail.objects.filter(
+                distribution_mobil__id=last_distribution_set.last().previous_distribution_id,
+                status='C',
+                product__id=product__id
+            )
+            if last_distribution_detail_set.exists():
+                last_distribution_detail_obj = last_distribution_detail_set.last()
+                remaining_in_the_car_bg = int(last_distribution_detail_obj.quantity)
+
+    return remaining_in_the_car_bg
+
+
+def get_credits_from_clients_by_subsidiary(request):
+    if request.method == 'GET':
+        user_id = request.user.id
+        user_obj = User.objects.get(pk=int(user_id))
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+
+        return render(request, 'comercial/credits_from_clients_by_subsidiary_list.html', {
+            'subsidiary_obj': subsidiary_obj
+        })
+    elif request.method == 'POST':
+        type_debt = str(request.POST.get('type-debt'))
+        user_id = request.user.id
+        user_obj = User.objects.get(id=user_id)
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+        d = get_orders_for_status_account(subsidiary_obj=subsidiary_obj)
+        client_dict = d['client_dict']
+        summary_sum_total_remaining_repay_loan = d['summary_sum_total_remaining_repay_loan']
+        summary_sum_total_remaining_return_loan = d['summary_sum_total_remaining_return_loan']
+        array_p_p = []
+
+        if len(client_dict) > 0:
+
+            for k, st in client_dict.items():
+                client_name = st['client_names']
+                if type_debt == "E":
+                    total = float(round(st['sum_total_remaining_repay_loan'], 2))
+                else:
+                    total = float(round(st['sum_total_remaining_return_loan'], 0))
+                purchase_dict = {
+                    'label': client_name,
+                    'y': total
+                }
+                array_p_p.append(purchase_dict)
+            tpl = loader.get_template('comercial/credits_from_clients_by_subsidiary_grid_list.html')
+            context = ({
+                'type_debt': type_debt,
+                'client_dict': client_dict,
+                'summary_sum_total_remaining_repay_loan': round(summary_sum_total_remaining_repay_loan, 2),
+                'summary_sum_total_remaining_return_loan': round(summary_sum_total_remaining_return_loan),
+                'array_p_p': array_p_p,
+                'subsidiary_obj': subsidiary_obj,
+            })
+
+            return JsonResponse({
+                'grid': tpl.render(context)
+            }, status=HTTPStatus.OK)
+        else:
+            data = {'error': "No hay operaciones registradas"}
+            response = JsonResponse(data)
+            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+            return response
+
+
+def get_expenses_by_licence_plate(request):
+    if request.method == 'GET':
+        truck_set = Truck.objects.filter(distributionmobil__isnull=False).distinct('license_plate').order_by(
+            'license_plate')
+        my_date = datetime.now()
+        formatdate = my_date.strftime("%Y-%m-%d")
+        return render(request, 'comercial/expenses_by_licence_plate_list.html', {
+            'formatdate': formatdate,
+            'truck_set': truck_set
+        })
+    elif request.method == 'POST':
+        truck_id = int(request.POST.get('truck'))
+        start_date = str(request.POST.get('start-date'))
+        end_date = str(request.POST.get('end-date'))
+
+        base_query_set = CashFlow.objects.filter(
+            transaction_date__date__range=[start_date, end_date], distribution_mobil__isnull=False, type='S'
+        )
+        if truck_id > 0:
+            base_query_set = base_query_set.filter(distribution_mobil__truck__id=truck_id)
+
+        pilots = list(base_query_set.values_list('distribution_mobil__pilot__id', flat=True).distinct())
+
+        if pilots:
+            grouped_by_pilot = defaultdict(
+                lambda: {
+                    'pilot_id': '', 'pilot_name': '',
+                    'expense_1': 0, 'expense_2': 0, 'expense_3': 0, 'expense_4': 0, 'expense_5': 0, 'total_expenses': 0,
+                    'date_expense_1': "", 'date_expense_2': "", 'date_expense_3': "", 'date_expense_4': "",
+                    'date_expense_5': ""
+                }
+            )
+
+            for pilot_id in pilots:
+                data_obj = grouped_by_pilot[pilot_id]
+                pilot_obj = Employee.objects.get(id=pilot_id)
+                data_obj['pilot_id'] = pilot_id
+                data_obj['pilot_name'] = pilot_obj.full_name()
+                total_expenses = 0
+                for expense in base_query_set:
+                    if expense.description == "PETROLEO":
+                        data_obj["expense_1"] += round(expense.total, 1)
+                        date_str = expense.transaction_date.strftime('%d-%b').upper()
+                        data_obj['date_expense_1'] = date_str.replace('JAN', 'ENE')
+                    if expense.description == "VIATICO":
+                        data_obj["expense_2"] += round(expense.total, 1)
+                        date_str = expense.transaction_date.strftime('%d-%b').upper()
+                        data_obj['date_expense_2'] = date_str.replace('JAN', 'ENE')
+                    if expense.description == "FERIADO Y SUELDO":
+                        data_obj["expense_3"] += round(expense.total, 1)
+                        date_str = expense.transaction_date.strftime('%d-%b').upper()
+                        data_obj['date_expense_3'] = date_str.replace('JAN', 'ENE')
+                    if expense.description == "MANTENIMIENTO":
+                        data_obj["expense_4"] += round(expense.total, 1)
+                        date_str = expense.transaction_date.strftime('%d-%b').upper()
+                        data_obj['date_expense_4'] = date_str.replace('JAN', 'ENE')
+                    if expense.description == "OTROS GASTOS":
+                        data_obj["expense_5"] += round(expense.total, 1)
+                        date_str = expense.transaction_date.strftime('%d-%b').upper()
+                        data_obj['date_expense_5'] = date_str.replace('JAN', 'ENE')
+                    total_expenses += round(expense.total, 1)
+                data_obj['total_expenses'] = total_expenses
+
+            pilots_with_expenses = list(grouped_by_pilot.values())
+
+            tpl = loader.get_template('comercial/expenses_by_licence_plate_grid_list.html')
+            context = ({
+                'pilots_with_expenses': pilots_with_expenses,
+            })
+            return JsonResponse({
+                'grid': tpl.render(context)
+            }, status=HTTPStatus.OK)
+        else:
+            data = {'error': "No hay operaciones registradas"}
+            response = JsonResponse(data)
+            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+            return response
+
+
+def get_monthly_distribution_by_licence_plate(request):
+    if request.method == 'GET':
+        truck_set = Truck.objects.filter(distributionmobil__isnull=False).distinct('license_plate').order_by(
+            'license_plate')
+        my_date = datetime.now()
+        formatdate = my_date.strftime("%Y-%m-%d")
+        return render(request, 'comercial/monthly_distribution_by_licence_plate_list.html', {
+            'month_set': get_spanish_month_names(),
+            'current_year': datetime.now().year,
+            'current_month': datetime.now().month,
+            'year_set': get_consecutive_years(),
+            'formatdate': formatdate,
+            'truck_set': truck_set
+        })
+    elif request.method == 'POST':
+        truck_id = int(request.POST.get('truck'))
+        # month = int(request.POST.get('month'))
+        # year = int(request.POST.get('year'))
+        start_date = str(request.POST.get('start-date'))
+        end_date = str(request.POST.get('end-date'))
+
+        timezone_peru = pytz.timezone('America/Lima')
+
+        start_date_sin_timezone = datetime.strptime(start_date, '%Y-%m-%d')
+        # start_date_con_timezone = timezone.make_aware(start_date_sin_timezone, timezone=timezone_peru)
+        end_date_sin_timezone = datetime.strptime(end_date, '%Y-%m-%d')
+        # end_date_con_timezone = timezone.make_aware(end_date_sin_timezone, timezone=timezone_peru)
+
+
+        # selected_datetime = datetime(year, month, 1)
+        remaining_borrowed_b10 = get_previous_debt_for_borrowed_balls(selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=1)
+        remaining_borrowed_b5 = get_previous_debt_for_borrowed_balls(selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=2)
+        remaining_borrowed_b45 = get_previous_debt_for_borrowed_balls(selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=3)
+
+        distribution_mobil_set = DistributionMobil.objects.filter(
+            # date_distribution__month=month,
+            # date_distribution__year=year,
+            date_distribution__range=[start_date_sin_timezone.date(), end_date_sin_timezone.date()],
+            truck__id=truck_id
+        ).annotate(
+            previous_distribution_id=Window(expression=Lag('id', default=0), order_by=(F('date_distribution').asc(), F('id').asc()))
+        ).order_by('date_distribution', 'id')
+
+        remaining_in_the_car_bg10 = get_previous_debt_for_in_the_car_balls(distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=1)
+        remaining_in_the_car_bg5 = get_previous_debt_for_in_the_car_balls(distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=2)
+        remaining_in_the_car_bg45 = get_previous_debt_for_in_the_car_balls(distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=3)
+
+        initial_remaining_in_the_car_bg10 = remaining_in_the_car_bg10
+        initial_remaining_in_the_car_bg5 = remaining_in_the_car_bg5
+        initial_remaining_in_the_car_bg45 = remaining_in_the_car_bg45
+
+        initial_remaining_borrowed_b10 = remaining_borrowed_b10
+        initial_remaining_borrowed_b5 = remaining_borrowed_b5
+        initial_remaining_borrowed_b45 = remaining_borrowed_b45
+
+        distributions = []
+
+        # 1: "BALON DE 10 KG"
+        # 2: "BALON DE 5KG"
+        # 3: "BALON DE 45 KG"
+        # 12: "BALON DE 15 KG"
+        # 14: "BALONES DE 3 KG"
+
+        base_query_set = OrderDetail.objects.filter(
+            # order__distribution_mobil__date_distribution__month=month,
+            # order__distribution_mobil__date_distribution__year=year,
+            order__distribution_mobil__date_distribution__range=[start_date_sin_timezone.date(), end_date_sin_timezone.date()],
+            order__distribution_mobil__truck__id=truck_id,
+            unit__name__in=['G', 'B']
+        )
+
+        header_b10 = list(base_query_set.filter(product__id=1).values_list('price_unit', flat=True).distinct())
+        header_b5 = list(base_query_set.filter(product__id=2).values_list('price_unit', flat=True).distinct())
+        header_b45 = list(base_query_set.filter(product__id=3).values_list('price_unit', flat=True).distinct())
+
+        if len(header_b10) == 0:
+            header_b10 = [""]
+        if len(header_b5) == 0:
+            header_b5 = [""]
+        if len(header_b45) == 0:
+            header_b45 = [""]
+
+        grouped_by_date = defaultdict(
+            lambda: {
+                'date': '',
+                'B5': {
+                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
+                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0,
+                    'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b5}, 'total_sales': 0,
+                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'advanced_b': 0, 'remaining_borrowed_b': 0
+                },
+                'B10': {
+                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
+                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0,
+                    'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b10}, 'total_sales': 0,
+                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'advanced_b': 0, 'remaining_borrowed_b': 0
+                },
+                'B45': {
+                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
+                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0,
+                    'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b45}, 'total_sales': 0,
+                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'advanced_b': 0, 'remaining_borrowed_b': 0
+                },
+                'B15': {
+                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
+                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'prices': {}, 'total_sales': 0,
+                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'advanced_b': 0, 'remaining_borrowed_b': 0
+                },
+                'B3': {
+                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
+                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'prices': {}, 'total_sales': 0,
+                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'advanced_b': 0, 'remaining_borrowed_b': 0
+                },
+                'total_sold_by_date': 0,
+                'expense_1': 0, 'expense_2': 0, 'expense_3': 0, 'expense_4': 0, 'expense_5': 0, 'total_to_deposit': 0,
+                'deposited': 0, 'balance': 0, 'bank': "", 'date_deposit': ""
+            }
+        )
+
+        for distribution in distribution_mobil_set:
+
+            date_str = distribution.date_distribution.strftime('%d-%b').upper()
+            distribution_obj = grouped_by_date[date_str]
+            distribution_obj['date'] = date_str.replace('JAN', 'ENE')
+
+            for detail in distribution.distributiondetail_set.all():
+                # last_distribution_detail_in_the_car_obj = None
+                # if distribution.previous_distribution_id > 0:
+                #
+                #     last_distribution_detail_in_the_car_set = DistributionDetail.objects.filter(
+                #         distribution_mobil__id=distribution.previous_distribution_id,
+                #         status='C',
+                #         product=detail.product
+                #     )
+                #     if last_distribution_detail_in_the_car_set.exists():
+                #         last_distribution_detail_in_the_car_obj = last_distribution_detail_in_the_car_set.last()
+
+                product_id = detail.product.id
+
+                ball = None
+                in_the_car_bg = 0
+
+                if product_id == 1:  # B10KG
+                    ball = distribution_obj["B10"]
+                elif product_id == 2:  # B5KG
+                    ball = distribution_obj["B5"]
+                elif product_id == 3:  # B45KG
+                    ball = distribution_obj["B45"]
+
+                # if last_distribution_detail_in_the_car_obj is not None:
+                    # ball["in_the_car_bg"] = int(last_distribution_detail_in_the_car_obj.quantity)
+                if detail.status == "C" and detail.type == "L":
+                    ball["in_the_car_bg"] = int(detail.quantity)
+                if detail.status == "E" and detail.type == "L":
+                    kardex_set = Kardex.objects.filter(distribution_detail=detail)
+                    if kardex_set.exists():
+                        kardex_obj = kardex_set.last()
+                        ball["extracted_bg"] += int(kardex_obj.quantity)
+                    # ball["extracted_bg"] += int(detail.quantity)
+
+                if detail.status == "D" and detail.type == "V":
+                    ball["returned_b"] += int(detail.quantity)
+                if detail.status == "D" and detail.type == "M":
+                    ball["ruined_returned_bg"] += int(detail.quantity)
+                if detail.status == "R" and detail.type == "V":
+                    ball["recovered_b"] += int(detail.quantity)
+                    ball["remaining_borrowed_b"] = remaining_borrowed_b10 - int(detail.quantity)
+                    remaining_borrowed_b10 -= int(detail.quantity)
+                if detail.status == "A" and detail.type == "V":
+                    ball["advanced_b"] += int(detail.quantity)
+
+            total_sales_by_date = 0
+            for order in distribution.order_set.all():
+
+                for od in order.orderdetail_set.all():
+                    product_id = od.product.id
+                    ball = None
+
+                    value = od.price_unit
+
+                    if product_id == 1:  # B10KG
+                        ball = distribution_obj["B10"]
+                    elif product_id == 2:  # B5KG
+                        ball = distribution_obj["B5"]
+                    elif product_id == 3:  # B45KG
+                        ball = distribution_obj["B45"]
+
+                    ball['prices'][value]["quantity"] += int(od.quantity_sold)
+                    ball['prices'][value]['subtotal'] = ball['prices'][value]['quantity'] * od.price_unit
+
+                    if od.unit.name == 'G':
+                        ball["quantity_sold_g"] += int(od.quantity_sold)
+                        ball["quantity_sold"] += int(od.quantity_sold)
+                    if od.unit.name == 'B':
+                        ball["quantity_sold_b"] += int(od.quantity_sold)
+                        ball["quantity_sold"] += int(od.quantity_sold)
+                        ball["remaining_borrowed_b"] = int(remaining_borrowed_b10) + int(od.quantity_sold)
+                        remaining_borrowed_b10 += int(od.quantity_sold)
+                    ball["total_sales"] += round(od.quantity_sold * od.price_unit, 1)
+                    total_sales_by_date += round(od.quantity_sold * od.price_unit, 1)
+
+            total_expenses = 0
+            for expense in distribution.cashflow_set.filter(type='S'):
+                if expense.description == "PETROLEO":
+                    distribution_obj["expense_1"] += round(expense.total, 1)
+                if expense.description == "VIATICO":
+                    distribution_obj["expense_2"] += round(expense.total, 1)
+                if expense.description == "FERIADO Y SUELDO":
+                    distribution_obj["expense_3"] += round(expense.total, 1)
+                if expense.description == "MANTENIMIENTO":
+                    distribution_obj["expense_4"] += round(expense.total, 1)
+                if expense.description == "OTROS GASTOS":
+                    distribution_obj["expense_5"] += round(expense.total, 1)
+                total_expenses += round(expense.total, 1)
+
+            distribution_obj['total_sold_by_date'] = total_sales_by_date
+            distribution_obj['total_to_deposit'] = total_sales_by_date - total_expenses
+
+            total_deposited = 0
+            bank = []
+            dates_of_deposit = []
+            for deposit in distribution.cashflow_set.filter(type='D'):
+                distribution_obj["deposited"] += round(deposit.total, 1)
+                total_deposited += round(deposit.total, 1)
+                bank.append(deposit.cash.name)
+                dates_of_deposit.append(str(deposit.transaction_date.date()))
+
+            distribution_obj['balance'] = total_sales_by_date - total_expenses - total_deposited
+
+            bank_without_duplicates = list(set(bank))
+            string_of_banks = ", ".join(bank_without_duplicates)
+            dates_of_deposit_without_duplicates = list(set(dates_of_deposit))
+            string_of_dates_of_deposit = ", ".join(dates_of_deposit_without_duplicates)
+
+            distribution_obj['bank'] = string_of_banks
+            distribution_obj['date_deposit'] = string_of_dates_of_deposit
+
+        distributions = list(grouped_by_date.values())
+        tpl = loader.get_template('comercial/monthly_distribution_by_licence_plate_grid_list.html')
+        context = ({
+            'distributions': distributions,
+            'header_b10': header_b10,
+            'header_b5': header_b5,
+            'header_b45': header_b45,
+            'initial_remaining_in_the_car_bg10': int(initial_remaining_in_the_car_bg10),
+            'initial_remaining_in_the_car_bg5': int(initial_remaining_in_the_car_bg5),
+            'initial_remaining_in_the_car_bg45': int(initial_remaining_in_the_car_bg45),
+            'initial_remaining_borrowed_b10': int(initial_remaining_borrowed_b10),
+            'initial_remaining_borrowed_b5': int(initial_remaining_borrowed_b5),
+            'initial_remaining_borrowed_b45': int(initial_remaining_borrowed_b45),
+        })
+
+        if distribution_mobil_set:
+            return JsonResponse({
+                'grid': tpl.render(context)
+            }, status=HTTPStatus.OK)
+        else:
+            data = {'error': "No hay operaciones registradas"}
+            response = JsonResponse(data)
+            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+            return response
+
+
 def get_distribution_query(request):
     if request.method == 'GET':
         my_date = datetime.now()
@@ -2308,6 +2786,121 @@ def get_advancement_client(request):
                 'format': formatdate,
                 'product_set': product_obj,
             })
+
+
+def get_distribution_expense(request):
+    if request.method == 'GET':
+        pk = (request.GET.get('pk', ''))
+        my_date = datetime.now()
+        formatdate = my_date.strftime("%Y-%m-%d")
+        distribution_mobil_obj = DistributionMobil.objects.get(id=int(pk))
+
+        t = loader.get_template('comercial/distribution_expense.html')
+        c = ({
+            'distribution_mobil': distribution_mobil_obj,
+            'format': formatdate,
+        })
+        return JsonResponse({
+            'form': t.render(c, request),
+        })
+
+
+def get_distribution_deposit(request):
+    if request.method == 'GET':
+        pk = (request.GET.get('pk', ''))
+        my_date = datetime.now()
+        formatdate = my_date.strftime("%Y-%m-%d")
+        distribution_mobil_obj = DistributionMobil.objects.get(id=int(pk))
+        user_id = request.user.id
+        user_obj = User.objects.get(id=user_id)
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+
+        cash_set = Cash.objects.filter(subsidiary=subsidiary_obj).filter(Q(accounting_account__code__startswith='101')|Q(accounting_account__code__startswith='1041'))
+        t = loader.get_template('comercial/distribution_deposit.html')
+        c = ({
+            'distribution_mobil': distribution_mobil_obj,
+            'cash_set': cash_set,
+            'format': formatdate,
+        })
+        return JsonResponse({
+            'form': t.render(c, request),
+        })
+
+
+def save_distribution_expense(request):
+    if request.method == 'GET':
+        expense_request = request.GET.get('expense', '')
+        data_expense = json.loads(expense_request)
+        user_id = request.user.id
+        user_obj = User.objects.get(pk=int(user_id))
+        distribution_mobil_id = int(data_expense["distributionId"])
+        distribution_mobil_obj = DistributionMobil.objects.get(id=distribution_mobil_id)
+        total_expense = decimal.Decimal(data_expense["totalExpense"])
+        date_expense = str(data_expense["dateExpense"])
+        type_expense = str(data_expense["typeExpense"])
+        description = ""
+        if type_expense == '1':
+            description = "PETROLEO"
+        elif type_expense == '2':
+            description = "VIATICO"
+        elif type_expense == '3':
+            description = "FERIADO Y SUELDO"
+        elif type_expense == '4':
+            description = "MANTENIMIENTO"
+        elif type_expense == '5':
+            description = "OTROS GASTOS"
+
+        date_sin_timezone = datetime.strptime(date_expense, '%Y-%m-%d')
+        timezone_peru = pytz.timezone('America/Lima')
+        date_con_timezone = timezone.make_aware(date_sin_timezone, timezone=timezone_peru)
+        cash_flow_obj, _ = CashFlow.objects.update_or_create(
+            distribution_mobil=distribution_mobil_obj,
+            description=description,
+            type='S'
+        )
+        cash_flow_obj.transaction_date = date_con_timezone
+        cash_flow_obj.total = total_expense
+        cash_flow_obj.user = user_obj
+        cash_flow_obj.save()
+
+        return JsonResponse({
+            'message': 'GASTO REGISTRADO CORRECTAMENTE.',
+        }, status=HTTPStatus.OK)
+
+
+def save_distribution_deposit(request):
+    if request.method == 'GET':
+        deposit_request = request.GET.get('deposit', '')
+        data_deposit = json.loads(deposit_request)
+        user_id = request.user.id
+        user_obj = User.objects.get(pk=int(user_id))
+        distribution_mobil_id = int(data_deposit["distributionId"])
+        cash_id = int(data_deposit["cashId"])
+        distribution_mobil_obj = DistributionMobil.objects.get(id=distribution_mobil_id)
+        cash_obj = Cash.objects.get(id=cash_id)
+        total_deposit = decimal.Decimal(data_deposit["totalDeposit"])
+        date_deposit = str(data_deposit["dateDeposit"])
+        description = "DEPOSITO A CAJA"
+
+        date_sin_timezone = datetime.strptime(date_deposit, '%Y-%m-%d')
+        timezone_peru = pytz.timezone('America/Lima')
+        date_con_timezone = timezone.make_aware(date_sin_timezone, timezone=timezone_peru)
+
+        new_deposit = {
+            'transaction_date': date_con_timezone,
+            'distribution_mobil': distribution_mobil_obj,
+            'description': description,
+            'type': 'D',
+            'total': total_deposit,
+            'cash': cash_obj,
+            'user': user_obj,
+        }
+        deposit_obj = CashFlow.objects.create(**new_deposit)
+        deposit_obj.save()
+
+        return JsonResponse({
+            'message': 'GASTO REGISTRADO CORRECTAMENTE.',
+        }, status=HTTPStatus.OK)
 
 
 def save_advancement_client(request):

@@ -1,0 +1,91 @@
+{% extends 'home.html' %}
+
+{% block title %}
+    Comercial | Reporte por vendedor
+{% endblock title %}
+
+{% block body %}
+    <div class="container-fluid mt-3">
+
+    <p class="h1">Reporte por vendedor</p>
+
+        <div class="card">
+            <div class="card-body">
+            <h5 class="card-title">Filtros</h5>
+                <form class="form-inline" id="search-form" method="POST">
+                    {% csrf_token %}
+
+                    <label class="my-1 mr-2" for="id-start-date">DESDE :</label>
+                    <input type="date" class="form-control" id="id-start-date" name="start-date" value="{{ formatdate }}" required />
+
+                    <label class="my-1 mr-2" for="id-end-date">HASTA :</label>
+                    <input type="date" class="form-control" id="id-end-date" name="end-date" value="{{ formatdate }}" required />
+
+                    <label class="my-1 mr-2" for="id-truck">PLACA :</label>
+                    <select class="custom-select my-1 mr-sm-2" id="id-truck" name="truck" required>
+                        <option value="" disabled selected>SELECCIONE...</option>
+                        {% for t in truck_set %}
+                            <option value="{{ t.pk }}">{{ t.license_plate }} -> {{ t.get_pilot }} ({{ t.distributionmobil_set.count }})</option>
+                        {% endfor %}
+                    </select>
+
+                    <button type="submit" class="btn btn-info my-1">
+                        <i class="fas fa-search-dollar" id="btn-search"></i> Buscar
+                    </button>
+
+                    <a onclick="excelTickets();" class="btn btn-success text-white m-1">
+                        <span class="fa fa-file-excel"></span> Exportar
+                    </a>
+                </form>
+
+                <div id="distribution-grid-list">{% include "comercial/monthly_distribution_by_licence_plate_grid_list.html" %}</div>
+            </div>
+        </div>
+    </div>
+{% endblock body %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+
+        function excelTickets() {
+
+            $("#excel-data-grid").table2excel({
+                // exclude CSS class
+                exclude: ".noExl",
+                name: "Worksheet vouchers",
+                filename: "reporte_mensual_de_repartidor",//do not include extension
+                fileext: ".xlsx", // file extension
+                preserveColors: true
+
+            });
+        }
+
+        $('#search-form').submit(function (event) {
+            event.preventDefault();
+            let _data = new FormData($('#search-form').get(0));
+            $("#btn-search").attr("disabled", "true");
+            $.ajax({
+                url: '/comercial/get_monthly_distribution_by_licence_plate/',
+                type: "POST",
+                data: _data,
+                cache: false,
+                processData: false,
+                contentType: false,
+                success: function (response, textStatus, xhr) {
+                    console.log(response);
+                    if (xhr.status === 200) {
+                        $('#distribution-grid-list').html(response.grid);
+                        toastr.info(response['message'], '¡Bien hecho!');
+                    }
+                },
+                error: function (jqXhr, textStatus, xhr) {
+                    if (jqXhr.status === 500) {
+                        toastr.info(jqXhr.responseJSON.error, '¡Inconcebible!');
+                    }
+                }
+            });
+
+            $("#btn-search").removeAttr("disabled", "false");
+        });
+    </script>
+{% endblock extrajs %}

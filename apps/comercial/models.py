@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+
+from apps.accounting.models import Cash, CashFlow
 from apps.hrm.models import Subsidiary, Employee
 from apps.sales.models import Client, Product, Unit, SubsidiaryStore, Order, OrderDetail, ProductRecipe
 from django.db.models import Sum
@@ -75,6 +77,15 @@ class Truck(models.Model):
 
     def __str__(self):
         return self.license_plate
+
+    def get_pilot(self):
+        distribution_mobil_set = DistributionMobil.objects.filter(truck=self)
+        pilot_name = "SIN CONDUCTOR"
+        if distribution_mobil_set.exists():
+            distribution_mobil_obj = distribution_mobil_set.last()
+            if distribution_mobil_obj.pilot is not None:
+                pilot_name = distribution_mobil_obj.pilot.full_name()
+        return pilot_name
 
     class Meta:
         verbose_name = 'Tracto'
@@ -408,6 +419,40 @@ class DistributionMobil(models.Model):
     pilot = models.ForeignKey(Employee, on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     guide_number = models.CharField('Numero guia', max_length=20, null=True, blank=True)
+
+    def calculate_total_sales(self):
+        sales_set = Order.objects.filter(distribution_mobil=self)
+        total = 0
+        for s in sales_set.all():
+            for d in s.orderdetail_set.all():
+                if d.unit.name in ['B', 'G']:
+                    total += (d.quantity_sold * d.price_unit)
+        return round(total, 1)
+
+    def calculate_total_expenses(self):
+        cash_flow_set = CashFlow.objects.filter(distribution_mobil=self, type='S')
+
+        total = 0
+        for cf in cash_flow_set.all():
+            total += cf.total
+        return round(total, 1)
+
+    def calculate_total_deposits(self):
+        cash_flow_set = CashFlow.objects.filter(distribution_mobil=self, type='D')
+
+        total = 0
+        for cf in cash_flow_set.all():
+            total += cf.total
+        return round(total, 1)
+
+    def calculate_total_balance(self):
+        total_sales = self.calculate_total_sales()
+        total_expenses = self.calculate_total_expenses()
+        total_deposits = self.calculate_total_deposits()
+
+        total = total_sales - total_expenses - total_deposits
+
+        return round(total, 1)
 
     def new_detail_distribution(self):
         response = DistributionDetail.objects.filter(

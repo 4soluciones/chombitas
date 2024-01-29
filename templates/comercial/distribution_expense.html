@@ -1,0 +1,100 @@
+<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+
+    <div class="modal-content modal-sm">
+
+        <div class="modal-header">
+            <h6 class="modal-title">INGRESO DE GASTOS</h6>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+
+
+        <form action="" method="POST" id="form-distribution-expense">
+            <div class="modal-body">
+                {% csrf_token %}
+                <input type="hidden" value="{{ distribution_mobil.id }}" id="distribution-expense-id" />
+
+                <div class="form-group">
+                    <label for="truck-expense">Placa vehiculo</label>
+                    <input type="text" class="form-control" id="truck-expense" name="truck-expense" value="{{ distribution_mobil.truck.license_plate }}" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="pilot-expense">Nombre del conductor</label>
+                    <input type="text" class="form-control" id="pilot-expense" name="pilot-expense" value="{{ distribution_mobil.pilot.full_name }}" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="date-expense">Fecha</label>
+                    <input type="date" class="form-control" id="date-expense" name="date-expense" value="{{ format }}" required>
+                </div>
+
+
+                <div class="form-group">
+                    <label for="type-expense">Tipo</label>
+                    <select class="form-control" id="type-expense" name="type-expense" required>
+                      <option value="1">PETROLEO</option>
+                      <option value="2">VIATICO</option>
+                      <option value="3">FERIADO Y SUELDO</option>
+                      <option value="4">MANTENIMIENTO</option>
+                      <option value="5">OTROS GASTOS</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="total-expense">Total</label>
+                    <input type="number" name="total-expense" class="form-control" id="total-expense" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button id="save-expense" type="submit" class="btn btn-sm btn-primary">Registrar</button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    function limper() {
+        $("#type-expense").val('1');
+        $("#total-expense").val('');
+    }
+
+    $('#form-distribution-expense').submit(function (event) {
+        event.preventDefault();
+        let expenseData = {
+            "distributionId": $('#distribution-expense-id').val(),
+            "dateExpense": $('#date-expense').val(),
+            "typeExpense": $('#type-expense').val(),
+            "totalExpense": $('#total-expense').val(),
+        }
+        let message = confirm("¿Esta seguro de registrar el gasto");
+        if (message) {
+            $.ajax({
+                url: '/comercial/save_distribution_expense/',
+                async: true,
+                dataType: 'json', // for response
+                type: 'GET',
+                data: {'expense': JSON.stringify(expenseData)},
+                contentType: 'application/json;charset=UTF-8',
+                headers: {"X-CSRFToken": '{{ csrf_token }}'},
+                success: function (response, textStatus, xhr) {
+                    if (xhr.status == 200) {
+                        toastr.success(response.message, '¡MENSAJE!');
+                        limper()
+                        $('#modal-distribution').modal('hide');
+                        getDistributionList();
+                    }
+                },
+                fail: function (response) {
+                    toastr.error("NO SE LOGRO REGISTRAR EL GASTO. ", '¡MENSAJE!');
+                }
+            });
+
+        }
+
+    });
+</script>

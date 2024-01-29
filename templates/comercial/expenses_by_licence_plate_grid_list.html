@@ -1,0 +1,42 @@
+
+<table class="table table-sm table-bordered" id="excel-data-grid">
+    <thead>
+    <tr>
+        <td class="align-middle text-center table-light">ID</td>
+        <td class="align-middle text-center table-light">VENDEDOR</td>
+
+        <td class="align-middle text-center table-warning">FECHA</td>
+        <td class="align-middle text-center table-secondary">PETROLEO</td>
+        <td class="align-middle text-center table-warning">FECHA</td>
+        <td class="align-middle text-center table-secondary">VIATICO</td>
+        <td class="align-middle text-center table-warning">FECHA</td>
+        <td class="align-middle text-center table-secondary">FERIADO Y SUELDO</td>
+        <td class="align-middle text-center table-warning">FECHA</td>
+        <td class="align-middle text-center table-secondary">MANTENIMIENTO</td>
+        <td class="align-middle text-center table-warning">FECHA</td>
+        <td class="align-middle text-center table-secondary">OTROS GASTOS</td>
+        <td class="align-middle text-center table-danger">TOTAL GASTOS</td>
+    </tr>
+    </thead>
+    <tbody>
+    {% for e in pilots_with_expenses %}
+
+        <tr>
+            <td class="align-middle text-center table-light">{{ e.pilot_id }}</td>
+            <td class="align-middle text-center table-light">{{ e.pilot_name }}</td>
+            <td class="align-middle text-center table-warning">{{ e.date_expense_1 }}</td>
+            <td class="align-middle text-center table-secondary">{{ e.expense_1 }}</td>
+            <td class="align-middle text-center table-warning">{{ e.date_expense_2 }}</td>
+            <td class="align-middle text-center table-secondary">{{ e.expense_2 }}</td>
+            <td class="align-middle text-center table-warning">{{ e.date_expense_3 }}</td>
+            <td class="align-middle text-center table-secondary">{{ e.expense_3 }}</td>
+            <td class="align-middle text-center table-warning">{{ e.date_expense_4 }}</td>
+            <td class="align-middle text-center table-secondary">{{ e.expense_4 }}</td>
+            <td class="align-middle text-center table-warning">{{ e.date_expense_5 }}</td>
+            <td class="align-middle text-center table-secondary">{{ e.expense_5 }}</td>
+            <td class="align-middle text-center table-danger">{{ e.total_expenses }}</td>
+        </tr>
+    {% endfor %}
+
+    </tbody>
+</table>
