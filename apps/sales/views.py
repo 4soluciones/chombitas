@@ -6039,7 +6039,7 @@ def purchase_report_by_product_category(request):
                 else:
                     purchase_set = Purchase.objects.filter(
                         purchase_date__month=month_names.index(m) + 1, purchase_date__year=year, supplier__sector=value,
-                        status='A'
+                        status__in=['S', 'A']
                     ).select_related('supplier').annotate(
                         sum_total=Subquery(
                             PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).annotate(

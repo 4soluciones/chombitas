@@ -25,11 +25,14 @@
                             <option value="2022">2022</option>
                             <option value="2022">2023</option>
                             <option value="2022">2024</option>
+                            <option value="2022">2025</option>
                         </select>
                         <button type="submit" class="btn btn-blue my-1 ml-2" id="btn-search">
                             <i class="fas fa-search-dollar"></i> Buscar
                         </button>
-
+                        <button type="button" class="btn btn-outline-success my-1 ml-2" id="btn-search">
+                            <i class="fa fa-file-excel"></i> Exportar Excel
+                        </button>
                     </form>
 
                 </form>
@@ -82,9 +85,15 @@
             $('#btn-search').removeAttr("disabled", "false");
         });
 
-
-
-
+        function ReportTributaryExcel() {
+            let year = $('#id_year').val()
+            if (year) {
+                {#window.location.href = "{% url 'sales:reportkardex' month=m pk=p %}";#}
+                {#window.open("/sales/reportkardex/" + m + "/" + p + "/");#}
+                {#window.open("/sales/reportkardex/" + m + "/" + p + "/", '_top');#}
+                window.open("/sales/report_tributary_excel/" + year + "/", '_top');
+            }
+        }
     </script>
 
 

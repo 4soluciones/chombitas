@@ -1,0 +1,59 @@
+<div class="text-center roboto-condensed-regular" style="border-color: #000000">
+    <table class="table table-bordered table-sm w-100" id="report-salary">
+        <thead>
+        <tr class="text-white bg-dark text-uppercase text-center">
+            <td class="col-form-label">RUBRO</td>
+            <td class="col-form-label">ENERO</td>
+            <td class="col-form-label">FEBRERO</td>
+            <td class="col-form-label">MARZO</td>
+            <td class="col-form-label">ABRIL</td>
+            <td class="col-form-label">MAYO</td>
+            <td class="col-form-label">JUNIO</td>
+            <td class="col-form-label">JULIO</td>
+            <td class="col-form-label">AGOSTO</td>
+            <td class="col-form-label">SEPTIEMBRE</td>
+            <td class="col-form-label">OCTUBRE</td>
+            <td class="col-form-label">NOVIEMBRE</td>
+            <td class="col-form-label">DICIEMBRE</td>
+            <td class="col-form-label">TOTAL AÑO</td>
+        </tr>
+        </thead>
+        <tbody id="tbl-items">
+        {% for p in purchase_dict %}
+            <tr class="text-center">
+                <td class="align-middle text-left bg-light font-weight-bold">{{ p.category }}</td>
+                <td class="align-middle text-right">S/ {{ p.month_data.0.purchases_sum_total|safe }}</td>
+                <td class="align-middle text-right">S/ {{ p.month_data.1.purchases_sum_total|safe }}</td>
+                <td class="align-middle text-right">S/ {{ p.month_data.2.purchases_sum_total|safe }}</td>
+                <td class="align-middle text-right">S/ {{ p.month_data.3.purchases_sum_total|safe }}</td>
+                <td class="align-middle text-right">S/ {{ p.month_data.4.purchases_sum_total|safe }}</td>
+                <td class="align-middle text-right">S/ {{ p.month_data.5.purchases_sum_total|safe }}</td>
+                <td class="align-middle text-right">S/ {{ p.month_data.6.purchases_sum_total|safe }}</td>
+                <td class="align-middle text-right">S/ {{ p.month_data.7.purchases_sum_total|safe }}</td>
+                <td class="align-middle text-right">S/ {{ p.month_data.8.purchases_sum_total|safe }}</td>
+                <td class="align-middle text-right">S/ {{ p.month_data.9.purchases_sum_total|safe }}</td>
+                <td class="align-middle text-right">S/ {{ p.month_data.10.purchases_sum_total|safe }}</td>
+                <td class="align-middle text-right">S/ {{ p.month_data.11.purchases_sum_total|safe }}</td>
+                <td class="align-middle text-right font-weight-bold">S/ {{ p.sum_total_year|safe }}</td>
+            </tr>
+        {% endfor %}
+        <tr class="text-center">
+            <td class="align-middle text-center bg-light font-weight-bold">TOTAL MES</td>
+            <td class="align-middle text-right bg-light font-weight-bold">S/ {{ sum_month.0|floatformat:2 }}</td>
+            <td class="align-middle text-right bg-light font-weight-bold">S/ {{ sum_month.1|floatformat:2 }}</td>
+            <td class="align-middle text-right bg-light font-weight-bold">S/ {{ sum_month.2|floatformat:2 }}</td>
+            <td class="align-middle text-right bg-light font-weight-bold">S/ {{ sum_month.3|floatformat:2 }}</td>
+            <td class="align-middle text-right bg-light font-weight-bold">S/ {{ sum_month.4|floatformat:2 }}</td>
+            <td class="align-middle text-right bg-light font-weight-bold">S/ {{ sum_month.5|floatformat:2 }}</td>
+            <td class="align-middle text-right bg-light font-weight-bold">S/ {{ sum_month.6|floatformat:2 }}</td>
+            <td class="align-middle text-right bg-light font-weight-bold">S/ {{ sum_month.7|floatformat:2 }}</td>
+            <td class="align-middle text-right bg-light font-weight-bold">S/ {{ sum_month.8|floatformat:2 }}</td>
+            <td class="align-middle text-right bg-light font-weight-bold">S/ {{ sum_month.9|floatformat:2 }}</td>
+            <td class="align-middle text-right bg-light font-weight-bold">S/ {{ sum_month.10|floatformat:2 }}</td>
+            <td class="align-middle text-right bg-light font-weight-bold">S/ {{ sum_month.11|floatformat:2 }}</td>
+            <td class="align-middle text-right bg-light font-weight-bold">S/ {{ total_total|floatformat:2 }}</td>
+        </tr>
+
+        </tbody>
+    </table>
+</div>

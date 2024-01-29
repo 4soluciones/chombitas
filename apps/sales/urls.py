@@ -6,7 +6,9 @@ from apps.sales.views import *
 from apps.sales.views_SUNAT import query_dni
 from apps.sales.views_PDF import product_print, kardex_glp_pdf, account_order_list_pdf, \
     pdf_get_orders_for_status_account
-from apps.sales.views_EXCEL import kardex_glp_excel
+from apps.sales.views_EXCEL import kardex_glp_excel, report_category_product, excel_sales_all_subsidiaries, \
+    report_sales_excel
+
 urlpatterns = [
     path('', login_required(Home.as_view()), name='home'),
     path('product_list/', login_required(ProductList.as_view()), name='product_list'),
@@ -125,7 +127,8 @@ urlpatterns = [
     # debtors
     path('get_summary_debtors/', login_required(get_summary_debtors), name='get_summary_debtors'),
     # report graphic
-    path('get_report_sales_subsidiary/', login_required(get_report_sales_subsidiary), name='get_report_sales_subsidiary'),
+    path('get_report_sales_subsidiary/', login_required(get_report_sales_subsidiary),
+         name='get_report_sales_subsidiary'),
 
     # is_review
     path('check_review_pay/', login_required(check_review_pay), name='check_review_pay'),
@@ -146,12 +149,24 @@ urlpatterns = [
     path('check_loan_payment/', login_required(check_loan_payment), name='check_loan_payment'),
 
     path('test/', login_required(test), name='test'),
-    path('pdf_get_orders_for_status_account/', login_required(pdf_get_orders_for_status_account), name='pdf_get_orders_for_status_account'),
+    path('pdf_get_orders_for_status_account/', login_required(pdf_get_orders_for_status_account),
+         name='pdf_get_orders_for_status_account'),
 
     # comparative_sales_and_purchases_report
-    path('comparative_sales_and_purchases_report/', login_required(comparative_sales_and_purchases_report), name='comparative_sales_and_purchases_report'),
+    path('comparative_sales_and_purchases_report/', login_required(comparative_sales_and_purchases_report),
+         name='comparative_sales_and_purchases_report'),
 
     # purchase_report_by_category
-    path('purchase_report_by_category/', login_required(purchase_report_by_category), name='purchase_report_by_category'),
-]
+    path('purchase_report_by_category/', login_required(purchase_report_by_category),
+         name='purchase_report_by_category'),
+    path('purchase_report_by_product_category/', login_required(purchase_report_by_product_category),
+         name='purchase_report_by_product_category'),
 
+    path('report_category_product/<int:year>/', login_required(report_category_product),
+         name='report_category_product'),
+    path('excel_sales_all_subsidiaries/<str:init>/<str:end>/<int:pk>/<int:u>/',
+         login_required(excel_sales_all_subsidiaries), name='excel_sales_all_subsidiaries'),
+    path('report_sales/', login_required(report_sales), name='report_sales'),
+    path('report_sales_excel/<str:init>/<str:end>/<int:pk>/',
+         login_required(report_sales_excel), name='report_sales_excel'),
+]

@@ -1,0 +1,155 @@
+{% load operations %}
+<div class="card p-0  m-0" style="border-color: #2b579a">
+    <div class="card-header text-center pb-1" style="background: #2b579a">
+        <h6 class="card-title text-white">REPORTES GRAFICOS</h6>
+
+    </div>
+    <div id="id-print">
+        <div class="card-body p-0  m-0">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>REPORTE DE VENTAS</h5>
+                            <button type="button" class="btn btn-outline-success"  onclick="ReportSalesExcel()"><i class="fa fa-file-excel"></i>
+                                Exportar Excel
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-hover table-striped table-sm">
+                                <thead>
+                                <tr class="text-center font-weight-bold bg-primary text-white">
+                                    <td class="align-middle">Nº</td>
+                                    <td class="align-middle">SUCURSAL</td>
+                                    <td class="align-middle">TOTAL VENTA</td>
+                                    <td class="align-middle">TOTAL COBRANZA</td>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for s in sales %}
+                                    <tr>
+                                        <td class="align-middle text-center">{{ forloop.counter }}</td>
+                                        <td class="align-middle font-weight-bold text-left">{{ s.subsidiary }}</td>
+                                        <td class="align-middle font-weight-bold text-right text-primary">{{ s.total_sales|safe }}</td>
+                                        <td class="align-middle font-weight-bold text-right text-danger">{{ s.total_cash|safe }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                <tr>
+                                    <td class="align-middle text-center"></td>
+                                    <td class="align-middle font-weight-bold text-right">TOTAL</td>
+                                    <td class="align-middle font-weight-bold text-right text-primary">{{ t_sales|safe }}</td>
+                                    <td class="align-middle font-weight-bold text-right text-danger">{{ t_cash|safe }}</td>
+                                </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <section class="full-box page-content active" style="height: 700px; overflow-y: scroll;">
+                <div class="col-lg-12 col-md-12 p-3  m-0">
+                    <div class="card p-0  m-0  mt-5" style="border-color: #2b579a">
+                        <div class="card-body p-0  m-0">
+                            <div class="col-lg-12 col-md-12 p-0  m-0">
+                                <div id="container-graphic-total" style="height: 500px; width: 100%;"></div>
+                                <div class="p-2">
+                                    <button class="btn btn-warning" id="printChart2">Imprimir</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    var chartbar = new CanvasJS.Chart("container-graphic-total", {
+        animationEnabled: true,
+        title: {
+            text: "TOTAL DE VENTAS Y COBRANZAS",
+            fontSize: 20,
+            culture: "es",
+        },
+        axisX: {
+            titleFontSize: 25,
+            labelFontSize: 25,
+            labelFontWeight: "bold",
+        },
+        axisY: {
+            title: "VENTA",
+            titleFontSize: 19,
+            labelFontSize: 20,
+            titleFontColor: "#4F81BC",
+            lineColor: "#4F81BC",
+            labelFontColor: "#4F81BC",
+            tickColor: "#4F81BC"
+        },
+        axisY2: {
+            title: "COBRANZA",
+            titleFontSize: 19,
+            labelFontSize: 20,
+            titleFontColor: "#C0504E",
+            lineColor: "#C0504E",
+            labelFontColor: "#C0504E",
+            tickColor: "#C0504E"
+
+        },
+        toolTip: {
+            shared: true,
+            culture: "es",
+        },
+        legend: {
+            cursor: "pointer",
+            fontSize: 25,
+            culture: "es",
+            itemclick: toggleDataSeries
+        },
+        data: [{
+            type: "column",
+            name: "Venta",
+            culture: "es",
+            indexLabelPlacement: "outside",
+            indexLabelFontSize: 16,
+            indexLabelFontStyle: "Bold",
+            indexLabel: "{y}",
+            indexLabelOrientation: "horizontal",
+            legendText: "VENTA",
+            showInLegend: true,
+            dataPoints: {{ sales_total|safe }}
+        },
+            {
+                type: "column",
+                name: "Cobranza",
+                indexLabelPlacement: "outside",
+                indexLabelFontSize: 16,
+                indexLabelFontStyle: "Bold",
+                indexLabel: "{y}",
+                indexLabelOrientation: "horizontal",
+                legendText: "COBRANZA",
+                axisYType: "secondary",
+                showInLegend: true,
+                culture: "es",
+                dataPoints: {{ cash_total|safe }}
+            }]
+    });
+    chartbar.render();
+
+    function toggleDataSeries(e) {
+        if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+            e.dataSeries.visible = false;
+        } else {
+            e.dataSeries.visible = true;
+        }
+        chartbar.render();
+    }
+
+    document.getElementById("printChart2").addEventListener("click", function () {
+        chartbar.print();
+    });
+
+</script>

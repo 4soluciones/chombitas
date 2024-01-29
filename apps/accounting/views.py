@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.contrib.auth.models import User
 from apps.hrm.views import get_subsidiary_by_user
 from apps.hrm.models import Worker, WorkerType, Employee
-from apps.buys.models import Purchase, PurchaseDetail
+from apps.buys.models import Purchase, PurchaseDetail, Requirement_buys, RequirementDetail_buys
 from apps.sales.models import Subsidiary, SubsidiaryStore, Order, OrderDetail, TransactionPayment, LoanPayment, Supplier
 from django.template import loader, Context
 from django.http import JsonResponse
@@ -1592,7 +1592,8 @@ def get_report_employees_salary(request):
         salary_dict = context_dict.get('salary_dict')
         total_salary = context_dict.get('total_salary')
         if total_salary > 0:
-            decimal_total_salary = '{:,}'.format(total_salary.quantize(decimal.Decimal('0.00'), rounding=decimal.ROUND_HALF_EVEN)),
+            decimal_total_salary = '{:,}'.format(
+                total_salary.quantize(decimal.Decimal('0.00'), rounding=decimal.ROUND_HALF_EVEN)),
         else:
             decimal_total_salary = total_salary
         tpl = loader.get_template('accounting/get_report_employees_salary_grid.html')
@@ -1628,7 +1629,8 @@ def get_dict_salaries(worker_set, month, year):
         new = {
             'id': w.id,
             'names': names + ' ' + paternal_name + ' ' + maternal_name,
-            'salary_initial': '{:,}'.format(w.initial_basic_remuneration.quantize(decimal.Decimal('0.00'), rounding=decimal.ROUND_HALF_EVEN)),
+            'salary_initial': '{:,}'.format(
+                w.initial_basic_remuneration.quantize(decimal.Decimal('0.00'), rounding=decimal.ROUND_HALF_EVEN)),
             'salary_set': [],
             'salary_reward_set': []
         }
@@ -1652,7 +1654,8 @@ def get_dict_salaries(worker_set, month, year):
                             cod = c.operation_code
                         cash_flow_salary = {
                             'id': c.id,
-                            'salary_pay': '{:,}'.format(c.total.quantize(decimal.Decimal('0.00'), rounding=decimal.ROUND_HALF_EVEN)),
+                            'salary_pay': '{:,}'.format(
+                                c.total.quantize(decimal.Decimal('0.00'), rounding=decimal.ROUND_HALF_EVEN)),
                             'cash': c.cash.name,
                             'date_pay': c.transaction_date,
                             'cod': cod,
@@ -1674,7 +1677,8 @@ def get_dict_salaries(worker_set, month, year):
                             cod = c.operation_code
                         cash_flow_reward = {
                             'id': c.id,
-                            'salary_pay': '{:,}'.format(c.total.quantize(decimal.Decimal('0.00'), rounding=decimal.ROUND_HALF_EVEN)),
+                            'salary_pay': '{:,}'.format(
+                                c.total.quantize(decimal.Decimal('0.00'), rounding=decimal.ROUND_HALF_EVEN)),
                             'cash': c.cash.name,
                             'date_pay': c.transaction_date,
                             'cod': cod,
@@ -1867,15 +1871,12 @@ def report_tributary(request):
                     else:
                         purchase_set = Purchase.objects.filter(
                             subsidiary__id__in=subsidiaries, purchase_date__month=i, purchase_date__year=year,
-                            status__in=['S', 'A'], type_bill='F'
-                        ).select_related('subsidiary').prefetch_related(
-                            Prefetch(
-                                'purchasedetail_set', queryset=PurchaseDetail.objects.select_related('unit', 'product')
-                            )
-                        ).select_related('supplier', 'truck').annotate(
+                            status__in=['S', 'A'], type_bill__in=['F', 'B']
+                        ).select_related('subsidiary').select_related('supplier', 'truck').annotate(
                             sum_total=Subquery(
                                 PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).annotate(
-                                    return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
+                                    return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[
+                                :1]
                             )
                         ).aggregate(Sum('sum_total'))
 
@@ -1886,7 +1887,21 @@ def report_tributary(request):
                         else:
                             float_purchases_sum_total = 0
 
-                        purchase_base_total = float(decimal.Decimal(float_purchases_sum_total) / decimal.Decimal(1.18))
+                        # requirements
+
+                        requirement_set = Requirement_buys.objects.filter(status='2', type='M', status_pay='2',
+                                                                          approval_date__year=year,
+                                                                          approval_date__month=i).annotate(
+                            sum_total=Subquery(
+                                RequirementDetail_buys.objects.filter(requirement_buys_id=OuterRef('id')).annotate(
+                                    r=Sum(F('quantity') * F('price_pen'))).values('r')[:1])).aggregate(Sum('sum_total'))
+                        requirement_sum_total = requirement_set['sum_total__sum']
+                        if requirement_sum_total is not None:
+                            requirement_sum_total = decimal.Decimal(requirement_sum_total)
+                        else:
+                            requirement_sum_total = decimal.Decimal(0.00)
+                        purchase_base_total = float((decimal.Decimal(float_purchases_sum_total) + decimal.Decimal(
+                            requirement_sum_total)) / decimal.Decimal(1.18))
                         purchase_igv_total = float(float_purchases_sum_total - purchase_base_total)
 
                         purchase_base_total = purchase_base_total
@@ -1933,7 +1948,7 @@ def report_tributary(request):
                 else:
                     purchase_set = Purchase.objects.filter(
                         subsidiary__id__in=subsidiaries, purchase_date__month=i, purchase_date__year=year,
-                        status__in=['S', 'A'], type_bill='F'
+                        status__in=['S', 'A'], type_bill__in=['F', 'B']
                     ).select_related('subsidiary').prefetch_related(
                         Prefetch(
                             'purchasedetail_set', queryset=PurchaseDetail.objects.select_related('unit', 'product')
@@ -1952,7 +1967,19 @@ def report_tributary(request):
                     else:
                         float_purchases_sum_total = 0
 
-                    purchase_base_total = float(decimal.Decimal(float_purchases_sum_total) / decimal.Decimal(1.18))
+                    requirement_set = Requirement_buys.objects.filter(status='2', type='M', status_pay='2',
+                                                                      approval_date__year=year,
+                                                                      approval_date__month=i).annotate(
+                        sum_total=Subquery(
+                            RequirementDetail_buys.objects.filter(requirement_buys_id=OuterRef('id')).annotate(
+                                r=Sum(F('quantity') * F('price_pen'))).values('r')[:1])).aggregate(Sum('sum_total'))
+                    requirement_sum_total = requirement_set['sum_total__sum']
+                    if requirement_sum_total is not None:
+                        requirement_sum_total = decimal.Decimal(requirement_sum_total)
+                    else:
+                        requirement_sum_total = decimal.Decimal(0.00)
+
+                    purchase_base_total = float((decimal.Decimal(float_purchases_sum_total)+decimal.Decimal(requirement_sum_total)) / decimal.Decimal(1.18))
                     purchase_igv_total = float(float_purchases_sum_total - purchase_base_total)
 
                     purchase_base_total = purchase_base_total

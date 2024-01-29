@@ -18,33 +18,35 @@
             <label class="my-1 mr-2" for="id-start-date">Fecha Inicial</label>
             <input type="date" class="form-control my-1 mr-sm-2" id="id-start-date" name="start-date"
                    value="{{ formatdate }}">
-
             <label class="my-1 mr-2" for="id-end-date">Fecha final</label>
             <input type="date" class="form-control my-1 mr-sm-2" id="id-end-date" name="end-date"
                    value="{{ formatdate }}">
-
+            <label class="my-1 mr-2" for="id-end-date">Sucursal</label>
+            <select class="form-control my-1 mr-sm-2" id="subsidiary" name="subsidiary">
+                <option value="0">TODOS</option>
+                {% for s in subsidiary_set %}
+                    <option value="{{ s.id }}">{{ s.name }}</option>
+                {% endfor %}
+            </select>
             <button type="submit" class="btn btn-danger my-1 mr-2">
                 <i class="fas fa-search-dollar" id="btn-search"></i> Buscar
             </button>
-
             <div class="form-check form-check-inline">
                 <input class="form-check-input" type="checkbox" name="by-units" id="id-by-units"
                        value="UNIT">
                 <label class="form-check-label" for="id-by-units"> Por Unidades </label>
             </div>
-
+            <button type="button" class="btn btn-outline-success my-1 mr-2" onclick="ReportExcel()">
+                <i class="fas fa-file-excel" id="btn-excel"></i> Descargar excel
+            </button>
         </form>
-
-            <div id="sales-grid-list">{% include "sales/order_sales_grid_list.html" %}</div>
-
-
-
+        <div id="sales-grid-list">{% include "sales/order_sales_grid_list.html" %}</div>
     </div>
 {% endblock body %}
 
 {% block extrajs %}
     <script type="text/javascript">
-    loader = '<div class="container">' +
+        loader = '<div class="container">' +
             '<div class="row">' +
             '<div class="col-md-12">' +
             '<div class="loader">' +
@@ -81,11 +83,30 @@
                 error: function (jqXhr, textStatus, xhr) {
                     if (jqXhr.status == 500) {
                         toastr.error(jqXhr.responseJSON.error, '¡Inconcebible!');
+                        $('#sales-grid-list').empty();
                     }
                 }
             });
             $('#btn-search').removeAttr("disabled", "false");
 
         });
+
+        function ReportExcel() {
+            let init = $('#id-start-date').val()
+            let end = $('#id-end-date').val()
+            let subsidiary = $('#subsidiary').val()
+            let unit = 0
+            if ($('#id-by-units').is(':checked')) {
+                unit = 1
+            } else {
+                unit = 0
+            }
+            if (init && end) {
+                {#window.location.href = "{% url 'sales:reportkardex' month=m pk=p %}";#}
+                {#window.open("/sales/reportkardex/" + m + "/" + p + "/");#}
+                {#window.open("/sales/reportkardex/" + m + "/" + p + "/", '_top');#}
+                window.open("/sales/excel_sales_all_subsidiaries/" + init + "/" + end + "/" + subsidiary + "/" + unit + "/", '_top');
+            }
+        }
     </script>
 {% endblock extrajs %}
