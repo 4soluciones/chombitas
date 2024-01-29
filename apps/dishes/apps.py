@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class DishesConfig(AppConfig):
-    name = 'apps.dishes'
+    name = 'dishes'
