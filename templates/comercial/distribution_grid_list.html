@@ -45,11 +45,11 @@
                                 {% endif %}
                                 </h4>
                             </td>
-                            <td>{{ dm.user.worker_set.last.employee.full_name }}</td>
-                            <td>{{ dm.calculate_total_sales }}</td>
-                            <td>{{ dm.calculate_total_expenses }}</td>
-                            <td>{{ dm.calculate_total_deposits }}</td>
-                            <td>{{ dm.calculate_total_balance }}</td>
+                            <td class="align-middle col-form-label col-form-label-lg">{{ dm.user.worker_set.last.employee.full_name }}</td>
+                            <td class="align-middle col-form-label col-form-label-lg">{{ dm.calculate_total_sales }}</td>
+                            <td class="align-middle col-form-label col-form-label-lg">{{ dm.calculate_total_expenses }}</td>
+                            <td class="align-middle col-form-label col-form-label-lg">{{ dm.calculate_total_deposits }}</td>
+                            <td class="align-middle col-form-label col-form-label-lg">{{ dm.calculate_total_balance }}</td>
                             <td class="align-middle">
                                 <div class="btn-group">
                                     <button type="button" class="btn btn-block btn-primary  dropdown-toggle"
@@ -87,7 +87,7 @@
                                                     class="fas fa-edit pr-1"></i> Ingresar deposito </a>
                                         {% endif %}
 
-                                        {% if dm.status == 'F' %}
+                                        {% if dm.status != 'F' %}
                                             <a class="dropdown-item btn-update" pk="{{ dm.id }}"><i
                                                     class="fas fa-edit pr-1"></i> Retornar balones </a>
                                         {% endif %}

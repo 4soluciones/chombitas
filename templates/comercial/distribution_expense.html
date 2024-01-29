@@ -43,6 +43,11 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="total-available">Total disponible</label>
+                    <input type="number" name="total-available" class="form-control" id="total-available" value="{{ distribution_mobil.calculate_total_available|safe }}" readonly>
+                </div>
+
+                <div class="form-group">
                     <label for="total-expense">Total</label>
                     <input type="number" name="total-expense" class="form-control" id="total-expense" required>
                 </div>
@@ -65,36 +70,42 @@
 
     $('#form-distribution-expense').submit(function (event) {
         event.preventDefault();
-        let expenseData = {
-            "distributionId": $('#distribution-expense-id').val(),
-            "dateExpense": $('#date-expense').val(),
-            "typeExpense": $('#type-expense').val(),
-            "totalExpense": $('#total-expense').val(),
-        }
-        let message = confirm("¿Esta seguro de registrar el gasto");
-        if (message) {
-            $.ajax({
-                url: '/comercial/save_distribution_expense/',
-                async: true,
-                dataType: 'json', // for response
-                type: 'GET',
-                data: {'expense': JSON.stringify(expenseData)},
-                contentType: 'application/json;charset=UTF-8',
-                headers: {"X-CSRFToken": '{{ csrf_token }}'},
-                success: function (response, textStatus, xhr) {
-                    if (xhr.status == 200) {
-                        toastr.success(response.message, '¡MENSAJE!');
-                        limper()
-                        $('#modal-distribution').modal('hide');
-                        getDistributionList();
-                    }
-                },
-                fail: function (response) {
-                    toastr.error("NO SE LOGRO REGISTRAR EL GASTO. ", '¡MENSAJE!');
-                }
-            });
+        if(Number($('#total-expense').val()) > 0 && Number($('#total-expense').val())<= Number($('#total-available').val())) {
 
+            let expenseData = {
+                "distributionId": $('#distribution-expense-id').val(),
+                "dateExpense": $('#date-expense').val(),
+                "typeExpense": $('#type-expense').val(),
+                "totalExpense": $('#total-expense').val(),
+            }
+            let message = confirm("¿Esta seguro de registrar el gasto");
+            if (message) {
+                $.ajax({
+                    url: '/comercial/save_distribution_expense/',
+                    async: true,
+                    dataType: 'json', // for response
+                    type: 'GET',
+                    data: {'expense': JSON.stringify(expenseData)},
+                    contentType: 'application/json;charset=UTF-8',
+                    headers: {"X-CSRFToken": '{{ csrf_token }}'},
+                    success: function (response, textStatus, xhr) {
+                        if (xhr.status == 200) {
+                            toastr.success(response.message, '¡MENSAJE!');
+                            limper()
+                            $('#modal-distribution').modal('hide');
+                            getDistributionList();
+                        }
+                    },
+                    fail: function (response) {
+                        toastr.error("NO SE LOGRO REGISTRAR EL GASTO. ", '¡MENSAJE!');
+                    }
+                });
+
+            }
+        }else{
+            toastr.error("VERIFIQUE GASTO", '¡MENSAJE!');
         }
+
 
     });
 </script>

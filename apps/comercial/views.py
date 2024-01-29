@@ -2886,6 +2886,7 @@ def save_distribution_deposit(request):
         cash_obj = Cash.objects.get(id=cash_id)
         total_deposit = decimal.Decimal(data_deposit["totalDeposit"])
         date_deposit = str(data_deposit["dateDeposit"])
+        operation_code = str(data_deposit["operationCode"])
         description = "DEPOSITO A CAJA"
 
         date_sin_timezone = datetime.strptime(date_deposit, '%Y-%m-%d')
@@ -2900,6 +2901,7 @@ def save_distribution_deposit(request):
             'total': total_deposit,
             'cash': cash_obj,
             'user': user_obj,
+            'operation_code': operation_code
         }
         deposit_obj = CashFlow.objects.create(**new_deposit)
         deposit_obj.save()

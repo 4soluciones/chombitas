@@ -51,7 +51,7 @@
                                     class="badge badge-primary badge-pill p-2" style="font-size: 14px;">B</span></th>
                             <th style="font-size: 10px;" class="text-white font-weight-normal">CANTIDAD PRESTADA <span
                                     class="badge badge-primary badge-pill p-2" style="font-size: 14px;">B</span></th>
-                            <th style="font-size: 10px;" class="text-white font-weight-normal"></th>
+                            <th style="font-size: 10px;" class="text-white font-weight-normal">OBS</th>
                         </tr>
                         <tbody class="detail-sales-distribution-tbody">
 
@@ -68,14 +68,14 @@
 
                                         </td>
                                         <td class="item-quantity-borrowed">{{ value.i_sold_bg|floatformat:0 }}</td>
-                                        <td>
-                                            i_expenses: {{ value.i_expenses|floatformat:0 }}
-                                            i_returned: {{ value.i_returned|floatformat:0 }}<br/>
-                                            i_advanced: {{ value.i_advanced|floatformat:0 }}<br/>
-                                            i_recovered: {{ value.i_recovered|floatformat:0 }}<br/>
-                                            i_sold: {{ value.i_sold|floatformat:0 }}<br/>
-                                            i_ball: {{ value.i_ball|floatformat:0 }}<br/>
-                                            i_sold_bg: {{ value.i_sold_bg|floatformat:0 }}
+                                        <td class="align-middle text-left">
+                                            egresados llenos: {{ value.i_expenses|floatformat:0 }}
+                                            llenos: {{ value.i_returned|floatformat:0 }}<br/>
+                                            adelantados vacios: {{ value.i_advanced|floatformat:0 }}<br/>
+                                            recuperados vacios: {{ value.i_recovered|floatformat:0 }}<br/>
+                                            vendidos: {{ value.i_sold|floatformat:0 }}<br/>
+                                            vacios: {{ value.i_ball|floatformat:0 }}<br/>
+                                            prestados: {{ value.i_sold_bg|floatformat:0 }}
                                         </td>
                                     </tr>
                         {% endfor %}
@@ -99,10 +99,17 @@
                             {% endfor %}
                         </select>
                         </td>
-                        <td class="align-middle" style="width: 10%">Unidad:</td>
-                        <td style="width: 25%">
-                            <select class="form-control form-control-sm" disabled id="id_unit" name="unit" required>
-                                <option disabled selected value=""> Seleccione</option>
+
+                        <td class="align-middle">Tipo:</td>
+                        <td>
+                            <select class="form-control form-control-sm" id="id_type" name="type" required>
+                                <option selected disabled value=""> Seleccione</option>
+                                {% for t in type %}
+                                    <option {% if t.type == t.0 %} selected {% endif %} value="{{ t.0 }}">
+                                        {{ t.1 }}
+                                    </option>
+                                {% endfor %}
+
                             </select>
                         </td>
                         <td rowspan="2" class="text-center align-middle" style="width: 30%">
@@ -118,19 +125,13 @@
                             <input type="number" class="form-control form-control-sm" id="id_quantity" required
                                    placeholder="Cantidad">
                         </td>
-                        <td class="align-middle">Tipo:</td>
-                        <td>
-                            <select class="form-control form-control-sm" id="id_type" name="type" required>
-                                <option selected disabled value=""> Seleccione</option>
-                                {% for t in type %}
-                                    <option {% if t.type == t.0 %} selected {% endif %} value="{{ t.0 }}">
-                                        {{ t.1 }}
-                                    </option>
-                                {% endfor %}
 
+                        <td class="align-middle" style="width: 10%">Unidad:</td>
+                        <td style="width: 25%">
+                            <select class="form-control form-control-sm" disabled id="id_unit" name="unit" required>
+                                <option disabled selected value=""> Seleccione</option>
                             </select>
                         </td>
-
                     </tr>
 
                 </table>
@@ -282,6 +283,7 @@
                 if (xhr.status == 200) {
                     toastr.success(response.message, '¡Mensaje!');
                     $('#modal-distribution').modal('hide');
+                    getDistributionList();
                     /*setTimeout(() => {
                         location.reload();
                     }, 500);*/

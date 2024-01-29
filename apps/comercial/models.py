@@ -454,6 +454,13 @@ class DistributionMobil(models.Model):
 
         return round(total, 1)
 
+    def calculate_total_available(self):
+        total_sales = self.calculate_total_sales()
+        total_expenses = self.calculate_total_expenses()
+        total = total_sales - total_expenses
+
+        return round(total, 1)
+
     def new_detail_distribution(self):
         response = DistributionDetail.objects.filter(
             distribution_mobil_id=self.id).exclude(status='D')
