@@ -116,5 +116,6 @@ urlpatterns = [
     path('list_output_distribution/', login_required(get_output_distributions), name='list_output_distribution'),
     path('report_guide_by_plate/', login_required(report_guide_by_plate), name='report_guide_by_plate'),
     path('report_guides_by_plate_grid/', login_required(report_guides_by_plate_grid), name='report_guides_by_plate_grid'),
+    path('get_stock_unit_by_product_type/', login_required(get_stock_unit_by_product_type), name='get_stock_unit_by_product_type'),
 
 ]

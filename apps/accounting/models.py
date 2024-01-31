@@ -218,6 +218,21 @@ class CashFlow(models.Model):
                                                 blank=True)
     distribution_mobil = models.ForeignKey('comercial.DistributionMobil', on_delete=models.CASCADE, null=True, blank=True)
 
+    def calculate_total_missing(self):
+
+        total_cash_flow = self.total
+
+        total_subtracted = 0
+        from apps.sales.models import TransactionPayment
+        sum_total_subtracted = TransactionPayment.objects.filter(
+            cash_flow=self,
+            type='PFD').aggregate(Sum('payment'))
+        if sum_total_subtracted['payment__sum'] is not None:
+            total_subtracted = sum_total_subtracted['payment__sum']
+
+        total = total_cash_flow - total_subtracted
+        return round(total, 1)
+
     def __str__(self):
         return str(self.pk)
 
@@ -337,7 +352,8 @@ class Tributes(models.Model):
     id = models.AutoField(primary_key=True)
     year = models.IntegerField('Año', default=0, null=True, blank=True)
     month = models.IntegerField('Meses', default=0, null=True, blank=True)
-    base_total_purchase = models.DecimalField('Total base mponible Compras', max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    base_total_purchase = models.DecimalField('Total base mponible Compras', max_digits=30, decimal_places=2, default=0)
     igv_total_purchase = models.DecimalField('Total IGV compras', max_digits=30, decimal_places=2, default=0)
     total_purchase = models.DecimalField('Total compras', max_digits=30, decimal_places=2, default=0)
     base_total_sales = models.DecimalField('Total base ventas', max_digits=30, decimal_places=2, default=0)

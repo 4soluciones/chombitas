@@ -36,7 +36,7 @@
                         <td class="align-middle" style="width: 6%">Fecha</td>
                         <td style="width: 8%" class="align-middle text-center">
                             <input type="date" class="form-control form-control-sm" id="id-date-output"
-                                   name="date-output"
+                                   name="date-output" value="{{ date_now }}"
                                    required>
                         </td>
                         <td class="align-middle" style="width: 6%">Placa</td>
@@ -71,13 +71,14 @@
 
                         <thead>
                         <tr class="text-center text-white align-middle" style="height: 28px; background: #0273ec">
-                            <th style="width: 4%" class="font-weight-normal">#</th>
-                            <th style="width: 35%" class="font-weight-normal">Producto</th>
+                            <th style="width: 3%" class="font-weight-normal">#</th>
+                            <th style="width: 24%" class="font-weight-normal">Producto</th>
+                            <th style="width: 17%" class="font-weight-normal">Tipo</th>
                             <th style="width: 15%" class="font-weight-normal">Cantidad</th>
-                            <th style="width: 10%" class="font-weight-normal">Carro</th>
-                            <th style="width: 16%" class="font-weight-normal">Unidad</th>
+                            <th style="width: 8%" class="font-weight-normal">Carro</th>
+                            <th style="width: 15%" class="font-weight-normal">Unidad</th>
                             <th style="width: 10%" class="font-weight-normal">Stock</th>
-                            <th style="width: 10%" class="font-weight-normal">Borrar</th>
+                            <th style="width: 8%" class="font-weight-normal">Borrar</th>
                         </tr>
                         </thead>
                         <tbody id="details">
@@ -128,13 +129,26 @@
                 ],
             {% endfor %}
         ];
+    unitList =
+        [
+            {% for t in type_set %}
+                [
+                    '{{ t.0 }}',
+                    '{{ t.1 }}'
+                ],
+            {% endfor %}
+        ];
+
     function AddRow_Details() {
         console.log('AddRow_Details');
-         let options = '<option value="0">seleccione...</option>';
-
+        let options = '<option value="0">seleccione</option>';
+        let type_options = '<option value="0">seleccione</option>';
 
         for (let i = 0; i < productList.length; i++) {
             options = options + '<option value="' + productList[i][0] + '">' + productList[i][1] + '</option>'
+        }
+        for (let i = 0; i < unitList.length; i++) {
+            type_options = type_options + '<option value="' + unitList[i][0] + '">' + unitList[i][1] + '</option>'
         }
 
 
@@ -143,6 +157,7 @@
             '<td class="text-center align-middle item-number">' + '</td>' +
             // '<td class="align-middle item-product">' + _product + '</td>' +
             '<td class="align-middle item-product"><select class="form-control form-control-sm">' + options + '</td>' +
+            '<td class="align-middle item-type"><select class="form-control form-control-sm">' + type_options + '</td>' +
             '<td class="align-middle item-quantity"><input type="number" class="form-control form-control-sm"></td>' +
             '<td class="align-middle text-center item-quantity-last">0</td>' +
             '<td class="align-middle text-center item-unit" unit="0"></td>' +
@@ -160,6 +175,7 @@
         {#$index=$index +1;#}
         counterStrike();
     }
+
     $("#add-detail").click(function () {
         AddRow_Details();
     });
@@ -184,74 +200,130 @@
         $("#id_unit").empty();
 
     };
+    $(document).on('keyup change', '#details tr td.item-type select', function () {
+        let type = $(this).val();
+        let tr = $(this).parent('td.item-type').parent('tr')
+        let product_select = tr.find('td.item-product select')
+        let product = product_select.val()
+        let _td_unit = tr.find('td.item-unit');
+        let _td_delete = tr.find('td.item-delete button');
+        let _stock_total = tr.find('td.item-stock');
 
-    $(document).on('change', '#details tr td.item-product select', function () {
-        //recupera el id_dela opcion seleccionada
-        let value = $(this).val();
-        console.log("value :", value)
-        let _tr = $(this).parent('td').parent('tr');
-        let _select_product = $(this);
-        let _td_unit = _tr.find('td.item-unit');
-        let _td_delete = _tr.find('td.item-delete button');
-        let _stock_total = _tr.find('td.item-stock');
-
-        _tr.attr('product', 0);
+        tr.attr('product', 0);
         _td_delete.attr('onclick', 'deleteItem(0)');
         _td_unit.text('');
         _td_unit.attr('unit', 0);
         _stock_total.text('');
-
-// console.log('length: ' + $('#details').find('tr product="' + value + '"').length);
-
-// console.log($('#details tr[product="' + value + '"]').length);
-
-        if ($('#details tr[product="' + value + '"][type="L"]').length) {
-            $(this).find('option[value=0]').attr('selected', 'selected');
-            toastr.warning('SELECCIONE OTRO PRODUCTO', '¡MENSAJE!');
-            return false;
-        }
-
-        if (value !== '0') {
+        if (type !== "0" && parseInt(product) > 0) {
             $.ajax({
-                url: '/buys/get_units_product/',
+                url: '/comercial/get_stock_unit_by_product_type/',
                 async: true,
                 dataType: 'json',
                 type: 'GET',
-                //mando  id del producto del combo
-                data: {'ip': value},
-                // si va bien retorna la data
+                data: {'id_product': product, 'id_type': type},
                 success: function (response) {
-                    //le da formato array
-                    let _stock = response['stock'];
-                    let units = JSON.parse(response['units']);
+                    let stock = response['quantity'];
+                    let store = response['id_product_store'];
+                    let store_name = response['product_store_name'];
+                    let unit = response['unit'];
+                    let unit_name = response['unit_name'];
+                    tr.attr('type', type)
+                    _td_unit.text(unit_name);
+                    _td_unit.attr('unit', unit);
+                    tr.attr('product', product);
+                    _td_delete.attr('onclick', 'deleteItem(' + product + ')');
+                    {#tr.find('td.item-product select option[value="' + product + '"]').attr('selected', 'selected');#}
+                    tr.find('td.item-product select option[value="' + product + '"]').attr('selected', 'selected');
+                    _stock_total.text(parseFloat(stock).toFixed(2));
+                    tr.find('td.item-quantity input').val(0);
 
-                    for (let i = 0; i < units.length; i++) {
-                        if (units[i].fields.name === 'BG') {  // GAL
-                            _td_unit.text(units[i].fields.description);
-                            _td_unit.attr('unit', units[i].pk);
-                            _tr.attr('product', value);
-                            _td_delete.attr('onclick', 'deleteItem(' + value + ')');
-                            _tr.find('td.item-product select option[value="' + value + '"]').attr('selected', 'selected');
-                            _stock_total.text(_stock);
-                            _tr.find('td.item-quantity input').val(0);
-                        }
-
-                    }
-                    if (_td_unit.text() === '') {
-                        toastr.warning('NO TIENE UNIDAD MEDIDA', '¡MENSAJE!');
-
-                        //$('#details tr[product="0"] td.item-product select option[value="0"]').attr('selected', 'selected');
-                        $('#details tr[product="0"] td.item-product select option[value]').removeAttr('selected');
-                        $('#details tr[product="0"] td.item-product select option[value="0"]').attr('selected', 'selected');
-                    }
                 },
+                error: function (jqXhr, textStatus, xhr) {
+                    if (jqXhr.status === 500) {
+                        {#toastr.error(jqXhr.responseJSON.error, '¡Error de consulta!');#}
+                    } else {
+                        if (textStatus === 'timeout') {
 
+                            toastr.error('Error de Tiempo de Espera', '¡Error de consulta!');
+                        } else {
+                            console.log(" STATUS: " + xhr + " " + textStatus);
+                        }
+                    }
+                }
             });
-
-
         }
-
+    });
+    $(document).on('change', '#details tr td.item-product select', function () {
+        let value = $(this)
+        let tr = $(this).parent('td.item-product').parent('tr')
+        let td_type = tr.find('td.item-type select')
+        if (parseInt(value) > 0) {
+            td_type.trigger('change')
+        } else {
+            td_type.val(0)
+            td_type.trigger('change')
+        }
     })
+    {#$(document).on('change', '#details tr td.item-product select', function () {#}
+    {#    //recupera el id_dela opcion seleccionada#}
+    {#    let value = $(this).val();#}
+    {#    console.log("value :", value)#}
+    {#    let _tr = $(this).parent('td').parent('tr');#}
+    {#    let _select_product = $(this);#}
+    {#    let _td_unit = _tr.find('td.item-unit');#}
+    {#    let _td_delete = _tr.find('td.item-delete button');#}
+    {#    let _stock_total = _tr.find('td.item-stock');#}
+    {##}
+    {#    _tr.attr('product', 0);#}
+    {#    _td_delete.attr('onclick', 'deleteItem(0)');#}
+    {#    _td_unit.text('');#}
+    {#    _td_unit.attr('unit', 0);#}
+    {#    _stock_total.text('');#}
+    {##}
+    {#    if ($('#details tr[product="' + value + '"][type="L"]').length) {#}
+    {#        $(this).find('option[value=0]').attr('selected', 'selected');#}
+    {#        toastr.warning('SELECCIONE OTRO PRODUCTO', '¡MENSAJE!');#}
+    {#        return false;#}
+    {#    }#}
+    {##}
+    {#    if (value !== '0') {#}
+    {#$.ajax({#}
+    {#    url: '/buys/get_units_product/',#}
+    {#    async: true,#}
+    {#    dataType: 'json',#}
+    {#    type: 'GET',#}
+    {#    data: {'ip': value},#}
+    {#    success: function (response) {#}
+    {#        let _stock = response['stock'];#}
+    {#        let units = JSON.parse(response['units']);#}
+    {##}
+    {#        for (let i = 0; i < units.length; i++) {#}
+    {#            if (units[i].fields.name === 'BG') {  // GAL#}
+    {#                _td_unit.text(units[i].fields.description);#}
+    {#                _td_unit.attr('unit', units[i].pk);#}
+    {#                _tr.attr('product', value);#}
+    {#                _td_delete.attr('onclick', 'deleteItem(' + value + ')');#}
+    {#                _tr.find('td.item-product select option[value="' + value + '"]').attr('selected', 'selected');#}
+    {#                _stock_total.text(_stock);#}
+    {#                _tr.find('td.item-quantity input').val(0);#}
+    {#            }#}
+    {##}
+    {#        }#}
+    {#        if (_td_unit.text() === '') {#}
+    {#            toastr.warning('NO TIENE UNIDAD MEDIDA', '¡MENSAJE!');#}
+    {##}
+    {#            //$('#details tr[product="0"] td.item-product select option[value="0"]').attr('selected', 'selected');#}
+    {#            $('#details tr[product="0"] td.item-product select option[value]').removeAttr('selected');#}
+    {#            $('#details tr[product="0"] td.item-product select option[value="0"]').attr('selected', 'selected');#}
+    {#        }#}
+    {#    },#}
+    {##}
+    {# });#}
+    {##}
+    {##}
+    {#    }#}
+    {##}
+    {# })#}
     $('#form-distribution_output').submit(function (event) {
         event.preventDefault();
         if ($('#details tr').length === 0) {
@@ -265,57 +337,58 @@
             "id_pilot": $('#id_pilot').val(),
             "number_guide": $('#id-guide').val(),
         };
-
+        let value = true
         $("#details  tr").each(function () {
-
-            if ($(this).attr('product') !== '' && $(this).find("td.item-quantity input").val() !== '' && $(this).find("td.item-unit").attr('unit') !== '' && $(this).attr('type') !== 'V') {
-                let _product = $(this).attr('product');
-                let _type = $(this).attr('type');
-                let _quantity = parseFloat($(this).find("td.item-quantity input").val());
-                let _unit = $(this).find("td.item-unit").attr('unit');
-                let _quantity_last = parseFloat($(this).find("td.item-quantity-last").text());
-                /*
-               if ($('table#id-table-form tr td#item-details-distribution-last').html() != '') {
-                   $('table#id-table-distribution-last tbody#details-distribution-last tr').each(function () {
-                       if ($(this).attr('product_id') == _product && $(this).attr('unit_id') == _unit) {
-                           _quantity_total = parseFloat(_quantity) + parseFloat($(this).find('td.item-quantity-last').text());
-                           return false;
-                       } else {
-                           _quantity_total = _quantity
-                       }
-                   })
-               } else {
-                   _quantity_total = _quantity
-               }
-                 */
-                let detailObj = {
-                    "Product": _product,
-                    "Quantity": _quantity,
-                    "Unit": _unit,
-                    "Type": _type,
-                    "Status": 'E',
-                    "Quantity_total": _quantity + _quantity_last,
-                };
-                distribution.Details.push(detailObj);
+            let f = $(this).attr('f');
+            let product = $(this).attr('product');
+            let type = $(this).attr('type');
+            let status = $(this).attr('status');
+            let unit = $(this).find("td.item-unit").attr('unit');
+            if (product === '' || product === '0') {
+                value = false
+                toastr.warning('Seleccione el producto en la fila ' + f.toString())
+                return false
             }
-            if ($(this).attr('type') === 'V') {
-                let _product = $(this).attr('product');
-                let _type = $(this).attr('type');
-                let _quantity = 0;
-                let _unit = '4';
-                let _quantity_last = parseFloat($(this).find("td.item-quantity-last").text());
-
-                let detailObj = {
-                    "Product": _product,
-                    "Quantity": _quantity,
-                    "Unit": _unit,
-                    "Type": _type,
-                    "Status": 'E',
-                    "Quantity_total": _quantity + _quantity_last,
-                };
-                distribution.Details.push(detailObj);
+            if (unit === '' || unit === '0') {
+                value = false
+                toastr.warning('Seleccione la unidad en la fila ' + f.toString())
+                return false
             }
+            if (type === '' || type === '0') {
+                value = false
+                toastr.warning('Seleccione el tipo en la fila ' + f.toString())
+                return false
+            }
+            if (status === '' || status === '0') {
+                value = false
+                toastr.warning('No se obtuvo el estado en la fila ' + f.toString())
+                return false
+            }
+            let quantity = $(this).find("td.item-quantity input").val();
+            if (quantity === '' || quantity === '0' || quantity === 'NaN' || isNaN(quantity)) {
+                quantity = parseFloat('0.00')
+            } else {
+                quantity = parseFloat(quantity)
+            }
+            let quantity_last = $(this).find("td.item-quantity-last").text();
+            if (quantity_last === '' || quantity_last === '0' || quantity_last === 'NaN' || isNaN(quantity_last)) {
+                quantity_last = parseFloat('0.00')
+            } else {
+                quantity_last = parseFloat(quantity_last)
+            }
+            let detailObj = {
+                "Product": product,
+                "Quantity": quantity,
+                "Unit": unit,
+                "Type": type,
+                "Status": status,
+                "Quantity_total": quantity + quantity_last,
+            };
+            distribution.Details.push(detailObj);
         });
+        if (value === false) {
+            return false
+        }
         console.log(JSON.stringify(distribution))
         let mensaje = confirm("¿Esta seguro de registrar la salida");
         if (mensaje) {
@@ -328,7 +401,7 @@
                 contentType: 'application/json;charset=UTF-8',
                 headers: {"X-CSRFToken": '{{ csrf_token }}'},
                 success: function (response, textStatus, xhr) {
-                    if (xhr.status == 200) {
+                    if (xhr.status === 200) {
                         toastr.success(response.message, '¡PROGRAMACION REGISTRADA CORECTAMENTE!');
                         setTimeout(() => {
                             location.reload();
@@ -360,25 +433,29 @@
                     let _list = JSON.parse(response['list']);
                     console.log(_list)
                     for (let i = 0; i < _list.length; i++) {
-                        if (parseFloat(_list[i].fields.quantity)>0){
+                        if (parseFloat(_list[i].fields.quantity) > 0) {
                             AddRow_Details();
-                            let _tr = $('#details tr[f='+(i+1)+']');
+                            let _tr = $('#details tr[f=' + (i + 1) + ']');
                             let _select = _tr.find('td.item-product select');
+                            let _select_type = _tr.find('td.item-type select');
 
 
-                            _select.find('option[value='+_list[i].fields.product+']').attr('selected', 'selected');
+                            _select.find('option[value=' + _list[i].fields.product + ']').attr('selected', 'selected');
                             _select.trigger('change');
+                            _select_type.find('option[value=' + _list[i].fields.type + ']').attr('selected', 'selected');
+                            _select_type.trigger('change');
                             _tr.attr('product', _list[i].fields.product);
                             _tr.attr('type', _list[i].fields.type);
                             _tr.attr('status', _list[i].fields.status);
-                            _select.find('option[value!='+_list[i].fields.product+']').remove();
+                            _select.find('option[value!=' + _list[i].fields.product + ']').remove();
+                            _select_type.find('option[value!=' + _list[i].fields.type + ']').remove();
                             _tr.find('td.item-quantity-last').text(parseFloat(_list[i].fields.quantity));
-                            _tr.find('td.item-delete button').prop('disabled',true);
+                            _tr.find('td.item-delete button').prop('disabled', true);
 
 
-                            if (_tr.attr('type') === 'V'){
-                                _tr.addClass('d-none');
-                            }
+                            {#if (_tr.attr('type') === 'V') {#}
+                            {#    _tr.addClass('d-none');#}
+                            {# }#}
                         }
                     }
                 } else {

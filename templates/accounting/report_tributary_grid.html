@@ -18,23 +18,23 @@
         <tr class="text-uppercase text-center" pk="{{ t.month }}">
             <td class="col-form-label col-form-label-lg font-weight-bold text-right month"
                 month="{{ t.month }}">{{ t.month_names }}</td>
-            <td class="col-form-label col-form-label-lg bg-warning purchase-base-total">{{ t.purchase_base_total }}</td>
-            <td class="col-form-label col-form-label-lg bg-warning purchase-igv-total">{{ t.purchase_igv_total }}</td>
-            <td class="col-form-label col-form-label-lg bg-warning purchase-total">{{ t.purchases_sum_total }}</td>
+            <td class="col-form-label col-form-label-lg bg-warning purchase-base-total">{{ t.purchase_base_total|safe }}</td>
+            <td class="col-form-label col-form-label-lg bg-warning purchase-igv-total">{{ t.purchase_igv_total|safe }}</td>
+            <td class="col-form-label col-form-label-lg bg-warning purchase-total">{{ t.purchases_sum_total|safe }}</td>
 
             <td class="col-form-label col-form-label-lg bg-success sale-base-total">
                 <input type="text" class="form-control text-right" id="id-sale-subtotal"
-                       name="sale-sub-total" value="{{ t.sale_base_total }}" min="0"
+                       name="sale-sub-total" value="{{ t.sale_base_total|safe }}" min="0"
                        placeholder="" readonly>
             </td>
             <td class="col-form-label col-form-label-lg bg-success sale-igv-total">
                 <input type="text" class="form-control text-right" id="id-sale-igv"
-                       name="sale-igv" value="{{ t.sale_igv_total }}" min="0"
+                       name="sale-igv" value="{{ t.sale_igv_total|safe }}" min="0"
                        placeholder="" readonly>
             </td>
             <td class="col-form-label col-form-label-lg bg-success sale-total">
                 <input type="text" class="form-control text-right" id="id-sale-total"
-                       name="sale-total" value="{{ t.sales_sum_total }}" min="0"
+                       name="sale-total" value="{{ t.sales_sum_total|safe }}" min="0"
                        placeholder="Escribir monto total de venta...">
             </td>
             <td class="col-form-label col-form-label-lg bg-success">
@@ -42,7 +42,7 @@
                 </button>
 
             </td>
-            <td class="col-form-label col-form-label-lg bg-warning">{{ t.difference_igv }}</td>
+            <td class="col-form-label col-form-label-lg bg-warning">{{ t.difference_igv|safe }}</td>
             {#            <td class="col-form-label col-form-label-lg bg-success">#}
             {#                <button type="button" class="btn btn-link text-dark btn-edit"><i class="fa fa-pencil-alt btn-lg"></i></button>#}
             {#            </td>#}

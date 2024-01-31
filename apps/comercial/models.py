@@ -3,7 +3,8 @@ from django.contrib.auth.models import User
 
 from apps.accounting.models import Cash, CashFlow
 from apps.hrm.models import Subsidiary, Employee
-from apps.sales.models import Client, Product, Unit, SubsidiaryStore, Order, OrderDetail, ProductRecipe
+from apps.sales.models import Client, Product, Unit, SubsidiaryStore, Order, OrderDetail, ProductRecipe, \
+    TransactionPayment
 from django.db.models import Sum
 from django.db.models import Q
 
@@ -425,7 +426,7 @@ class DistributionMobil(models.Model):
         total = 0
         for s in sales_set.all():
             for d in s.orderdetail_set.all():
-                if d.unit.name in ['B', 'G']:
+                if d.unit.name in ['B', 'G', 'GBC']:
                     total += (d.quantity_sold * d.price_unit)
         return round(total, 1)
 
@@ -459,6 +460,36 @@ class DistributionMobil(models.Model):
         total_expenses = self.calculate_total_expenses()
         total = total_sales - total_expenses
 
+        return round(total, 1)
+
+    def calculate_total_missing_deposited(self):
+
+        total_deposited = self.calculate_total_deposits()
+
+        total_payed = 0
+        sum_total_payed = TransactionPayment.objects.filter(
+            cash_flow__distribution_mobil=self,
+            cash_flow__type='D',
+            type='PFD').aggregate(Sum('payment'))
+        if sum_total_payed['payment__sum'] is not None:
+            total_payed = sum_total_payed['payment__sum']
+
+        total = total_deposited - total_payed
+        return round(total, 1)
+
+    def calculate_total_missing_expensed(self):
+
+        total_expenses = self.calculate_total_expenses()
+
+        total_payed = 0
+        sum_total_payed = TransactionPayment.objects.filter(
+            cash_flow__distribution_mobil=self,
+            cash_flow__type='S',
+            type='PFD').aggregate(Sum('payment'))
+        if sum_total_payed['payment__sum'] is not None:
+            total_payed = sum_total_payed['payment__sum']
+
+        total = total_expenses - total_payed
         return round(total, 1)
 
     def new_detail_distribution(self):

@@ -1317,7 +1317,7 @@ def distribution_mobil_save(request):
         guide = str(data_distribution["number_guide"])
         employee_obj = Employee.objects.get(id=id_pilot)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
-        subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='V').first()
+
         new_distribution = {
             'truck': truck_obj,
             'pilot': employee_obj,
@@ -1328,7 +1328,7 @@ def distribution_mobil_save(request):
         }
         distribution_obj = DistributionMobil.objects.create(**new_distribution)
         distribution_obj.save()
-        status=''
+        status = ''
         for detail in data_distribution['Details']:
             quantity = decimal.Decimal(detail['Quantity'])
             quantity_total = decimal.Decimal(detail['Quantity_total'])
@@ -1345,17 +1345,31 @@ def distribution_mobil_save(request):
                 'quantity': quantity_total,
                 'unit': unit_obj,
                 'type': type,
-                'status': status,
+                'status': 'E',
             }
             new_detail_distribution = DistributionDetail.objects.create(**new_detail_distribution)
             new_detail_distribution.save()
 
-            if quantity > 0 and type != 'V':
-                product_store_obj = ProductStore.objects.get(product=product_obj,
-                                                             subsidiary_store=subsidiary_store_obj)
-                quantity_minimum_unit = calculate_minimum_unit(quantity, unit_obj, product_obj)
-                kardex_ouput(product_store_obj.id, quantity_minimum_unit,
-                             distribution_detail_obj=new_detail_distribution)
+            if quantity > 0:
+                if unit_obj.name == 'BG':
+                    subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='V').first()
+                    product_store_obj = ProductStore.objects.get(product=product_obj,
+                                                                 subsidiary_store=subsidiary_store_obj)
+                    quantity_minimum_unit = calculate_minimum_unit(quantity, unit_obj, product_obj)
+                    kardex_ouput(product_store_obj.id, quantity_minimum_unit,
+                                 distribution_detail_obj=new_detail_distribution)
+                elif unit_obj.name == 'B':
+                    subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj,
+                                                                          category='I').first()
+                    subcategory_obj = ProductSubcategory.objects.get(name='FIERRO', product_category__name='FIERRO')
+                    product_recipe_obj = ProductRecipe.objects.filter(product=product_obj,
+                                                                      product_input__product_subcategory=subcategory_obj)
+                    productr_obj = product_recipe_obj.first().product_input
+                    product_store_obj = ProductStore.objects.get(product=productr_obj,
+                                                                 subsidiary_store=subsidiary_store_obj)
+                    quantity_minimum_unit = calculate_minimum_unit(quantity, unit_obj, product_obj)
+                    kardex_ouput(product_store_obj.id, quantity_minimum_unit,
+                                 distribution_detail_obj=new_detail_distribution)
 
         return JsonResponse({
             'message': 'DISTRIBUCION REALIZADA.',
@@ -1639,13 +1653,18 @@ def output_distribution(request):
         user_id = request.user.id
         user_obj = User.objects.get(id=user_id)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
+        my_date = datetime.now()
+        date_now = my_date.strftime("%Y-%m-%d")
         subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='V').first()
-        products_set = Product.objects.filter(productstore__subsidiary_store=subsidiary_store_obj).exclude(id__in=[5, 4])
+        products_set = Product.objects.filter(productstore__subsidiary_store=subsidiary_store_obj,
+                                              product_subcategory__id=4)
         t = loader.get_template('comercial/distribution_output.html')
         c = ({
             'truck_set': trucks_set,
             'product_set': products_set,
             'employees': Employee.objects.all(),
+            'type_set': DistributionDetail._meta.get_field('type').choices,
+            'date_now': date_now
         })
         return JsonResponse({
             'form': t.render(c, request),
@@ -1905,7 +1924,76 @@ def get_stock_by_product_type(request):
             'id_product_store': product_store_obj.id,
             'product_store_name': product_store_obj.subsidiary_store.name
         }, status=HTTPStatus.OK)
-    return JsonResponse({'error': True, 'message': 'Error de peticion.'})
+    else:
+        return JsonResponse({'error': True, 'message': 'Error de peticion.'})
+
+
+def get_stock_unit_by_product_type(request):
+    if request.method == 'GET':
+        data = {}
+        id_product = request.GET.get('id_product', '')
+        id_type = request.GET.get('id_type', '')
+
+        if id_type == '0' or id_type == '':
+            data['error'] = "Ingrese un tipo."
+            response = JsonResponse(data)
+            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+            return response
+
+        product_obj = Product.objects.get(pk=int(id_product))
+        user = request.user.id
+        user_obj = User.objects.get(id=user)
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+        unit_obj = None
+        product_store_obj = ''
+        try:
+            if id_type == 'V':
+                subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='I').first()
+                subcategory_obj = ProductSubcategory.objects.get(name='FIERRO', product_category__name='FIERRO')
+                product_recipe_obj = ProductRecipe.objects.filter(product=product_obj,
+                                                                  product_input__product_subcategory=subcategory_obj)
+                product_obj = product_recipe_obj.first().product_input
+                product_store_obj = ProductStore.objects.get(product__id=product_obj.id,
+                                                             subsidiary_store=subsidiary_store_obj)
+                unit_obj = product_recipe_obj.first().unit
+            if id_type == 'L':
+                subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='V').first()
+                product_store_obj = ProductStore.objects.get(product__id=id_product,
+                                                             subsidiary_store=subsidiary_store_obj)
+                unit_obj = Unit.objects.filter(name='BG', productdetail__product=product_obj).first()
+            if id_type == 'M':
+                subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='R').first()
+                product_store_obj = ProductStore.objects.get(product__id=id_product,
+                                                             subsidiary_store=subsidiary_store_obj)
+                unit_obj = Unit.objects.filter(name='BG', productdetail__product=product_obj).first()
+            if id_type == 'VM':
+                subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='R').first()
+                subcategory_obj = ProductSubcategory.objects.get(name='FIERRO', product_category__name='FIERRO')
+                product_recipe_obj = ProductRecipe.objects.filter(product=product_obj,
+                                                                  product_input__product_subcategory=subcategory_obj)
+                product_obj = product_recipe_obj.first().product_input
+                product_store_obj = ProductStore.objects.get(product__id=product_obj.id,
+                                                             subsidiary_store=subsidiary_store_obj)
+                unit_obj = product_recipe_obj.first().unit
+
+            return JsonResponse({
+                'quantity': product_store_obj.stock,
+                'unit': unit_obj.id,
+                'unit_name': unit_obj.description,
+                'id_product_store': product_store_obj.id,
+                'product_store_name': product_store_obj.subsidiary_store.name
+            }, status=HTTPStatus.OK)
+
+        except Exception as e:
+            return JsonResponse({
+                'quantity': decimal.Decimal(0.00),
+                'unit': 0,
+                'unit_name': "SIN DATOS",
+                'id_product_store': 0,
+                'product_store_name': "SIN ALMACEN"
+            }, status=HTTPStatus.OK)
+    else:
+        return JsonResponse({'error': True, 'message': 'Error de peticion.'})
 
 
 def get_consecutive_years():
@@ -1915,7 +2003,6 @@ def get_consecutive_years():
 
 
 def get_spanish_month_names():
-
     month_names = [
         'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO',
         'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
@@ -1925,7 +2012,6 @@ def get_spanish_month_names():
 
 
 def get_previous_debt_for_borrowed_balls(selected_datetime=None, truck_id=None, product__id=None):
-
     q = OrderDetail.objects.filter(
         order__distribution_mobil__date_distribution__lt=selected_datetime.date(),
         order__distribution_mobil__truck__id=truck_id,
@@ -2142,11 +2228,15 @@ def get_monthly_distribution_by_licence_plate(request):
         end_date_sin_timezone = datetime.strptime(end_date, '%Y-%m-%d')
         # end_date_con_timezone = timezone.make_aware(end_date_sin_timezone, timezone=timezone_peru)
 
-
         # selected_datetime = datetime(year, month, 1)
-        remaining_borrowed_b10 = get_previous_debt_for_borrowed_balls(selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=1)
-        remaining_borrowed_b5 = get_previous_debt_for_borrowed_balls(selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=2)
-        remaining_borrowed_b45 = get_previous_debt_for_borrowed_balls(selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=3)
+        remaining_borrowed_b10 = get_previous_debt_for_borrowed_balls(selected_datetime=start_date_sin_timezone,
+                                                                      truck_id=truck_id, product__id=1)
+        remaining_borrowed_b5 = get_previous_debt_for_borrowed_balls(selected_datetime=start_date_sin_timezone,
+                                                                     truck_id=truck_id, product__id=2)
+        remaining_borrowed_b45 = get_previous_debt_for_borrowed_balls(selected_datetime=start_date_sin_timezone,
+                                                                      truck_id=truck_id, product__id=3)
+        remaining_borrowed_b15 = get_previous_debt_for_borrowed_balls(selected_datetime=start_date_sin_timezone,
+                                                                      truck_id=truck_id, product__id=12)
 
         distribution_mobil_set = DistributionMobil.objects.filter(
             # date_distribution__month=month,
@@ -2154,20 +2244,28 @@ def get_monthly_distribution_by_licence_plate(request):
             date_distribution__range=[start_date_sin_timezone.date(), end_date_sin_timezone.date()],
             truck__id=truck_id
         ).annotate(
-            previous_distribution_id=Window(expression=Lag('id', default=0), order_by=(F('date_distribution').asc(), F('id').asc()))
+            previous_distribution_id=Window(expression=Lag('id', default=0),
+                                            order_by=(F('date_distribution').asc(), F('id').asc()))
         ).order_by('date_distribution', 'id')
 
-        remaining_in_the_car_bg10 = get_previous_debt_for_in_the_car_balls(distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=1)
-        remaining_in_the_car_bg5 = get_previous_debt_for_in_the_car_balls(distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=2)
-        remaining_in_the_car_bg45 = get_previous_debt_for_in_the_car_balls(distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=3)
+        remaining_in_the_car_bg10 = get_previous_debt_for_in_the_car_balls(
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=1)
+        remaining_in_the_car_bg5 = get_previous_debt_for_in_the_car_balls(
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=2)
+        remaining_in_the_car_bg45 = get_previous_debt_for_in_the_car_balls(
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=3)
+        remaining_in_the_car_bg15 = get_previous_debt_for_in_the_car_balls(
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=12)
 
         initial_remaining_in_the_car_bg10 = remaining_in_the_car_bg10
         initial_remaining_in_the_car_bg5 = remaining_in_the_car_bg5
         initial_remaining_in_the_car_bg45 = remaining_in_the_car_bg45
+        initial_remaining_in_the_car_bg15 = remaining_in_the_car_bg15
 
         initial_remaining_borrowed_b10 = remaining_borrowed_b10
         initial_remaining_borrowed_b5 = remaining_borrowed_b5
         initial_remaining_borrowed_b45 = remaining_borrowed_b45
+        initial_remaining_borrowed_b15 = remaining_borrowed_b15
 
         distributions = []
 
@@ -2180,7 +2278,8 @@ def get_monthly_distribution_by_licence_plate(request):
         base_query_set = OrderDetail.objects.filter(
             # order__distribution_mobil__date_distribution__month=month,
             # order__distribution_mobil__date_distribution__year=year,
-            order__distribution_mobil__date_distribution__range=[start_date_sin_timezone.date(), end_date_sin_timezone.date()],
+            order__distribution_mobil__date_distribution__range=[start_date_sin_timezone.date(),
+                                                                 end_date_sin_timezone.date()],
             order__distribution_mobil__truck__id=truck_id,
             unit__name__in=['G', 'GBC']
         )
@@ -2188,6 +2287,7 @@ def get_monthly_distribution_by_licence_plate(request):
         header_b10 = list(base_query_set.filter(product__id=1).values_list('price_unit', flat=True).distinct())
         header_b5 = list(base_query_set.filter(product__id=2).values_list('price_unit', flat=True).distinct())
         header_b45 = list(base_query_set.filter(product__id=3).values_list('price_unit', flat=True).distinct())
+        header_b15 = list(base_query_set.filter(product__id=12).values_list('price_unit', flat=True).distinct())
 
         if len(header_b10) == 0:
             header_b10 = [""]
@@ -2195,6 +2295,8 @@ def get_monthly_distribution_by_licence_plate(request):
             header_b5 = [""]
         if len(header_b45) == 0:
             header_b45 = [""]
+        if len(header_b15) == 0:
+            header_b15 = [""]
 
         grouped_by_date = defaultdict(
             lambda: {
@@ -2219,19 +2321,25 @@ def get_monthly_distribution_by_licence_plate(request):
                 },
                 'B15': {
                     'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
-                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'prices': {}, 'total_sales': 0,
+                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0,
+                    'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b15}, 'total_sales': 0,
                     'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'advanced_b': 0, 'remaining_borrowed_b': 0
                 },
                 'B3': {
                     'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
-                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'prices': {}, 'total_sales': 0,
+                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0,
+                    'prices': {}, 'total_sales': 0,
                     'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'advanced_b': 0, 'remaining_borrowed_b': 0
                 },
                 'total_sold_by_date': 0,
-                'expense_1': 0, 'expense_2': 0, 'expense_3': 0, 'expense_4': 0, 'expense_5': 0, 'total_to_deposit': 0,
+                'expense_1': 0, 'expense_2': 0, 'expense_3': 0, 'expense_4': 0, 'expense_5': 0,
+                'total_to_deposit': 0,
+                'remaining_total_to_deposit': 0,
                 'deposited': 0, 'balance': 0, 'bank': "", 'date_deposit': ""
             }
         )
+
+        remaining_total_to_deposit = 0
 
         for distribution in distribution_mobil_set:
 
@@ -2262,9 +2370,11 @@ def get_monthly_distribution_by_licence_plate(request):
                     ball = distribution_obj["B5"]
                 elif product_id == 3:  # B45KG
                     ball = distribution_obj["B45"]
+                elif product_id == 12:  # B15KG
+                    ball = distribution_obj["B15"]
 
                 # if last_distribution_detail_in_the_car_obj is not None:
-                    # ball["in_the_car_bg"] = int(last_distribution_detail_in_the_car_obj.quantity)
+                # ball["in_the_car_bg"] = int(last_distribution_detail_in_the_car_obj.quantity)
                 if detail.status == "C" and detail.type == "L":
                     ball["in_the_car_bg"] = int(detail.quantity)
                 if detail.status == "E" and detail.type == "L":
@@ -2272,7 +2382,8 @@ def get_monthly_distribution_by_licence_plate(request):
                     if kardex_set.exists():
                         kardex_obj = kardex_set.last()
                         ball["extracted_bg"] += int(kardex_obj.quantity)
-                    # ball["extracted_bg"] += int(detail.quantity)
+                    else:
+                        ball["extracted_bg"] += int(detail.quantity)
 
                 if detail.status == "D" and detail.type == "V":
                     ball["returned_b"] += int(detail.quantity)
@@ -2280,8 +2391,18 @@ def get_monthly_distribution_by_licence_plate(request):
                     ball["ruined_returned_bg"] += int(detail.quantity)
                 if detail.status == "R" and detail.type == "V":
                     ball["recovered_b"] += int(detail.quantity)
-                    ball["remaining_borrowed_b"] = remaining_borrowed_b10 - int(detail.quantity)
-                    remaining_borrowed_b10 -= int(detail.quantity)
+                    if product_id == 1:
+                        ball["remaining_borrowed_b"] = remaining_borrowed_b10 - int(detail.quantity)
+                        remaining_borrowed_b10 -= int(detail.quantity)
+                    elif product_id == 2:
+                        ball["remaining_borrowed_b"] = remaining_borrowed_b5 - int(detail.quantity)
+                        remaining_borrowed_b5 -= int(detail.quantity)
+                    elif product_id == 3:
+                        ball["remaining_borrowed_b"] = remaining_borrowed_b45 - int(detail.quantity)
+                        remaining_borrowed_b45 -= int(detail.quantity)
+                    elif product_id == 12:
+                        ball["remaining_borrowed_b"] = remaining_borrowed_b15 - int(detail.quantity)
+                        remaining_borrowed_b15 -= int(detail.quantity)
                 if detail.status == "A" and detail.type == "V":
                     ball["advanced_b"] += int(detail.quantity)
 
@@ -2304,6 +2425,10 @@ def get_monthly_distribution_by_licence_plate(request):
                         ball = distribution_obj["B45"]
                         if value not in header_b45:
                             value = 0
+                    elif product_id == 12:  # B15KG
+                        ball = distribution_obj["B15"]
+                        if value not in header_b15:
+                            value = 0
 
                     if value > 0:
                         ball['prices'][value]["quantity"] += int(od.quantity_sold)
@@ -2311,15 +2436,33 @@ def get_monthly_distribution_by_licence_plate(request):
                         ball["total_sales"] += round(od.quantity_sold * od.price_unit, 1)
                         total_sales_by_date += round(od.quantity_sold * od.price_unit, 1)
 
-                    if od.unit.name == 'G':
+                    if od.unit.name in ['G', 'GBC']:
                         ball["quantity_sold_g"] += int(od.quantity_sold)
                         ball["quantity_sold"] += int(od.quantity_sold)
                     if od.unit.name == 'B':
                         ball["quantity_sold_b"] += int(od.quantity_sold)
                         ball["quantity_sold"] += int(od.quantity_sold)
-                        ball["remaining_borrowed_b"] = int(remaining_borrowed_b10) + int(od.quantity_sold)
-                        remaining_borrowed_b10 += int(od.quantity_sold)
+                        if product_id == 1:
+                            ball["remaining_borrowed_b"] = int(remaining_borrowed_b10) + int(od.quantity_sold)
+                            remaining_borrowed_b10 += int(od.quantity_sold)
+                        elif product_id == 2:
+                            ball["remaining_borrowed_b"] = int(remaining_borrowed_b5) + int(od.quantity_sold)
+                            remaining_borrowed_b5 += int(od.quantity_sold)
+                        elif product_id == 3:
+                            ball["remaining_borrowed_b"] = int(remaining_borrowed_b45) + int(od.quantity_sold)
+                            remaining_borrowed_b45 += int(od.quantity_sold)
+                        elif product_id == 12:
+                            ball["remaining_borrowed_b"] = int(remaining_borrowed_b15) + int(od.quantity_sold)
+                            remaining_borrowed_b15 += int(od.quantity_sold)
 
+            if distribution_obj["B10"]["remaining_borrowed_b"] == 0:
+                distribution_obj["B10"]["remaining_borrowed_b"] = int(remaining_borrowed_b10)
+            if distribution_obj["B5"]["remaining_borrowed_b"] == 0:
+                distribution_obj["B5"]["remaining_borrowed_b"] = int(remaining_borrowed_b5)
+            if distribution_obj["B45"]["remaining_borrowed_b"] == 0:
+                distribution_obj["B45"]["remaining_borrowed_b"] = int(remaining_borrowed_b45)
+            if distribution_obj["B15"]["remaining_borrowed_b"] == 0:
+                distribution_obj["B15"]["remaining_borrowed_b"] = int(remaining_borrowed_b15)
 
             total_expenses = 0
             for expense in distribution.cashflow_set.filter(type='S'):
@@ -2335,9 +2478,6 @@ def get_monthly_distribution_by_licence_plate(request):
                     distribution_obj["expense_5"] += round(expense.total, 1)
                 total_expenses += round(expense.total, 1)
 
-            distribution_obj['total_sold_by_date'] += total_sales_by_date
-            distribution_obj['total_to_deposit'] += (total_sales_by_date - total_expenses)
-
             total_deposited = 0
             bank = []
             dates_of_deposit = []
@@ -2347,7 +2487,14 @@ def get_monthly_distribution_by_licence_plate(request):
                 bank.append(deposit.cash.name)
                 dates_of_deposit.append(str(deposit.transaction_date.date()))
 
+            distribution_obj['total_sold_by_date'] += total_sales_by_date
+
+            distribution_obj['total_to_deposit'] += (total_sales_by_date - total_expenses)
+
             distribution_obj['balance'] += (total_sales_by_date - total_expenses - total_deposited)
+
+            remaining_total_to_deposit += (total_sales_by_date - total_expenses - total_deposited)
+            distribution_obj['remaining_total_to_deposit'] = remaining_total_to_deposit
 
             bank_without_duplicates = list(set(bank))
             string_of_banks = ", ".join(bank_without_duplicates)
@@ -2364,12 +2511,15 @@ def get_monthly_distribution_by_licence_plate(request):
             'header_b10': header_b10,
             'header_b5': header_b5,
             'header_b45': header_b45,
+            'header_b15': header_b15,
             'initial_remaining_in_the_car_bg10': int(initial_remaining_in_the_car_bg10),
             'initial_remaining_in_the_car_bg5': int(initial_remaining_in_the_car_bg5),
             'initial_remaining_in_the_car_bg45': int(initial_remaining_in_the_car_bg45),
+            'initial_remaining_in_the_car_bg15': int(initial_remaining_in_the_car_bg15),
             'initial_remaining_borrowed_b10': int(initial_remaining_borrowed_b10),
             'initial_remaining_borrowed_b5': int(initial_remaining_borrowed_b5),
             'initial_remaining_borrowed_b45': int(initial_remaining_borrowed_b45),
+            'initial_remaining_borrowed_b15': int(initial_remaining_borrowed_b15),
         })
 
         if distribution_mobil_set:
@@ -2821,7 +2971,7 @@ def get_distribution_deposit(request):
         user_obj = User.objects.get(id=user_id)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
 
-        cash_set = Cash.objects.filter(subsidiary=subsidiary_obj).filter(Q(accounting_account__code__startswith='101')|Q(accounting_account__code__startswith='1041'))
+        cash_set = Cash.objects.filter(accounting_account__code__startswith='1041')
         t = loader.get_template('comercial/distribution_deposit.html')
         c = ({
             'distribution_mobil': distribution_mobil_obj,

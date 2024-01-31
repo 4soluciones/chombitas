@@ -2645,7 +2645,10 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                         transaction_payment = None
                         for t in transaction_payment_set:
                             transaction_payment = t
-                        _cash_flow = get_cash_flow(order=o, transactionpayment=transaction_payment)
+                        if transaction_payment is not None and transaction_payment.cash_flow is not None:
+                            _cash_flow = transaction_payment.cash_flow
+                        else:
+                            _cash_flow = get_cash_flow(order=o, transactionpayment=transaction_payment)
                         _payment_type = transaction_payment.get_type_display()
                         _number_of_vouchers = transaction_payment.number_of_vouchers
 
@@ -2963,6 +2966,62 @@ def new_loan_payment(request):
                     code_operation = str(request.POST.get('code_operation'))
 
                     payment = val
+
+                    if transaction_payment_type == 'PFD':
+                        cash_flow_expense_id = int(request.POST.get('cash-flow-expense-id'))
+                        cash_flow_deposit_id = int(request.POST.get('cash-flow-deposit-id'))
+                        str_total_expense_to_subtract = str(request.POST.get('total_expense_to_subtract')).strip()
+                        str_total_deposit_to_subtract = str(request.POST.get('total_deposit_to_subtract')).strip()
+                        total_expense_to_subtract = 0
+                        total_deposit_to_subtract = 0
+                        if str_total_expense_to_subtract != '':
+                            total_expense_to_subtract = decimal.Decimal(str_total_expense_to_subtract)
+                        if str_total_deposit_to_subtract != '':
+                            total_deposit_to_subtract = decimal.Decimal(str_total_deposit_to_subtract)
+
+                        if total_expense_to_subtract > 0 and cash_flow_expense_id > 0:
+                            cash_flow_expense_obj = CashFlow.objects.get(id=cash_flow_expense_id)
+                            loan_payment_obj = LoanPayment(
+                                price=total_expense_to_subtract,
+                                quantity=0,
+                                product=detail_obj.product,
+                                order_detail=detail_obj,
+                                operation_date=_operation_date
+                            )
+                            loan_payment_obj.save()
+
+                            transaction_payment_obj = TransactionPayment(
+                                payment=total_expense_to_subtract,
+                                number_of_vouchers=number_of_vouchers,
+                                type=transaction_payment_type,
+                                operation_code=cash_flow_expense_obj.operation_code,
+                                loan_payment=loan_payment_obj,
+                                cash_flow=cash_flow_expense_obj
+                            )
+                            transaction_payment_obj.save()
+
+                        if total_deposit_to_subtract > 0 and cash_flow_deposit_id > 0:
+                            cash_flow_deposit_obj = CashFlow.objects.get(id=cash_flow_deposit_id)
+                            loan_payment_obj = LoanPayment(
+                                price=total_deposit_to_subtract,
+                                quantity=0,
+                                product=detail_obj.product,
+                                order_detail=detail_obj,
+                                operation_date=_operation_date
+                            )
+                            loan_payment_obj.save()
+
+                            transaction_payment_obj = TransactionPayment(
+                                payment=total_deposit_to_subtract,
+                                number_of_vouchers=number_of_vouchers,
+                                type=transaction_payment_type,
+                                operation_code=cash_flow_deposit_obj.operation_code,
+                                loan_payment=loan_payment_obj,
+                                cash_flow=cash_flow_deposit_obj
+                            )
+                            transaction_payment_obj.save()
+
+                        return True
 
                     if transaction_payment_type == 'D':
                         cash_flow_description = str(request.POST.get('description_deposit'))

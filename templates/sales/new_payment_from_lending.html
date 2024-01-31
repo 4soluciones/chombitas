@@ -34,6 +34,7 @@
 
                 <td class="border-top-0 border-bottom border-right align-middle text-left text-danger pay-loan" style="width: 30%">
                     {{ detail.order.total_remaining_repay_loan|floatformat:2 }}
+                    <input type="hidden" id="remaining_to_pay" value="{{ detail.order.total_remaining_repay_loan|safe }}" />
                 </td>
 
                 <td class="border-top-0 border-bottom border-right align-middle"  style="width: 20%">
@@ -51,7 +52,9 @@
                             class="form-control form-control-sm">
                         <option value="0">Seleccione</option>
                         {% for item in choices_payments %}
-                            <option value="{{ item.0 }}">{{ item.1 }}</option>
+
+                            <option value="{{ item.0 }}" {% if item.0 == "PFD" and not detail.order.distribution_mobil %}class="d-none bg-danger"{% endif %}>{{ item.1 }}</option>
+
                         {% endfor %}
                     </select>
                 </td>
@@ -219,7 +222,124 @@
                 </tr>
                 </tbody>
             </table>
+            {#            CUANDO TIENE FONDOS DE DISTRIBUCIÓN#}
+            <table class="table table-sm" id="distribution-funds" style="display: none">
+                <thead>
+                <tr class="text-uppercase font-weight-lighter">
+                    <th class="border-bottom-0 border-right align-middle">CONCEPTO</th>
+                    <th class="border-bottom-0 border-right align-middle code">DETALLE DE OPERACION</th>
+                    <th class="border-bottom-0 border-right align-middle code">MONTO SELECCIONADO</th>
+                    <th class="border-bottom-0 border-right align-middle voucher">MONTO A EXTRAER</th>
+                    <th class="border-bottom-0 border-right align-middle voucher">MONTO SOBRANTE</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td class="border-top-0 border-bottom border-right align-middle">DEPOSITOS</td>
+                    <td class="border-top-0 border-bottom border-right align-middle">
+                        <select id="cash-flow-deposit-id" name="cash-flow-deposit-id" class="form-control form-control-sm" aria-describedby="depositedHelpBlock">
+                            <option value="0">SELECCIONA</option>
+                            {% for cf in detail.order.distribution_mobil.cashflow_set.all %}
+                                {% if cf.type == "D" %}
+                                    <option value="{{ cf.id }}"
+                                            cash-flow-transaction-date="{{ cf.transaction_date|safe }}"
+                                            cash-flow-missing="{{ cf.calculate_total_missing|safe }}"
+                                            cash-flow-total="{{ cf.total|safe }}">{{ cf.description }} {{ cf.transaction_date|date:"SHORT_DATE_FORMAT" }} {{ cf.total|floatformat:2|safe }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                        <small id="depositedHelpBlock" class="form-text text-muted">
+                          TOTAL DEPOSITADO: {{  detail.order.distribution_mobil.calculate_total_deposits|safe }}.
+                        </small>
+                    </td>
+                    <td class="border-top-0 border-bottom border-right align-middle">
+                        <input
+                                type="number"
+                                id="id_total_deposited_accumulated"
+                                name="total_deposited_accumulated"
+                                readonly
+                                value="0"
+                                class="form-control form-control-sm">
+                    </td>
 
+                    <td class="border-top-0 border-bottom border-right align-middle">
+                        <input
+                                type="number"
+                                id="id_total_deposit_to_subtract"
+                                name="total_deposit_to_subtract"
+                                autocomplete="off"
+                                onclick="this.select();"
+                                class="form-control form-control-sm">
+                    </td>
+                    <td class="border-top-0 border-bottom border-right align-middle">
+
+                        <input type="hidden" id="initial_total_deposited_available" value="{{ detail.order.distribution_mobil.calculate_total_missing_deposited|safe }}" />
+
+                         <input
+                                type="number"
+                                id="id_total_deposited_available"
+                                name="total_deposited_available"
+                                readonly
+                                value="0"
+                                class="form-control form-control-sm">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="border-top-0 border-bottom border-right align-middle">GASTOS</td>
+                    <td class="border-top-0 border-bottom border-right align-middle">
+                        <select id="cash-flow-expense-id" name="cash-flow-expense-id" class="form-control form-control-sm" aria-describedby="expensedHelpBlock">
+                            <option value="0">SELECCIONA</option>
+                            {% for cf in detail.order.distribution_mobil.cashflow_set.all %}
+                                {% if cf.type == "S" %}
+                                    <option value="{{ cf.id }}"
+                                            cash-flow-transaction-date="{{ cf.transaction_date|safe }}"
+                                            cash-flow-missing="{{ cf.calculate_total_missing|safe }}"
+                                            cash-flow-total="{{ cf.total|safe }}">{{ cf.description }} {{ cf.transaction_date|date:"SHORT_DATE_FORMAT" }} {{ cf.total|floatformat:2|safe }}</option>
+                                {% endif %}
+
+                            {% endfor %}
+
+                        </select>
+                        <small id="expensedHelpBlock" class="form-text text-muted">
+                          TOTAL GASTADO: {{  detail.order.distribution_mobil.calculate_total_expenses|safe }}.
+                        </small>
+
+                    </td>
+
+                    <td class="border-top-0 border-bottom border-right align-middle">
+
+                        <input
+                                type="number"
+                                id="id_total_expense_accumulated"
+                                name="total_expense_accumulated"
+                                readonly
+                                value="0"
+                                class="form-control form-control-sm">
+                    </td>
+
+                    <td class="border-top-0 border-bottom border-right align-middle">
+                        <input
+                                type="number"
+                                id="id_total_expense_to_subtract"
+                                name="total_expense_to_subtract"
+                                autocomplete="off"
+                                onclick="this.select();"
+                                class="form-control form-control-sm">
+                    </td>
+
+                    <td class="border-top-0 border-bottom border-right align-middle">
+                        <input type="hidden" id="initial_total_expense_available" value="{{  detail.order.distribution_mobil.calculate_total_missing_expensed|safe }}" />
+                        <input
+                                type="number"
+                                id="id_total_expense_available"
+                                name="total_expense_available"
+                                readonly
+                                value="0"
+                                class="form-control form-control-sm">
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         {% endif %}
 
         {% if detail.unit.name == 'B' %}
@@ -453,21 +573,31 @@
             $('#deposit').css('display', 'none');
             $('#id_cash').trigger('change');
             $('#fises').css('display', 'none');
+            $('#distribution-funds').css('display', 'none');
         } else if (type === 'D') {
             $('#deposit').css('display', 'table');
             $('#cash').css('display', 'none');
             $('#fises').css('display', 'none');
+            $('#distribution-funds').css('display', 'none');
         } else if (type === 'F') {
             $('#fises').css('display', 'table');
             $('#cash').css('display', 'none');
             $('#deposit').css('display', 'none');
+            $('#distribution-funds').css('display', 'none');
         } else if (type === 'V' || type === 'C') {
             $('#cash').css('display', 'none');
             $('#deposit').css('display', 'none');
             $('#fises').css('display', 'none');
+            $('#distribution-funds').css('display', 'none');
+        } else if (type === 'PFD') {
+            $('#cash').css('display', 'none');
+            $('#deposit').css('display', 'none');
+            $('#fises').css('display', 'none');
+            $('#distribution-funds').css('display', 'table');
         }
 
     });
+
 
     $('#id_transaction_payment_type2').change(function () {
 
@@ -541,7 +671,75 @@
             _number_of_vouchers.val(_quantity.toFixed(2));
         }
 
+        let transactionPaymentType = $('#id_transaction_payment_type').val();
+        if (transactionPaymentType==="PFD"){
+            calculate_total_to_subtract()
+        }
+
     });
+
+    $('#id_total_deposit_to_subtract, #id_total_expense_to_subtract').keyup(function () {calculate_total_to_subtract()});
+
+    $('#cash-flow-expense-id').change(function () {
+        let cashFlowTotal = Number($(this).find('option:selected').attr('cash-flow-total'));
+        let cashFlowMissing = Number($(this).find('option:selected').attr('cash-flow-missing'));
+
+        $('#id_total_expense_accumulated').val(cashFlowMissing);
+        $('#initial_total_expense_available').val(cashFlowMissing);
+        $('#id_total_expense_available').val(cashFlowMissing);
+    });
+
+    $('#cash-flow-deposit-id').change(function () {
+        let cashFlowTotal = Number($(this).find('option:selected').attr('cash-flow-total'));
+        let cashFlowMissing = Number($(this).find('option:selected').attr('cash-flow-missing'));
+        $('#id_total_deposited_accumulated').val(cashFlowMissing);
+        $('#initial_total_deposited_available').val(cashFlowMissing);
+        $('#id_total_deposited_available').val(cashFlowMissing);
+    });
+
+
+    function calculate_total_to_subtract(){
+        let remainingToPay = Number($('#remaining_to_pay').val());
+        console.log("remainingToPay", remainingToPay)
+        let initialTotalDepositedAvailable = Number($('#initial_total_deposited_available').val());
+        let initialTotalExpensedAvailable = Number($('#initial_total_expense_available').val());
+
+        {#let totalDepositedAvailable = Number($('#id_total_deposited_available').val());#}
+        {#let totalExpenseAvailable = Number($('#id_total_expense_available').val());#}
+
+        let depositToSubtract = Number($('#id_total_deposit_to_subtract').val());
+        let expenseToSubtract = Number($('#id_total_expense_to_subtract').val());
+
+        if((depositToSubtract + expenseToSubtract) <= remainingToPay){
+            if((initialTotalDepositedAvailable - depositToSubtract)>=0 && (initialTotalExpensedAvailable- expenseToSubtract)>=0 ){
+                let loan_payment = depositToSubtract + expenseToSubtract
+
+                $('#id_total_deposited_available').val(initialTotalDepositedAvailable - depositToSubtract);
+                $('#id_total_expense_available').val(initialTotalExpensedAvailable - expenseToSubtract);
+                $('#id_loan_payment').val(loan_payment);
+            }
+            else{
+                toastr.warning('valor extraido fuera de control', 'Inconcebible')
+                $('#id_total_deposit_to_subtract').val('');
+                $('#id_total_expense_to_subtract').val('');
+                $('#id_total_deposited_available').val(initialTotalDepositedAvailable);
+                $('#id_total_expense_available').val(initialTotalExpensedAvailable);
+                $('#id_loan_payment').val('');
+            }
+
+        }
+        else {
+            toastr.warning('valor por encima de la deuda', 'Inconcebible')
+            $('#id_total_deposit_to_subtract').val('');
+            $('#id_total_expense_to_subtract').val('');
+            $('#id_total_deposited_available').val(initialTotalDepositedAvailable);
+                $('#id_total_expense_available').val(initialTotalExpensedAvailable);
+            $('#id_loan_payment').val('');
+        }
+
+    }
+
+
 
     $('#id_loan_quantity').keyup(function () {
         let val = $(this).val();

@@ -530,15 +530,18 @@ class OrderDetail(models.Model):
 
 
 class TransactionPayment(models.Model):
-    TYPE_CHOICES = (('E', 'Efectivo'), ('D', 'Deposito'), ('F', 'FISE'))
+    TYPE_CHOICES = (('E', 'Efectivo'), ('D', 'Deposito'), ('F', 'FISE'),
+                    ('PFD', 'Fondos de distribucion')
+                    )
     id = models.AutoField(primary_key=True)
     payment = models.DecimalField('Pago', max_digits=10, decimal_places=2, default=0)
-    type = models.CharField('Tipo de pago', max_length=1, choices=TYPE_CHOICES, default='E', )
+    type = models.CharField('Tipo de pago', max_length=3, choices=TYPE_CHOICES, default='E', )
     order = models.ForeignKey('Order', on_delete=models.SET_NULL, null=True, blank=True)
     operation_code = models.CharField(
         verbose_name='Codigo de operación', max_length=45, null=True, blank=True)
     number_of_vouchers = models.DecimalField('Vales FISE', max_digits=10, decimal_places=2, default=0)
     loan_payment = models.ForeignKey('LoanPayment', on_delete=models.SET_NULL, null=True, blank=True)
+    cash_flow = models.ForeignKey('accounting.CashFlow', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return str(self.order.id) + " - " + str(self.type) + " - " + str(self.payment)

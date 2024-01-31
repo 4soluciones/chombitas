@@ -1902,7 +1902,7 @@ def report_tributary(request):
                             requirement_sum_total = decimal.Decimal(0.00)
                         purchase_base_total = float((decimal.Decimal(float_purchases_sum_total) + decimal.Decimal(
                             requirement_sum_total)) / decimal.Decimal(1.18))
-                        purchase_igv_total = float(float_purchases_sum_total - purchase_base_total)
+                        purchase_igv_total = float(float(decimal.Decimal(float_purchases_sum_total)+decimal.Decimal(requirement_sum_total)) - purchase_base_total)
 
                         purchase_base_total = purchase_base_total
                         purchase_igv_total = purchase_igv_total
@@ -1980,7 +1980,7 @@ def report_tributary(request):
                         requirement_sum_total = decimal.Decimal(0.00)
 
                     purchase_base_total = float((decimal.Decimal(float_purchases_sum_total)+decimal.Decimal(requirement_sum_total)) / decimal.Decimal(1.18))
-                    purchase_igv_total = float(float_purchases_sum_total - purchase_base_total)
+                    purchase_igv_total = float(float(decimal.Decimal(float_purchases_sum_total)+decimal.Decimal(requirement_sum_total)) - purchase_base_total)
 
                     purchase_base_total = purchase_base_total
                     purchase_igv_total = purchase_igv_total

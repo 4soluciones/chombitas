@@ -192,8 +192,8 @@
                                     {{ l.type }}
                                 {% endif %}
                                 {% if l.cash_flow %}
-                                    <br>{{ l.cash_flow.cash.name }}
-                                    <br>{{ l.cash_flow.operation_code }}
+                                    <br>{% if l.cash_flow.cash %}{{ l.cash_flow.cash.name }}{% else %}{{ l.cash_flow.description }}{% endif %}
+                                    <br>{% if l.cash_flow.operation_code %}{{ l.cash_flow.operation_code }}{% endif %}
 
                                     {% if l.is_review_pay %}
                                         <div class="form-check form-switch">
@@ -302,8 +302,8 @@
                                         {{ l.type }}
                                     {% endif %}
                                     {% if l.cash_flow %}
-                                        <br>{{ l.cash_flow.cash.name }}
-                                        <br>{{ l.cash_flow.operation_code }}
+                                        <br>{% if l.cash_flow.cash %}{{ l.cash_flow.cash.name }}{% else %}{{ l.cash_flow.description }}{% endif %}
+                                        <br>{% if l.cash_flow.operation_code %}{{ l.cash_flow.operation_code }}{% endif %}
 
                                         {% if l.is_review_pay %}
                                         <div class="form-check form-switch">
