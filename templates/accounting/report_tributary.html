@@ -30,9 +30,12 @@
                         <button type="submit" class="btn btn-blue my-1 ml-2" id="btn-search">
                             <i class="fas fa-search-dollar"></i> Buscar
                         </button>
-                        <button type="button" class="btn btn-outline-success my-1 ml-2" id="btn-search">
-                            <i class="fa fa-file-excel"></i> Exportar Excel
-                        </button>
+{#                        <button type="button" class="btn btn-outline-success my-1 ml-2" id="btn-search">#}
+{#                            <i class="fa fa-file-excel"></i> Exportar Excel#}
+{#                        </button>#}
+                        <a onclick="excelTickets();" class="btn btn-success my-1 ml-2 text-white m-1">
+                        <span class="fa fa-file-excel"></span> Exportar
+                    </a>
                     </form>
 
                 </form>
@@ -56,7 +59,18 @@
 
 
     <script type="text/javascript">
+        function excelTickets() {
 
+            $("#report-comparative").table2excel({
+                // exclude CSS class
+                exclude: ".noExl",
+                name: "Worksheet vouchers",
+                filename: "reporte_tributario_del_año",//do not include extension
+                fileext: ".xlsx", // file extension
+                preserveColors: true
+
+            });
+        }
         $('#search-form').submit(function (event) {
             event.preventDefault();
             let data = new FormData($('#search-form').get(0));

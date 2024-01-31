@@ -41,17 +41,17 @@
 
                 <div class="form-group">
                     <label for="operation-code">Codigo de operación</label>
-                    <input type="text" name="operation-code" class="form-control" id="operation-code" required>
+                    <input type="text" name="operation-code" class="form-control" id="operation-code">
                 </div>
 
                 <div class="form-group">
                     <label for="total-balance">Total disponible</label>
-                    <input type="number" name="total-balance" class="form-control" id="total-balance" value="{{ distribution_mobil.calculate_total_balance|safe }}" readonly>
+                    <input type="text" name="total-balance" class="form-control" id="total-balance" value="{{ distribution_mobil.calculate_total_balance|safe }}" readonly>
                 </div>
 
                 <div class="form-group">
                     <label for="total-deposit">Total</label>
-                    <input type="number" name="total-deposit" class="form-control" id="total-deposit" required>
+                    <input type="text" inputmode="numeric" name="total-deposit" class="form-control" id="total-deposit" required />
                 </div>
 
             </div>

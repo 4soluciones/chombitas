@@ -2020,9 +2020,10 @@ def save_register_tributary(request):
         user_obj = User.objects.get(id=user_id)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
         mydate = datetime.now()
-        formatdate = mydate.strftime("%Y-%m-%d")
-        year = mydate.year
+        # formatdate = mydate.strftime("%Y-%m-%d")
+        # year = mydate.year
 
+        year = int(request.GET.get('year', ''))
         month = int(request.GET.get('month', ''))
 
         total_buy = request.GET.get('total_buy', '').replace(',', '')

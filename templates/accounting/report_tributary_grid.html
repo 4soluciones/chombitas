@@ -22,27 +22,27 @@
             <td class="col-form-label col-form-label-lg bg-warning purchase-igv-total">{{ t.purchase_igv_total|safe }}</td>
             <td class="col-form-label col-form-label-lg bg-warning purchase-total">{{ t.purchases_sum_total|safe }}</td>
 
-            <td class="col-form-label col-form-label-lg bg-success sale-base-total">
+            <td class="col-form-label col-form-label-lg bg-success sale-base-total p-1">
                 <input type="text" class="form-control text-right" id="id-sale-subtotal"
                        name="sale-sub-total" value="{{ t.sale_base_total|safe }}" min="0"
                        placeholder="" readonly>
             </td>
-            <td class="col-form-label col-form-label-lg bg-success sale-igv-total">
+            <td class="col-form-label col-form-label-lg bg-success sale-igv-total p-1">
                 <input type="text" class="form-control text-right" id="id-sale-igv"
                        name="sale-igv" value="{{ t.sale_igv_total|safe }}" min="0"
                        placeholder="" readonly>
             </td>
-            <td class="col-form-label col-form-label-lg bg-success sale-total">
+            <td class="col-form-label col-form-label-lg bg-success sale-total p-1">
                 <input type="text" class="form-control text-right" id="id-sale-total"
                        name="sale-total" value="{{ t.sales_sum_total|safe }}" min="0"
                        placeholder="Escribir monto total de venta...">
             </td>
-            <td class="col-form-label col-form-label-lg bg-success">
-                <button type="button" class="btn btn-link text-dark btn-save"><i class="fas fa-save btn-lg"></i>
+            <td class="col-form-label col-form-label-lg bg-success p-1">
+                <button type="button" class="btn btn-link text-white btn-save"><i class="fas fa-save btn-lg"></i>
                 </button>
 
             </td>
-            <td class="col-form-label col-form-label-lg bg-warning">{{ t.difference_igv|safe }}</td>
+            <td class="col-form-label col-form-label-lg bg-warning item-igv-total">{{ t.difference_igv|safe }}</td>
             {#            <td class="col-form-label col-form-label-lg bg-success">#}
             {#                <button type="button" class="btn btn-link text-dark btn-edit"><i class="fa fa-pencil-alt btn-lg"></i></button>#}
             {#            </td>#}
@@ -66,6 +66,11 @@
             let _igv_sale_total = _tr.find('td.sale-igv-total input').val().replace(',', '')
             let _total_sale = _tr.find('td.sale-total input').val().replace(',', '')
             let _month = _tr.find('td.month').attr('month')
+            let _year = $('#id_year').val()
+            if (_year === '' || _year === '0') {
+                toastr.warning('seleccione el año')
+                return false
+            }
             {#console.log('btn', btn)#}
             {#console.log('tr', _tr)#}
             {#console.log('_base_buy_total', _base_buy_total)#}
@@ -88,6 +93,7 @@
                     'base_sale_total': _base_sale_total,
                     'igv_sale_total': _igv_sale_total,
                     'total_sale': _total_sale,
+                    'year': _year,
                     'month': _month,
                 },
                 success: function (response, textStatus, xhr) {
@@ -120,11 +126,26 @@
 
             let _tr = $(this).parent('tr')
             let sale_total = $(this).find('#id-sale-total').val()
+            if (sale_total === '' || sale_total === 'NaN') {
+                sale_total = parseFloat('0.00')
+            } else {
+                sale_total = parseFloat(sale_total.replace(',', ''))
+            }
             let sale_base_total = sale_total / Number(1.18)
             let sale_igv = sale_total - sale_base_total
 
-            _tr.find('.sale-base-total input#id-sale-subtotal').val(sale_base_total.toFixed(2));
-            _tr.find('.sale-igv-total input#id-sale-igv').val(sale_igv.toFixed(2));
+            _tr.find('td.sale-base-total input#id-sale-subtotal').val(sale_base_total.toFixed(2));
+            _tr.find('td.sale-igv-total input#id-sale-igv').val(sale_igv.toFixed(2));
+            let igv_purchase = _tr.find('td.purchase-igv-total').text();
+            if (igv_purchase === '' || igv_purchase === 'NaN') {
+                igv_purchase = parseFloat('0.00')
+            } else {
+                igv_purchase = parseFloat(igv_purchase.replace(',', ''))
+            }
+
+            let igv_total = parseFloat(sale_igv) - parseFloat(igv_purchase)
+            {#console.log(igv_total)#}
+            _tr.find('td.item-igv-total').text(parseFloat(igv_total).toFixed(2));
 
         });
 

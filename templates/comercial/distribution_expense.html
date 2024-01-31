@@ -44,12 +44,12 @@
 
                 <div class="form-group">
                     <label for="total-available">Total disponible</label>
-                    <input type="number" name="total-available" class="form-control" id="total-available" value="{{ distribution_mobil.calculate_total_available|safe }}" readonly>
+                    <input type="text" name="total-available" class="form-control" id="total-available" value="{{ distribution_mobil.calculate_total_available|safe }}" readonly>
                 </div>
 
                 <div class="form-group">
                     <label for="total-expense">Total</label>
-                    <input type="number" name="total-expense" class="form-control" id="total-expense" required>
+                    <input type="text" inputmode="numeric" name="total-expense" class="form-control" id="total-expense" required>
                 </div>
             </div>
             <div class="modal-footer">
