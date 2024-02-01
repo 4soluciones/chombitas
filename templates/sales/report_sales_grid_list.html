@@ -11,18 +11,21 @@
                     <div class="card">
                         <div class="card-header">
                             <h5>REPORTE DE VENTAS</h5>
-                            <button type="button" class="btn btn-outline-success"  onclick="ReportSalesExcel()"><i class="fa fa-file-excel"></i>
-                                Exportar Excel
-                            </button>
+                            {#                            <button type="button" class="btn btn-outline-success"  onclick="ReportSalesExcel()"><i class="fa fa-file-excel"></i>#}
+                            {#                                Exportar Excel#}
+                            {#                            </button>#}
+                            <a onclick="excelTickets();" class="btn btn-success text-white m-1">
+                                <span class="fa fa-file-excel"></span> Exportar
+                            </a>
                         </div>
                         <div class="card-body">
-                            <table class="table table-hover table-striped table-sm">
+                            <table class="table table-hover table-striped table-sm" id="excel-data-grid">
                                 <thead>
                                 <tr class="text-center font-weight-bold bg-primary text-white">
                                     <td class="align-middle">Nº</td>
                                     <td class="align-middle">SUCURSAL</td>
                                     <td class="align-middle">TOTAL VENTA</td>
-                                    <td class="align-middle">TOTAL COBRANZA</td>
+                                    <td class="align-middle">TOTAL BALONES DE 10KG</td>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -71,7 +74,7 @@
     var chartbar = new CanvasJS.Chart("container-graphic-total", {
         animationEnabled: true,
         title: {
-            text: "TOTAL DE VENTAS Y COBRANZAS",
+            text: "TOTAL DE VENTAS Y TOTAL BALONES DE 10KG",
             fontSize: 20,
             culture: "es",
         },
@@ -90,7 +93,7 @@
             tickColor: "#4F81BC"
         },
         axisY2: {
-            title: "COBRANZA",
+            title: "TOTAL BALONES DE 10KG",
             titleFontSize: 19,
             labelFontSize: 20,
             titleFontColor: "#C0504E",
@@ -124,13 +127,13 @@
         },
             {
                 type: "column",
-                name: "Cobranza",
+                name: "Balones 10kg",
                 indexLabelPlacement: "outside",
                 indexLabelFontSize: 16,
                 indexLabelFontStyle: "Bold",
                 indexLabel: "{y}",
                 indexLabelOrientation: "horizontal",
-                legendText: "COBRANZA",
+                legendText: "BALONES",
                 axisYType: "secondary",
                 showInLegend: true,
                 culture: "es",

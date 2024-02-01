@@ -1,6 +1,5 @@
-
 <style>
-    .hide{
+    .hide {
         display: none;
     }
 </style>
@@ -87,6 +86,12 @@
                 <td class="align-middle text-center font-weight-bold">{{ sum_5kg|floatformat:0 }} [5KG]</td>
                 <td class="align-middle text-center font-weight-bold">{{ sum_45kg|floatformat:0 }} [45KG]</td>
                 <td class="align-middle text-center font-weight-bold">{{ sum_15kg|floatformat:0 }} [15KG]</td>
+            </tr>
+            <tr>
+                <td colspan="7" class="text-right font-weight-bold text-right">TOTAL CONVERSION EN BALONES DE [10KG]
+                </td>
+                <td class="align-middle text-center font-weight-bold ">{{ total_10kg|safe }} [10KG]</td>
+                <td colspan="3" class="align-middle"></td>
             </tr>
             </tbody>
         </table>

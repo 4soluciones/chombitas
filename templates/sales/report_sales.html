@@ -84,5 +84,18 @@
                 window.open("/sales/report_sales_excel/" + init + "/" + end + "/" + pk + "/", '_top');
             }
         }
+
+        function excelTickets() {
+
+            $("#excel-data-grid").table2excel({
+                // exclude CSS class
+                exclude: ".noExl",
+                name: "Worksheet vouchers",
+                filename: "reporte_de_ventas_por_balones_de10kg",//do not include extension
+                fileext: ".xlsx", // file extension
+                preserveColors: true
+
+            });
+        }
     </script>
 {% endblock extrajs %}

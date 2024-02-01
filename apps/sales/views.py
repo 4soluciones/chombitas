@@ -1749,6 +1749,39 @@ def get_dict_order_queries(order_set, is_pdf=False, is_unit=False):
     return tpl.render(context)
 
 
+def get_balon_month(init, end, subsidiary):
+    subsidiary_store_obj = SubsidiaryStore.objects.get(subsidiary=subsidiary, category='V')
+    orders = Order.objects.filter(create_at__date__range=[init, end], type__in=['V', 'R'],
+                                  subsidiary_store=subsidiary_store_obj)
+    if orders.exists():
+        total_10kg = decimal.Decimal(0.00)
+        sum_10kg = 0
+        sum_5kg = 0
+        sum_45kg = 0
+        sum_15kg = 0
+        for o in orders:
+            order_detail = o.orderdetail_set.all()
+            ball_5kg = get_quantity_ball_5kg(order_detail)
+            ball_10kg = get_quantity_ball_10kg(order_detail)
+            ball_45kg = get_quantity_ball_45kg(order_detail)
+            ball_15kg = get_quantity_ball_15kg(order_detail)
+
+            s10 = ball_10kg.get('g') + ball_10kg.get('gbc') + ball_10kg.get('bg')
+            s5 = ball_5kg.get('g') + ball_5kg.get('gbc') + ball_5kg.get('bg')
+            s45 = ball_45kg.get('g') + ball_45kg.get('gbc') + ball_45kg.get('bg')
+            s15 = ball_15kg.get('g') + ball_15kg.get('gbc') + ball_15kg.get('bg')
+
+            sum_10kg = sum_10kg + s10
+            sum_5kg = sum_5kg + s5
+            sum_45kg = sum_45kg + s45
+            sum_15kg = sum_15kg + s15
+        total_10kg = decimal.Decimal(sum_10kg) + decimal.Decimal(sum_5kg) * decimal.Decimal(0.50) + decimal.Decimal(
+            sum_15kg) * decimal.Decimal(1.50) + decimal.Decimal(sum_45kg) * decimal.Decimal(4.50)
+        return total_10kg
+    else:
+        return 0
+
+
 def get_dict_order_by_units(order_set, is_pdf=False, is_unit=True):
     dictionary = []
     sum_10kg = 0
@@ -1816,7 +1849,8 @@ def get_dict_order_by_units(order_set, is_pdf=False, is_unit=True):
         sum = sum + subtotal
 
         dictionary.append(order)
-
+    total_10kg = decimal.Decimal(sum_10kg) + decimal.Decimal(sum_5kg) * decimal.Decimal(0.50) + decimal.Decimal(
+        sum_15kg) * decimal.Decimal(1.50) + decimal.Decimal(sum_45kg) * decimal.Decimal(4.50)
     tpl = loader.get_template('sales/order_sales_grid_list.html')
     context = ({
         'dictionary': dictionary,
@@ -1825,6 +1859,7 @@ def get_dict_order_by_units(order_set, is_pdf=False, is_unit=True):
         'sum_5kg': sum_5kg,
         'sum_45kg': sum_45kg,
         'sum_15kg': sum_15kg,
+        'total_10kg': total_10kg,
         'is_unit': is_unit,
         'is_pdf': is_pdf,
     })
@@ -2552,11 +2587,62 @@ def order_list(request):
         })
 
 
-def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=None, subsidiary_obj=None):
-    sum_quantity_total = 0
-    order_set = Order.objects.filter(
-        client=client_obj, create_at__date__range=[start_date, end_date], type__in=['V', 'R']
-    ).prefetch_related(
+def calculate_total_to_pay_g(order_id, product_id):
+    return Coalesce(
+        Subquery(
+            OrderDetail.objects.filter(
+                order_id=order_id, unit__name__in=['G', 'GBC'], product__id=product_id
+            ).annotate(
+                sum_payed_loan_g=Coalesce(
+                    Subquery(
+                        LoanPayment.objects.filter(
+                            order_detail=OuterRef('id'), quantity=0, product__id=product_id
+                        ).values('order_detail_id').annotate(
+                            payed_loan_g=Coalesce(Sum('price'), decimal.Decimal(0.00))
+                        ).values('payed_loan_g')[:1],
+                        output_field=models.DecimalField()
+                    ), decimal.Decimal(0.00)
+                ),
+                total_sold_g=Sum(F('quantity_sold') * F('price_unit'))
+            ).values(
+                'order_id'
+            ).annotate(
+                amount=F('total_sold_g') - F('sum_payed_loan_g')
+            ).values('amount')
+        ),
+        decimal.Decimal(0.00)
+    )
+
+
+def calculate_total_to_return_b(order_id, product_id):
+    return Coalesce(
+        Subquery(
+            OrderDetail.objects.filter(
+                order_id=order_id, unit__name__in=['B'], product__id=product_id
+            ).annotate(
+                sum_returned_loan_b=Coalesce(
+                    Subquery(
+                        LoanPayment.objects.filter(
+                            order_detail=OuterRef('id'), quantity__gt=0, product__id=product_id
+                        ).values('order_detail_id').annotate(
+                            return_loan_b=Coalesce(Sum('quantity'), decimal.Decimal(0.00))
+                        ).values('return_loan_b')[:1],
+                        output_field=models.DecimalField()
+                    ), decimal.Decimal(0.00)
+                ),
+                total_sold_b=Sum(F('quantity_sold'))
+            ).values(
+                'order_id'
+            ).annotate(
+                amount=F('total_sold_b') - F('sum_returned_loan_b')
+            ).values('amount')
+        ),
+        decimal.Decimal(0.00)
+    )
+
+
+def get_base_query(queryset=None):
+    return queryset.prefetch_related(
         Prefetch(
             'orderdetail_set', queryset=OrderDetail.objects.select_related('product', 'unit').prefetch_related(
                 Prefetch(
@@ -2575,6 +2661,42 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
             'cashflow_set', queryset=CashFlow.objects.select_related('cash')
         ),
     ).select_related('distribution_mobil__truck', 'distribution_mobil__pilot', 'client').order_by('id')
+
+
+def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=None, subsidiary_obj=None):
+    sum_quantity_total = 0
+
+    other_query = Order.objects.filter(
+        client=client_obj
+    ).annotate(
+        total_to_pay_g_b10=calculate_total_to_pay_g(OuterRef('id'), 1),
+        total_to_return_b_b10=calculate_total_to_return_b(OuterRef('id'), 1),
+        total_to_pay_g_b5=calculate_total_to_pay_g(OuterRef('id'), 2),
+        total_to_return_b_b5=calculate_total_to_return_b(OuterRef('id'), 2),
+        total_to_pay_g_b45=calculate_total_to_pay_g(OuterRef('id'), 3),
+        total_to_return_b_b45=calculate_total_to_return_b(OuterRef('id'), 3),
+        total_to_pay_g_b15=calculate_total_to_pay_g(OuterRef('id'), 12),
+        total_to_return_b_b15=calculate_total_to_return_b(OuterRef('id'), 12)
+    ).filter(Q(total_to_pay_g_b10__gt=0) | Q(total_to_return_b_b10__gt=0)).values_list('id', flat=True).distinct()
+
+    sales_with_debt = list(other_query)
+
+    # if len(sales_with_debt):
+    query_set = Order.objects.filter(Q(id__in=sales_with_debt, create_at__date__lt=start_date) | Q(client=client_obj,
+                                                                                                   create_at__date__range=[
+                                                                                                       start_date,
+                                                                                                       end_date],
+                                                                                                   type__in=['V', 'R']))
+    # query_set = get_base_query(queryset=query_set)
+
+    # query2_set = Order.objects.filter(
+    #     client=client_obj, create_at__date__range=[start_date, end_date], type__in=['V', 'R']
+    # )
+    # query2_set = get_base_query(queryset=query2_set)
+
+    # order_set = query_set.union(query2_set)
+
+    order_set = get_base_query(queryset=query_set)
 
     dictionary = []
 
@@ -2746,14 +2868,15 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
         sum_total = total_set[0].get('totals')
 
         # sum_quantity_total = total_quantity_set[0].get('totals_quantity')
-    summary_sum_total_repay_loan = None
-    summary_sum_total_return_loan = None
-    client_dict = None
-    if subsidiary_obj is not None:
-        d2 = get_previous_orders_for_status_account(subsidiary_obj=subsidiary_obj, client_obj=client_obj, previous_date=start_date)
-        summary_sum_total_repay_loan = d2['summary_sum_total_repay_loan']
-        summary_sum_total_return_loan = d2['summary_sum_total_return_loan']
-        client_dict = d2['client_dict']
+    # summary_sum_total_repay_loan = None
+    # summary_sum_total_return_loan = None
+    # client_dict = None
+    # if subsidiary_obj is not None:
+    #     d2 = get_previous_orders_for_status_account(subsidiary_obj=subsidiary_obj, client_obj=client_obj,
+    #                                                 previous_date=start_date)
+    #     summary_sum_total_repay_loan = d2['summary_sum_total_repay_loan']
+    #     summary_sum_total_return_loan = d2['summary_sum_total_return_loan']
+    #     client_dict = d2['client_dict']
 
     tpl = loader.get_template('sales/account_order_list.html')
     context = ({
@@ -2769,9 +2892,9 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
         'sum_total_cash_flow_spending': '{:,}'.format(round(float(sum_total_cash_flow_spending), 2)),
         'sum_quantity_total': sum_quantity_total,
         'difference_debt': '{:,}'.format(round(float(difference_debt), 2)),
-        'client_dict': client_dict,
-        'summary_sum_total_repay_loan': round(float(summary_sum_total_repay_loan), 2),
-        'summary_sum_total_return_loan': round(float(summary_sum_total_return_loan), 0),
+        # 'client_dict': client_dict,
+        # 'summary_sum_total_repay_loan': round(float(summary_sum_total_repay_loan), 2),
+        # 'summary_sum_total_return_loan': round(float(summary_sum_total_return_loan), 0),
         'is_pdf': is_pdf,
         'client_obj': client_obj,
     })
@@ -2791,7 +2914,8 @@ def get_orders_by_client(request):
         # order_set = Order.objects.filter(client=client_obj, create_at__date__range=[start_date, end_date], type__in=['V', 'R']).order_by('id')
 
         return JsonResponse({
-            'grid': get_dict_orders(client_obj=client_obj, is_pdf=False, start_date=start_date, end_date=end_date, subsidiary_obj=subsidiary_obj),
+            'grid': get_dict_orders(client_obj=client_obj, is_pdf=False, start_date=start_date, end_date=end_date,
+                                    subsidiary_obj=subsidiary_obj),
         }, status=HTTPStatus.OK)
 
 
@@ -2931,7 +3055,8 @@ def new_expense(request):
 
         return JsonResponse({
             'message': 'Registro guardado correctamente.',
-            'grid': get_dict_orders(client_obj=order_obj.client, is_pdf=False, start_date=start_date, end_date=end_date, subsidiary_obj=subsidiary_obj)
+            'grid': get_dict_orders(client_obj=order_obj.client, is_pdf=False, start_date=start_date, end_date=end_date,
+                                    subsidiary_obj=subsidiary_obj)
         }, status=HTTPStatus.OK)
     return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)
 
@@ -3738,7 +3863,8 @@ def new_massiel_payment(request):
             return JsonResponse({
                 'success': True,
                 'message': 'El cliente se asocio correctamente.',
-                'grid': get_dict_orders(client_obj=client_obj, is_pdf=False, start_date=None, end_date=None, subsidiary_obj=None),
+                'grid': get_dict_orders(client_obj=client_obj, is_pdf=False, start_date=None, end_date=None,
+                                        subsidiary_obj=None),
             })
     return JsonResponse({'error': True, 'message': 'Error de peticion.'})
 
@@ -3906,7 +4032,8 @@ def new_massiel_return(request):
         return JsonResponse({
             'success': True,
             'message': 'El cliente se asocio correctamente.',
-            'grid': get_dict_orders(client_obj=client_obj, is_pdf=False, start_date=None, end_date=None,subsidiary_obj=None),
+            'grid': get_dict_orders(client_obj=client_obj, is_pdf=False, start_date=None, end_date=None,
+                                    subsidiary_obj=None),
         })
     return JsonResponse({'error': True, 'message': 'Error de peticion.'})
 
@@ -4296,6 +4423,7 @@ def report_sales(request):
             v2 = "y"
             t_sales = 0
             t_cash = 0
+            user_obj = User.objects.get(id=int(request.user.id))
             if pk_subsidiary == '0':
                 subsidiary_set = Subsidiary.objects.all()
             else:
@@ -4310,24 +4438,30 @@ def report_sales(request):
                     v2: float(t['r'])
                 }
                 array1.append(sales_dict)
-                c = CashFlow.objects.filter(
-                    cash__subsidiary_id=s.id,
-                    type='E',
-                    transaction_date__range=(date_initial, date_final)
-                ).aggregate(r=Coalesce(Sum('total'), decimal.Decimal(0.00)))
-                cash_dict = {
+                b10kg = get_balon_month(init=date_initial, end=date_final, subsidiary=s)
+                # c = CashFlow.objects.filter(
+                #     cash__subsidiary_id=s.id,
+                #     type='E',
+                #     transaction_date__range=(date_initial, date_final)
+                # ).aggregate(r=Coalesce(Sum('total'), decimal.Decimal(0.00)))
+                # cash_dict = {
+                #     v1: s.name,
+                #     v2: float(c['r'])
+                # }
+                # array2.append(cash_dict)
+                b10kg_dict = {
                     v1: s.name,
-                    v2: float(c['r'])
+                    v2: float(b10kg)
                 }
-                array2.append(cash_dict)
+                array2.append(b10kg_dict)
                 sales = {
                     'subsidiary': s.name,
                     'total_sales': float(t['r']),
-                    'total_cash': float(c['r'])
+                    'total_cash': float(b10kg)
                 }
                 array3.append(sales)
                 t_sales += float(t['r'])
-                t_cash += float(c['r'])
+                t_cash += float(b10kg)
 
             tpl = loader.get_template('sales/report_sales_grid_list.html')
             context = ({
@@ -6046,6 +6180,10 @@ def purchase_report_by_product_category(request):
         sum_float_purchases_sum_total = 0
         sector = Supplier._meta.get_field('sector').choices
         sum_month = [0] * len(month_names)
+        sum_sale_month = [0] * len(month_names)
+        sum_cost_month = [0] * len(month_names)
+        sum_total_sale = 0
+        sum_cost_total = 0
         total_total = 0
         for c in sector:
             # print(sector.index(c))
@@ -6124,6 +6262,14 @@ def purchase_report_by_product_category(request):
             category_row['sum_total_year'] = '{:,}'.format(round(decimal.Decimal(sum_total_year), 2))
 
             purchase_dict.append(category_row)
+        for m in month_names:
+            t = Order.objects.filter(create_at__month=month_names.index(m) + 1, create_at__year=year,
+                                     type__in=['V', 'R']
+                                     ).aggregate(r=Coalesce(Sum('total'), decimal.Decimal(0.00)))
+            sum_sale_month[month_names.index(m)] = decimal.Decimal(t['r'])
+            sum_cost_month[month_names.index(m)] = decimal.Decimal(sum_month[month_names.index(m)])/decimal.Decimal(t['r'])
+            sum_total_sale += decimal.Decimal(t['r'])
+            sum_cost_total += sum_cost_month[month_names.index(m)]
 
         tpl = loader.get_template('sales/report_purchase_category_and_month_grid.html')
         context = ({
@@ -6131,6 +6277,10 @@ def purchase_report_by_product_category(request):
             'sum_month': sum_month,
             'total_total': total_total,
             'sum_float_purchases_sum_total': sum_float_purchases_sum_total,
+            'sum_sale_month': sum_sale_month,
+            'sum_total_sale': sum_total_sale,
+            'sum_cost_month': sum_cost_month,
+            'sum_cost_total': sum_cost_total,
         })
 
         return JsonResponse({

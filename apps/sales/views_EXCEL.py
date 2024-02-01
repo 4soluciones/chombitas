@@ -446,6 +446,10 @@ def report_category_product(request, year=None):
         sum_float_purchases_sum_total = 0
         sector = Supplier._meta.get_field('sector').choices
         sum_month = [0] * len(month_names)
+        sum_sale_month = [0] * len(month_names)
+        sum_cost_month = [0] * len(month_names)
+        sum_total_sale = 0
+        sum_cost_total = 0
         total_total = 0
         wb = Workbook()
         bandera = True
@@ -582,7 +586,7 @@ def report_category_product(request, year=None):
                                  top=Side(border_style="thin"), bottom=Side(border_style="thin"))
         ws['O4'].fill = PatternFill(start_color='000066CC', end_color='000066CC', fill_type="solid")
         ws['O4'].font = Font(name='Calibro', size=10, bold=True, color='00FFFFFF')
-        ws['O4'] = 'TOTAL AÑOS'
+        ws['O4'] = 'TOTAL AÑO'
 
         ws.row_dimensions[4].height = 30
 
@@ -698,7 +702,7 @@ def report_category_product(request, year=None):
         ws.cell(row=row + sector.index(c) + 1, column=2).border = border_cell
         ws.cell(row=row + sector.index(c) + 1, column=2).fill = color_cell
         ws.cell(row=row + sector.index(c) + 1, column=2).font = text_color
-        ws.cell(row=row + sector.index(c) + 1, column=2).value = "TOTAL MES"
+        ws.cell(row=row + sector.index(c) + 1, column=2).value = "TOTAL GASTOS MES"
         align_cell = Alignment(horizontal="right")
         for t in sum_month:
             ws.cell(row=row + sector.index(c) + 1,
@@ -721,6 +725,56 @@ def report_category_product(request, year=None):
                 column=4 + sum_month.index(t)).font = text_color
         ws.cell(row=row + sector.index(c) + 1, column=4 + sum_month.index(t)).value = "{:.2f}".format(
             round(decimal.Decimal(total_total), 2))
+
+        align_cell = Alignment(horizontal="center")
+        ws.cell(row=row + sector.index(c) + 2, column=2).alignment = align_cell
+        ws.cell(row=row + sector.index(c) + 2, column=2).border = border_cell
+        ws.cell(row=row + sector.index(c) + 2, column=2).fill = color_cell
+        ws.cell(row=row + sector.index(c) + 2, column=2).font = text_color
+        ws.cell(row=row + sector.index(c) + 2, column=2).value = "TOTAL VENTAS MES"
+
+        ws.cell(row=row + sector.index(c) + 3, column=2).alignment = align_cell
+        ws.cell(row=row + sector.index(c) + 3, column=2).border = border_cell
+        ws.cell(row=row + sector.index(c) + 3, column=2).fill = color_cell
+        ws.cell(row=row + sector.index(c) + 3, column=2).font = text_color
+        ws.cell(row=row + sector.index(c) + 3, column=2).value = "TOTAL COSTO MES"
+        for m in month_names:
+            t = Order.objects.filter(create_at__month=month_names.index(m) + 1, create_at__year=year,
+                                     type__in=['V', 'R']
+                                     ).aggregate(r=Coalesce(Sum('total'), decimal.Decimal(0.00)))
+            sum_sale_month[month_names.index(m)] = decimal.Decimal(t['r'])
+            sum_cost_month[month_names.index(m)] = decimal.Decimal(sum_month[month_names.index(m)]) / decimal.Decimal(
+                t['r'])
+            sum_total_sale += decimal.Decimal(t['r'])
+            sum_cost_total += sum_cost_month[month_names.index(m)]
+            align_cell = Alignment(horizontal="right")
+            ws.cell(row=row + sector.index(c) + 2, column=month_names.index(m) + 3).alignment = align_cell
+            ws.cell(row=row + sector.index(c) + 2, column=month_names.index(m) + 3).border = border_cell
+            ws.cell(row=row + sector.index(c) + 2, column=month_names.index(m) + 3).fill = color_cell
+            ws.cell(row=row + sector.index(c) + 2, column=month_names.index(m) + 3).font = text_color
+            ws.cell(row=row + sector.index(c) + 2, column=month_names.index(m) + 3).value = "{:.2f}".format(round(
+                decimal.Decimal(t['r']), 2))
+
+            ws.cell(row=row + sector.index(c) + 3, column=month_names.index(m) + 3).alignment = align_cell
+            ws.cell(row=row + sector.index(c) + 3, column=month_names.index(m) + 3).border = border_cell
+            ws.cell(row=row + sector.index(c) + 3, column=month_names.index(m) + 3).fill = color_cell
+            ws.cell(row=row + sector.index(c) + 3, column=month_names.index(m) + 3).font = text_color
+            ws.cell(row=row + sector.index(c) + 3, column=month_names.index(m) + 3).value = "{:.2f}".format(round(
+                decimal.Decimal(sum_cost_month[month_names.index(m)]), 2))
+
+        ws.cell(row=row + sector.index(c) + 2, column=month_names.index(m) + 4).alignment = align_cell
+        ws.cell(row=row + sector.index(c) + 2, column=month_names.index(m) + 4).border = border_cell
+        ws.cell(row=row + sector.index(c) + 2, column=month_names.index(m) + 4).fill = color_cell
+        ws.cell(row=row + sector.index(c) + 2, column=month_names.index(m) + 4).font = text_color
+        ws.cell(row=row + sector.index(c) + 2, column=month_names.index(m) + 4).value = "{:.2f}".format(round(
+            decimal.Decimal(sum_total_sale), 2))
+
+        ws.cell(row=row + sector.index(c) + 3, column=month_names.index(m) + 4).alignment = align_cell
+        ws.cell(row=row + sector.index(c) + 3, column=month_names.index(m) + 4).border = border_cell
+        ws.cell(row=row + sector.index(c) + 3, column=month_names.index(m) + 4).fill = color_cell
+        ws.cell(row=row + sector.index(c) + 3, column=month_names.index(m) + 4).font = text_color
+        ws.cell(row=row + sector.index(c) + 3, column=month_names.index(m) + 4).value = "{:.2f}".format(round(
+            decimal.Decimal(sum_cost_total), 2))
 
         nombre_archivo = "{} - {}.xlsx".format("REPORTE DE COMPRAS", str(year))
         # Definir el tipo de respuesta que se va a dar
@@ -999,6 +1053,23 @@ def excel_sales_all_subsidiaries(request, init=None, end=None, pk=0, u=0):
             ws.cell(row=row, column=11).fill = color_cell
             ws.cell(row=row, column=11).font = text_color
             ws.cell(row=row, column=11).value = str(int(detail[5])) + "[15 KG]"
+
+            total_10kg = decimal.Decimal(detail[2]) + decimal.Decimal(detail[3]) * decimal.Decimal(
+                0.50) + decimal.Decimal(detail[4]) * decimal.Decimal(4.50) + decimal.Decimal(
+                detail[5]) * decimal.Decimal(1.50)
+
+            ws.cell(row=row + 1, column=5).alignment = align_cell
+            ws.cell(row=row + 1, column=5).border = border_cell
+            ws.cell(row=row + 1, column=5).fill = color_cell
+            ws.cell(row=row + 1, column=5).font = text_color
+            ws.cell(row=row + 1, column=5).value = "TOTAL CONVERSION EN BALONES DE [10KG]"
+
+            ws.merge_cells('E{}:G{}'.format(row + 1, row + 1))
+            ws.cell(row=row + 1, column=8).alignment = align_cell
+            ws.cell(row=row + 1, column=8).border = border_cell
+            ws.cell(row=row + 1, column=8).fill = color_cell
+            ws.cell(row=row + 1, column=8).font = text_color
+            ws.cell(row=row + 1, column=8).value = "{:.2f}".format(round(total_10kg, 2))
 
         else:
             ws['B2'].alignment = Alignment(horizontal="center", vertical="center")
