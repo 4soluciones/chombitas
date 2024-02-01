@@ -6267,7 +6267,7 @@ def purchase_report_by_product_category(request):
                                      type__in=['V', 'R']
                                      ).aggregate(r=Coalesce(Sum('total'), decimal.Decimal(0.00)))
             sum_sale_month[month_names.index(m)] = decimal.Decimal(t['r'])
-            if decimal.Decimal(sum_month[month_names.index(m)]) > 0 :
+            if decimal.Decimal(sum_month[month_names.index(m)]) > 0 and decimal.Decimal(t['r']) > 0:
                 sum_cost_month[month_names.index(m)] = decimal.Decimal(sum_month[month_names.index(m)])/decimal.Decimal(t['r'])
             else:
                 sum_cost_month[month_names.index(m)] = 0
