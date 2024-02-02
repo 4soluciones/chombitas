@@ -35,7 +35,7 @@
             <td rowspan="{{ purchase.count_details }}" class="align-middle text-nowrap">{{ purchase.bill_number }}</td>
             <td rowspan="{{ purchase.count_details }}" class="align-middle text-nowrap">{{ purchase.supplier.name }}</td>
             <td rowspan="{{ purchase.count_details }}" class="align-middle text-nowrap">{{ purchase.supplier.get_sector_display }}</td>
-<td rowspan="{{ purchase.count_details }}" class="align-middle text-nowrap text-right">S/ {{ purchase.sum_total|safe|floatformat:2 }}</td>
+            <td rowspan="{{ purchase.count_details }}" class="align-middle text-nowrap text-right">S/ {{ purchase.sum_total|safe|floatformat:2 }}</td>
             {% for pd in purchase.purchasedetail_set.all %}
                 {% if not forloop.first %}
                     <tr>
@@ -46,10 +46,8 @@
                  <td class="align-middle text-nowrap text-right">S/ {{ pd.multiplicate|safe|floatformat:2 }}</td>
 
 
-        </tr>
+                </tr>
             {% endfor %}
-
-
     {% endfor %}
 
     </tbody>
