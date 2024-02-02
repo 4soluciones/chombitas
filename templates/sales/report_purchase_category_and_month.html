@@ -11,7 +11,7 @@
         <div class="card">
 
             <div class="card-header">
-                <label class="col-form-label col-form-label-lg">Reporte de comprar por rubro y mes</label>
+                <label class="col-form-label col-form-label-lg">Reporte de compras por rubro y mes</label>
             </div>
 
             <div class="card-body">
@@ -101,9 +101,12 @@
                     if (xhr.status === 200) {
                         toastr.success(response['message'], '¡Bien hecho!');
                         $('#tbl-purchases').html(response.grid);
+                    }else {
+                        $('#tbl-purchases').empty();
                     }
                 },
                 error: function (jqXhr, textStatus, xhr) {
+                    $('#tbl-purchases').empty();
                     if (jqXhr.status === 500) {
                         toastr.error(jqXhr.responseJSON.error, '¡Error!');
                     }
