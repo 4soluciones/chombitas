@@ -426,7 +426,7 @@ class DistributionMobil(models.Model):
         total = 0
         for s in sales_set.all():
             for d in s.orderdetail_set.all():
-                if d.unit.name in ['B', 'G', 'GBC']:
+                if d.unit.name in ['G', 'GBC']:
                     total += (d.quantity_sold * d.price_unit)
         return round(total, 1)
 

@@ -1558,9 +1558,13 @@ def kardex_input(
     new_price_unit = decimal.Decimal(price_unit)
     new_price_total = new_quantity * new_price_unit
 
-    last_kardex = Kardex.objects.filter(product_store_id=product_store.id).last()
-    last_remaining_quantity = last_kardex.remaining_quantity
-    last_remaining_price_total = last_kardex.remaining_price_total
+    last_kardex_set = Kardex.objects.filter(product_store_id=product_store.id)
+    last_remaining_quantity = 0
+    last_remaining_price_total = 0
+    if last_kardex_set.exists():
+        last_kardex = last_kardex_set.last()
+        last_remaining_quantity = last_kardex.remaining_quantity
+        last_remaining_price_total = last_kardex.remaining_price_total
 
     new_remaining_quantity = last_remaining_quantity + new_quantity
     new_remaining_price = (decimal.Decimal(last_remaining_price_total) +
@@ -1611,9 +1615,13 @@ def kardex_ouput(
     new_stock = old_stock - decimal.Decimal(quantity_sold)
     new_quantity = decimal.Decimal(quantity_sold)
 
-    last_kardex = Kardex.objects.filter(product_store_id=product_store.id).last()
-    last_remaining_quantity = last_kardex.remaining_quantity
-    old_price_unit = last_kardex.remaining_price
+    last_kardex_set = Kardex.objects.filter(product_store_id=product_store.id)
+    last_remaining_quantity = 0
+    old_price_unit = 0
+    if last_kardex_set.exists():
+        last_kardex = last_kardex_set.last()
+        last_remaining_quantity = last_kardex.remaining_quantity
+        old_price_unit = last_kardex.remaining_price
 
     new_price_total = old_price_unit * new_quantity
 
@@ -1752,6 +1760,39 @@ def get_dict_order_queries(order_set, is_pdf=False, is_unit=False):
 def get_balon_month(init, end, subsidiary):
     subsidiary_store_obj = SubsidiaryStore.objects.get(subsidiary=subsidiary, category='V')
     orders = Order.objects.filter(create_at__date__range=[init, end], type__in=['V', 'R'],
+                                  subsidiary_store=subsidiary_store_obj)
+    if orders.exists():
+        total_10kg = decimal.Decimal(0.00)
+        sum_10kg = 0
+        sum_5kg = 0
+        sum_45kg = 0
+        sum_15kg = 0
+        for o in orders:
+            order_detail = o.orderdetail_set.all()
+            ball_5kg = get_quantity_ball_5kg(order_detail)
+            ball_10kg = get_quantity_ball_10kg(order_detail)
+            ball_45kg = get_quantity_ball_45kg(order_detail)
+            ball_15kg = get_quantity_ball_15kg(order_detail)
+
+            s10 = ball_10kg.get('g') + ball_10kg.get('gbc') + ball_10kg.get('bg')
+            s5 = ball_5kg.get('g') + ball_5kg.get('gbc') + ball_5kg.get('bg')
+            s45 = ball_45kg.get('g') + ball_45kg.get('gbc') + ball_45kg.get('bg')
+            s15 = ball_15kg.get('g') + ball_15kg.get('gbc') + ball_15kg.get('bg')
+
+            sum_10kg = sum_10kg + s10
+            sum_5kg = sum_5kg + s5
+            sum_45kg = sum_45kg + s45
+            sum_15kg = sum_15kg + s15
+        total_10kg = decimal.Decimal(sum_10kg) + decimal.Decimal(sum_5kg) * decimal.Decimal(0.50) + decimal.Decimal(
+            sum_15kg) * decimal.Decimal(1.50) + decimal.Decimal(sum_45kg) * decimal.Decimal(4.50)
+        return total_10kg
+    else:
+        return 0
+
+
+def get_balon_month_and_year(year, month, subsidiary):
+    subsidiary_store_obj = SubsidiaryStore.objects.get(subsidiary=subsidiary, category='V')
+    orders = Order.objects.filter(create_at__year=year, create_at__month=month, type__in=['V', 'R'],
                                   subsidiary_store=subsidiary_store_obj)
     if orders.exists():
         total_10kg = decimal.Decimal(0.00)
@@ -2679,14 +2720,16 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
         total_to_return_b_b15=calculate_total_to_return_b(OuterRef('id'), 12)
     ).filter(Q(total_to_pay_g_b10__gt=0) | Q(total_to_return_b_b10__gt=0)).values_list('id', flat=True).distinct()
 
-    sales_with_debt = list(other_query)
+    if other_query.exists():
+        sales_with_debt = list(other_query)
+    else:
+        sales_with_debt = []
 
     # if len(sales_with_debt):
-    query_set = Order.objects.filter(Q(id__in=sales_with_debt, create_at__date__lt=start_date) | Q(client=client_obj,
-                                                                                                   create_at__date__range=[
-                                                                                                       start_date,
-                                                                                                       end_date],
-                                                                                                   type__in=['V', 'R']))
+    query_set = Order.objects.filter(
+        Q(id__in=sales_with_debt, create_at__date__lt=start_date) |
+        Q(client=client_obj, create_at__date__range=[start_date, end_date], type__in=['V', 'R'])
+    )
     # query_set = get_base_query(queryset=query_set)
 
     # query2_set = Order.objects.filter(
@@ -2942,6 +2985,23 @@ def get_order_detail_for_pay(request):
         cash_deposit_set = Cash.objects.filter(accounting_account__code__startswith='104')
         mydate = datetime.now()
         formatdate = mydate.strftime("%Y-%m-%d")
+
+        cash_flow_of_distributions_with_deposits_set = CashFlow.objects.filter(
+            distribution_mobil__truck=order_obj.distribution_mobil.truck, type='D'
+        ).annotate(
+            total_subtracted=Coalesce(
+                Subquery(
+                    TransactionPayment.objects.filter(
+                        cash_flow_id=OuterRef('id'), type='PFD'
+                    ).values('cash_flow_id').annotate(
+                        total_payment=Coalesce(Sum('payment'), decimal.Decimal(0.00))
+                    ).values('total_payment')[:1],
+                    output_field=models.DecimalField()
+                ), decimal.Decimal(0.00)
+            ),
+            total_cash_flow=F('total') - F('total_subtracted')
+        ).filter(total_cash_flow__gt=0)
+
         tpl = loader.get_template('sales/new_payment_from_lending.html')
         context = ({
             'choices_payments': TransactionPayment._meta.get_field('type').choices,
@@ -2951,7 +3011,8 @@ def get_order_detail_for_pay(request):
             'choices_account_bank': cash_deposit_set,
             'date': formatdate,
             'start_date': start_date,
-            'end_date': end_date
+            'end_date': end_date,
+            'cash_flow_of_distributions_with_deposits_set': cash_flow_of_distributions_with_deposits_set,
         })
 
         return JsonResponse({
@@ -6009,7 +6070,7 @@ def comparative_sales_and_purchases_report(request):
                     )
                 ).select_related('supplier', 'truck').annotate(
                     sum_total=Subquery(
-                        PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).annotate(
+                        PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
                             return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
                     )
                 ).aggregate(Sum('sum_total'))
@@ -6112,20 +6173,10 @@ def purchase_report_by_category(request):
                     )
                 ).select_related('supplier').annotate(
                     sum_total=Subquery(
-                        PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).annotate(
+                        PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
                             return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
                     )
                 ).aggregate(Sum('sum_total'))
-
-                print(Purchase.objects.filter(
-                    purchase_date__month=i, purchase_date__year=year, supplier__sector=sector_set[s],
-                    status='A'
-                ).select_related('supplier').annotate(
-                    sum_total=Subquery(
-                        PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).annotate(
-                            return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
-                    )
-                ).query)
 
                 purchases_sum_total = purchase_set['sum_total__sum']
 
@@ -6158,6 +6209,67 @@ def purchase_report_by_category(request):
         }, status=HTTPStatus.OK)
 
 
+def get_report_purchase_category_by_license_plate(request):
+    if request.method == 'GET':
+        user_id = request.user.id
+        truck_set = Truck.objects.filter(purchase__isnull=False).distinct('license_plate').order_by(
+            'license_plate')
+        my_date = datetime.now()
+        formatdate = my_date.strftime("%Y-%m-%d")
+        return render(request, 'sales/report_purchase_category_by_license_plate_list.html', {
+            'current_year': datetime.now().year,
+            'current_month': datetime.now().month,
+            'formatdate': formatdate,
+            'truck_set': truck_set
+        })
+    elif request.method == 'POST':
+        truck_id = int(request.POST.get('truck'))
+        start_date = str(request.POST.get('start-date'))
+        end_date = str(request.POST.get('end-date'))
+
+        start_date_sin_timezone = datetime.strptime(start_date, '%Y-%m-%d')
+        end_date_sin_timezone = datetime.strptime(end_date, '%Y-%m-%d')
+
+        month_names = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SETIEMBRE', 'OCTUBRE',
+                       'NOVIEMBRE', 'DICIEMBRE']
+        purchase_dict = []
+        sum_float_purchases_sum_total = 0
+        sector = Supplier._meta.get_field('sector').choices
+        sum_month = [0] * len(month_names)
+        sum_sale_month = [0] * len(month_names)
+        sum_cost_month = [0] * len(month_names)
+        sum_total_sale = 0
+        sum_cost_total = 0
+        total_total = 0
+        purchase_set = Purchase.objects.filter(
+            purchase_date__range=[start_date_sin_timezone.date(), end_date_sin_timezone.date()],
+            # supplier__sector=value,
+            # status__in=['S', 'A']
+        ).select_related('supplier').annotate(
+            sum_total=Subquery(
+                PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
+                    return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
+            )
+        )
+
+        query_sum = purchase_set.aggregate(Sum('sum_total'))
+        purchases_sum_total = 0
+        if query_sum is not None:
+            purchases_sum_total = query_sum['sum_total__sum']
+
+        print(purchase_set.query)
+
+        tpl = loader.get_template('sales/report_purchase_category_by_license_plate_grid_list.html')
+        context = ({
+            'purchase_set': purchase_set,
+            'purchases_sum_total': purchases_sum_total,
+        })
+
+        return JsonResponse({
+            'grid': tpl.render(context, request),
+        }, status=HTTPStatus.OK)
+
+
 def purchase_report_by_product_category(request):
     if request.method == 'GET':
         user_id = request.user.id
@@ -6173,7 +6285,9 @@ def purchase_report_by_product_category(request):
     elif request.method == 'POST':
 
         year = str(request.POST.get('year'))
-
+        user_id = request.user.id
+        user_obj = User.objects.get(id=user_id)
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
         month_names = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SETIEMBRE', 'OCTUBRE',
                        'NOVIEMBRE', 'DICIEMBRE']
         purchase_dict = []
@@ -6202,7 +6316,7 @@ def purchase_report_by_product_category(request):
                                                                       approval_date__month=month_names.index(
                                                                           m) + 1).annotate(
                         sum_total=Subquery(
-                            RequirementDetail_buys.objects.filter(requirement_buys_id=OuterRef('id')).annotate(
+                            RequirementDetail_buys.objects.filter(requirement_buys_id=OuterRef('id')).values('requirement_buys_id').annotate(
                                 r=Sum(F('quantity') * F('price_pen'))).values('r')[:1])).aggregate(Sum('sum_total'))
                     requirement_sum_total = requirement_set['sum_total__sum']
                     if requirement_sum_total is not None:
@@ -6239,7 +6353,7 @@ def purchase_report_by_product_category(request):
                         status__in=['S', 'A']
                     ).select_related('supplier').annotate(
                         sum_total=Subquery(
-                            PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).annotate(
+                            PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
                                 return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
                         )
                     ).aggregate(Sum('sum_total'))
@@ -6263,16 +6377,25 @@ def purchase_report_by_product_category(request):
 
             purchase_dict.append(category_row)
         for m in month_names:
-            t = Order.objects.filter(create_at__month=month_names.index(m) + 1, create_at__year=year,
-                                     type__in=['V', 'R']
-                                     ).aggregate(r=Coalesce(Sum('total'), decimal.Decimal(0.00)))
-            sum_sale_month[month_names.index(m)] = decimal.Decimal(t['r'])
-            if decimal.Decimal(sum_month[month_names.index(m)]) > 0 and decimal.Decimal(t['r']) > 0:
-                sum_cost_month[month_names.index(m)] = decimal.Decimal(sum_month[month_names.index(m)])/decimal.Decimal(t['r'])
+            b10kg = get_balon_month_and_year(year=year, month=month_names.index(m) + 1, subsidiary=subsidiary_obj)
+            sum_sale_month[month_names.index(m)] = decimal.Decimal(b10kg)
+            if decimal.Decimal(sum_month[month_names.index(m)]) > 0 and decimal.Decimal(b10kg) > 0:
+                sum_cost_month[month_names.index(m)] = decimal.Decimal(
+                    sum_month[month_names.index(m)]) / decimal.Decimal(b10kg)
             else:
                 sum_cost_month[month_names.index(m)] = 0
-            sum_total_sale += decimal.Decimal(t['r'])
+            sum_total_sale += decimal.Decimal(b10kg)
             sum_cost_total += sum_cost_month[month_names.index(m)]
+            # t = Order.objects.filter(create_at__month=month_names.index(m) + 1, create_at__year=year,
+            #                          type__in=['V', 'R']
+            #                          ).aggregate(r=Coalesce(Sum('total'), decimal.Decimal(0.00)))
+            # sum_sale_month[month_names.index(m)] = decimal.Decimal(t['r'])
+            # if decimal.Decimal(sum_month[month_names.index(m)]) > 0 and decimal.Decimal(t['r']) > 0:
+            #     sum_cost_month[month_names.index(m)] = decimal.Decimal(sum_month[month_names.index(m)])/decimal.Decimal(t['r'])
+            # else:
+            #     sum_cost_month[month_names.index(m)] = 0
+            # sum_total_sale += decimal.Decimal(t['r'])
+            # sum_cost_total += sum_cost_month[month_names.index(m)]
 
         tpl = loader.get_template('sales/report_purchase_category_and_month_grid.html')
         context = ({
@@ -6305,7 +6428,7 @@ def test(request):
             )
         ).select_related('supplier', 'truck').annotate(
             sum_total=Subquery(
-                PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).annotate(
+                PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
                     return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
             )
         )

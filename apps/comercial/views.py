@@ -1956,17 +1956,17 @@ def get_stock_unit_by_product_type(request):
                 product_store_obj = ProductStore.objects.get(product__id=product_obj.id,
                                                              subsidiary_store=subsidiary_store_obj)
                 unit_obj = product_recipe_obj.first().unit
-            if id_type == 'L':
+            elif id_type == 'L':
                 subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='V').first()
                 product_store_obj = ProductStore.objects.get(product__id=id_product,
                                                              subsidiary_store=subsidiary_store_obj)
                 unit_obj = Unit.objects.filter(name='BG', productdetail__product=product_obj).first()
-            if id_type == 'M':
+            elif id_type == 'M':
                 subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='R').first()
                 product_store_obj = ProductStore.objects.get(product__id=id_product,
                                                              subsidiary_store=subsidiary_store_obj)
                 unit_obj = Unit.objects.filter(name='BG', productdetail__product=product_obj).first()
-            if id_type == 'VM':
+            elif id_type == 'VM':
                 subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='R').first()
                 subcategory_obj = ProductSubcategory.objects.get(name='FIERRO', product_category__name='FIERRO')
                 product_recipe_obj = ProductRecipe.objects.filter(product=product_obj,
@@ -2335,7 +2335,7 @@ def get_monthly_distribution_by_licence_plate(request):
                 'expense_1': 0, 'expense_2': 0, 'expense_3': 0, 'expense_4': 0, 'expense_5': 0,
                 'total_to_deposit': 0,
                 'remaining_total_to_deposit': 0,
-                'deposited': 0, 'balance': 0, 'bank': "", 'date_deposit': ""
+                'deposited': 0, 'balance': 0, 'bank': "", 'date_deposit': "", 'code_deposit': ""
             }
         )
 
@@ -2481,15 +2481,18 @@ def get_monthly_distribution_by_licence_plate(request):
             total_deposited = 0
             bank = []
             dates_of_deposit = []
+            codes_of_deposit = []
             for deposit in distribution.cashflow_set.filter(type='D'):
                 distribution_obj["deposited"] += round(deposit.total, 1)
                 total_deposited += round(deposit.total, 1)
                 bank.append(deposit.cash.name)
                 dates_of_deposit.append(str(deposit.transaction_date.date()))
+                codes_of_deposit.append(str(deposit.operation_code))
 
             distribution_obj['total_sold_by_date'] += total_sales_by_date
+            print("distribution_obj['total_sold_by_date']", distribution_obj['total_sold_by_date'])
 
-            distribution_obj['total_to_deposit'] += (total_sales_by_date - total_expenses)
+            distribution_obj['total_to_deposit'] = total_sales_by_date - total_expenses
 
             distribution_obj['balance'] += (total_sales_by_date - total_expenses - total_deposited)
 
@@ -2500,9 +2503,12 @@ def get_monthly_distribution_by_licence_plate(request):
             string_of_banks = ", ".join(bank_without_duplicates)
             dates_of_deposit_without_duplicates = list(set(dates_of_deposit))
             string_of_dates_of_deposit = ", ".join(dates_of_deposit_without_duplicates)
+            codes_of_deposit_without_duplicates = list(set(codes_of_deposit))
+            string_of_codes_of_deposit = ", ".join(codes_of_deposit_without_duplicates)
 
             distribution_obj['bank'] = string_of_banks
             distribution_obj['date_deposit'] = string_of_dates_of_deposit
+            distribution_obj['code_deposit'] = string_of_codes_of_deposit
 
         distributions = list(grouped_by_date.values())
         tpl = loader.get_template('comercial/monthly_distribution_by_licence_plate_grid_list.html')

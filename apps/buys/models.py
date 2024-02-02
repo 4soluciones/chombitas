@@ -29,6 +29,12 @@ class Purchase(models.Model):
         verbose_name = 'Compra'
         verbose_name_plural = 'Compras'
 
+    def count_details(self):
+        quantity = 0
+        if self.purchasedetail_set.exists():
+            quantity = self.purchasedetail_set.count()
+        return quantity
+
     def total(self):
         response = 0
         purchase_detail_set = PurchaseDetail.objects.filter(purchase__id=self.id)

@@ -1,0 +1,61 @@
+
+<table class="table table-sm table-bordered" id="excel-data-grid">
+    <thead>
+    <tr>
+
+        <td class="align-middle table-dark text-white text-center font-weight-bold" rowspan="2">ID</td>
+        <td class="align-middle table-dark text-white text-center font-weight-bold" rowspan="2">FECHA</td>
+        <td class="align-middle table-dark text-white text-center font-weight-bold" rowspan="2">TIPO COMP</td>
+        <td class="align-middle table-dark text-white text-center font-weight-bold" rowspan="2">NUM COMP</td>
+        <td class="align-middle table-dark text-white text-center font-weight-bold" rowspan="2">PROVEEDOR</td>
+        <td class="align-middle table-dark text-white text-center font-weight-bold" rowspan="2">SECTOR</td>
+        <td class="align-middle table-dark text-white text-center font-weight-bold" rowspan="2">TOTAL</td>
+        <td class="align-middle table-dark text-white text-center font-weight-bold" colspan="4">DETALLES</td>
+
+    </tr>
+    <tr>
+
+        <td class="align-middle table-dark text-white text-center font-weight-bold">PRODUCTO</td>
+        <td class="align-middle table-dark text-white text-center font-weight-bold">CANTIDAD</td>
+        <td class="align-middle table-dark text-white text-center font-weight-bold">PRECIO</td>
+        <td class="align-middle table-dark text-white text-center font-weight-bold">SUBTOTAL</td>
+
+    </tr>
+
+    </thead>
+    <tbody>
+
+    {% for purchase in purchase_set %}
+
+        <tr>
+
+            <td rowspan="{{ purchase.count_details }}" class="align-middle text-nowrap">{{ purchase.id }}</td>
+            <td rowspan="{{ purchase.count_details }}" class="align-middle text-nowrap">{{ purchase.purchase_date|date:"SHORT_DATE_FORMAT" }}</td>
+            <td rowspan="{{ purchase.count_details }}" class="align-middle text-nowrap">{{ purchase.get_type_bill_display }}</td>
+            <td rowspan="{{ purchase.count_details }}" class="align-middle text-nowrap">{{ purchase.bill_number }}</td>
+            <td rowspan="{{ purchase.count_details }}" class="align-middle text-nowrap">{{ purchase.supplier.name }}</td>
+            <td rowspan="{{ purchase.count_details }}" class="align-middle text-nowrap">{{ purchase.supplier.get_sector_display }}</td>
+<td rowspan="{{ purchase.count_details }}" class="align-middle text-nowrap text-right">S/ {{ purchase.sum_total|safe|floatformat:2 }}</td>
+            {% for pd in purchase.purchasedetail_set.all %}
+                {% if not forloop.first %}
+                    <tr>
+                {% endif %}
+                 <td class="align-middle text-nowrap">{{ pd.product.name }}</td>
+                 <td class="align-middle text-nowrap">{{ pd.quantity|floatformat:0 }}</td>
+                 <td class="align-middle text-nowrap text-right">S/ {{ pd.price_unit|safe|floatformat:2 }}</td>
+                 <td class="align-middle text-nowrap text-right">S/ {{ pd.multiplicate|safe|floatformat:2 }}</td>
+
+
+        </tr>
+            {% endfor %}
+
+
+    {% endfor %}
+
+    </tbody>
+    <tfoot>
+    <td class="table-dark text-white align-middle font-weight-bold text-nowrap" colspan="10">TOTAL</td>
+    <td class="table-dark text-white align-middle font-weight-bold text-nowrap text-right">S/ {{ purchases_sum_total|safe|floatformat:2 }}</td>
+    </tfoot>
+
+</table>

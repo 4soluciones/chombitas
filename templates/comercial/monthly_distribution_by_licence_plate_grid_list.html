@@ -41,7 +41,7 @@
 
         <td class="text-center" colspan="5">GASTOS</td>
         <td class="align-middle text-center table-danger  font-weight-bold" rowspan="2"><span class="text-rotated-90">TOTAL<br/>DEPOSITAR S/</span></td>
-            <td class="text-center" colspan="4">MOVIMIENTO DE EFECTIVO</td>
+            <td class="text-center" colspan="5">MOVIMIENTO DE EFECTIVO</td>
         <td class="align-middle text-center table-secondary  font-weight-bold" rowspan="2"><span class="text-rotated-90">TOTAL POR<br/>DEPOSITAR <br/>ACUMULADO S/</span></td>
 
     </tr>
@@ -117,6 +117,7 @@
             <td class="align-middle text-center"><span class="text-rotated-90">DEPOSITO<br/>Y/O<br/>EFECTIVO</span></td>
             <td class="align-middle text-center"><span class="text-rotated-90">SALDO</span></td>
             <td class="align-middle text-center"><span class="text-rotated-90">ENT. BANC</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">COD. OPE</span></td>
             <td class="align-middle text-center"><span class="text-rotated-90">FECHA</span></td>
     </tr>
     </thead>
@@ -159,7 +160,7 @@
         <td class="align-middle text-center table-info"></td>
         <td colspan="5"></td>
         <td class="align-middle text-center table-danger"></td>
-        <td colspan="4"></td>
+        <td colspan="5"></td>
         <td class="align-middle text-center table-secondary font-weight-bold"></td>
     </tr>
 
@@ -239,6 +240,7 @@
         <td class="align-middle text-nowrap">{{ distribution.deposited }}</td>
         <td class="align-middle text-nowrap">{{ distribution.balance }}</td>
         <td class="align-middle text-nowrap">{{ distribution.bank }}</td>
+        <td class="align-middle text-nowrap">{{ distribution.code_deposit }}</td>
         <td class="align-middle text-nowrap">{{ distribution.date_deposit }}</td>
         <td class="align-middle text-center table-secondary font-weight-bold">{{ distribution.remaining_total_to_deposit }}</td>
 

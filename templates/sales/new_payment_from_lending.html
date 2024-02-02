@@ -228,7 +228,7 @@
                 <tr class="text-uppercase font-weight-lighter">
                     <th class="border-bottom-0 border-right align-middle">CONCEPTO</th>
                     <th class="border-bottom-0 border-right align-middle code">DETALLE DE OPERACION</th>
-                    <th class="border-bottom-0 border-right align-middle code">MONTO SELECCIONADO</th>
+                    <th class="border-bottom-0 border-right align-middle code">MONTO DISPONIBLE</th>
                     <th class="border-bottom-0 border-right align-middle voucher">MONTO A EXTRAER</th>
                     <th class="border-bottom-0 border-right align-middle voucher">MONTO SOBRANTE</th>
                 </tr>
@@ -239,7 +239,7 @@
                     <td class="border-top-0 border-bottom border-right align-middle">
                         <select id="cash-flow-deposit-id" name="cash-flow-deposit-id" class="form-control form-control-sm" aria-describedby="depositedHelpBlock">
                             <option value="0">SELECCIONA</option>
-                            {% for cf in detail.order.distribution_mobil.cashflow_set.all %}
+                            {% for cf in cash_flow_of_distributions_with_deposits_set %}
                                 {% if cf.type == "D" %}
                                     <option value="{{ cf.id }}"
                                             cash-flow-transaction-date="{{ cf.transaction_date|safe }}"
@@ -248,9 +248,9 @@
                                 {% endif %}
                             {% endfor %}
                         </select>
-                        <small id="depositedHelpBlock" class="form-text text-muted">
-                          TOTAL DEPOSITADO: {{  detail.order.distribution_mobil.calculate_total_deposits|safe }}.
-                        </small>
+{#                        <small id="depositedHelpBlock" class="form-text text-muted">#}
+{#                          TOTAL DEPOSITADO: {{  detail.order.distribution_mobil.calculate_total_deposits|safe }}.#}
+{#                        </small>#}
                     </td>
                     <td class="border-top-0 border-bottom border-right align-middle">
                         <input

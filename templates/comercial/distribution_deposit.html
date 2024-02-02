@@ -74,7 +74,7 @@
     $('#form-distribution-deposit').submit(function (event) {
         event.preventDefault();
 
-        if(Number($('#total-deposit').val()) > 0 && Number($('#total-deposit').val())<= Number($('#total-balance').val())) {
+        if(Number($('#total-deposit').val()) > 0) {
             let depositData = {
                 "distributionId": $('#distribution-deposit-id').val(),
                 "cashId": $('#cash-deposit-id').val(),

@@ -2,8 +2,8 @@
 
     <div class="modal-content small">
 
-        <div class="modal-header" style="background: #045ebf">
-            <h6 class="modal-title  text-white">Registro de salidas reparto</h6>
+        <div class="modal-header bg-primary pt-2 pb-2">
+            <h6 class="modal-title  text-white">REGISTRO DE SALIDAS UNIDADES DE REPARTO</h6>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>
@@ -34,13 +34,13 @@
                     </tr>
                     <tr>
                         <td class="align-middle" style="width: 6%">Fecha</td>
-                        <td style="width: 8%" class="align-middle text-center">
+                        <td style="width: 10%" class="align-middle text-center">
                             <input type="date" class="form-control form-control-sm" id="id-date-output"
                                    name="date-output" value="{{ date_now }}"
                                    required>
                         </td>
                         <td class="align-middle" style="width: 6%">Placa</td>
-                        <td style="width: 20%" class="align-middle">
+                        <td style="width: 18%" class="align-middle">
                             <select class="form-control form-control-sm" id="id_truck" name="truck" required>
                                 <option disabled selected value=""> Seleccione</option>
                                 {% for t in truck_set %}
@@ -54,37 +54,41 @@
                     <tr>
                         <td class="align-middle"></td>
                         <td class="align-middle text-center" colspan="1">
-                            <button id="add-detail" type="button" class="btn btn-success btn-sm p-2">Agregar productos
+                            <button id="add-detail" type="button" class="btn btn-outline-success btn-sm">
+                                Agregar producto
                             </button>
                         </td>
                         <td class="align-middle">Numero Guia</td>
                         <td class="align-middle text-center">
-                            <input type="text" class="form-control form-control-sm" id="id-guide"
+                            <input type="text" class="form-control form-control-sm text-right" id="id-guide"
                                    name="guide" placeholder="G001-0003">
                         </td>
                     </tr>
                 </table>
-                <div class="card" style="border-color: #fffffe; background: #fffff6">
-                    <table id="id_distribution_output"
-                           class="table table-sm table-striped align-content-center table-bordered response"
+                <div class="card card-personal">
+{#                    <div class="card-header"></div>#}
+                    <div class="card-body p-2">
+                        <table id="id_distribution_output"
+                           class="table table-sm table-striped align-content-center table-bordered response mb-0"
                            cellspacing="0" style="width: 100%">
 
                         <thead>
-                        <tr class="text-center text-white align-middle" style="height: 28px; background: #0273ec">
-                            <th style="width: 3%" class="font-weight-normal">#</th>
-                            <th style="width: 24%" class="font-weight-normal">Producto</th>
-                            <th style="width: 17%" class="font-weight-normal">Tipo</th>
-                            <th style="width: 15%" class="font-weight-normal">Cantidad</th>
-                            <th style="width: 8%" class="font-weight-normal">Carro</th>
-                            <th style="width: 15%" class="font-weight-normal">Unidad</th>
-                            <th style="width: 10%" class="font-weight-normal">Stock</th>
-                            <th style="width: 8%" class="font-weight-normal">Borrar</th>
+                        <tr class="text-center  text-white bg-primary">
+                            <th style="width: 3%">#</th>
+                            <th style="width: 24%">Producto</th>
+                            <th style="width: 17%">Tipo</th>
+                            <th style="width: 15%">Cantidad</th>
+                            <th style="width: 8%">Carro</th>
+                            <th style="width: 15%">Unidad</th>
+                            <th style="width: 10%">Stock</th>
+                            <th style="width: 8%">Borrar</th>
                         </tr>
                         </thead>
                         <tbody id="details">
 
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div><!-- modal-body -->
 
@@ -375,6 +379,16 @@
                 quantity_last = parseFloat('0.00')
             } else {
                 quantity_last = parseFloat(quantity_last)
+            }
+            if (parseInt(unit) === 6 && type !== 'L') {
+                toastr.error('Problemas con la unidad comuniquese con sistemas')
+                value = false
+                return false
+            }
+            if (parseInt(unit) === 4 && type !== 'V') {
+                toastr.error('Problemas con la unidad comuniquese con sistemas unidad=' + unit.toString() + " tipo=" + type.toString())
+                value = false
+                return false
             }
             let detailObj = {
                 "Product": product,

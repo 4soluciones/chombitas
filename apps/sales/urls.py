@@ -161,6 +161,8 @@ urlpatterns = [
          name='purchase_report_by_category'),
     path('purchase_report_by_product_category/', login_required(purchase_report_by_product_category),
          name='purchase_report_by_product_category'),
+    path('get_report_purchase_category_by_license_plate/', login_required(get_report_purchase_category_by_license_plate),
+         name='get_report_purchase_category_by_license_plate'),
 
     path('report_category_product/<int:year>/', login_required(report_category_product),
          name='report_category_product'),
