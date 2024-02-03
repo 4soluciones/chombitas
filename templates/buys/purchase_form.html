@@ -4,18 +4,186 @@
 {% endblock title %}
 
 {% block body %}
-    <div class="row">
-        <div class="card col-sm-12">
-            <div class="card-body" id="render-form">
-                {% include "buys/purchase_create.html" %}
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="d-flex align-items-center justify-content-center p-2" style="height: 100vh;">
+                    <form id="purchase-form" action="{% url 'buys:save_purchase' %}" method="POST"
+                          class="was-validated">
+                        {% csrf_token %}
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label class="m-0">Numero documento</label>
+                                        <input type="text" class="form-control" id="document"
+                                               name="document"
+                                               value="" placeholder="Ingrese ruc" required>
+                                        <input type="hidden" class="form-control" value="" pk="supplier_pk"
+                                               name="supplier_pk">
+                                    </div>
+                                    <div class="col-md-8">
+                                        <label class="m-0">Nombres/Razon Social</label>
+                                        <div id="autocomplete-supplier" class="autocomplete">
+                                            <div class="input-group input-group">
+                                                <input class="form-control  autocomplete-input" required
+                                                       id="search-supplier"
+                                                       name="search-supplier"
+                                                       placeholder="Buscar proveedor..."/>
+                                                <div class="input-group-append">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="fas fa-search"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <ul class="autocomplete-result-list"></ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label class="m-0">Fecha compra</label>
+                                        <input type="date" class="form-control" id="id_fechacompra"
+                                               name="fechacompra"
+                                               placeholder="Fecha compra"
+                                               value="{{ date_now }}" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="m-0">Comprobante</label>
+                                        <select class="form-control" id="id_type_bill" name="type_bill"
+                                                required>
+                                            <option disabled selected value=""> Seleccione</option>
+                                            <option value="T">TICKET</option>
+                                            <option value="B">BOLETA</option>
+                                            <option value="F">FACTURA</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="m-0">Numero comprobante</label>
+                                        <input type="text" class="form-control" id="id_factura"
+                                               name="factura"
+                                               placeholder="Numero Comprobante"
+                                               value="">
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label class="m-0">Placa vehiculo</label>
+                                        <select class="form-control" id="id-truck" name="truck">
+                                            <option disabled selected value=""> Seleccione</option>
+                                            {% for t in truck_set %}
+                                                <option value="{{ t.id }}">{{ t.license_plate }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="m-0">Categoria compra</label>
+                                        <select class="form-control" id="id-category" name="id-category" required>
+                                            <option disabled selected value=""> Seleccione</option>
+                                            {% for c in category_set %}
+                                                <option value="{{ c.0 }}">{{ c.1 }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 align-self-end">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <button type="submit" class="btn btn-primary pl-1 pr-1">Registrar
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <button type="button" id="btn-detail"
+                                                        class="btn btn-primary btn-block pl-1 pr-1"
+                                                        data-toggle="modal"
+                                                        data-target="#modal-updetail">Detalle
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body" id="render-form" style="height: 300px;">
+                                <div class="table-responsive" id="render-table">
+                                    {% include "buys/purchase_detail_list.html" %}
+                                </div>
+                                {#                {% include "buys/purchase_create.html" %}#}
+                            </div>
+                        </div>
+                    </form>
+                    <div>
+                        <!-- Tu contenido aquí -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="row mt-4 ml-4">
-        <div class="card col-sm-10">
-            <div class="card-body ">
-                <div class="table-responsive" id="render-table">
-                    {% include "buys/purchase_detail_list.html" %}
+    <div class="modal fade" id="modal-updetail" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">DETALLE DE LA COMPRA</h5>
+                    <button type="button" class="close" onclick="limper()" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modal-detail">
+                    <table class="table table-sm">
+                        <tr>
+                            <td>Descricpion del producto:</td>
+                            <td><select class="form-control" id="id_producto" name="producto" required>
+                                <option selected value="0"> Seleccione</option>
+                                {% for p in product_obj %}
+                                    {% if employee.occupation.id == p.id %}
+                                        <option value="{{ p.id }}">{{ p.name }}</option>
+                                    {% else %}
+                                        <option value="{{ p.id }}">{{ p.name }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Cantidad:</td>
+                            <td>
+                                <input type="text" class="form-control" id="id_cantidad"
+                                       name="cantidad"
+                                       placeholder="Cantidad" required
+                                       value="{{ employee.person.paternal_last_name }}">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Unidad de Medida:
+                            </td>
+                            <td>
+                                <select class="form-control" id="id_unidad" name="unidad" required>
+                                    <option value="0"> Seleccione</option>
+                                    {% for u in unitmeasurement_obj %}
+                                        {% if employee.occupation.id == u.id %}
+                                            <option selected value="{{ u.id }}">{{ u.description }}</option>
+                                        {% else %}
+                                            <option value="{{ u.id }}">{{ u.description }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Precio Unitario:
+                            </td>
+                            <td>
+                                <input type="text" class="form-control" id="id_preciounitario"
+                                       name="preciounitario"
+                                       placeholder="S/.0.00" required
+                                       value="{{ employee.person.paternal_last_name }}">
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="limper()" data-dismiss="modal">Salir
+                    </button>
+                    <button type="button" id="id_add" class="btn btn-primary">Agregar</button>
                 </div>
             </div>
         </div>
@@ -25,10 +193,56 @@
 
 {% block extrajs %}
     <script type="text/javascript">
+        $(document).ready(function () {
+            new Autocomplete('#autocomplete-supplier', {
+                search: input => {
+                    const url = `/buys/search_supplier/?search=${encodeURI(input.toUpperCase())}`
+
+                    return new Promise(resolve => {
+                        if (input.length < 3) {
+                            $('#search-code').val('')
+                            return resolve([])
+                        }
+                        fetch(url)
+                            .then(response => response.json())
+                            .then(data => {
+                                resolve(data.product)
+                            })
+                    })
+                },
+                renderResult: (result, props) => {
+                    let group = ''
+                    if (result.index % 3 === 0) {
+                        group = '<li class="group">Group</li>'
+                    }
+                    return `
+                ${group}
+                <li ${props} class="font-weight-bold small">
+                 <div class="text-white h6">
+                    ${'<i class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></i>'} ${result.business_name}
+                 </div>
+                 <div class="text-white-50">
+                    <b class="text-white">RUC: ${result.ruc}</b> <br>
+                    DIRECCION : ${result.address} <br>
+                    SECTOR : ${result.sector} <br>
+                  </div>
+                </li>
+                `
+                },
+                getResultValue: result => result.business_name,
+                onSubmit: result => {
+                    if (result) {
+                        $('#supplier_pk').val(result.pk)
+                        $('#document').val(result.ruc)
+                        {#SearchProduct(result.pk)#}
+                    }
+                }
+            })
+        })
         {#document.ready = document.getElementById("opciones").value = '0';#}
-        $('#id_proveedor').select2({
-            theme: 'bootstrap4',
-        });
+        {#$('#id_proveedor').select2({#}
+        {#    theme: 'bootstrap4',#}
+        {# });#}
         $('#id_producto').select2({
             theme: 'bootstrap4',
         });
@@ -38,13 +252,46 @@
         $("#btn-new").click(function () {
             limper_form();
         });
+        $('#document').keypress(function (e) {
+            if (e.keyCode === 13) {
+                e.preventDefault()
+                $(this).trigger("enterKey");
+                let document = $('#document').val();
+                // if ((document.length !== 8)) {
+                //     toastr.warning('El DNI debe contener 8 digitos');
+                //     return false;
+                // }
+                $('#id-loading').css('display', '')
+                $.ajax({
+                    url: '/buys/get_supplier/',
+                    dataType: 'json',
+                    type: 'GET',
+                    data: {'document': document},
+                    success: function (response) {
+                        if (response.pk) {
+                            toastr.success(response.message);
+                            $("#supplier_pk").val(response.pk);
+                            $("#search-supplier").val(response.names);
+                            {#$("#phone").val(response.phone);#}
+                            {#$("#address").val(response.address);#}
+                        } else {
+                            toastr.error(response.message)
+                        }
+                        $('#id-loading').css('display', 'none')
+                    },
+                    fail: function (response) {
+                        toastr.error('Ocurrio un problema en el proceso')
+                    }
+                });
+            }
+        });
 
         function limper_form(request) {
             $('#id_fechacompra').val('');
             $("#id_factura").val('');
-            $('#id_proveedor option').removeAttr('selected');
-            $('#id_proveedor option:first').attr('selected', 'selected');
-            $('#id_proveedor').trigger('change');
+            {#$('#id_proveedor option').removeAttr('selected');#}
+            {#$('#id_proveedor option:first').attr('selected', 'selected');#}
+            {#$('#id_proveedor').trigger('change');#}
             $('#id-truck option').removeAttr('selected');
             $('#id-truck option:first').attr('selected', 'selected');
             $('#id-truck').trigger('change');
@@ -106,10 +353,11 @@
                 let Detail_purchase = {
                     "Details": [],
                     "Invoice": $('#id_factura').val(),
-                    "ProviderId": $('#id_proveedor').val(),
+                    "ProviderId": $('#supplier_pk').val(),
                     "Date": $('#id_fechacompra').val(),
                     "truck": $('#id-truck').val(),
-                    "Type_bill": $('#id_type_bill').val()
+                    "Type_bill": $('#id_type_bill').val(),
+                    "category": $('#id-category').val()
                 };
                 // Recorre cada detalle de producto (son 2 arrays) each -> recorre
 
@@ -149,9 +397,7 @@
                     }
                 });
 
-            }
-            else
-            {
+            } else {
                 toastr.warning("PARA REALIZAR LA COMPRA NECESITA AGREGAR PRODUCTOS. ", '¡ADVERTENCIA!');
             }
         });

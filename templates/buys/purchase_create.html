@@ -7,23 +7,38 @@
             <table class="table table-sm" style="width: 100%">
                 <tr>
                     <td style="width: 10%">Proveedor:</td>
-                    <td style="width: 10%"><select class="form-control" id="id_proveedor" name="proveedor" required>
-                        <option disabled selected value=""> Seleccione</option>
-                        {% for o in supplier_obj %}
-                            {% if purchase.supplier.id == o.id %}
-                                <option value="{{ o.id }}">{{ o.name }}</option>
-                            {% else %}
-                                <option value="{{ o.id }}">{{ o.name }}</option>
-                            {% endif %}
-                        {% endfor %}
-                    </select>
+                    <td class="align-middle" style="width: 20%">
+                        <div id="autocomplete-supplier" class="autocomplete">
+                            <div class="input-group input-group">
+                                <input class="form-control  autocomplete-input" id="search-supplier"
+                                       name="search-product"
+                                       placeholder="Buscar proveedor..."/>
+                                <div class="input-group-append">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <ul class="autocomplete-result-list"></ul>
+                        </div>
                     </td>
+{#                    <td style="width: 10%"><select class="form-control" id="id_proveedor" name="proveedor" required>#}
+{#                        <option disabled selected value=""> Seleccione</option>#}
+{#                        {% for o in supplier_obj %}#}
+{#                            {% if purchase.supplier.id == o.id %}#}
+{#                                <option value="{{ o.id }}">{{ o.name }}</option>#}
+{#                            {% else %}#}
+{#                                <option value="{{ o.id }}">{{ o.name }}</option>#}
+{#                            {% endif %}#}
+{#                        {% endfor %}#}
+{#                    </select>#}
+{#                    </td>#}
                     <td style="width: 10%">
                         <button type="button" id="btn-new"
                                 class="btn btn-primary btn-block pb-1">Nuevo
                         </button>
                     </td>
-                    <td rowspan="3" class="align-middle text-center" style="width: 70%">
+                    <td rowspan="3" class="align-middle text-center" style="width: 60%">
                         <h2>REGISTRO DE COMPRAS</h2>
                     </td>
                 </tr>

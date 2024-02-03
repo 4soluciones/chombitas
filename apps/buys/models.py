@@ -11,6 +11,7 @@ from imagekit.processors import ResizeToFill, Adjust
 
 class Purchase(models.Model):
     STATUS_CHOICES = (('S', 'SIN ALMACEN'), ('A', 'EN ALMACEN'), ('N', 'ANULADO'),)
+    CATEGORY_CHOICES = (('A', 'ACTIVO'), ('D', 'ADMINISTRATIVO'), ('P', 'PRODUCCION'), ('V', 'VENTAS'))
     TYPE_CHOICES = (('T', 'TICKET'), ('B', 'BOLETA'), ('F', 'FACTURA'),)
     id = models.AutoField(primary_key=True)
     supplier = models.ForeignKey(Supplier, verbose_name='Proveedor', on_delete=models.CASCADE, null=True, blank=True)
@@ -19,6 +20,7 @@ class Purchase(models.Model):
     user = models.ForeignKey(User, verbose_name='Usuario', on_delete=models.CASCADE, null=True, blank=True)
     subsidiary = models.ForeignKey(Subsidiary, on_delete=models.SET_NULL, null=True, blank=True)
     status = models.CharField('Estado', max_length=1, choices=STATUS_CHOICES, default='S')
+    category = models.CharField('Categoria', max_length=1, choices=CATEGORY_CHOICES, default='A')
     truck = models.ForeignKey(Truck, on_delete=models.SET_NULL, null=True, blank=True)
     type_bill = models.CharField('Tipo de comprobante', max_length=1, choices=TYPE_CHOICES, default='T')
 
