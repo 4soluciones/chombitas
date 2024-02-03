@@ -45,6 +45,7 @@ def purchase_form(request):
         'product_obj': product_obj,
         'truck_set': truck_set,
         'category_set': Purchase._meta.get_field('category').choices,
+        'sector_set': Supplier._meta.get_field('sector').choices,
         'date_now': my_date.strftime("%Y-%m-%d")
         # 'list_detail_purchase': get_employees(need_rendering=False),
     })
@@ -2125,8 +2126,11 @@ def search_supplier(request):
 def get_supplier(request):
     if request.method == 'GET':
         document = request.GET.get('document', '')
+        supplier_obj = None
         try:
-            supplier_obj = Supplier.objects.get(ruc=document)
+            supplier_set = Supplier.objects.filter(ruc=document)
+            if supplier_set.exists():
+                supplier_obj = supplier_set.first()
         except Supplier.DoesNotExist:
             supplier_obj = None
         if supplier_obj is not None:
@@ -2200,3 +2204,35 @@ def get_supplier(request):
                 return JsonResponse({'error': 'Documento no encontrado.'}, status=HTTPStatus.BAD_REQUEST)
     else:
         return JsonResponse({'error': 'Error de petición.'}, status=HTTPStatus.BAD_REQUEST)
+
+
+def save_supplier(request):
+    if request.method == 'GET':
+        supplier_request = request.GET.get('supplier', '')
+        data = json.loads(supplier_request)
+        # print(data_purchase)
+        try:
+            document = str(data["document"])
+            names = data["names"]
+            address = data["address"]
+            phone = data["phone"]
+            email = data["email"]
+            sector = data["sector"]
+            supplier_obj = Supplier(
+                ruc=document,
+                business_name=names,
+                name=document,
+                address=address,
+                phone=phone,
+                email=email,
+                sector=sector
+            )
+            supplier_obj.save()
+            return JsonResponse({
+                'pk': supplier_obj.id,
+                'message': 'PROVEEDOR REGISTRADO CORRECTAMENTE.',
+            }, status=HTTPStatus.OK)
+        except Exception as e:
+            return JsonResponse({
+                'message': str(e),
+            }, status=HTTPStatus.OK)

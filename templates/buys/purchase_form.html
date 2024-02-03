@@ -31,8 +31,10 @@
                                                        name="search-supplier"
                                                        placeholder="Buscar proveedor..."/>
                                                 <div class="input-group-append">
-                                                    <button type="submit" class="btn btn-primary">
-                                                        <i class="fas fa-search"></i>
+                                                    <button type="submit" class="btn btn-primary"
+                                                            data-toggle="modal"
+                                                            data-target="#modal-supplier">
+                                                        <i class="fa fa-plus"></i>
                                                     </button>
                                                 </div>
                                             </div>
@@ -184,6 +186,67 @@
                     <button type="button" class="btn btn-secondary" onclick="limper()" data-dismiss="modal">Salir
                     </button>
                     <button type="button" id="id_add" class="btn btn-primary">Agregar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-supplier" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content modal-sm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">REGISTRAR PROVEEDOR</h5>
+                    <button type="button" class="close" onclick="limper()" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="m-0">Numero documento</label>
+                            <input type="text" class="form-control" id="s_document" name="s_document">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="m-0">Razon Social/Nombres</label>
+                            <input type="text" class="form-control" id="s_names" name="s_names">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="m-0">Direccion</label>
+                            <input type="text" class="form-control" id="s_address" name="s_address">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="m-0">Telefono</label>
+                            <input type="text" class="form-control" id="s_phone" name="s_phone">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="m-0">Correo electronico</label>
+                            <input type="text" class="form-control" id="s_email" name="s_email">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="m-0">Sector</label>
+                            <select class="form-control" id="s_sector" name="s_sector">
+                                {% for s in sector_set %}
+                                    <option value="{{ s.0 }}">{{ s.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="close-supplier" data-dismiss="modal">Cancelar
+                    </button>
+                    <button type="button" onclick="SaveSupplier()" class="btn btn-primary">Registrar</button>
                 </div>
             </div>
         </div>
@@ -451,6 +514,57 @@
 
         }
 
+        function SaveSupplier() {
+            let document = $('#s_document').val()
+            let names = $('#s_names').val()
+            let address = $('#s_address').val()
+            let phone = $('#s_phone').val()
+            let email = $('#s_email').val()
+            let sector = $('#s_sector').val()
+            if (document === "") {
+                toastr.warning('Ingrese un numero de docuemnto')
+                return false
+            }
+            if (names === "") {
+                toastr.warning('Ingrese un nombre')
+                return false
+            }
+            if (address === "") {
+                toastr.warning('Ingrese la direccion')
+                return false
+            }
+            let supplier = {
+                "document": document,
+                "names": names,
+                "address": address,
+                "phone": phone,
+                "email": email,
+                "sector": sector
+            };
+            $.ajax({
 
+                url: '/buys/save_supplier/',
+                async: true,
+                dataType: 'json', // for response
+                type: 'GET',
+                data: {'supplier': JSON.stringify(supplier)},
+                contentType: 'application/json;charset=UTF-8',
+                headers: {"X-CSRFToken": '{{ csrf_token }}'},
+                success: function (response, textStatus, xhr) {
+                    if (xhr.status === 200) {
+                        toastr.success(response.message);
+                        $('#close-supplier').trigger('click')
+                        $('#document').val(document)
+                        $('#search-supplier').val(names)
+                        $('#ProviderId').val(response.pk)
+                    }else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function (jqXhr, textStatus, xhr) {
+                    toastr.error("ERROR. ", '¡INCONCEBIBLE!');
+                }
+            });
+        }
     </script>
 {% endblock extrajs %}

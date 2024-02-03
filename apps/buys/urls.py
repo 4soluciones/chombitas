@@ -68,4 +68,5 @@ urlpatterns = [
     path('get_purchases_by_provider_category/', get_purchases_by_provider_category, name='get_purchases_by_provider_category'),
     path('search_supplier/', search_supplier, name='search_supplier'),
     path('get_supplier/', get_supplier, name='get_supplier'),
+    path('save_supplier/', save_supplier, name='save_supplier'),
 ]
