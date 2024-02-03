@@ -19,8 +19,8 @@
                                         <input type="text" class="form-control" id="document"
                                                name="document"
                                                value="" placeholder="Ingrese ruc" required>
-                                        <input type="hidden" class="form-control" value="" pk="supplier_pk"
-                                               name="supplier_pk">
+                                        <input type="hidden" class="form-control" value="0" id="ProviderId"
+                                               name="ProviderId">
                                     </div>
                                     <div class="col-md-8">
                                         <label class="m-0">Nombres/Razon Social</label>
@@ -232,7 +232,7 @@
                 getResultValue: result => result.business_name,
                 onSubmit: result => {
                     if (result) {
-                        $('#supplier_pk').val(result.pk)
+                        $('#ProviderId').val(result.pk)
                         $('#document').val(result.ruc)
                         {#SearchProduct(result.pk)#}
                     }
@@ -270,7 +270,7 @@
                     success: function (response) {
                         if (response.pk) {
                             toastr.success(response.message);
-                            $("#supplier_pk").val(response.pk);
+                            $("#ProviderId").val(response.pk);
                             $("#search-supplier").val(response.names);
                             {#$("#phone").val(response.phone);#}
                             {#$("#address").val(response.address);#}
@@ -353,7 +353,7 @@
                 let Detail_purchase = {
                     "Details": [],
                     "Invoice": $('#id_factura').val(),
-                    "ProviderId": $('#supplier_pk').val(),
+                    "ProviderId": $('#ProviderId').val(),
                     "Date": $('#id_fechacompra').val(),
                     "truck": $('#id-truck').val(),
                     "Type_bill": $('#id_type_bill').val(),
@@ -389,7 +389,7 @@
                             toastr.success(response.message, '¡COMPRA REGISTRADA CORRECTAMENTE!');
                             setTimeout(() => {
                                 location.reload();
-                            }, 800);
+                            }, 200);
                         }
                     },
                     error: function (jqXhr, textStatus, xhr) {
@@ -407,27 +407,31 @@
             let _search = $(this).val();
             //vacia el combo-borra opciones
             $('#id_unidad').empty();
+            if (parseInt(_search) > 0) {
+                $.ajax({
+                    url: '/buys/get_units_by_product/',
+                    async: true,
+                    dataType: 'json',
+                    type: 'GET',
+                    //mando  id del producto del combo
+                    data: {'ip': _search},
+                    // si va bien retorna la data
+                    success: function (response) {
+                        //le da formato array
+                        let units = JSON.parse(response['units']);
+                        {#console.log(units)#}
+                        if (units.length > 0) {
+                            units.forEach(
+                                element =>
+                                    $('#id_unidad').append(
+                                        '<option value="' + element['pk'] + '">' + element['fields']['name'] + '</option>')
+                            )
+                        }
 
-            $.ajax({
-                url: '/buys/get_units_by_product/',
-                async: true,
-                dataType: 'json',
-                type: 'GET',
-                //mando  id del producto del combo
-                data: {'ip': _search},
-                // si va bien retorna la data
-                success: function (response) {
-                    //le da formato array
-                    let units = JSON.parse(response['units']);
-                    units.forEach(
-                        element =>
-                            $('#id_unidad').append(
-                                '<option value="' + element['pk'] + '">' + element['fields']['name'] + '</option>')
-                    )
-                },
+                    },
 
-            });
-
+                });
+            }
         });
 
         //Bonton eliminar fila

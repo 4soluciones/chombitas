@@ -473,10 +473,13 @@ def get_units_by_product(request):
             product_obj = Product.objects.get(pk=int(id_product))
             units = Unit.objects.filter(productdetail__product=product_obj)
             units_serialized_obj = serializers.serialize('json', units)
-
-        return JsonResponse({
-            'units': units_serialized_obj,
-        }, status=HTTPStatus.OK)
+            return JsonResponse({
+                'units': units_serialized_obj,
+            }, status=HTTPStatus.OK)
+        else:
+            return JsonResponse({
+                'units': "SIN UNIDADES",
+            }, status=HTTPStatus.OK)
 
 
 def get_units_product(request):
@@ -2146,6 +2149,7 @@ def get_supplier(request):
                         names = "{} {} {}".format(name, first_name, last_name)
                         supplier_obj = Supplier(
                             ruc=document,
+                            name=document,
                             business_name=names,
                             address=address
                         )
@@ -2175,6 +2179,7 @@ def get_supplier(request):
                     address = (r.get('direccion_completa')).strip()
                     supplier_obj = Supplier(
                         ruc=document,
+                        name=document,
                         business_name=names,
                         address=address
                     )
