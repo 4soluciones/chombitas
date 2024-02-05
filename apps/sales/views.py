@@ -12,7 +12,7 @@ from .models import *
 from .forms import *
 from apps.hrm.models import Subsidiary, District, DocumentType, Employee, Worker
 from apps.comercial.models import DistributionMobil, Truck, DistributionDetail, ClientAdvancement, ClientProduct, \
-    Programming, Route, Guide, GuideDetail
+    Programming, Route, Guide, GuideDetail, GuideMotive, GuideEmployee
 from django.contrib.auth.models import User
 from apps.hrm.views import get_subsidiary_by_user, get_sales_vs_expenses, get_subsidiary_by_user_id
 from apps.accounting.views import TransactionAccount, LedgerEntry, get_account_cash, Cash, CashFlow, AccountingAccount
@@ -362,6 +362,8 @@ def get_kardex_by_product(request):
 def get_list_kardex(request):
     data = dict()
     if request.method == 'GET':
+        user_id = request.user.id
+        user_obj = User.objects.get(pk=int(user_id))
         pk = request.GET.get('pk', '')
         pk_subsidiary_store = request.GET.get('subsidiary_store', '')
         start_date = request.GET.get('start_date', '')
@@ -411,12 +413,203 @@ def get_list_kardex(request):
             ).order_by('id')
 
         t = loader.get_template('sales/kardex_grid_list.html')
-        c = ({'product': product, 'inventories': inventories})
+        c = ({'product': product, 'inventories': inventories, 'user_obj': user_obj})
 
         return JsonResponse({
             'success': True,
             'form': t.render(c),
         })
+
+
+def get_readjust_inventory(request):
+
+    if request.method == 'GET':
+        user_id = request.user.id
+        user_obj = User.objects.get(pk=int(user_id))
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+
+        inventory_id = request.GET.get('inventoryId', '')
+        new_quantity = decimal.Decimal(request.GET.get('newQuantity', 0))
+        current_quantity = decimal.Decimal(request.GET.get('currentQuantity', 0))
+        type_operation = str(request.GET.get('typeOperation', ''))
+
+        inventory_obj = Kardex.objects.get(id=inventory_id)
+        product_store_obj = inventory_obj.product_store
+
+        last_inventory_set = Kardex.objects.filter(product_store=product_store_obj, id__lt=inventory_id).order_by('id')
+        last_inventory_entry_set = Kardex.objects.filter(
+            product_store=product_store_obj, id__lt=inventory_id, operation='E'
+        ).filter(Q(distribution_detail__isnull=False)|Q(guide_detail__isnull=False)|Q(purchase_detail__isnull=False)).order_by('id')
+
+        last_price_unit_of_purchase = 0
+        last_remaining_quantity = 0
+        last_remaining_price = 0
+        last_remaining_price_total = 0
+
+        if last_inventory_entry_set.exists():
+            last_inventory_entry_obj = last_inventory_entry_set.last()
+            last_price_unit_of_purchase = last_inventory_entry_obj.price_unit
+
+        if last_inventory_set.exists():
+            last_inventory_obj = last_inventory_set.last()
+            last_remaining_quantity = last_inventory_obj.remaining_quantity
+            last_remaining_price = last_inventory_obj.remaining_price
+            last_remaining_price_total = last_inventory_obj.remaining_price_total
+
+        if type_operation == 'S':
+            new_price_unit = last_remaining_price
+            new_price_total = last_remaining_price * new_quantity
+            new_remaining_quantity = last_remaining_quantity - new_quantity
+            new_remaining_price = last_remaining_price
+            new_remaining_price_total = new_remaining_quantity * new_remaining_price
+        else:
+            new_price_unit = last_price_unit_of_purchase
+            new_price_total = new_quantity * last_price_unit_of_purchase
+            new_remaining_quantity = last_remaining_quantity + new_quantity
+            new_remaining_price = (decimal.Decimal(last_remaining_price_total) + new_price_total) / new_remaining_quantity
+            new_remaining_price_total = new_remaining_quantity * new_remaining_price
+
+        guide_detail_obj = create_note_of_operation(
+            subsidiary_obj=subsidiary_obj,
+            subsidiary_store_obj=product_store_obj.subsidiary_store,
+            product_obj=product_store_obj.product,
+            user_obj=user_obj, type_operation=type_operation,
+            quantity=new_quantity, minimal_cost=new_price_total
+        )
+
+        new_inventory_obj = Kardex.objects.create(
+            product_store=product_store_obj,
+            operation=type_operation,
+            quantity=new_quantity,
+            price_unit=new_price_unit,
+            price_total=new_price_total,
+            remaining_quantity=new_remaining_quantity,
+            remaining_price=new_remaining_price,
+            remaining_price_total=new_remaining_price_total,
+            guide_detail=guide_detail_obj
+        )
+
+        next_inventories_set = Kardex.objects.filter(
+            product_store=product_store_obj, id__gte=inventory_id, id__lt=new_inventory_obj.id
+        ).order_by('id').values_list('id', flat=True).distinct()
+
+        next_inventories = []
+        if next_inventories_set.exists():
+            next_inventories = list(reversed(next_inventories_set))
+
+        for i in range(len(next_inventories)):
+            k1 = Kardex.objects.get(id=next_inventories[i])
+
+            if i == 0:
+                k2 = Kardex.objects.create(product_store=product_store_obj)
+                copying_the_values_of_an_object_to_another_object(k1, k2)
+            else:
+                k2 = Kardex.objects.get(id=next_inventories[i-1])
+                copying_the_values_of_an_object_to_another_object(k1, k2)
+
+            if i == len(next_inventories) - 1:
+                copying_the_values_of_an_object_to_another_object(new_inventory_obj, k1)
+                new_inventory_obj.delete()
+
+        for k in Kardex.objects.filter(product_store=product_store_obj, id__gte=inventory_id).order_by('id'):
+
+            if k.operation == 'S':
+                last_remaining_quantity -= k.quantity
+            else:
+                last_remaining_quantity += k.quantity
+
+            k.price_total = k.quantity * k.price_total
+            k.remaining_quantity = last_remaining_quantity
+            k.remaining_price_total = k.remaining_quantity * k.remaining_price
+            k.save()
+
+        product_store_obj.stock = last_remaining_quantity
+        product_store_obj.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': "Reajuste realizado",
+        })
+
+
+def create_note_of_operation(
+    subsidiary_obj=None, subsidiary_store_obj=None, product_obj=None, user_obj=None, type_operation=None, quantity=0, minimal_cost=0
+):
+    if type_operation == 'S':
+        motive_obj = GuideMotive.objects.get(id=1)  # output
+    else:
+        motive_obj = GuideMotive.objects.get(id=20)  # input
+
+    new_guide_obj = Guide(
+        serial=subsidiary_obj.serial,
+        document_type_attached='O',
+        minimal_cost=minimal_cost,
+        observation='REAJUSTE DE ALMACEN',
+        user=user_obj,
+        guide_motive=motive_obj,
+        status='5',
+        subsidiary=subsidiary_obj,
+    )
+    new_guide_obj.save()
+
+    new_origin_route_obj = Route(
+        guide=new_guide_obj,
+        subsidiary_store=subsidiary_store_obj,
+        type='O',
+    )
+    new_origin_route_obj.save()
+
+    new_guide_employee_obj = GuideEmployee(
+        guide=new_guide_obj,
+        user=user_obj,
+        function='E',
+    )
+    new_guide_employee_obj.save()
+    unit_obj = None
+    if product_obj.product_subcategory_id is not None and product_obj.product_subcategory_id == 5:
+        unit_obj = Unit.objects.get(id=4)  # B
+    elif product_obj.product_subcategory_id is not None and product_obj.product_subcategory_id == 4:
+        unit_obj = Unit.objects.get(id=6)  # BG
+    new_guide_detail_obj = GuideDetail(
+        guide=new_guide_obj,
+        product=product_obj,
+        quantity_request=quantity,
+        quantity_sent=quantity,
+        quantity=quantity,
+        unit_measure=unit_obj,
+    )
+    new_guide_detail_obj.save()
+
+    return new_guide_detail_obj
+
+
+def copying_the_values_of_an_object_to_another_object(object_origen=None, object_destiny=None):
+
+    object_destiny.quantity = object_origen.quantity
+    object_destiny.price_unit = object_origen.price_unit
+    object_destiny.price_total = object_origen.price_total
+    object_destiny.remaining_quantity = object_origen.remaining_quantity
+    object_destiny.remaining_price = object_origen.remaining_price
+    object_destiny.remaining_price_total = object_origen.remaining_price_total
+
+    object_destiny.operation = object_origen.operation
+    object_destiny.product_store = object_origen.product_store
+    object_destiny.order_detail = object_origen.order_detail
+    object_destiny.purchase_detail = object_origen.purchase_detail
+    object_destiny.guide_detail = object_origen.guide_detail
+    object_destiny.requirement_detail = object_origen.requirement_detail
+    object_destiny.programming_invoice = object_origen.programming_invoice
+    object_destiny.manufacture_detail = object_origen.manufacture_detail
+    object_destiny.manufacture_recipe = object_origen.manufacture_recipe
+    object_destiny.distribution_detail = object_origen.distribution_detail
+    object_destiny.loan_payment = object_origen.loan_payment
+    object_destiny.ball_change = object_origen.ball_change
+    object_destiny.advance_detail = object_origen.advance_detail
+
+    # object_destiny.__dict__.update(object_origen.__dict__)
+    # object_origen.id = object_origen.id
+    # object_destiny.id = object_origen.id
+    object_destiny.save()
 
 
 class ExtendedEncoder(DjangoJSONEncoder):
@@ -2327,8 +2520,12 @@ def get_stock_insume_by_product_recipe(request):
         dictionary = []
 
         for i in product_recipe_set.all():
-            current_stock_of_supply = i.product_input.productstore_set.filter(
-                subsidiary_store=subsidiary_store_supplies_obj).first().stock
+            product_input = i.product_input
+            product_store_set = product_input.productstore_set
+            store_filter = product_store_set.filter(
+                subsidiary_store=subsidiary_store_supplies_obj)
+            if store_filter.exists():
+                current_stock_of_supply = store_filter.first().stock
             total_quantity_request = i.quantity * quantity_request
             total_quantity_remaining = current_stock_of_supply - total_quantity_request
             detail = {

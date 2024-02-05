@@ -22,6 +22,7 @@ urlpatterns = [
 
     path('get_kardex_by_product/', get_kardex_by_product, name='get_kardex_by_product'),
     path('get_list_kardex/', get_list_kardex, name='get_list_kardex'),
+    path('get_readjust_inventory/', get_readjust_inventory, name='get_readjust_inventory'),
 
     path('client_list/', login_required(ClientList.as_view()), name='client_list'),
 

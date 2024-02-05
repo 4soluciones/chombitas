@@ -89,6 +89,7 @@
                             </div>
                         </div>
 
+
                     </form>
 
                 </div>
@@ -113,12 +114,61 @@
 </div>
 
 <script type="text/javascript">
+    $(document).on('click', '.save-inventory', function () {
+
+        let pk = Number($(this).attr("pk"));
+
+        let typeOperation = $(`#inventory-type-operation-${pk}`).val();
+        let newQuantity = Number($(`#inventory-new-quantity-${pk}`).val());
+        let currentQuantity = Number($(`#inventory-current-quantity-${pk}`).val());
+
+        $.ajax({
+            url: '/sales/get_readjust_inventory/',
+            dataType: 'json',
+            type: 'GET',
+            data: {
+                'inventoryId': pk,
+                'newQuantity': newQuantity,
+                'currentQuantity': currentQuantity,
+                'typeOperation': typeOperation
+            },
+            success: function (response) {
+                if (response.success) {
+                    toastr.success(response.message, '¡Bien hecho!');
+                    searchList();
+                }
+            },
+            fail: function (response) {
+                console.log(response);
+            }
+        });
+
+    });
+
+
+    function changeText(btn) {
+        if (btn.innerHTML == 'Editar') {
+            btn.innerHTML = 'Cerrar';
+            btn.classList.remove("btn-primary");
+            btn.classList.add("btn-secondary");
+        }
+        else {
+            btn.innerHTML = 'Editar';
+            btn.classList.add("btn-primary");
+            btn.classList.remove("btn-secondary");
+        }
+    }
 
     $("#id_subsidiary_store").chained("#id_subsidiary");
 
     $('#btn-search').on('click', function () {
 
-        let search = $("#search").attr('pk');
+        searchList();
+
+    });
+
+    function searchList(){
+        let productId = $("#search").attr('pk');
         let _start_date = $('#id_date_initial').val();
         let _end_date = $('#id_date_final').val();
 
@@ -127,13 +177,12 @@
             dataType: 'json',
             type: 'GET',
             data: {
-                'pk': search,
+                'pk': productId,
                 'subsidiary_store': $("#id_subsidiary_store").val(),
                 'start_date': _start_date,
                 'end_date': _end_date
             },
             success: function (response) {
-                console.log(response);
                 if (response.success) {
                     $('#kardex-grid-list').html(response.form);
                 }
@@ -142,5 +191,6 @@
                 console.log(response);
             }
         });
-    });
+    }
+
 </script>
