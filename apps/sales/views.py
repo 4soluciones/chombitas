@@ -517,11 +517,14 @@ def get_readjust_inventory(request):
                 last_remaining_quantity -= k.quantity
             else:
                 last_remaining_quantity += k.quantity
-
-            k.price_total = k.quantity * k.price_total
-            k.remaining_quantity = last_remaining_quantity
-            k.remaining_price_total = k.remaining_quantity * k.remaining_price
-            k.save()
+            try:
+                k.price_total = round(float(k.quantity * k.price_unit), 10)
+                k.remaining_quantity = last_remaining_quantity
+                k.remaining_price_total = round(float(k.remaining_quantity * k.remaining_price), 10)
+                k.save()
+            except OverflowError as e:
+                print(f"Error de desbordamiento: {e}")
+                print(k.quantity)
 
         product_store_obj.stock = last_remaining_quantity
         product_store_obj.save()
