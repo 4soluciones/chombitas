@@ -6167,28 +6167,16 @@ def comparative_sales_and_purchases_report(request):
             requirement_set = RequirementDetail_buys.objects.filter(
                 requirement_buys__approval_date__month=month_names.index(m) + 1,
                 requirement_buys__approval_date__year=my_date.year,
-                requirement_buys__status='2',
-                requirement_buys__status_pay='2')
+                requirement_buys__status='2')
 
-            quantity = requirement_set.aggregate(r=Coalesce(Sum('quantity'), decimal.Decimal(0.00))).get('r')
-            sum_quantity_requirement += quantity
-            total_requirement_soles = requirement_set.aggregate(
-                r=Coalesce(Sum('amount_pen'), decimal.Decimal(0.00))).get('r')
+            quantity_r = requirement_set.aggregate(r=Coalesce(Sum('quantity'), decimal.Decimal(0.00))).get('r')
+            sum_quantity_requirement += quantity_r
+            # total_requirement_soles = requirement_set.aggregate(
+            #     r=Coalesce(Sum('amount_pen'), decimal.Decimal(0.00))).get('r')
 
-            requirement_buys_set = Requirement_buys.objects.filter(status='2', type='M', status_pay='2',
-                                                                   approval_date__year=my_date.year,
-                                                                   approval_date__month=month_names.index(
-                                                                       m) + 1).annotate(
-                sum_total=Subquery(
-                    RequirementDetail_buys.objects.filter(requirement_buys_id=OuterRef('id')).values(
-                        'requirement_buys_id').annotate(
-                        r=Sum(F('quantity') * F('price_pen'))).values('r')[:1])).aggregate(Sum('sum_total'))
-            requirement_sum_total = requirement_buys_set['sum_total__sum']
-            if requirement_sum_total is not None:
-                float_requirement_sum_total = float(requirement_sum_total)
-            else:
-                float_requirement_sum_total = float(0)
-            sum_total_requirement += float_requirement_sum_total
+            requirement_total = requirement_set.aggregate(
+                r=Coalesce(Sum(F('quantity') * F('price_pen')), decimal.Decimal(0.00))).get('r')
+            sum_total_requirement += requirement_total
 
             salary_total = CashFlow.objects.filter(salary__year=my_date.year,
                                                    salary__month=month_names.index(m) + 1).aggregate(
@@ -6214,7 +6202,8 @@ def comparative_sales_and_purchases_report(request):
                 float_purchases_sum_total = float(purchases_sum_total)
             else:
                 float_purchases_sum_total = 0
-            total_purchase = float_requirement_sum_total + float_salary_total + float_purchases_sum_total
+            total_purchase = sum_total_requirement + decimal.Decimal(float_salary_total) + decimal.Decimal(
+                float_purchases_sum_total)
             sum_total_purchase += total_purchase
 
             programing_invoice_set = Programminginvoice.objects.filter(status='R',
@@ -6227,8 +6216,8 @@ def comparative_sales_and_purchases_report(request):
             sum_total_count += quantity
             item = {
                 'month': m,
-                'quantity_glp': quantity,
-                'total_soles_glp': decimal.Decimal(total_requirement_soles),
+                'quantity_glp': quantity_r,
+                'total_soles_glp': decimal.Decimal(requirement_total),
                 'total_ball_month': b10kg,
                 'total_ball_month_10': b10kg * decimal.Decimal(10.00),
                 'total_sales_month': decimal.Decimal(t),
