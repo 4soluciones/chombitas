@@ -26,31 +26,31 @@
     </thead>
     <tbody>
 
-    {% for month in month_dict %}
+    {% for month in report %}
         <tr class="text-uppercase text-center">
-            <td class="col-form-label col-form-label-lg font-weight-bold text-right">{{ month.month_names }}</td>
-            <td class="col-form-label col-form-label-lg bg-warning">{{ month.req_quantity_kg }}</td>
-            <td class="col-form-label col-form-label-lg bg-warning">{{ month.req_amount_pen }}</td>
-            <td class="col-form-label col-form-label-lg bg-success">{{ month.sum_total_all_balls }}</td>
-            <td class="col-form-label col-form-label-lg bg-success">{{ month.sum_total_all_balls2 }}</td>
-            <td class="col-form-label col-form-label-lg bg-success">{{ month.sum_total_orders }}</td>
-            <td class="col-form-label col-form-label-lg bg-info">{{ month.glp_kg }}</td>
-            <td class="col-form-label col-form-label-lg bg-info">{{ month.glp_unit }}</td>
-            <td class="col-form-label col-form-label-lg bg-secondary">{{ month.purchases_sum_total }}</td>
+            <td class="col-form-label col-form-label-lg font-weight-bold text-right">{{ month.month }}</td>
+            <td class="col-form-label col-form-label-lg bg-warning">{{ month.quantity_glp|safe }}</td>
+            <td class="col-form-label col-form-label-lg bg-warning">{{ month.total_soles_glp|safe }}</td>
+            <td class="col-form-label col-form-label-lg bg-success">{{ month.total_ball_month|safe }}</td>
+            <td class="col-form-label col-form-label-lg bg-success">{{ month.total_ball_month_10|safe }}</td>
+            <td class="col-form-label col-form-label-lg bg-success">{{ month.total_sales_month|safe }}</td>
+            <td class="col-form-label col-form-label-lg bg-info">{{ month.quantity|safe }}</td>
+            <td class="col-form-label col-form-label-lg bg-info">{{ month.total_quantity|safe }}</td>
+            <td class="col-form-label col-form-label-lg bg-secondary">{{ month.total_purchase|safe }}</td>
         </tr>
     {% endfor %}
     </tbody>
     <tfoot>
     <tr class="bg-dark text-white font-weight-bold">
         <td class="align-middle text-center col-form-label p-1">SUMA TOTAL</td>
-        <td class="align-middle text-center col-form-label p-1">{{ sum_float_req_quantity_kg }}</td>
-        <td class="align-middle text-center col-form-label p-1">{{ sum_float_req_amount_pen }}</td>
-        <td class="align-middle text-center col-form-label p-1">{{ sum_acc_total_all_balls }}</td>
-        <td class="align-middle text-center col-form-label p-1">{{ sum_float_sum_total_all_balls }}</td>
-        <td class="align-middle text-center col-form-label p-1">{{ sum_acc_total_orders }}</td>
-        <td class="align-middle text-center col-form-label p-1">{{ sum_total_sum_charge }}</td>
-        <td class="align-middle text-center col-form-label p-1">{{ sum_total_travel }}</td>
-        <td class="align-middle text-center col-form-label p-1">{{ sum_float_purchases_sum_total }}</td>
+        <td class="align-middle text-center col-form-label p-1">{{ sum_quantity_requirement|safe }}</td>
+        <td class="align-middle text-center col-form-label p-1">{{ sum_total_requirement|safe }}</td>
+        <td class="align-middle text-center col-form-label p-1">{{ sum_total_ball|safe }}</td>
+        <td class="align-middle text-center col-form-label p-1">{{ sum_total_ball_10|safe }}</td>
+        <td class="align-middle text-center col-form-label p-1">{{ sum_total_sales|safe }}</td>
+        <td class="align-middle text-center col-form-label p-1">{{ sum_total_quantity|safe }}</td>
+        <td class="align-middle text-center col-form-label p-1">{{ sum_total_count|safe }}</td>
+        <td class="align-middle text-center col-form-label p-1">{{ sum_total_purchase|safe }}</td>
     </tr>
     </tfoot>
 </table>

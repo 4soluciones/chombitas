@@ -422,7 +422,6 @@ def get_list_kardex(request):
 
 
 def get_readjust_inventory(request):
-
     if request.method == 'GET':
         user_id = request.user.id
         user_obj = User.objects.get(pk=int(user_id))
@@ -439,7 +438,8 @@ def get_readjust_inventory(request):
         last_inventory_set = Kardex.objects.filter(product_store=product_store_obj, id__lt=inventory_id).order_by('id')
         last_inventory_entry_set = Kardex.objects.filter(
             product_store=product_store_obj, id__lt=inventory_id, operation='E'
-        ).filter(Q(distribution_detail__isnull=False)|Q(guide_detail__isnull=False)|Q(purchase_detail__isnull=False)).order_by('id')
+        ).filter(Q(distribution_detail__isnull=False) | Q(guide_detail__isnull=False) | Q(
+            purchase_detail__isnull=False)).order_by('id')
 
         last_price_unit_of_purchase = 0
         last_remaining_quantity = 0
@@ -466,7 +466,8 @@ def get_readjust_inventory(request):
             new_price_unit = last_price_unit_of_purchase
             new_price_total = new_quantity * last_price_unit_of_purchase
             new_remaining_quantity = last_remaining_quantity + new_quantity
-            new_remaining_price = (decimal.Decimal(last_remaining_price_total) + new_price_total) / new_remaining_quantity
+            new_remaining_price = (decimal.Decimal(
+                last_remaining_price_total) + new_price_total) / new_remaining_quantity
             new_remaining_price_total = new_remaining_quantity * new_remaining_price
 
         guide_detail_obj = create_note_of_operation(
@@ -504,7 +505,7 @@ def get_readjust_inventory(request):
                 k2 = Kardex.objects.create(product_store=product_store_obj)
                 copying_the_values_of_an_object_to_another_object(k1, k2)
             else:
-                k2 = Kardex.objects.get(id=next_inventories[i-1])
+                k2 = Kardex.objects.get(id=next_inventories[i - 1])
                 copying_the_values_of_an_object_to_another_object(k1, k2)
 
             if i == len(next_inventories) - 1:
@@ -536,7 +537,8 @@ def get_readjust_inventory(request):
 
 
 def create_note_of_operation(
-    subsidiary_obj=None, subsidiary_store_obj=None, product_obj=None, user_obj=None, type_operation=None, quantity=0, minimal_cost=0
+        subsidiary_obj=None, subsidiary_store_obj=None, product_obj=None, user_obj=None, type_operation=None,
+        quantity=0, minimal_cost=0
 ):
     if type_operation == 'S':
         motive_obj = GuideMotive.objects.get(id=1)  # output
@@ -587,7 +589,6 @@ def create_note_of_operation(
 
 
 def copying_the_values_of_an_object_to_another_object(object_origen=None, object_destiny=None):
-
     object_destiny.quantity = object_origen.quantity
     object_destiny.price_unit = object_origen.price_unit
     object_destiny.price_total = object_origen.price_total
@@ -6129,6 +6130,16 @@ def comparative_sales_and_purchases_report(request):
         month_names = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SETIEMBRE', 'OCTUBRE',
                        'NOVIEMBRE', 'DICIEMBRE']
 
+        report = []
+        sum_total_ball = 0
+        sum_total_sales = 0
+        sum_total_ball_10 = 0
+        sum_quantity_requirement = 0
+        sum_total_requirement = 0
+        sum_total_quantity = 0
+        sum_total_count = 0
+        sum_total_purchase = 0
+
         my_subsidiary_store_glp_obj = SubsidiaryStore.objects.get(
             subsidiary=subsidiary_obj, category='G')  # pluspetrol
 
@@ -6139,195 +6150,290 @@ def comparative_sales_and_purchases_report(request):
 
         product_store_obj = ProductStore.objects.get(subsidiary_store=my_subsidiary_store_glp_obj,
                                                      product=product_obj)
+        for m in month_names:
+            b10kg = get_balon_month_and_year(year=my_date.year, month=month_names.index(m) + 1)
+            # sum_ball_month[month_names.index(m)] = decimal.Decimal(b10kg)
+            sum_total_ball += decimal.Decimal(b10kg)
+            # sum_total_ball_year += sum_ball_month[month_names.index(m)]
 
-        for i in range(1, 13):
+            t = Order.objects.filter(create_at__month=month_names.index(m) + 1, create_at__year=my_date.year,
+                                     type__in=['V', 'R']
+                                     ).aggregate(r=Coalesce(Sum('total'), decimal.Decimal(0.00))).get('r')
+            # sum_sale_month[month_names.index(m)] = decimal.Decimal(t['r'])
+            sum_total_sales += decimal.Decimal(t)
+            sum_total_ball_10 += b10kg * decimal.Decimal(10.00)
+            # sum_total_sales_year += sum_sale_month[month_names.index(m)]
 
-            sum_5kg = sum_quantity_by_order_detail(month=i, product_id=2)
-            sum_10kg = sum_quantity_by_order_detail(month=i, product_id=1)
-            sum_15kg = sum_quantity_by_order_detail(month=i, product_id=12)
-            sum_45kg = sum_quantity_by_order_detail(month=i, product_id=3)
-
-            if sum_5kg is not None:
-                float_sum_5kg = float(sum_5kg)
-            else:
-                float_sum_5kg = 0
-            if sum_10kg is not None:
-                float_sum_10kg = float(sum_10kg)
-            else:
-                float_sum_10kg = 0
-            if sum_15kg is not None:
-                float_sum_15kg = float(sum_15kg)
-            else:
-                float_sum_15kg = 0
-            if sum_45kg is not None:
-                float_sum_45kg = float(sum_45kg)
-            else:
-                float_sum_45kg = 0
-
-            sum_total_all_balls = float_sum_10kg + (float_sum_5kg * 0.5) + (float_sum_15kg * 1.5) + (
-                    float_sum_45kg * 4.5)
-
-            order_detail_set = OrderDetail.objects.filter(
-                order__subsidiary__id__in=subsidiaries,
-                order__create_at__month=i,
-                order__create_at__year=my_date.year,
-                order__type__in=['R', 'V'],
-            ).annotate(
-                sum_subtotal=Sum(F('quantity_sold') * F('price_unit'))
-            ).aggregate(Sum('sum_subtotal'))
-
-            sum_total_orders = order_detail_set['sum_subtotal__sum']
-
-            if sum_total_orders is not None:
-                float_sum_total_orders = float(sum_total_orders)
-            else:
-                float_sum_total_orders = 0
-
-            if sum_total_all_balls is not None:
-                float_sum_total_all_balls = float(sum_total_all_balls)
-            else:
-                float_sum_total_all_balls = 0
-
-            req_quantity_kg = RequirementDetail_buys.objects.filter(
-                requirement_buys__approval_date__month=i,
+            requirement_set = RequirementDetail_buys.objects.filter(
+                requirement_buys__approval_date__month=month_names.index(m) + 1,
                 requirement_buys__approval_date__year=my_date.year,
                 requirement_buys__status='2',
-                requirement_buys__subsidiary=subsidiary_obj).aggregate(Sum('quantity'))
+                requirement_buys__status_pay='2')
 
-            sum_req_quantity_kg = req_quantity_kg['quantity__sum']
+            quantity = requirement_set.aggregate(r=Coalesce(Sum('quantity'), decimal.Decimal(0.00))).get('r')
+            sum_quantity_requirement += quantity
+            total_requirement_soles = requirement_set.aggregate(
+                r=Coalesce(Sum('amount_pen'), decimal.Decimal(0.00))).get('r')
 
-            if sum_req_quantity_kg is not None:
-                float_req_quantity_kg = float(sum_req_quantity_kg)
-            else:
-                float_req_quantity_kg = 0
-
-            req_amount_pen = RequirementDetail_buys.objects.filter(
-                requirement_buys__approval_date__month=i,
-                requirement_buys__approval_date__year=my_date.year,
-                requirement_buys__status='2',
-                requirement_buys__subsidiary=subsidiary_obj).aggregate(Sum('amount_pen'))
-
-            sum_req_amount_pen = req_amount_pen['amount_pen__sum']
-
-            if sum_req_amount_pen is not None:
-                float_req_amount_pen = float(sum_req_amount_pen)
-            else:
-                float_req_amount_pen = 0
-
-            # -----------------------------------------------------------------------------------------
-
-            total_sum_charge = 0
-            _total_travel = 0
-            total_charge = 0
-
-            kardex_set = Kardex.objects.filter(product_store=product_store_obj).filter(
-                Q(programming_invoice__date_arrive__month=i, programming_invoice__date_arrive__year=my_date.year, ) | Q(
-                    requirement_detail__requirement_buys__approval_date__month=i,
-                    requirement_detail__requirement_buys__approval_date__year=my_date.year),
-                programming_invoice__id__isnull=False, requirement_detail__isnull=True
-            ).distinct('programming_invoice__requirementBuysProgramming', 'programming_invoice__quantity',
-                       'programming_invoice__requirementBuysProgramming__number_scop', 'create_at').select_related(
-                'programming_invoice'
-            ).annotate(
+            requirement_buys_set = Requirement_buys.objects.filter(status='2', type='M', status_pay='2',
+                                                                   approval_date__year=my_date.year,
+                                                                   approval_date__month=month_names.index(
+                                                                       m) + 1).annotate(
                 sum_total=Subquery(
-                    Programminginvoice.objects.filter(requirementBuysProgramming_id=OuterRef(
-                        'programming_invoice__requirementBuysProgramming_id')).filter(
-                        subsidiary_store_origin=my_subsidiary_store_glp_obj,
-                        subsidiary_store_destiny=my_subsidiary_store_insume_obj).annotate(
-                        return_sum_total=Sum(F('quantity'))
-                    )
+                    RequirementDetail_buys.objects.filter(requirement_buys_id=OuterRef('id')).values(
+                        'requirement_buys_id').annotate(
+                        r=Sum(F('quantity') * F('price_pen'))).values('r')[:1])).aggregate(Sum('sum_total'))
+            requirement_sum_total = requirement_buys_set['sum_total__sum']
+            if requirement_sum_total is not None:
+                float_requirement_sum_total = float(requirement_sum_total)
+            else:
+                float_requirement_sum_total = float(0)
+            sum_total_requirement += float_requirement_sum_total
+
+            salary_total = CashFlow.objects.filter(salary__year=my_date.year,
+                                                   salary__month=month_names.index(m) + 1).aggregate(
+                r=Coalesce(Sum('total'), decimal.Decimal(0.00))).get('r')
+            if salary_total is not None:
+                float_salary_total = float(salary_total)
+            else:
+                float_salary_total = float(0)
+
+            purchase_set = Purchase.objects.filter(
+                purchase_date__month=month_names.index(m) + 1, purchase_date__year=my_date.year,
+                status__in=['S', 'A']
+            ).select_related('supplier').annotate(
+                sum_total=Subquery(
+                    PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
+                        return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
                 )
-            ).values('programming_invoice__requirementBuysProgramming',
-                     'programming_invoice__requirementBuysProgramming__number_scop',
-                     'programming_invoice__quantity').order_by('create_at')
+            ).aggregate(Sum('sum_total'))
 
-            # print(kardex_set)
+            purchases_sum_total = purchase_set['sum_total__sum']
 
-            # programming_invoice_set = Programminginvoice.objects.filter(
-            #     subsidiary_store_origin=my_subsidiary_store_glp_obj,
-            #     subsidiary_store_destiny=my_subsidiary_store_insume_obj,
-            #     kardex__product_store=product_store_obj,
-            # ).filter(
-            #     Q(date_arrive__month=i,) | Q(kardex__requirement_detail__requirement_buys__approval_date__month=i)
-            # ).values('requirementBuysProgramming', 'requirementBuysProgramming__number_scop').annotate(totals=Sum('quantity')).order_by('kardex__create_at')
-            #
-            # # print(programming_invoice_set)
+            if purchases_sum_total is not None:
+                float_purchases_sum_total = float(purchases_sum_total)
+            else:
+                float_purchases_sum_total = 0
+            total_purchase = float_requirement_sum_total + float_salary_total + float_purchases_sum_total
+            sum_total_purchase += total_purchase
 
-            # -----------------------------------------------------------------------------------------
-
-            for pi in kardex_set:
-                my_charge = 0
-                other_charge = 0
-                my_charge = pi['programming_invoice__quantity']
-                total_charge = total_charge + my_charge
-                total_sum_charge = total_sum_charge + my_charge
-
-                if merge_scope == pi['programming_invoice__requirementBuysProgramming__number_scop']:
-                    # dictionary.pop(len(dictionary) - 1)
-                    # total_charge = total_charge - other_charge - my_charge
-                    _total_travel = _total_travel - 1
-                    # total_sum_charge = total_sum_charge - my_charge - other_charge
-                _total_travel = _total_travel + 1
-                merge_scope = pi['programming_invoice__requirementBuysProgramming__number_scop']
-
-            if i >= 8 and my_date.year > 2020:
-                purchase_set = Purchase.objects.filter(
-                    subsidiary=subsidiary_obj, purchase_date__month=i, purchase_date__year=my_date.year,
-                    status__in=['S', 'A'], type_bill='F'
-                ).prefetch_related(
-                    Prefetch(
-                        'purchasedetail_set', queryset=PurchaseDetail.objects.select_related('unit', 'product')
-                    )
-                ).select_related('supplier', 'truck').annotate(
-                    sum_total=Subquery(
-                        PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
-                            return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
-                    )
-                ).aggregate(Sum('sum_total'))
-
-                purchases_sum_total = purchase_set['sum_total__sum']
-
-                if purchases_sum_total is not None:
-                    float_purchases_sum_total = float(purchases_sum_total)
-                else:
-                    float_purchases_sum_total = 0
-
-            sum_total_all_balls2 = float_sum_total_all_balls / 0.1
-
-            sum_float_req_quantity_kg += float_req_quantity_kg
-            sum_float_req_amount_pen += float_req_amount_pen
-            sum_acc_total_all_balls += sum_total_all_balls
-            sum_float_sum_total_all_balls += sum_total_all_balls2
-            sum_acc_total_orders += float_sum_total_orders
-            sum_total_sum_charge += total_sum_charge
-            sum_total_travel += _total_travel
-            sum_float_purchases_sum_total += float_purchases_sum_total
-
+            programing_invoice_set = Programminginvoice.objects.filter(status='R',
+                                                                       date_arrive__month=month_names.index(m) + 1,
+                                                                       date_arrive__year=my_date.year)
+            total_quantity = programing_invoice_set.aggregate(r=Coalesce(Sum('quantity'), decimal.Decimal(0.00))).get(
+                'r')
+            quantity = programing_invoice_set.count()
+            sum_total_quantity += total_quantity
+            sum_total_count += quantity
             item = {
-                'month': i,
-                'month_names': month_names[i - 1],
-                'req_quantity_kg': '{:,}'.format(round(float_req_quantity_kg), 2),
-                'req_amount_pen': '{:,}'.format(round(decimal.Decimal(float_req_amount_pen), 2)),
-                'sum_total_all_balls': '{:,}'.format(round(decimal.Decimal(sum_total_all_balls), 2)),
-                'sum_total_all_balls2': '{:,}'.format(round(decimal.Decimal(sum_total_all_balls2), 2)),
-                'sum_total_orders': '{:,}'.format(round(decimal.Decimal(float_sum_total_orders), 2)),
-                'glp_kg': '{:,}'.format(round(total_sum_charge), 2),
-                'glp_unit': _total_travel,
-                'purchases_sum_total': '{:,}'.format(round(decimal.Decimal(float_purchases_sum_total), 2))
+                'month': m,
+                'quantity_glp': quantity,
+                'total_soles_glp': decimal.Decimal(total_requirement_soles),
+                'total_ball_month': b10kg,
+                'total_ball_month_10': b10kg * decimal.Decimal(10.00),
+                'total_sales_month': decimal.Decimal(t),
+                'total_purchase': total_purchase,
+                'quantity': quantity,
+                'total_quantity': total_quantity
             }
-            month_dict.append(item)
+            report.append(item)
+
+        # for i in range(1, 13):
+
+        # sum_5kg = sum_quantity_by_order_detail(month=i, product_id=2)
+        # sum_10kg = sum_quantity_by_order_detail(month=i, product_id=1)
+        # sum_15kg = sum_quantity_by_order_detail(month=i, product_id=12)
+        # sum_45kg = sum_quantity_by_order_detail(month=i, product_id=3)
+        #
+        # if sum_5kg is not None:
+        #     float_sum_5kg = float(sum_5kg)
+        # else:
+        #     float_sum_5kg = 0
+        # if sum_10kg is not None:
+        #     float_sum_10kg = float(sum_10kg)
+        # else:
+        #     float_sum_10kg = 0
+        # if sum_15kg is not None:
+        #     float_sum_15kg = float(sum_15kg)
+        # else:
+        #     float_sum_15kg = 0
+        # if sum_45kg is not None:
+        #     float_sum_45kg = float(sum_45kg)
+        # else:
+        #     float_sum_45kg = 0
+        #
+        # sum_total_all_balls = float_sum_10kg + (float_sum_5kg * 0.5) + (float_sum_15kg * 1.5) + (
+        #         float_sum_45kg * 4.5)
+
+        # order_detail_set = OrderDetail.objects.filter(
+        #     order__subsidiary__id__in=subsidiaries,
+        #     order__create_at__month=i,
+        #     order__create_at__year=my_date.year,
+        #     order__type__in=['R', 'V'],
+        # ).annotate(
+        #     sum_subtotal=Sum(F('quantity_sold') * F('price_unit'))
+        # ).aggregate(Sum('sum_subtotal'))
+        #
+        # sum_total_orders = order_detail_set['sum_subtotal__sum']
+        #
+        # if sum_total_orders is not None:
+        #     float_sum_total_orders = float(sum_total_orders)
+        # else:
+        #     float_sum_total_orders = 0
+        #
+        # if sum_total_all_balls is not None:
+        #     float_sum_total_all_balls = float(sum_total_all_balls)
+        # else:
+        #     float_sum_total_all_balls = 0
+
+        # req_quantity_kg = RequirementDetail_buys.objects.filter(
+        #     requirement_buys__approval_date__month=i,
+        #     requirement_buys__approval_date__year=my_date.year,
+        #     requirement_buys__status='2',
+        #     requirement_buys__subsidiary=subsidiary_obj).aggregate(Sum('quantity'))
+        #
+        # sum_req_quantity_kg = req_quantity_kg['quantity__sum']
+        #
+        # if sum_req_quantity_kg is not None:
+        #     float_req_quantity_kg = float(sum_req_quantity_kg)
+        # else:
+        #     float_req_quantity_kg = 0
+
+        # req_amount_pen = RequirementDetail_buys.objects.filter(
+        #     requirement_buys__approval_date__month=i,
+        #     requirement_buys__approval_date__year=my_date.year,
+        #     requirement_buys__status='2',
+        #     requirement_buys__subsidiary=subsidiary_obj).aggregate(Sum('amount_pen'))
+        #
+        # sum_req_amount_pen = req_amount_pen['amount_pen__sum']
+        #
+        # if sum_req_amount_pen is not None:
+        #     float_req_amount_pen = float(sum_req_amount_pen)
+        # else:
+        #     float_req_amount_pen = 0
+
+        # -----------------------------------------------------------------------------------------
+
+        # total_sum_charge = 0
+        # _total_travel = 0
+        # total_charge = 0
+        #
+        # kardex_set = Kardex.objects.filter(product_store=product_store_obj).filter(
+        #     Q(programming_invoice__date_arrive__month=i, programming_invoice__date_arrive__year=my_date.year, ) | Q(
+        #         requirement_detail__requirement_buys__approval_date__month=i,
+        #         requirement_detail__requirement_buys__approval_date__year=my_date.year),
+        #     programming_invoice__id__isnull=False, requirement_detail__isnull=True
+        # ).distinct('programming_invoice__requirementBuysProgramming', 'programming_invoice__quantity',
+        #            'programming_invoice__requirementBuysProgramming__number_scop', 'create_at').select_related(
+        #     'programming_invoice'
+        # ).annotate(
+        #     sum_total=Subquery(
+        #         Programminginvoice.objects.filter(requirementBuysProgramming_id=OuterRef(
+        #             'programming_invoice__requirementBuysProgramming_id')).filter(
+        #             subsidiary_store_origin=my_subsidiary_store_glp_obj,
+        #             subsidiary_store_destiny=my_subsidiary_store_insume_obj).annotate(
+        #             return_sum_total=Sum(F('quantity'))
+        #         )
+        #     )
+        # ).values('programming_invoice__requirementBuysProgramming',
+        #          'programming_invoice__requirementBuysProgramming__number_scop',
+        #          'programming_invoice__quantity').order_by('create_at')
+
+        # print(kardex_set)
+
+        # programming_invoice_set = Programminginvoice.objects.filter(
+        #     subsidiary_store_origin=my_subsidiary_store_glp_obj,
+        #     subsidiary_store_destiny=my_subsidiary_store_insume_obj,
+        #     kardex__product_store=product_store_obj,
+        # ).filter(
+        #     Q(date_arrive__month=i,) | Q(kardex__requirement_detail__requirement_buys__approval_date__month=i)
+        # ).values('requirementBuysProgramming', 'requirementBuysProgramming__number_scop').annotate(totals=Sum('quantity')).order_by('kardex__create_at')
+        #
+        # # print(programming_invoice_set)
+
+        # -----------------------------------------------------------------------------------------
+
+        # for pi in kardex_set:
+        #     my_charge = 0
+        #     other_charge = 0
+        #     my_charge = pi['programming_invoice__quantity']
+        #     total_charge = total_charge + my_charge
+        #     total_sum_charge = total_sum_charge + my_charge
+        #
+        #     if merge_scope == pi['programming_invoice__requirementBuysProgramming__number_scop']:
+        #         # dictionary.pop(len(dictionary) - 1)
+        #         # total_charge = total_charge - other_charge - my_charge
+        #         _total_travel = _total_travel - 1
+        #         # total_sum_charge = total_sum_charge - my_charge - other_charge
+        #     _total_travel = _total_travel + 1
+        #     merge_scope = pi['programming_invoice__requirementBuysProgramming__number_scop']
+        #
+        # if i >= 8 and my_date.year > 2020:
+        #     purchase_set = Purchase.objects.filter(
+        #         subsidiary=subsidiary_obj, purchase_date__month=i, purchase_date__year=my_date.year,
+        #         status__in=['S', 'A'], type_bill='F'
+        #     ).prefetch_related(
+        #         Prefetch(
+        #             'purchasedetail_set', queryset=PurchaseDetail.objects.select_related('unit', 'product')
+        #         )
+        #     ).select_related('supplier', 'truck').annotate(
+        #         sum_total=Subquery(
+        #             PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
+        #                 return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
+        #         )
+        #     ).aggregate(Sum('sum_total'))
+        #
+        #     purchases_sum_total = purchase_set['sum_total__sum']
+        #
+        #     if purchases_sum_total is not None:
+        #         float_purchases_sum_total = float(purchases_sum_total)
+        #     else:
+        #         float_purchases_sum_total = 0
+
+        # sum_total_all_balls2 = float_sum_total_all_balls / 0.1
+        #
+        # sum_float_req_quantity_kg += float_req_quantity_kg
+        # sum_float_req_amount_pen += float_req_amount_pen
+        # sum_acc_total_all_balls += sum_total_all_balls
+        # sum_float_sum_total_all_balls += sum_total_all_balls2
+        # sum_acc_total_orders += float_sum_total_orders
+        # sum_total_sum_charge += total_sum_charge
+        # sum_total_travel += _total_travel
+        # sum_float_purchases_sum_total += float_purchases_sum_total
+
+        # item = {
+        #     'month': i,
+        #     'month_names': month_names[i - 1],
+        #     'req_quantity_kg': '{:,}'.format(round(float_req_quantity_kg), 2),
+        #     'req_amount_pen': '{:,}'.format(round(decimal.Decimal(float_req_amount_pen), 2)),
+        #     'sum_total_all_balls': '{:,}'.format(round(decimal.Decimal(sum_total_all_balls), 2)),
+        #     'sum_total_all_balls2': '{:,}'.format(round(decimal.Decimal(sum_total_all_balls2), 2)),
+        #     'sum_total_orders': '{:,}'.format(round(decimal.Decimal(float_sum_total_orders), 2)),
+        #     'glp_kg': '{:,}'.format(round(total_sum_charge), 2),
+        #     'glp_unit': _total_travel,
+        #     'purchases_sum_total': '{:,}'.format(round(decimal.Decimal(float_purchases_sum_total), 2))
+        # }
+        # month_dict.append(item)
 
         tpl = loader.get_template('sales/comparative_sales_and purchases_grid.html')
         context = ({
-            'month_dict': month_dict,
-            'sum_float_req_quantity_kg': '{:,}'.format(round(sum_float_req_quantity_kg), 2),
-            'sum_float_req_amount_pen': '{:,}'.format(round(decimal.Decimal(sum_float_req_amount_pen), 2)),
-            'sum_acc_total_all_balls': '{:,}'.format(round(decimal.Decimal(sum_acc_total_all_balls), 2)),
-            'sum_float_sum_total_all_balls': '{:,}'.format(round(decimal.Decimal(sum_float_sum_total_all_balls), 2)),
-            'sum_acc_total_orders': '{:,}'.format(round(decimal.Decimal(sum_acc_total_orders), 2)),
-            'sum_total_sum_charge': '{:,}'.format(round(decimal.Decimal(sum_total_sum_charge), 2)),
-            'sum_total_travel': '{:,}'.format(round(sum_total_travel), 2),
-            'sum_float_purchases_sum_total': '{:,}'.format(round(decimal.Decimal(sum_float_purchases_sum_total), 2)),
+            'report': report,
+            'sum_total_ball': sum_total_ball,
+            'sum_total_sales': sum_total_sales,
+            'sum_total_ball_10': sum_total_ball_10,
+            'sum_quantity_requirement': sum_quantity_requirement,
+            'sum_total_requirement': sum_total_requirement,
+            'sum_total_quantity': sum_total_quantity,
+            'sum_total_count': sum_total_count,
+            'sum_total_purchase': sum_total_purchase
+            # 'sum_float_req_quantity_kg': '{:,}'.format(round(sum_float_req_quantity_kg), 2),
+            # 'sum_float_req_amount_pen': '{:,}'.format(round(decimal.Decimal(sum_float_req_amount_pen), 2)),
+            # 'sum_acc_total_all_balls': '{:,}'.format(round(decimal.Decimal(sum_acc_total_all_balls), 2)),
+            # 'sum_float_sum_total_all_balls': '{:,}'.format(round(decimal.Decimal(sum_float_sum_total_all_balls), 2)),
+            # 'sum_acc_total_orders': '{:,}'.format(round(decimal.Decimal(sum_acc_total_orders), 2)),
+            # 'sum_total_sum_charge': '{:,}'.format(round(decimal.Decimal(sum_total_sum_charge), 2)),
+            # 'sum_total_travel': '{:,}'.format(round(sum_total_travel), 2),
+            # 'sum_float_purchases_sum_total': '{:,}'.format(round(decimal.Decimal(sum_float_purchases_sum_total), 2)),
         })
 
         return render(request, 'sales/comparative_sales_and_purchases_report.html', {
