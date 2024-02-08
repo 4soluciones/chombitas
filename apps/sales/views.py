@@ -6202,8 +6202,8 @@ def comparative_sales_and_purchases_report(request):
                 float_purchases_sum_total = float(purchases_sum_total)
             else:
                 float_purchases_sum_total = 0
-            total_purchase = sum_total_requirement + decimal.Decimal(float_salary_total) + decimal.Decimal(
-                float_purchases_sum_total)
+            total_purchase = requirement_total + decimal.Decimal(float_salary_total) + decimal.Decimal(
+                total_purchase)
             sum_total_purchase += total_purchase
 
             programing_invoice_set = Programminginvoice.objects.filter(status='R',
