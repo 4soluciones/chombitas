@@ -5450,9 +5450,7 @@ def report_ball_all_mass(request):
         .filter(subsidiary__id__in=subsidiaries, status='F', distributiondetail__isnull=False) \
         .values('pilot__id', 'subsidiary__id').annotate(max=Max('id'))
 
-    distribution_mobil_set = DistributionMobil.objects.filter(
-        id__in=[q['max'] for q in queryset]
-    ).select_related('subsidiary').prefetch_related(
+    distribution_mobil_set = DistributionMobil.objects.filter(id__in=[q['max'] for q in queryset]).select_related('subsidiary').prefetch_related(
         Prefetch(
             'distributiondetail_set',
             queryset=DistributionDetail.objects.filter(
@@ -5528,7 +5526,7 @@ def report_ball_all_mass(request):
                 }
             balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
 
-    programming_set = Programming.objects.filter(status='P').prefetch_related(
+    programming_set = Programming.objects.filter(status='R').prefetch_related(
         Prefetch(
             'route_set',
             queryset=Route.objects.filter(
