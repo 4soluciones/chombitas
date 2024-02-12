@@ -42,6 +42,11 @@
                     </select>
                 </div>
 
+                <div class="form-group d-none" id="other-expense">
+                    <label for="observation">Observacion</label>
+                    <textarea class="form-control" id="observation" name="observation" rows="3"></textarea>
+                </div>
+
                 <div class="form-group">
                     <label for="total-available">Total disponible</label>
                     <input type="text" name="total-available" class="form-control" id="total-available" value="{{ distribution_mobil.calculate_total_available|safe }}" readonly>
@@ -68,6 +73,16 @@
         $("#total-expense").val('');
     }
 
+    $('#type-expense').change(function () {
+        let type = $('#type-expense').val();
+        if (type === '5') {
+            $('#other-expense').removeClass('d-none');
+        }
+        else{
+            $('#other-expense').addClass('d-none');
+        }
+    });
+
     $('#form-distribution-expense').submit(function (event) {
         event.preventDefault();
         if(Number($('#total-expense').val()) > 0 && Number($('#total-expense').val())<= Number($('#total-available').val())) {
@@ -77,6 +92,7 @@
                 "dateExpense": $('#date-expense').val(),
                 "typeExpense": $('#type-expense').val(),
                 "totalExpense": $('#total-expense').val(),
+                "observation": $('#observation').val(),
             }
             let message = confirm("¿Esta seguro de registrar el gasto");
             if (message) {

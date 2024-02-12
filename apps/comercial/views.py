@@ -1352,7 +1352,8 @@ def distribution_mobil_save(request):
 
             if quantity > 0:
                 if unit_obj.name == 'BG':
-                    subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj, category='V').first()
+                    subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj,
+                                                                          category='V').first()
                     product_store_obj = ProductStore.objects.get(product=product_obj,
                                                                  subsidiary_store=subsidiary_store_obj)
                     quantity_minimum_unit = calculate_minimum_unit(quantity, unit_obj, product_obj)
@@ -2977,7 +2978,9 @@ def get_distribution_deposit(request):
         user_obj = User.objects.get(id=user_id)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
 
-        cash_set = Cash.objects.filter(accounting_account__code__startswith='1041')
+        cash_set = Cash.objects.filter(subsidiary=subsidiary_obj).filter(
+            Q(accounting_account__code__startswith='1041') | Q(accounting_account__code__startswith='101')
+        )
         t = loader.get_template('comercial/distribution_deposit.html')
         c = ({
             'distribution_mobil': distribution_mobil_obj,
@@ -3000,7 +3003,9 @@ def save_distribution_expense(request):
         total_expense = decimal.Decimal(data_expense["totalExpense"])
         date_expense = str(data_expense["dateExpense"])
         type_expense = str(data_expense["typeExpense"])
+
         description = ""
+        observation = ""
         if type_expense == '1':
             description = "PETROLEO"
         elif type_expense == '2':
@@ -3011,6 +3016,7 @@ def save_distribution_expense(request):
             description = "MANTENIMIENTO"
         elif type_expense == '5':
             description = "OTROS GASTOS"
+            observation = str(data_expense["observation"]).strip()
 
         date_sin_timezone = datetime.strptime(date_expense, '%Y-%m-%d')
         timezone_peru = pytz.timezone('America/Lima')
@@ -3023,6 +3029,7 @@ def save_distribution_expense(request):
         cash_flow_obj.transaction_date = date_con_timezone
         cash_flow_obj.total = total_expense
         cash_flow_obj.user = user_obj
+        cash_flow_obj.observation = observation
         cash_flow_obj.save()
 
         return JsonResponse({
@@ -3049,21 +3056,58 @@ def save_distribution_deposit(request):
         timezone_peru = pytz.timezone('America/Lima')
         date_con_timezone = timezone.make_aware(date_sin_timezone, timezone=timezone_peru)
 
-        new_deposit = {
-            'transaction_date': date_con_timezone,
-            'distribution_mobil': distribution_mobil_obj,
-            'description': description,
-            'type': 'D',
-            'total': total_deposit,
-            'cash': cash_obj,
-            'user': user_obj,
-            'operation_code': operation_code
-        }
-        deposit_obj = CashFlow.objects.create(**new_deposit)
-        deposit_obj.save()
+        # Q(accounting_account__code__startswith='1041') | Q(accounting_account__code__startswith='101')
+        operation_type = ''
+        message = ''
+        _type = ''
+        allow_save = False
+        if cash_obj.accounting_account.code.startswith('101'):  # cash
+
+            check_closed_set = CashFlow.objects.filter(
+                type='C',
+                transaction_date__date=date_con_timezone.date(),
+                cash=cash_obj)
+            if check_closed_set.exists():
+                message = "CAJA CERRADA"
+                allow_save = False
+            else:
+                check_opened_set = CashFlow.objects.filter(
+                    cash=cash_obj, transaction_date__date=date_con_timezone.date(), type='A'
+                )
+                if check_opened_set.exists():
+                    message = "CAJA ABIERTA"
+                    allow_save = True
+                else:
+                    message = "CAJA SIN APERTURAR"
+                    allow_save = False
+
+            operation_type = '0'
+            _type = 'E'
+        else:  # bank
+            operation_type = '1'
+            _type = 'D'
+            allow_save = True
+
+        if allow_save:
+
+            new_deposit = {
+                'transaction_date': date_con_timezone,
+                'distribution_mobil': distribution_mobil_obj,
+                'description': description,
+                'type': _type,
+                'total': total_deposit,
+                'cash': cash_obj,
+                'user': user_obj,
+                'operation_type': operation_type,
+                'operation_code': operation_code
+            }
+            deposit_obj = CashFlow.objects.create(**new_deposit)
+            deposit_obj.save()
+
+            message = 'GASTO REGISTRADO CORRECTAMENTE.'
 
         return JsonResponse({
-            'message': 'GASTO REGISTRADO CORRECTAMENTE.',
+            'message': message, 'allowSave': allow_save
         }, status=HTTPStatus.OK)
 
 

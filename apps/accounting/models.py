@@ -217,6 +217,7 @@ class CashFlow(models.Model):
     requirement_programming = models.ForeignKey('buys.RequirementBuysProgramming', on_delete=models.CASCADE, null=True,
                                                 blank=True)
     distribution_mobil = models.ForeignKey('comercial.DistributionMobil', on_delete=models.CASCADE, null=True, blank=True)
+    observation = models.CharField('Observation', max_length=400, null=True, blank=True)
 
     def calculate_total_missing(self):
 
