@@ -5442,7 +5442,7 @@ def report_ball_all_mass(request):
 
     subsidiaries_dict = []
 
-    subsidiaries = [1, 2, 3, 4, 5, 6, 7, 8]
+    subsidiaries = [1, 2, 3, 4, 5, 6, 7]
 
     balls = {}
 
