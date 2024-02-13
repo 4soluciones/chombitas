@@ -5446,8 +5446,12 @@ def report_ball_all_mass(request):
 
     balls = {}
 
+    # queryset = DistributionMobil.objects \
+    #     .filter(subsidiary__id__in=subsidiaries, status='F', distributiondetail__isnull=False) \
+    #     .values('pilot__id', 'subsidiary__id').annotate(max=Max('id'))
+
     queryset = DistributionMobil.objects \
-        .filter(subsidiary__id__in=subsidiaries, status='F', distributiondetail__isnull=False) \
+        .filter(subsidiary__id__in=subsidiaries, distributiondetail__isnull=False) \
         .values('pilot__id', 'subsidiary__id').annotate(max=Max('id'))
 
     distribution_mobil_set = DistributionMobil.objects.filter(id__in=[q['max'] for q in queryset]).select_related('subsidiary').prefetch_related(
