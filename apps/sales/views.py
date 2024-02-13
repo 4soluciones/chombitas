@@ -5526,7 +5526,7 @@ def report_ball_all_mass(request):
                 }
             balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
 
-    programming_set = Programming.objects.filter(status='R').prefetch_related(
+    programming_set = Programming.objects.filter(status='P').prefetch_related(
         Prefetch(
             'route_set',
             queryset=Route.objects.filter(
@@ -5539,7 +5539,7 @@ def report_ball_all_mass(request):
                 Prefetch(
                     'guidedetail_set',
                     queryset=GuideDetail.objects.filter(
-                        type__in=[1, 2], product__id__in=products_in_ball
+                        type__in=['1', '2'], product__id__in=products_in_ball
                     ).select_related('product').only(
                         'id', 'guide__id', 'type', 'quantity', 'product__id', 'product__name'
                     )
@@ -5756,7 +5756,7 @@ def report_ball_all_mass(request):
         balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
 
     product_store_in_ball = ProductStore.objects.filter(
-        subsidiary_store__category='V', subsidiary_store__subsidiary__id__in=subsidiaries,
+        subsidiary_store__category__in=['V', 'R', 'O'], subsidiary_store__subsidiary__id__in=subsidiaries,
         product__id__in=products_in_ball
     ).select_related('subsidiary_store__subsidiary', 'product').only(
         'id', 'stock', 'product__id', 'product__name',
