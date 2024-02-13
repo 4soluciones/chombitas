@@ -5452,13 +5452,17 @@ def report_ball_all_mass(request):
 
     queryset = DistributionMobil.objects \
         .filter(subsidiary__id__in=subsidiaries, distributiondetail__isnull=False) \
-        .values('pilot__id', 'subsidiary__id').annotate(max=Max('id'))
+        .values('truck__license_plate', 'subsidiary__id').annotate(max=Max('id'))
 
-    distribution_mobil_set = DistributionMobil.objects.filter(id__in=[q['max'] for q in queryset]).select_related('subsidiary').prefetch_related(
+    print(queryset)
+
+    distribution_mobil_set = DistributionMobil.objects.filter(id__in=[q['max'] for q in queryset]).select_related(
+        'subsidiary').prefetch_related(
         Prefetch(
             'distributiondetail_set',
             queryset=DistributionDetail.objects.filter(
-                status='C', type__in=['L', 'V'], product__id__in=products_in_ball
+                Q(distribution_mobil__status='F', status='C') | Q(distribution_mobil__status='P', status='E'),
+                type__in=['L', 'V'], product__id__in=products_in_ball
             ).select_related('product').only(
                 'id', 'type', 'distribution_mobil', 'quantity', 'product__id', 'product__name')
         )
