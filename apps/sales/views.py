@@ -5623,7 +5623,7 @@ def report_ball_all_mass(request):
                     balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
 
     product_store_in_iron = ProductStore.objects.filter(
-        subsidiary_store__category='I',
+        subsidiary_store__category__in=['I', 'R'],
         subsidiary_store__subsidiary__id__in=subsidiaries,
         product__id__in=products_in_iron
     ).select_related('subsidiary_store__subsidiary', 'product').only(
