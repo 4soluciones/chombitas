@@ -130,7 +130,7 @@
 
                     {% for k, s in balls.items %}
                         <tr>
-                            <td class="align-middle text-center">{{ s.subsidiary_name }}</td>
+                            <td class="align-middle text-left">{{ s.subsidiary_name }}</td>
                             {% for key, value in s.distributions.items %}
                                 <td class="align-middle text-center">{% if value.stock_ball == 0 %}-{% else %}
                                     {{ value.stock_ball|safe|floatformat:0 }}{% endif %}</td>
