@@ -6552,11 +6552,12 @@ def get_report_purchase_category_by_license_plate(request):
         sum_total_sale = 0
         sum_cost_total = 0
         total_total = 0
-        purchase_set = Purchase.objects.filter(
-            purchase_date__range=[start_date_sin_timezone.date(), end_date_sin_timezone.date()],
-            # supplier__sector=value,
-            # status__in=['S', 'A']
-        ).select_related('supplier').annotate(
+        purchase_set = Purchase.objects.filter(truck_id=truck_id,
+                                               purchase_date__range=[start_date_sin_timezone.date(),
+                                                                     end_date_sin_timezone.date()],
+                                               # supplier__sector=value,
+                                               # status__in=['S', 'A']
+                                               ).select_related('supplier').annotate(
             sum_total=Subquery(
                 PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
                     return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
