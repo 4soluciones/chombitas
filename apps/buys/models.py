@@ -12,7 +12,7 @@ from imagekit.processors import ResizeToFill, Adjust
 class Purchase(models.Model):
     STATUS_CHOICES = (('S', 'SIN ALMACEN'), ('A', 'EN ALMACEN'), ('N', 'ANULADO'),)
     CATEGORY_CHOICES = (('A', 'ACTIVO'), ('D', 'ADMINISTRATIVO'), ('P', 'PRODUCCION'), ('V', 'VENTAS'))
-    TYPE_CHOICES = (('T', 'TICKET'), ('B', 'BOLETA'), ('F', 'FACTURA'),)
+    TYPE_CHOICES = (('T', 'TICKET'), ('B', 'BOLETA'), ('F', 'FACTURA'), ('C', 'COTIZACION'))
     id = models.AutoField(primary_key=True)
     supplier = models.ForeignKey(Supplier, verbose_name='Proveedor', on_delete=models.CASCADE, null=True, blank=True)
     purchase_date = models.DateField('Fecha compra', null=True, blank=True)
