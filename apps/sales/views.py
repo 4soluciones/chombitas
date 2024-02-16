@@ -6602,27 +6602,29 @@ def purchase_report_by_product_category(request):
         subsidiary_obj = get_subsidiary_by_user(user_obj)
         month_names = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SETIEMBRE', 'OCTUBRE',
                        'NOVIEMBRE', 'DICIEMBRE']
-        purchase_dict = []
         sum_float_purchases_sum_total = 0
-        sector = Supplier._meta.get_field('sector').choices
+        # sector = Supplier._meta.get_field('sector').choices
         sum_month = [0] * len(month_names)
         sum_sale_month = [0] * len(month_names)
         sum_cost_month = [0] * len(month_names)
         sum_total_sale = 0
         sum_cost_total = 0
         total_total = 0
-        for c in sector:
-            # print(sector.index(c))
-            value, label = c
-            sum_total_year = 0
-            category_row = {
-                'c': value,
+
+        # Obtener datos de sectores
+        sector_data = {}
+        for value, label in Supplier._meta.get_field('sector').choices:
+            sector_data[value] = {
                 'category': label,
-                'month_data': [],
-                'sum_total_year': sum_total_year
+                'month_data': [{'month': m, 'purchases_sum_total': 0} for m in month_names],
+                'sum_total_year': 0
             }
+
+        # Procesar datos de compras
+        for sector_value, sector_info in sector_data.items():
             for m in month_names:
-                if value == 'G':
+                # Lógica para obtener sum_total_year y purchases_sum_total
+                if sector_value == 'G':
                     requirement_set = Requirement_buys.objects.filter(status='2', type='M', status_pay='2',
                                                                       approval_date__year=year,
                                                                       approval_date__month=month_names.index(
@@ -6632,37 +6634,21 @@ def purchase_report_by_product_category(request):
                                 'requirement_buys_id').annotate(
                                 r=Sum(F('quantity') * F('price_pen'))).values('r')[:1])).aggregate(Sum('sum_total'))
                     requirement_sum_total = requirement_set['sum_total__sum']
-                    if requirement_sum_total is not None:
-                        float_requirement_sum_total = float(requirement_sum_total)
-                    else:
-                        float_requirement_sum_total = float(0)
-                    item = {
-                        'm': month_names.index(m),
-                        'month': m,
-                        'purchases_sum_total': '{:,}'.format(round(decimal.Decimal(float_requirement_sum_total), 2))
-                    }
-                    category_row.get('month_data').append(item)
-                    sum_total_year += float_requirement_sum_total
-                    sum_month[month_names.index(m)] += float_requirement_sum_total
-                elif value == 'PP':
+                    float_requirement_sum_total = float(
+                        requirement_sum_total) if requirement_sum_total is not None else 0
+                    sector_info['month_data'][month_names.index(m)]['purchases_sum_total'] = float_requirement_sum_total
+                    sector_info['sum_total_year'] += float_requirement_sum_total
+                elif sector_value == 'PP':
                     salary_total = CashFlow.objects.filter(salary__year=year,
                                                            salary__month=month_names.index(m) + 1).aggregate(
                         r=Coalesce(Sum('total'), decimal.Decimal(0.00))).get('r')
-                    if salary_total is not None:
-                        float_salary_total = float(salary_total)
-                    else:
-                        float_salary_total = float(0)
-                    item = {
-                        'm': month_names.index(m),
-                        'month': m,
-                        'purchases_sum_total': '{:,}'.format(round(decimal.Decimal(float_salary_total), 2))
-                    }
-                    category_row.get('month_data').append(item)
-                    sum_total_year += float_salary_total
-                    sum_month[month_names.index(m)] += float_salary_total
+                    float_salary_total = float(salary_total) if salary_total is not None else 0
+                    sector_info['month_data'][month_names.index(m)]['purchases_sum_total'] = float_salary_total
+                    sector_info['sum_total_year'] += float_salary_total
                 else:
                     purchase_set = Purchase.objects.filter(
-                        purchase_date__month=month_names.index(m) + 1, purchase_date__year=year, supplier__sector=value,
+                        purchase_date__month=month_names.index(m) + 1, purchase_date__year=year,
+                        supplier__sector=sector_value,
                         status__in=['S', 'A']
                     ).select_related('supplier').annotate(
                         sum_total=Subquery(
@@ -6672,23 +6658,26 @@ def purchase_report_by_product_category(request):
                     ).aggregate(Sum('sum_total'))
 
                     purchases_sum_total = purchase_set['sum_total__sum']
+                    float_purchases_sum_total = float(purchases_sum_total) if purchases_sum_total is not None else 0
+                    sector_info['month_data'][month_names.index(m)]['purchases_sum_total'] = float_purchases_sum_total
+                    sector_info['sum_total_year'] += float_purchases_sum_total
 
-                    if purchases_sum_total is not None:
-                        float_purchases_sum_total = float(purchases_sum_total)
-                    else:
-                        float_purchases_sum_total = 0
-                    item = {
-                        'm': month_names.index(m),
-                        'month': m,
-                        'purchases_sum_total': '{:,}'.format(round(decimal.Decimal(float_purchases_sum_total), 2))
-                    }
-                    category_row.get('month_data').append(item)
-                    sum_total_year += float_purchases_sum_total
-                    sum_month[month_names.index(m)] += float_purchases_sum_total
-            total_total += sum_total_year
-            category_row['sum_total_year'] = '{:,}'.format(round(decimal.Decimal(sum_total_year), 2))
-
-            purchase_dict.append(category_row)
+                # Obtener b10kg para el mes y año actual
+                # if m == month_names[-1]:
+                #     # Calcular b10kg fuera del bucle interno
+                #     b10kg = get_balon_month_and_year(year=year, month=month_names.index(m) + 1)
+                #
+                #     # Actualizar sum_sale_month y sum_cost_month
+                #     sum_sale_month[month_names.index(m)] = decimal.Decimal(b10kg)
+                #     if decimal.Decimal(sum_month[month_names.index(m)]) > 0 and decimal.Decimal(b10kg) > 0:
+                #         sum_cost_month[month_names.index(m)] = decimal.Decimal(
+                #             sum_month[month_names.index(m)]) / decimal.Decimal(b10kg)
+                #     else:
+                #         sum_cost_month[month_names.index(m)] = 0
+                #
+                #     # Actualizar sum_total_sale y sum_cost_total
+                #     sum_total_sale = decimal.Decimal(b10kg) * len(month_names)
+                #     sum_cost_total = sum(sum_cost_month)
         for m in month_names:
             b10kg = get_balon_month_and_year(year=year, month=month_names.index(m) + 1)
             sum_sale_month[month_names.index(m)] = decimal.Decimal(b10kg)
@@ -6699,20 +6688,16 @@ def purchase_report_by_product_category(request):
                 sum_cost_month[month_names.index(m)] = 0
             sum_total_sale += decimal.Decimal(b10kg)
             sum_cost_total += sum_cost_month[month_names.index(m)]
-            # t = Order.objects.filter(create_at__month=month_names.index(m) + 1, create_at__year=year,
-            #                          type__in=['V', 'R']
-            #                          ).aggregate(r=Coalesce(Sum('total'), decimal.Decimal(0.00)))
-            # sum_sale_month[month_names.index(m)] = decimal.Decimal(t['r'])
-            # if decimal.Decimal(sum_month[month_names.index(m)]) > 0 and decimal.Decimal(t['r']) > 0:
-            #     sum_cost_month[month_names.index(m)] = decimal.Decimal(sum_month[month_names.index(m)])/decimal.Decimal(t['r'])
-            # else:
-            #     sum_cost_month[month_names.index(m)] = 0
-            # sum_total_sale += decimal.Decimal(t['r'])
-            # sum_cost_total += sum_cost_month[month_names.index(m)]
+        # Calcular sum_month
+        sum_month = [0] * len(month_names)
+        for sector_value, sector_info in sector_data.items():
+            for m in month_names:
+                sum_month[month_names.index(m)] += sector_info['month_data'][month_names.index(m)][
+                    'purchases_sum_total']
 
         tpl = loader.get_template('sales/report_purchase_category_and_month_grid.html')
-        context = ({
-            'purchase_dict': purchase_dict,
+        context = {
+            'purchase_dict': list(sector_data.values()),
             'sum_month': sum_month,
             'total_total': total_total,
             'sum_float_purchases_sum_total': sum_float_purchases_sum_total,
@@ -6720,11 +6705,128 @@ def purchase_report_by_product_category(request):
             'sum_total_sale': sum_total_sale,
             'sum_cost_month': sum_cost_month,
             'sum_cost_total': sum_cost_total,
-        })
+        }
 
-        return JsonResponse({
-            'grid': tpl.render(context, request),
-        }, status=HTTPStatus.OK)
+        return JsonResponse({'grid': tpl.render(context, request)}, status=HTTPStatus.OK)
+        # year = str(request.POST.get('year'))
+        # user_id = request.user.id
+        # user_obj = User.objects.get(id=user_id)
+        # subsidiary_obj = get_subsidiary_by_user(user_obj)
+        # month_names = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SETIEMBRE', 'OCTUBRE',
+        #                'NOVIEMBRE', 'DICIEMBRE']
+        # purchase_dict = []
+        # sum_float_purchases_sum_total = 0
+        # sector = Supplier._meta.get_field('sector').choices
+        # sum_month = [0] * len(month_names)
+        # sum_sale_month = [0] * len(month_names)
+        # sum_cost_month = [0] * len(month_names)
+        # sum_total_sale = 0
+        # sum_cost_total = 0
+        # total_total = 0
+        # for c in sector:
+        #     # print(sector.index(c))
+        #     value, label = c
+        #     sum_total_year = 0
+        #     category_row = {
+        #         'c': value,
+        #         'category': label,
+        #         'month_data': [],
+        #         'sum_total_year': sum_total_year
+        #     }
+        #     for m in month_names:
+        #         if value == 'G':
+        #             requirement_set = Requirement_buys.objects.filter(status='2', type='M', status_pay='2',
+        #                                                               approval_date__year=year,
+        #                                                               approval_date__month=month_names.index(
+        #                                                                   m) + 1).annotate(
+        #                 sum_total=Subquery(
+        #                     RequirementDetail_buys.objects.filter(requirement_buys_id=OuterRef('id')).values(
+        #                         'requirement_buys_id').annotate(
+        #                         r=Sum(F('quantity') * F('price_pen'))).values('r')[:1])).aggregate(Sum('sum_total'))
+        #             requirement_sum_total = requirement_set['sum_total__sum']
+        #             if requirement_sum_total is not None:
+        #                 float_requirement_sum_total = float(requirement_sum_total)
+        #             else:
+        #                 float_requirement_sum_total = float(0)
+        #             item = {
+        #                 'm': month_names.index(m),
+        #                 'month': m,
+        #                 'purchases_sum_total': '{:,}'.format(round(decimal.Decimal(float_requirement_sum_total), 2))
+        #             }
+        #             category_row.get('month_data').append(item)
+        #             sum_total_year += float_requirement_sum_total
+        #             sum_month[month_names.index(m)] += float_requirement_sum_total
+        #         elif value == 'PP':
+        #             salary_total = CashFlow.objects.filter(salary__year=year,
+        #                                                    salary__month=month_names.index(m) + 1).aggregate(
+        #                 r=Coalesce(Sum('total'), decimal.Decimal(0.00))).get('r')
+        #             if salary_total is not None:
+        #                 float_salary_total = float(salary_total)
+        #             else:
+        #                 float_salary_total = float(0)
+        #             item = {
+        #                 'm': month_names.index(m),
+        #                 'month': m,
+        #                 'purchases_sum_total': '{:,}'.format(round(decimal.Decimal(float_salary_total), 2))
+        #             }
+        #             category_row.get('month_data').append(item)
+        #             sum_total_year += float_salary_total
+        #             sum_month[month_names.index(m)] += float_salary_total
+        #         else:
+        #             purchase_set = Purchase.objects.filter(
+        #                 purchase_date__month=month_names.index(m) + 1, purchase_date__year=year, supplier__sector=value,
+        #                 status__in=['S', 'A']
+        #             ).select_related('supplier').annotate(
+        #                 sum_total=Subquery(
+        #                     PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
+        #                         return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
+        #                 )
+        #             ).aggregate(Sum('sum_total'))
+        #
+        #             purchases_sum_total = purchase_set['sum_total__sum']
+        #
+        #             if purchases_sum_total is not None:
+        #                 float_purchases_sum_total = float(purchases_sum_total)
+        #             else:
+        #                 float_purchases_sum_total = 0
+        #             item = {
+        #                 'm': month_names.index(m),
+        #                 'month': m,
+        #                 'purchases_sum_total': '{:,}'.format(round(decimal.Decimal(float_purchases_sum_total), 2))
+        #             }
+        #             category_row.get('month_data').append(item)
+        #             sum_total_year += float_purchases_sum_total
+        #             sum_month[month_names.index(m)] += float_purchases_sum_total
+        #     total_total += sum_total_year
+        #     category_row['sum_total_year'] = '{:,}'.format(round(decimal.Decimal(sum_total_year), 2))
+        #
+        #     purchase_dict.append(category_row)
+        # for m in month_names:
+        #     b10kg = get_balon_month_and_year(year=year, month=month_names.index(m) + 1)
+        #     sum_sale_month[month_names.index(m)] = decimal.Decimal(b10kg)
+        #     if decimal.Decimal(sum_month[month_names.index(m)]) > 0 and decimal.Decimal(b10kg) > 0:
+        #         sum_cost_month[month_names.index(m)] = decimal.Decimal(
+        #             sum_month[month_names.index(m)]) / decimal.Decimal(b10kg)
+        #     else:
+        #         sum_cost_month[month_names.index(m)] = 0
+        #     sum_total_sale += decimal.Decimal(b10kg)
+        #     sum_cost_total += sum_cost_month[month_names.index(m)]
+        #
+        # tpl = loader.get_template('sales/report_purchase_category_and_month_grid.html')
+        # context = ({
+        #     'purchase_dict': purchase_dict,
+        #     'sum_month': sum_month,
+        #     'total_total': total_total,
+        #     'sum_float_purchases_sum_total': sum_float_purchases_sum_total,
+        #     'sum_sale_month': sum_sale_month,
+        #     'sum_total_sale': sum_total_sale,
+        #     'sum_cost_month': sum_cost_month,
+        #     'sum_cost_total': sum_cost_total,
+        # })
+        #
+        # return JsonResponse({
+        #     'grid': tpl.render(context, request),
+        # }, status=HTTPStatus.OK)
 
 
 def test(request):

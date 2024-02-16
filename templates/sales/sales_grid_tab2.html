@@ -20,7 +20,7 @@
         <div class="container p-0 m-0" id="grid-products" style="height: 391px;">
             <div class="row grid p-0 m-0">
                 {% for product in products %}
-                    <div class="col-sm-4 pt-0 pb-3 pr-0 element-item" data-category="{{ product.name }}">
+                    <div class="col-sm-3 pt-0 pb-3 pr-0 element-item" data-category="{{ product.name }}">
                         <div class="card h-100" style="background-color: #f6f5ef; border-color: #0d68ae">
                             <div class="card-body">
                                 <img src="{{ product.photo_thumbnail.url }}" class="img-thumbnail mx-auto d-block"

@@ -193,7 +193,7 @@
             });
 
         });
-        $("#grid-products").mCustomScrollbar();
+        {#$("#grid-products").mCustomScrollbar();#}
         /******* ISOTOPE *******/
 // quick search regex
         var qsRegex;
@@ -249,6 +249,7 @@
                 return false;
             }
             let _product_id = $(this).attr('pk');
+            console.log("llegue", _product_id)
             sessionStorage.setItem("product_id", _product_id);
 
             // Comprobar si hay filas en los detalles
