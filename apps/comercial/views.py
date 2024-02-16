@@ -2012,6 +2012,22 @@ def get_spanish_month_names():
     return month_names
 
 
+def get_previous_balls_recovered_in_plant(selected_datetime=None, truck_id=None, product__id=None):
+    q2 = LoanPayment.objects.filter(
+        order_detail__order__distribution_mobil__date_distribution__lt=selected_datetime.date(),
+        order_detail__order__distribution_mobil__truck__id=truck_id,
+        order_detail__unit__name__in=['B'],
+        product__id=product__id
+    ).values('product__id').annotate(sum_quantity_recovered_b=Sum(F('quantity'))).values(
+        'sum_quantity_recovered_b'
+    )
+    sum_quantity_recovered_b = 0
+    if q2.exists():
+        result2 = q2[0]
+        sum_quantity_recovered_b = result2.get('sum_quantity_recovered_b', 0)
+    return sum_quantity_recovered_b
+
+
 def get_previous_debt_for_borrowed_balls(selected_datetime=None, truck_id=None, product__id=None):
     q = OrderDetail.objects.filter(
         order__distribution_mobil__date_distribution__lt=selected_datetime.date(),
@@ -2022,27 +2038,44 @@ def get_previous_debt_for_borrowed_balls(selected_datetime=None, truck_id=None, 
         'sum_quantity_sold_b'
     )
 
-    q2 = LoanPayment.objects.filter(
-        order_detail__order__distribution_mobil__date_distribution__lt=selected_datetime.date(),
-        order_detail__order__distribution_mobil__truck__id=truck_id,
-        order_detail__unit__name__in=['B'],
-        product__id=product__id
-    ).values('product__id').annotate(sum_quantity_recovered_b=Sum(F('quantity'))).values(
-        'sum_quantity_recovered_b'
-    )
+    # q2 = LoanPayment.objects.filter(
+    #     order_detail__order__distribution_mobil__date_distribution__lt=selected_datetime.date(),
+    #     order_detail__order__distribution_mobil__truck__id=truck_id,
+    #     order_detail__unit__name__in=['B'],
+    #     product__id=product__id
+    # ).values('product__id').annotate(sum_quantity_recovered_b=Sum(F('quantity'))).values(
+    #     'sum_quantity_recovered_b'
+    # )
 
     sum_quantity_sold_b = 0
-    sum_quantity_recovered_b = 0
+    # sum_quantity_recovered_b = 0
 
     if q.exists():
         result = q[0]
         sum_quantity_sold_b = result.get('sum_quantity_sold_b', 0)
 
-    if q2.exists():
-        result2 = q2[0]
-        sum_quantity_recovered_b = result2.get('sum_quantity_recovered_b', 0)
+    # if q2.exists():
+    #     result2 = q2[0]
+    #     sum_quantity_recovered_b = result2.get('sum_quantity_recovered_b', 0)
 
-    return sum_quantity_sold_b - sum_quantity_recovered_b
+    # return sum_quantity_sold_b - sum_quantity_recovered_b
+    return sum_quantity_sold_b
+
+
+def get_ball_recovered_in_plant(product_id=None, distribution_mobil_id=None):
+    recovered_in_plant_set = LoanPayment.objects.filter(
+        order_detail__order__distribution_mobil__id=distribution_mobil_id,
+        order_detail__unit__name__in=['B'],
+        product__id=product_id
+    ).values('product__id').annotate(sum_quantity_recovered_in_plant_b=Sum(F('quantity'))).values(
+        'sum_quantity_recovered_in_plant_b'
+    )
+    quantity_recovered_in_plant_b = 0
+
+    if recovered_in_plant_set.exists():
+        recovered_in_plant_obj = recovered_in_plant_set[0]
+        quantity_recovered_in_plant_b = recovered_in_plant_obj.get('sum_quantity_recovered_in_plant_b', 0)
+    return quantity_recovered_in_plant_b
 
 
 def get_previous_debt_for_in_the_car_balls(distribution_mobil_set=None, truck_id=None, product__id=None):
@@ -2230,14 +2263,29 @@ def get_monthly_distribution_by_licence_plate(request):
         # end_date_con_timezone = timezone.make_aware(end_date_sin_timezone, timezone=timezone_peru)
 
         # selected_datetime = datetime(year, month, 1)
-        remaining_borrowed_b10 = get_previous_debt_for_borrowed_balls(selected_datetime=start_date_sin_timezone,
-                                                                      truck_id=truck_id, product__id=1)
-        remaining_borrowed_b5 = get_previous_debt_for_borrowed_balls(selected_datetime=start_date_sin_timezone,
-                                                                     truck_id=truck_id, product__id=2)
-        remaining_borrowed_b45 = get_previous_debt_for_borrowed_balls(selected_datetime=start_date_sin_timezone,
-                                                                      truck_id=truck_id, product__id=3)
-        remaining_borrowed_b15 = get_previous_debt_for_borrowed_balls(selected_datetime=start_date_sin_timezone,
-                                                                      truck_id=truck_id, product__id=12)
+
+        previous_debt_for_borrowed_balls_b10 = get_previous_debt_for_borrowed_balls(
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=1)
+        previous_debt_for_borrowed_balls_b5 = get_previous_debt_for_borrowed_balls(
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=2)
+        previous_debt_for_borrowed_balls_b45 = get_previous_debt_for_borrowed_balls(
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=3)
+        previous_debt_for_borrowed_balls_b15 = get_previous_debt_for_borrowed_balls(
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=12)
+
+        previous_balls_recovered_in_plant_b10 = get_previous_balls_recovered_in_plant(
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=1)
+        previous_balls_recovered_in_plant_b5 = get_previous_balls_recovered_in_plant(
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=2)
+        previous_balls_recovered_in_plant_b45 = get_previous_balls_recovered_in_plant(
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=3)
+        previous_balls_recovered_in_plant_b15 = get_previous_balls_recovered_in_plant(
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=12)
+
+        remaining_borrowed_b10 = int(previous_debt_for_borrowed_balls_b10) - int(previous_balls_recovered_in_plant_b10)
+        remaining_borrowed_b5 = int(previous_debt_for_borrowed_balls_b5) - int(previous_balls_recovered_in_plant_b5)
+        remaining_borrowed_b45 = int(previous_debt_for_borrowed_balls_b45) - int(previous_balls_recovered_in_plant_b45)
+        remaining_borrowed_b15 = int(previous_debt_for_borrowed_balls_b15) - int(previous_balls_recovered_in_plant_b15)
 
         distribution_mobil_set = DistributionMobil.objects.filter(
             # date_distribution__month=month,
@@ -2306,31 +2354,36 @@ def get_monthly_distribution_by_licence_plate(request):
                     'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
                     'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0,
                     'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b5}, 'total_sales': 0,
-                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'advanced_b': 0, 'remaining_borrowed_b': 0
+                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
+                    'advanced_b': 0, 'remaining_borrowed_b': 0
                 },
                 'B10': {
                     'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
                     'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0,
                     'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b10}, 'total_sales': 0,
-                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'advanced_b': 0, 'remaining_borrowed_b': 0
+                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
+                    'advanced_b': 0, 'remaining_borrowed_b': 0
                 },
                 'B45': {
                     'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
                     'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0,
                     'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b45}, 'total_sales': 0,
-                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'advanced_b': 0, 'remaining_borrowed_b': 0
+                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
+                    'advanced_b': 0, 'remaining_borrowed_b': 0
                 },
                 'B15': {
                     'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
                     'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0,
                     'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b15}, 'total_sales': 0,
-                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'advanced_b': 0, 'remaining_borrowed_b': 0
+                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
+                    'advanced_b': 0, 'remaining_borrowed_b': 0
                 },
                 'B3': {
                     'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
                     'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0,
                     'prices': {}, 'total_sales': 0,
-                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'advanced_b': 0, 'remaining_borrowed_b': 0
+                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
+                    'advanced_b': 0, 'remaining_borrowed_b': 0
                 },
                 'total_sold_by_date': 0,
                 'expense_1': 0, 'expense_2': 0, 'expense_3': 0, 'expense_4': 0, 'expense_5': 0,
@@ -2361,6 +2414,9 @@ def get_monthly_distribution_by_licence_plate(request):
                 #         last_distribution_detail_in_the_car_obj = last_distribution_detail_in_the_car_set.last()
 
                 product_id = detail.product.id
+
+                quantity_recovered_in_plant_b = get_ball_recovered_in_plant(
+                    product_id=product_id, distribution_mobil_id=detail.distribution_mobil_id)
 
                 ball = None
                 in_the_car_bg = 0
@@ -2406,7 +2462,20 @@ def get_monthly_distribution_by_licence_plate(request):
                         remaining_borrowed_b15 -= int(detail.quantity)
                 if detail.status == "A" and detail.type == "V":
                     ball["advanced_b"] += int(detail.quantity)
-
+                if quantity_recovered_in_plant_b > 0:
+                    ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b)
+                    if product_id == 1:
+                        ball["remaining_borrowed_b"] = remaining_borrowed_b10 - int(quantity_recovered_in_plant_b)
+                        remaining_borrowed_b10 -= int(quantity_recovered_in_plant_b)
+                    elif product_id == 2:
+                        ball["remaining_borrowed_b"] = remaining_borrowed_b5 - int(quantity_recovered_in_plant_b)
+                        remaining_borrowed_b5 -= int(quantity_recovered_in_plant_b)
+                    elif product_id == 3:
+                        ball["remaining_borrowed_b"] = remaining_borrowed_b45 - int(quantity_recovered_in_plant_b)
+                        remaining_borrowed_b45 -= int(quantity_recovered_in_plant_b)
+                    elif product_id == 12:
+                        ball["remaining_borrowed_b"] = remaining_borrowed_b15 - int(quantity_recovered_in_plant_b)
+                        remaining_borrowed_b15 -= int(quantity_recovered_in_plant_b)
             total_sales_by_date = 0
             for order in distribution.order_set.all():
 
@@ -2491,7 +2560,6 @@ def get_monthly_distribution_by_licence_plate(request):
                 codes_of_deposit.append(str(deposit.operation_code))
 
             distribution_obj['total_sold_by_date'] += total_sales_by_date
-            print("distribution_obj['total_sold_by_date']", distribution_obj['total_sold_by_date'])
 
             distribution_obj['total_to_deposit'] = total_sales_by_date - total_expenses
 
@@ -2523,10 +2591,21 @@ def get_monthly_distribution_by_licence_plate(request):
             'initial_remaining_in_the_car_bg5': int(initial_remaining_in_the_car_bg5),
             'initial_remaining_in_the_car_bg45': int(initial_remaining_in_the_car_bg45),
             'initial_remaining_in_the_car_bg15': int(initial_remaining_in_the_car_bg15),
+
             'initial_remaining_borrowed_b10': int(initial_remaining_borrowed_b10),
             'initial_remaining_borrowed_b5': int(initial_remaining_borrowed_b5),
             'initial_remaining_borrowed_b45': int(initial_remaining_borrowed_b45),
             'initial_remaining_borrowed_b15': int(initial_remaining_borrowed_b15),
+
+            'initial_debt_for_borrowed_balls_b10': int(previous_debt_for_borrowed_balls_b10),
+            'initial_debt_for_borrowed_balls_b5': int(previous_debt_for_borrowed_balls_b5),
+            'initial_debt_for_borrowed_balls_b45': int(previous_debt_for_borrowed_balls_b45),
+            'initial_debt_for_borrowed_balls_b15': int(previous_debt_for_borrowed_balls_b15),
+
+            'initial_recovered_in_plant_b10': int(previous_balls_recovered_in_plant_b10),
+            'initial_recovered_in_plant_b5': int(previous_balls_recovered_in_plant_b5),
+            'initial_recovered_in_plant_b45': int(previous_balls_recovered_in_plant_b45),
+            'initial_recovered_in_plant_b15': int(previous_balls_recovered_in_plant_b15),
         })
 
         if distribution_mobil_set:
