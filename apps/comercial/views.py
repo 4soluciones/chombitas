@@ -2978,8 +2978,9 @@ def get_distribution_deposit(request):
         user_obj = User.objects.get(id=user_id)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
 
-        cash_set = Cash.objects.filter(subsidiary=subsidiary_obj).filter(
-            Q(accounting_account__code__startswith='1041') | Q(accounting_account__code__startswith='101')
+        cash_set = Cash.objects.filter(
+            Q(accounting_account__code__startswith='1041', subsidiary__id=1) |
+            Q(accounting_account__code__startswith='101', subsidiary=subsidiary_obj)
         )
         t = loader.get_template('comercial/distribution_deposit.html')
         c = ({
