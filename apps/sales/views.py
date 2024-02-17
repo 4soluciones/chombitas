@@ -2019,6 +2019,42 @@ def get_balon_month_and_year(year, month):
         return 0
 
 
+def get_balon_month_and_year2(year, month):
+    query = OrderDetail.objects.filter(
+        order__create_at__year=year, order__create_at__month=month,
+        order__type__in=['V', 'R'],
+        product__id__in=[1, 2, 3, 12], unit__name__in=['G', 'GBC', 'BG']
+    ).values('product__id').annotate(
+        total_quantity=Sum('quantity_sold')
+    )
+
+    sum_10kg = 0
+    sum_5kg = 0
+    sum_45kg = 0
+    sum_15kg = 0
+
+    q10 = query.filter(product__id=1)
+    if q10.exists():
+        sum_10kg = q10[0]['total_quantity']
+
+    q5 = query.filter(product__id=2)
+    if q5.exists():
+        sum_5kg = q5[0]['total_quantity']
+
+    q45 = query.filter(product__id=3)
+    if q45.exists():
+        sum_45kg = q45[0]['total_quantity']
+
+    q15 = query.filter(product__id=12)
+    if q15.exists():
+        sum_15kg = q15[0]['total_quantity']
+
+    total_10kg = decimal.Decimal(sum_10kg) + decimal.Decimal(sum_5kg) * decimal.Decimal(0.50) + decimal.Decimal(
+        sum_15kg) * decimal.Decimal(1.50) + decimal.Decimal(sum_45kg) * decimal.Decimal(4.50)
+
+    return total_10kg
+
+
 def get_dict_order_by_units(order_set, is_pdf=False, is_unit=True):
     dictionary = []
     sum_10kg = 0
@@ -6598,7 +6634,7 @@ def report_table(request, year=None):
     sum_cost_total = 0
     total_total = 0
     for c in sector:
-        print(sector.index(c))
+        # print(sector.index(c))
         value, label = c
         sum_total_year = 0
         category_row = {
@@ -6609,7 +6645,8 @@ def report_table(request, year=None):
         }
         for m in month_names:
             if sector.index(c) == len(sector)-1:
-                b10kg = get_balon_month_and_year(year=year, month=month_names.index(m) + 1)
+                b10kg = get_balon_month_and_year2(year=year, month=month_names.index(m) + 1)
+                # b10kg = get_balon_month_and_year(year=year, month=month_names.index(m) + 1)
                 sum_sale_month[month_names.index(m)] = decimal.Decimal(b10kg)
                 if decimal.Decimal(sum_month[month_names.index(m)]) > 0 and decimal.Decimal(b10kg) > 0:
                     sum_cost_month[month_names.index(m)] = decimal.Decimal(
