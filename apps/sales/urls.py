@@ -73,6 +73,7 @@ urlpatterns = [
     # ReportLab
     path('product_print/', product_print, name='product_print'),
     path('product_print/<int:pk>/', product_print, name='product_print_one'),
+    path('report_table/<int:year>/', report_table, name='report_table'),
 
     # GlP KARDEX
     path('get_kardex_glp/', login_required(get_kardex_glp), name='get_kardex_glp'),

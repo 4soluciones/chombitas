@@ -16,7 +16,7 @@
 
             <div class="card-body">
 
-                <form class="form-inline" id="search-form" method="POST">
+                <form class="form-inline" id="search-form">
                     {% csrf_token %}
 
                     <label class="my-1 ml-2 mr-2" for="id_year">Año: </label>
@@ -32,9 +32,10 @@
                         <option value="2028">2028</option>
                     </select>
 
-                    <button type="submit" class="btn btn-blue my-1 ml-2" id="btn-search">
+                    <a href="{% url 'sales:report_table' 2024 %}" id="btn-buscar" class="btn btn-blue my-1 ml-2"
+                       onclick="buscarReporte()">
                         <i class="fas fa-search-dollar"></i> Buscar
-                    </button>
+                    </a>
 
                     {#                    <button type="button" class="btn my-1 ml-2 text-white" onclick="ReportCategoryProductExcel()" id="printReportExcel"#}
                     {#                            style="background: #00960f">#}
@@ -67,6 +68,20 @@
 {% block extrajs %}
 
     <script type="text/javascript">
+        {#function buscarReporte() {#}
+        {#    // Obtener el valor del elemento id_year#}
+        {#    var yearValue = document.getElementById("id_year").value;#}
+        {##}
+        {#    // Construir la URL del enlace con el valor obtenido#}
+        {#    var url = "{% url 'sales:report_table' '' %}" + yearValue;#}
+        {##}
+        {#    // Redirigir a la nueva URL#}
+        {#    window.location.href = url;#}
+        {# }#}
+        $('#id_year').change(function () {
+            let c = $(this).val()
+            $('#btn-buscar').attr('href', '/sales/report_table/' + c + '/')
+        })
 
         loader = '<div class="container">' +
             '<div class="row">' +
@@ -101,7 +116,7 @@
                     if (xhr.status === 200) {
                         toastr.success(response['message'], '¡Bien hecho!');
                         $('#tbl-purchases').html(response.grid);
-                    }else {
+                    } else {
                         $('#tbl-purchases').empty();
                     }
                 },
