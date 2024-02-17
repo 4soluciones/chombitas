@@ -16,7 +16,7 @@
 
             <div class="card-body">
 
-                <form class="form-inline" id="search-form">
+                <form class="form-inline" id="search-form" method="post">
                     {% csrf_token %}
 
                     <label class="my-1 ml-2 mr-2" for="id_year">Año: </label>
@@ -31,11 +31,12 @@
                         <option value="2027">2027</option>
                         <option value="2028">2028</option>
                     </select>
+                    <button type="submit" id="btn-search" class="btn btn-primary"><i class="fas fa-search-dollar"></i> Buscar</button>
 
-                    <a href="{% url 'sales:report_table' 2024 %}" id="btn-buscar" class="btn btn-blue my-1 ml-2"
-                       onclick="buscarReporte()">
-                        <i class="fas fa-search-dollar"></i> Buscar
-                    </a>
+{#                    <a href="{% url 'sales:report_table' 2024 %}" id="btn-buscar" class="btn btn-blue my-1 ml-2"#}
+{#                       onclick="buscarReporte()">#}
+{#                        <i class="fas fa-search-dollar"></i> Buscar#}
+{#                    </a>#}
 
                     {#                    <button type="button" class="btn my-1 ml-2 text-white" onclick="ReportCategoryProductExcel()" id="printReportExcel"#}
                     {#                            style="background: #00960f">#}
@@ -68,20 +69,11 @@
 {% block extrajs %}
 
     <script type="text/javascript">
-        {#function buscarReporte() {#}
-        {#    // Obtener el valor del elemento id_year#}
-        {#    var yearValue = document.getElementById("id_year").value;#}
-        {##}
-        {#    // Construir la URL del enlace con el valor obtenido#}
-        {#    var url = "{% url 'sales:report_table' '' %}" + yearValue;#}
-        {##}
-        {#    // Redirigir a la nueva URL#}
-        {#    window.location.href = url;#}
-        {# }#}
-        $('#id_year').change(function () {
-            let c = $(this).val()
-            $('#btn-buscar').attr('href', '/sales/report_table/' + c + '/')
-        })
+
+        {#$('#id_year').change(function () {#}
+        {#    let c = $(this).val()#}
+        {#    $('#btn-buscar').attr('href', '/sales/report_table/' + c + '/')#}
+        {# })#}
 
         loader = '<div class="container">' +
             '<div class="row">' +

@@ -6897,6 +6897,17 @@ def purchase_report_by_product_category(request):
                 'sum_total_year': sum_total_year
             }
             for m in month_names:
+                if sector.index(c) == len(sector) - 1:
+                    b10kg = get_balon_month_and_year2(year=year, month=month_names.index(m) + 1)
+                    # b10kg = get_balon_month_and_year(year=year, month=month_names.index(m) + 1)
+                    sum_sale_month[month_names.index(m)] = decimal.Decimal(b10kg)
+                    if decimal.Decimal(sum_month[month_names.index(m)]) > 0 and decimal.Decimal(b10kg) > 0:
+                        sum_cost_month[month_names.index(m)] = decimal.Decimal(
+                            sum_month[month_names.index(m)]) / decimal.Decimal(b10kg)
+                    else:
+                        sum_cost_month[month_names.index(m)] = 0
+                    sum_total_sale += decimal.Decimal(b10kg)
+                    sum_cost_total += sum_cost_month[month_names.index(m)]
                 if value == 'G':
                     requirement_set = Requirement_buys.objects.filter(status='2', type='M', status_pay='2',
                                                                       approval_date__year=year,
@@ -6964,16 +6975,16 @@ def purchase_report_by_product_category(request):
             category_row['sum_total_year'] = '{:,}'.format(round(decimal.Decimal(sum_total_year), 2))
 
             purchase_dict.append(category_row)
-        for m in month_names:
-            b10kg = get_balon_month_and_year(year=year, month=month_names.index(m) + 1)
-            sum_sale_month[month_names.index(m)] = decimal.Decimal(b10kg)
-            if decimal.Decimal(sum_month[month_names.index(m)]) > 0 and decimal.Decimal(b10kg) > 0:
-                sum_cost_month[month_names.index(m)] = decimal.Decimal(
-                    sum_month[month_names.index(m)]) / decimal.Decimal(b10kg)
-            else:
-                sum_cost_month[month_names.index(m)] = 0
-            sum_total_sale += decimal.Decimal(b10kg)
-            sum_cost_total += sum_cost_month[month_names.index(m)]
+        # for m in month_names:
+        #     b10kg = get_balon_month_and_year2(year=year, month=month_names.index(m) + 1)
+        #     sum_sale_month[month_names.index(m)] = decimal.Decimal(b10kg)
+        #     if decimal.Decimal(sum_month[month_names.index(m)]) > 0 and decimal.Decimal(b10kg) > 0:
+        #         sum_cost_month[month_names.index(m)] = decimal.Decimal(
+        #             sum_month[month_names.index(m)]) / decimal.Decimal(b10kg)
+        #     else:
+        #         sum_cost_month[month_names.index(m)] = 0
+        #     sum_total_sale += decimal.Decimal(b10kg)
+        #     sum_cost_total += sum_cost_month[month_names.index(m)]
 
         tpl = loader.get_template('sales/report_purchase_category_and_month_grid.html')
         context = ({
