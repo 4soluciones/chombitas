@@ -93,30 +93,6 @@
 
 <script type="text/javascript">
 
-    $(document).on('click', '.btn-show-payments', function () {
-        let _worker_id = $(this).attr('pk');
-        let _type = $(this).parent('td').attr("type")
-
-        $.ajax({
-            url: '/accounting/get_salary_pay/',
-            async: true,
-            dataType: 'json',
-            type: 'GET',
-            data: {
-                'worker_id': _worker_id,
-                'type': _type,
-                'month': $('#id_month').val(),
-                'year': $('#id_year').val(),
-            },
-            success: function (response) {
-                $('#pay-salary').html(response.grid);
-            },
-            fail: function (response) {
-                console.log("error");
-            }
-        });
-    });
-
     $('#report-salary tr.salary td.pay-row').each(function () {
         let row_pay = $(this).text();
         if (row_pay !== '') {

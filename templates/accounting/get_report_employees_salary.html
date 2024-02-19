@@ -30,10 +30,10 @@
                     <label class="my-1 ml-2 mr-2" for="id_year">Año: </label>
                     <select id="id_year" name="year"
                             class="form-control">
-                        <option  value="2021">2021</option>
+                        <option value="2021">2021</option>
                         <option selected value="2022">2022</option>
-                        <option  value="2023">2023</option>
-                        <option  value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
                     </select>
 
                     <button type="submit" class="btn btn-blue my-1 ml-2" id="btn-search">
@@ -114,6 +114,29 @@
             $('#btn-search').removeAttr("disabled", "false");
         });
 
+        $(document).on('click', '.btn-show-payments', function () {
+            let _worker_id = $(this).attr('pk');
+            let _type = $(this).parent('td').attr("type")
+
+            $.ajax({
+                url: '/accounting/get_salary_pay/',
+                async: true,
+                dataType: 'json',
+                type: 'GET',
+                data: {
+                    'worker_id': _worker_id,
+                    'type': _type,
+                    'month': $('#id_month').val(),
+                    'year': $('#id_year').val(),
+                },
+                success: function (response) {
+                    $('#pay-salary').html(response.grid);
+                },
+                fail: function (response) {
+                    console.log("error");
+                }
+            });
+        });
 
     </script>
 
