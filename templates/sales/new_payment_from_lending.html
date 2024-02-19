@@ -237,10 +237,11 @@
                 <tr>
                     <td class="border-top-0 border-bottom border-right align-middle">DEPOSITOS</td>
                     <td class="border-top-0 border-bottom border-right align-middle">
+
                         <select id="cash-flow-deposit-id" name="cash-flow-deposit-id" class="form-control form-control-sm" aria-describedby="depositedHelpBlock">
                             <option value="0">SELECCIONA</option>
                             {% for cf in cash_flow_of_distributions_with_deposits_set %}
-                                {% if cf.type == "D" %}
+                                {% if cf.type == "D" or cf.type == "E" %}
                                     <option value="{{ cf.id }}"
                                             cash-flow-transaction-date="{{ cf.transaction_date|safe }}"
                                             cash-flow-missing="{{ cf.calculate_total_missing|safe }}"

@@ -439,7 +439,7 @@ class DistributionMobil(models.Model):
         return round(total, 1)
 
     def calculate_total_deposits(self):
-        cash_flow_set = CashFlow.objects.filter(distribution_mobil=self, type='D')
+        cash_flow_set = CashFlow.objects.filter(distribution_mobil=self, type__in=['D', 'E'])
 
         total = 0
         for cf in cash_flow_set.all():
