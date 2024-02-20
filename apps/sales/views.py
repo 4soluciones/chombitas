@@ -3360,7 +3360,6 @@ def new_expense(request):
 
 
 def new_loan_payment(request):
-
     if request.method == 'POST':
         id_detail = int(request.POST.get('detail'))
         start_date = request.POST.get('start_date', '')
@@ -6642,7 +6641,7 @@ def report_table(request, year=None):
             'sum_total_year': sum_total_year
         }
         for m in month_names:
-            if sector.index(c) == len(sector)-1:
+            if sector.index(c) == len(sector) - 1:
                 b10kg = get_balon_month_and_year2(year=year, month=month_names.index(m) + 1)
                 # b10kg = get_balon_month_and_year(year=year, month=month_names.index(m) + 1)
                 sum_sale_month[month_names.index(m)] = decimal.Decimal(b10kg)
@@ -6930,7 +6929,8 @@ def purchase_report_by_product_category(request):
                     sum_month[month_names.index(m)] += float_requirement_sum_total
                 elif value == 'PP':
                     salary_total = CashFlow.objects.filter(transaction_date__year=year,
-                                                           transaction_date__month=month_names.index(m) + 1).aggregate(
+                                                           transaction_date__month=month_names.index(m) + 1,
+                                                           salary__type__in=['S', 'G']).aggregate(
                         r=Coalesce(Sum('total'), decimal.Decimal(0.00))).get('r')
                     if salary_total is not None:
                         float_salary_total = float(salary_total)
