@@ -218,6 +218,8 @@ class Supplier(models.Model):
                       ('M', 'MANTENIMIENTO'),
                       ('PE', 'PEAJES'),
                       ('PP', 'PAGOS PERSONAL'),
+                      ('BA', 'BATERIAS'),
+                      ('SE', 'SERVICIOS'),
                       ('O', 'OTROS'),)
     id = models.AutoField(primary_key=True)
     name = models.CharField('Nombre', max_length=200, unique=True)
