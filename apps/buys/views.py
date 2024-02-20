@@ -63,6 +63,12 @@ def save_purchase(request):
         type_bill = str(data_purchase["Type_bill"])
         date = str(data_purchase["Date"])
         invoice = str(data_purchase["Invoice"])
+        purchase_set = Purchase.objects.filter(bill_number__iexact=invoice)
+        if purchase_set.exists():
+            return JsonResponse({
+                'success': False,
+                'message': 'El numero de comprobante ya se encuentra registrado.',
+            }, status=HTTPStatus.OK)
         category = str(data_purchase["category"])
         print(data_purchase["truck"])
         if (data_purchase["truck"]) is not None:
@@ -114,8 +120,8 @@ def save_purchase(request):
             new_purchase_detail_obj.save()
 
         return JsonResponse({
-            'message': 'COMPRA REGISTRADA CORRECTAMENTE.',
-
+            'success': True,
+            'message': 'Compra regitrada correctamente.',
         }, status=HTTPStatus.OK)
 
 

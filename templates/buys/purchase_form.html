@@ -450,10 +450,15 @@
                     headers: {"X-CSRFToken": '{{ csrf_token }}'},
                     success: function (response, textStatus, xhr) {
                         if (xhr.status === 200) {
-                            toastr.success(response.message, '¡COMPRA REGISTRADA CORRECTAMENTE!');
-                            setTimeout(() => {
-                                location.reload();
-                            }, 200);
+                            if (response.success) {
+                                toastr.success(response.message, '¡RESULTADO!');
+                                setTimeout(() => {
+                                    location.reload();
+                                }, 200);
+                            } else {
+                                toastr.error(response.message, '¡RESULTADO!');
+                            }
+
                         }
                     },
                     error: function (jqXhr, textStatus, xhr) {
@@ -558,7 +563,7 @@
                         $('#document').val(document)
                         $('#search-supplier').val(names)
                         $('#ProviderId').val(response.pk)
-                    }else {
+                    } else {
                         toastr.error(response.message);
                     }
                 },
