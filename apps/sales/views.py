@@ -2937,7 +2937,7 @@ def get_base_query(queryset=None):
         Prefetch(
             'cashflow_set', queryset=CashFlow.objects.select_related('cash')
         ),
-    ).select_related('distribution_mobil__truck', 'distribution_mobil__pilot', 'client').order_by('id')
+    ).select_related('distribution_mobil__truck', 'distribution_mobil__pilot', 'client').order_by('create_at', 'id')
 
 
 def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=None, subsidiary_obj=None):
@@ -6595,7 +6595,7 @@ def get_report_purchase_category_by_license_plate(request):
                 PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
                     return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
             )
-        )
+        ).order_by('purchase_date')
 
         query_sum = purchase_set.aggregate(Sum('sum_total'))
         purchases_sum_total = 0

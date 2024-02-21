@@ -2145,6 +2145,8 @@ def get_supplier(request):
                 'names': supplier_obj.business_name,
                 'phone': supplier_obj.phone,
                 'address': supplier_obj.address,
+                'email': supplier_obj.email,
+                'sector': supplier_obj.sector,
                 'message': 'Operacion exitosa'},
                 status=HTTPStatus.OK)
         else:
@@ -2218,26 +2220,43 @@ def save_supplier(request):
         data = json.loads(supplier_request)
         # print(data_purchase)
         try:
+            pk = str(data["pk"])
             document = str(data["document"])
             names = data["names"]
             address = data["address"]
             phone = data["phone"]
             email = data["email"]
             sector = data["sector"]
-            supplier_obj = Supplier(
-                ruc=document,
-                business_name=names,
-                name=document,
-                address=address,
-                phone=phone,
-                email=email,
-                sector=sector
-            )
-            supplier_obj.save()
-            return JsonResponse({
-                'pk': supplier_obj.id,
-                'message': 'PROVEEDOR REGISTRADO CORRECTAMENTE.',
-            }, status=HTTPStatus.OK)
+            if int(pk) > 0:
+                supplier_obj = Supplier.objects.get(id=int(pk))
+                supplier_obj.ruc = document
+                supplier_obj.business_name = names
+                supplier_obj.name = names
+                supplier_obj.address = address
+                supplier_obj.phone = phone
+                supplier_obj.email = email
+                supplier_obj.sector = sector
+                supplier_obj.save()
+                return JsonResponse({
+                    'pk': supplier_obj.id,
+                    'message': 'PROVEEDOR ACTUALIZADO CORRECTAMENTE.',
+                }, status=HTTPStatus.OK)
+            else:
+                supplier_obj = Supplier(
+                    ruc=document,
+                    business_name=names,
+                    name=names,
+                    address=address,
+                    phone=phone,
+                    email=email,
+                    sector=sector
+                )
+                supplier_obj.save()
+                return JsonResponse({
+                    'pk': supplier_obj.id,
+                    'message': 'PROVEEDOR REGISTRADO CORRECTAMENTE.',
+                }, status=HTTPStatus.OK)
+
         except Exception as e:
             return JsonResponse({
                 'message': str(e),
