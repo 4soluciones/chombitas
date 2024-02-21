@@ -1,0 +1,101 @@
+{% extends 'home.html' %}
+
+{% block title %}
+    Comercial | Reporte inclusivo de balones
+{% endblock title %}
+
+{% block body %}
+    <div class="container-fluid mt-3">
+
+    <p class="h4">SALIDAS DIARIAS DE LLENOS SICUANI</p>
+
+        <div class="card">
+            <div class="card-body">
+            <h5 class="card-title">Filtros</h5>
+                <form class="form-inline" id="search-form" method="POST">
+                    {% csrf_token %}
+
+                    <label class="my-1 mr-2" for="id-programming-date">FECHA :</label>
+                    <input type="date" class="form-control mr-2" id="id-programming-date" name="programming-date" value="{{ formatdate }}" required />
+
+
+                    <button type="submit" class="btn btn-info my-1  mr-2">
+                        <i class="fas fa-search-dollar" id="btn-search"></i> Buscar
+                    </button>
+
+                    <a onclick="excelTickets();" class="btn btn-success text-white my-1">
+                        <span class="fa fa-file-excel"></span> Exportar
+                    </a>
+                </form>
+
+                <div id="programming-grid-list" class="table-responsive">{% include "comercial/inclusive_report_on_gas_cylinders_grid_list.html" %}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    ...
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock body %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+
+        function excelTickets() {
+
+            $("#excel-data-grid").table2excel({
+                // exclude CSS class
+                exclude: ".noExl",
+                name: "Worksheet vouchers",
+                filename: "reporte_mensual_de_repartidor",//do not include extension
+                fileext: ".xlsx", // file extension
+                preserveColors: true
+
+            });
+        }
+
+        $('#search-form').submit(function (event) {
+            event.preventDefault();
+            let _data = new FormData($('#search-form').get(0));
+            $("#btn-search").attr("disabled", "true");
+            $.ajax({
+                url: '/comercial/get_inclusive_report_on_gas_cylinders/',
+                type: "POST",
+                data: _data,
+                cache: false,
+                processData: false,
+                contentType: false,
+                success: function (response, textStatus, xhr) {
+                    console.log(response);
+                    if (xhr.status === 200) {
+                        $('#programming-grid-list').html(response.grid);
+                        toastr.info(response['message'], '¡Bien hecho!');
+                    }
+                },
+                error: function (jqXhr, textStatus, xhr) {
+                    if (jqXhr.status === 500) {
+                        toastr.info(jqXhr.responseJSON.error, '¡Inconcebible!');
+                    }
+                }
+            });
+
+            $("#btn-search").removeAttr("disabled", "false");
+        });
+    </script>
+{% endblock extrajs %}

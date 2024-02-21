@@ -1,0 +1,73 @@
+<style>
+    .text-rotated-90{
+        transform: rotate(180deg);
+        white-space: nowrap;
+        writing-mode: vertical-rl;
+        padding: 0;
+        line-height: 0.9;
+    }
+</style>
+
+
+{{ programming_date_sin_timezone }}
+<table class="table table-sm table-bordered" id="excel-data-grid">
+    <thead>
+    <tr>
+        <td class="align-middle text-center font-small font-weight-bold">TIPO<br/>SALIDA</td>
+        <td class="align-middle text-center font-small font-weight-bold">GUIA</td>
+        <td class="align-middle text-center font-small font-weight-bold">VEHICULO</td>
+        <td class="align-middle text-center font-small font-weight-bold">CHOFER</td>
+        <td class="align-middle text-center font-small font-weight-bold">DESTINO</td>
+        <td class="align-middle text-center font-small font-weight-bold">CLIENTE</td>
+        <td class="align-middle text-center font-small font-weight-bold">10KG</td>
+        <td class="align-middle text-center font-small font-weight-bold">45KG</td>
+        <td class="align-middle text-center font-small font-weight-bold">15KG</td>
+        <td class="align-middle text-center font-small font-weight-bold">5KG</td>
+        <td class="align-middle text-center font-small font-weight-bold">DEPOSITO</td>
+        <td class="align-middle text-center font-small font-weight-bold">GASTO</td>
+        <td class="align-middle text-center font-small font-weight-bold"></td>
+    </tr>
+    </thead>
+    <tbody>
+    {% for programming in outputs %}
+    <tr
+        {% if programming.type == 'Guide' %}
+            class=" table-primary"
+        {% endif %}
+    >
+        <td class="align-middle text-center">{{ programming.type|slice:"0:1" }}</td>
+        <td class="align-middle text-center">{{ programming.guideCode }}</td>
+        <td class="align-middle text-center">{{ programming.licensePlate }}</td>
+        <td class="align-middle text-center">{{ programming.pilot }}</td>
+        <td class="align-middle text-center">{{ programming.destiny }}</td>
+        <td class="align-middle text-center">{{ programming.client }}</td>
+        {% for k, v in programming.gasCylinders.items %}
+        <td class="align-middle text-center">{{ v }}</td>
+        {% endfor %}
+        <td class="align-middle text-center"></td>
+        <td class="align-middle text-center"></td>
+        <td class="align-middle text-center">
+            <button type="button" class="btn btn-sm btn-blue" data-toggle="modal" data-target="#exampleModal">
+                ASOCIAR PAGO
+            </button>
+        </td>
+
+
+    </tr>
+    {% endfor %}
+
+
+    </tbody>
+<tfoot>
+<tr>
+    <td colspan="6" class="font-weight-bold text-right">TOTAL</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+</tr>
+</tfoot>
+</table>

@@ -19,6 +19,18 @@
                                         <input type="text" class="form-control" id="document"
                                                name="document"
                                                value="" placeholder="Ingrese ruc" required>
+                                        {#                                        <div class="input-group input-group">#}
+                                        {#                                            <input class="form-control" id="document"#}
+                                        {#                                                   name="document"#}
+                                        {#                                                   value="" placeholder="Ingrese ruc" required/>#}
+                                        {#                                            <div class="input-group-append">#}
+                                        {#                                                <button type="button" class="btn btn-primary"#}
+                                        {#                                                        data-toggle="modal"#}
+                                        {#                                                        data-target="#modal-supplier">#}
+                                        {#                                                    <i class="fa fa-search"></i>#}
+                                        {#                                                </button>#}
+                                        {#                                            </div>#}
+                                        {#                                        </div>#}
                                         <input type="hidden" class="form-control" value="0" id="ProviderId"
                                                name="ProviderId">
                                     </div>
@@ -32,7 +44,7 @@
                                                        placeholder="Buscar proveedor..."/>
                                                 <div class="input-group-append">
                                                     <button type="submit" class="btn btn-primary"
-                                                            data-toggle="modal"
+                                                            data-toggle="modal" onclick="NewProvider()"
                                                             data-target="#modal-supplier">
                                                         <i class="fa fa-plus"></i>
                                                     </button>
@@ -207,6 +219,7 @@
                         <div class="col-md-12">
                             <label class="m-0">Numero documento</label>
                             <input type="text" class="form-control" id="s_document" name="s_document">
+                            <input type="hidden" value="0" id="id_provider" name="id_provider">
                         </div>
                     </div>
                     <div class="row">
@@ -302,6 +315,21 @@
                     }
                 }
             })
+            // Agrega un evento de teclado al input principal
+            $("#document").keypress(function (event) {
+                $("#id_provider").val("0");
+                if (event.keyCode === 13) {
+                    event.preventDefault()
+                    $(this).trigger("enterKey");
+                    let document = $('#document').val();
+                    $("#s_document").val(document);
+                    $("#modal-supplier").modal("show");
+                    var e = jQuery.Event("keypress");
+                    e.which = 13;
+                    e.keyCode = 13;
+                    $("#s_document").trigger(e);
+                }
+            });
         })
         {#document.ready = document.getElementById("opciones").value = '0';#}
         {#$('#id_proveedor').select2({#}
@@ -316,28 +344,33 @@
         $("#btn-new").click(function () {
             limper_form();
         });
-        $('#document').keypress(function (e) {
+
+        $('#s_document').keypress(function (e) {
             if (e.keyCode === 13) {
                 e.preventDefault()
                 $(this).trigger("enterKey");
-                let document = $('#document').val();
+                let s_document = $('#s_document').val();
                 // if ((document.length !== 8)) {
                 //     toastr.warning('El DNI debe contener 8 digitos');
                 //     return false;
                 // }
-                $('#id-loading').css('display', '')
+                {#$('#id-loading').css('display', '')#}
                 $.ajax({
                     url: '/buys/get_supplier/',
                     dataType: 'json',
                     type: 'GET',
-                    data: {'document': document},
+                    data: {'document': s_document},
                     success: function (response) {
                         if (response.pk) {
                             toastr.success(response.message);
-                            $("#ProviderId").val(response.pk);
-                            $("#search-supplier").val(response.names);
-                            {#$("#phone").val(response.phone);#}
-                            {#$("#address").val(response.address);#}
+                            $("#id_provider").val(response.pk);
+                            $("#s_names").val(response.names);
+                            $("#s_address").val(response.address);
+                            {#$("#ProviderId").val(response.pk);#}
+                            {#$("#search-supplier").val(response.names);#}
+                            $("#s_phone").val(response.phone);
+                            $("#s_sector").val(response.sector);
+                            $("#s_email").val(response.address);
                         } else {
                             toastr.error(response.message)
                         }
@@ -521,6 +554,7 @@
         }
 
         function SaveSupplier() {
+            let pk = $('#id_provider').val()
             let document = $('#s_document').val()
             let names = $('#s_names').val()
             let address = $('#s_address').val()
@@ -540,6 +574,7 @@
                 return false
             }
             let supplier = {
+                "pk": pk,
                 "document": document,
                 "names": names,
                 "address": address,
@@ -571,6 +606,18 @@
                     toastr.error("ERROR. ", '¡INCONCEBIBLE!');
                 }
             });
+        }
+
+        function NewProvider() {
+            $("#id_provider").val("0");
+            $("#s_document").val("");
+            $("#s_names").val("");
+            $("#s_address").val("");
+            {#$("#ProviderId").val(response.pk);#}
+            {#$("#search-supplier").val(response.names);#}
+            $("#s_phone").val("");
+            $("#s_sector").val("N");
+            $("#s_email").val("");
         }
     </script>
 {% endblock extrajs %}

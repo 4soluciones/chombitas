@@ -204,9 +204,6 @@
                                id="id_price_of_vouchers"
                                name="price_of_vouchers"
                                value="18.00"
-                               readonly
-                               disabled
-                               style="color: #e9ecef;"
                                class="form-control form-control-sm">
                     </td>
 
@@ -658,19 +655,27 @@
 
     });
 
-    $('#id_loan_payment').keyup(function () {
-        let val = $(this).val();
+    $('#id_price_of_vouchers').keyup(function () {
+        calculateNumberOfVouchers();
+    });
+
+    function calculateNumberOfVouchers(){
+        let val = $('#id_loan_payment').val();
         let _price_of_vouchers = parseFloat($('#id_price_of_vouchers').val());
         let _number_of_vouchers = $('#id_number_of_vouchers');
         let _quantity = 0;
         if (isNaN(val) || val === '') {
             val = 0;
             _number_of_vouchers.val(0);
-            $(this).val(val);
+            $('#id_loan_payment').val(val);
         } else {
             _quantity = parseFloat(val) / _price_of_vouchers;
             _number_of_vouchers.val(_quantity.toFixed(2));
         }
+    }
+
+    $('#id_loan_payment').keyup(function () {
+        calculateNumberOfVouchers();
 
         let transactionPaymentType = $('#id_transaction_payment_type').val();
         if (transactionPaymentType==="PFD"){
