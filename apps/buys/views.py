@@ -60,7 +60,7 @@ def save_purchase(request):
         # print(data_purchase)
 
         provider_id = str(data_purchase["ProviderId"])
-        if int(provider_id)>0:
+        if provider_id != "" or provider_id != "0":
             type_bill = str(data_purchase["Type_bill"])
             date = str(data_purchase["Date"])
             invoice = str(data_purchase["Invoice"])
