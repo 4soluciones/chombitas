@@ -60,69 +60,75 @@ def save_purchase(request):
         # print(data_purchase)
 
         provider_id = str(data_purchase["ProviderId"])
-        type_bill = str(data_purchase["Type_bill"])
-        date = str(data_purchase["Date"])
-        invoice = str(data_purchase["Invoice"])
-        purchase_set = Purchase.objects.filter(bill_number__iexact=invoice)
-        if purchase_set.exists():
+        if int(provider_id)>0:
+            type_bill = str(data_purchase["Type_bill"])
+            date = str(data_purchase["Date"])
+            invoice = str(data_purchase["Invoice"])
+            purchase_set = Purchase.objects.filter(bill_number__iexact=invoice)
+            if purchase_set.exists():
+                return JsonResponse({
+                    'success': False,
+                    'message': 'El numero de comprobante ya se encuentra registrado.',
+                }, status=HTTPStatus.OK)
+            category = str(data_purchase["category"])
+            print(data_purchase["truck"])
+            if (data_purchase["truck"]) is not None:
+                truck_id = int(data_purchase["truck"])
+                truck_obj = Truck.objects.get(id=truck_id)
+                status = 'A'
+            else:
+                truck_obj = None
+                status = 'S'
+            user_id = request.user.id
+            user_obj = User.objects.get(pk=int(user_id))
+
+            subsidiary_obj = get_subsidiary_by_user(user_obj)
+            print(subsidiary_obj)
+            supplier_obj = Supplier.objects.get(id=int(provider_id))
+
+            purchase_obj = Purchase(
+                supplier=supplier_obj,
+                purchase_date=date,
+                bill_number=invoice,
+                user=user_obj,
+                subsidiary=subsidiary_obj,
+                truck=truck_obj,
+                status=status,
+                type_bill=type_bill,
+                category=category
+            )
+            purchase_obj.save()
+
+            for detail in data_purchase['Details']:
+                quantity = decimal.Decimal(detail['Quantity'])
+                price = decimal.Decimal(detail['Price'])
+                # recuperamos del producto
+                product_id = int(detail['Product'])
+                product_obj = Product.objects.get(id=product_id)
+
+                # recuperamos la unidad
+                unit_id = int(detail['Unit'])
+                unit_obj = Unit.objects.get(id=unit_id)
+
+                new_purchase_detail = {
+                    'purchase': purchase_obj,
+                    'product': product_obj,
+                    'quantity': quantity,
+                    'unit': unit_obj,
+                    'price_unit': price,
+                }
+                new_purchase_detail_obj = PurchaseDetail.objects.create(**new_purchase_detail)
+                new_purchase_detail_obj.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Compra regitrada correctamente.',
+            }, status=HTTPStatus.OK)
+        else:
             return JsonResponse({
                 'success': False,
-                'message': 'El numero de comprobante ya se encuentra registrado.',
+                'message': 'Seleccion correctamente el proveedor.',
             }, status=HTTPStatus.OK)
-        category = str(data_purchase["category"])
-        print(data_purchase["truck"])
-        if (data_purchase["truck"]) is not None:
-            truck_id = int(data_purchase["truck"])
-            truck_obj = Truck.objects.get(id=truck_id)
-            status = 'A'
-        else:
-            truck_obj = None
-            status = 'S'
-        user_id = request.user.id
-        user_obj = User.objects.get(pk=int(user_id))
-
-        subsidiary_obj = get_subsidiary_by_user(user_obj)
-        print(subsidiary_obj)
-        supplier_obj = Supplier.objects.get(id=int(provider_id))
-
-        purchase_obj = Purchase(
-            supplier=supplier_obj,
-            purchase_date=date,
-            bill_number=invoice,
-            user=user_obj,
-            subsidiary=subsidiary_obj,
-            truck=truck_obj,
-            status=status,
-            type_bill=type_bill,
-            category=category
-        )
-        purchase_obj.save()
-
-        for detail in data_purchase['Details']:
-            quantity = decimal.Decimal(detail['Quantity'])
-            price = decimal.Decimal(detail['Price'])
-            # recuperamos del producto
-            product_id = int(detail['Product'])
-            product_obj = Product.objects.get(id=product_id)
-
-            # recuperamos la unidad
-            unit_id = int(detail['Unit'])
-            unit_obj = Unit.objects.get(id=unit_id)
-
-            new_purchase_detail = {
-                'purchase': purchase_obj,
-                'product': product_obj,
-                'quantity': quantity,
-                'unit': unit_obj,
-                'price_unit': price,
-            }
-            new_purchase_detail_obj = PurchaseDetail.objects.create(**new_purchase_detail)
-            new_purchase_detail_obj.save()
-
-        return JsonResponse({
-            'success': True,
-            'message': 'Compra regitrada correctamente.',
-        }, status=HTTPStatus.OK)
 
 
 # guardar detalle de compras en almacenes

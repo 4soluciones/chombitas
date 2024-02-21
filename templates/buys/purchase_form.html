@@ -43,7 +43,7 @@
                                                        name="search-supplier"
                                                        placeholder="Buscar proveedor..."/>
                                                 <div class="input-group-append">
-                                                    <button type="submit" class="btn btn-primary"
+                                                    <button type="button" class="btn btn-primary"
                                                             data-toggle="modal" onclick="NewProvider()"
                                                             data-target="#modal-supplier">
                                                         <i class="fa fa-plus"></i>
@@ -258,7 +258,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" id="close-supplier" data-dismiss="modal">Cancelar
+                    <button type="button" class="btn btn-secondary" id="close-supplier" onclick="Limpiar()" data-dismiss="modal">Cancelar
                     </button>
                     <button type="button" onclick="SaveSupplier()" class="btn btn-primary">Registrar</button>
                 </div>
@@ -618,6 +618,11 @@
             $("#s_phone").val("");
             $("#s_sector").val("N");
             $("#s_email").val("");
+        }
+        function Limpiar(){
+              $('#ProviderId').val("0")
+              $('#document').val("")
+              $('#search-supplier').val("")
         }
     </script>
 {% endblock extrajs %}
