@@ -2231,7 +2231,7 @@ def save_supplier(request):
             names = data["names"]
             address = data["address"]
             phone = data["phone"]
-            email = data["email"]
+            # email = data["email"]
             sector = data["sector"]
             if int(pk) > 0:
                 supplier_obj = Supplier.objects.get(id=int(pk))
@@ -2240,7 +2240,7 @@ def save_supplier(request):
                 supplier_obj.name = names
                 supplier_obj.address = address
                 supplier_obj.phone = phone
-                supplier_obj.email = email
+                # supplier_obj.email = email
                 supplier_obj.sector = sector
                 supplier_obj.save()
                 return JsonResponse({
@@ -2254,7 +2254,7 @@ def save_supplier(request):
                     name=names,
                     address=address,
                     phone=phone,
-                    email=email,
+                    # email=email,
                     sector=sector
                 )
                 supplier_obj.save()

@@ -240,12 +240,12 @@
                             <input type="text" class="form-control" id="s_phone" name="s_phone">
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <label class="m-0">Correo electronico</label>
-                            <input type="text" class="form-control" id="s_email" name="s_email">
-                        </div>
-                    </div>
+{#                    <div class="row">#}
+{#                        <div class="col-md-12">#}
+{#                            <label class="m-0">Correo electronico</label>#}
+{#                            <input type="text" class="form-control" id="s_email" name="s_email">#}
+{#                        </div>#}
+{#                    </div>#}
                     <div class="row">
                         <div class="col-md-12">
                             <label class="m-0">Sector</label>
@@ -370,7 +370,7 @@
                             {#$("#search-supplier").val(response.names);#}
                             $("#s_phone").val(response.phone);
                             $("#s_sector").val(response.sector);
-                            $("#s_email").val(response.address);
+                            {#$("#s_email").val(response.email);#}
                         } else {
                             toastr.error(response.message)
                         }
@@ -559,7 +559,7 @@
             let names = $('#s_names').val()
             let address = $('#s_address').val()
             let phone = $('#s_phone').val()
-            let email = $('#s_email').val()
+            {#let email = $('#s_email').val()#}
             let sector = $('#s_sector').val()
             if (document === "") {
                 toastr.warning('Ingrese un numero de docuemnto')
@@ -617,7 +617,7 @@
             {#$("#search-supplier").val(response.names);#}
             $("#s_phone").val("");
             $("#s_sector").val("N");
-            $("#s_email").val("");
+            {#$("#s_email").val("");#}
         }
         function Limpiar(){
               $('#ProviderId').val("0")
