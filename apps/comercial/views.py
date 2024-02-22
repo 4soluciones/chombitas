@@ -2428,6 +2428,15 @@ def get_monthly_distribution_by_licence_plate(request):
             distribution_obj = grouped_by_date[date_str]
             distribution_obj['date'] = date_str.replace('JAN', 'ENE')
 
+            quantity_recovered_in_plant_b10 = get_ball_recovered_in_plant(
+                product_id=1, distribution_mobil_id=distribution.id)
+            quantity_recovered_in_plant_b5 = get_ball_recovered_in_plant(
+                product_id=2, distribution_mobil_id=distribution.id)
+            quantity_recovered_in_plant_b45 = get_ball_recovered_in_plant(
+                product_id=3, distribution_mobil_id=distribution.id)
+            quantity_recovered_in_plant_b15 = get_ball_recovered_in_plant(
+                product_id=12, distribution_mobil_id=distribution.id)
+
             for detail in distribution.distributiondetail_set.all():
                 # last_distribution_detail_in_the_car_obj = None
                 # if distribution.previous_distribution_id > 0:
@@ -2441,9 +2450,6 @@ def get_monthly_distribution_by_licence_plate(request):
                 #         last_distribution_detail_in_the_car_obj = last_distribution_detail_in_the_car_set.last()
 
                 product_id = detail.product.id
-
-                quantity_recovered_in_plant_b = get_ball_recovered_in_plant(
-                    product_id=product_id, distribution_mobil_id=detail.distribution_mobil_id)
 
                 ball = None
                 in_the_car_bg = 0
@@ -2476,33 +2482,79 @@ def get_monthly_distribution_by_licence_plate(request):
                 if detail.status == "R" and detail.type == "V":
                     ball["recovered_b"] += int(detail.quantity)
                     if product_id == 1:
+
+                        if quantity_recovered_in_plant_b10 > 0:
+                            ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b10)
+                            ball["remaining_borrowed_b"] = remaining_borrowed_b10 - int(quantity_recovered_in_plant_b10)
+                            remaining_borrowed_b10 -= int(quantity_recovered_in_plant_b10)
+
                         ball["remaining_borrowed_b"] = remaining_borrowed_b10 - int(detail.quantity)
                         remaining_borrowed_b10 -= int(detail.quantity)
                     elif product_id == 2:
+
+                        if quantity_recovered_in_plant_b5 > 0:
+                            ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b5)
+                            ball["remaining_borrowed_b"] = remaining_borrowed_b5 - int(quantity_recovered_in_plant_b5)
+                            remaining_borrowed_b5 -= int(quantity_recovered_in_plant_b5)
+
                         ball["remaining_borrowed_b"] = remaining_borrowed_b5 - int(detail.quantity)
                         remaining_borrowed_b5 -= int(detail.quantity)
                     elif product_id == 3:
+
+                        if quantity_recovered_in_plant_b45 > 0:
+                            ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b45)
+                            ball["remaining_borrowed_b"] = remaining_borrowed_b45 - int(quantity_recovered_in_plant_b45)
+                            remaining_borrowed_b45 -= int(quantity_recovered_in_plant_b45)
+
                         ball["remaining_borrowed_b"] = remaining_borrowed_b45 - int(detail.quantity)
                         remaining_borrowed_b45 -= int(detail.quantity)
                     elif product_id == 12:
+
+                        if quantity_recovered_in_plant_b15 > 0:
+                            ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b15)
+                            ball["remaining_borrowed_b"] = remaining_borrowed_b15 - int(quantity_recovered_in_plant_b15)
+                            remaining_borrowed_b15 -= int(quantity_recovered_in_plant_b15)
+
                         ball["remaining_borrowed_b"] = remaining_borrowed_b15 - int(detail.quantity)
                         remaining_borrowed_b15 -= int(detail.quantity)
                 if detail.status == "A" and detail.type == "V":
                     ball["advanced_b"] += int(detail.quantity)
-                if quantity_recovered_in_plant_b > 0:
-                    ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b)
-                    if product_id == 1:
-                        ball["remaining_borrowed_b"] = remaining_borrowed_b10 - int(quantity_recovered_in_plant_b)
-                        remaining_borrowed_b10 -= int(quantity_recovered_in_plant_b)
-                    elif product_id == 2:
-                        ball["remaining_borrowed_b"] = remaining_borrowed_b5 - int(quantity_recovered_in_plant_b)
-                        remaining_borrowed_b5 -= int(quantity_recovered_in_plant_b)
-                    elif product_id == 3:
-                        ball["remaining_borrowed_b"] = remaining_borrowed_b45 - int(quantity_recovered_in_plant_b)
-                        remaining_borrowed_b45 -= int(quantity_recovered_in_plant_b)
-                    elif product_id == 12:
-                        ball["remaining_borrowed_b"] = remaining_borrowed_b15 - int(quantity_recovered_in_plant_b)
-                        remaining_borrowed_b15 -= int(quantity_recovered_in_plant_b)
+
+                # if quantity_recovered_in_plant_b > 0:
+                #     ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b)
+                #     if product_id == 1:
+                #         ball["remaining_borrowed_b"] = remaining_borrowed_b10 - int(quantity_recovered_in_plant_b)
+                #         remaining_borrowed_b10 -= int(quantity_recovered_in_plant_b)
+                #     elif product_id == 2:
+                #         ball["remaining_borrowed_b"] = remaining_borrowed_b5 - int(quantity_recovered_in_plant_b)
+                #         remaining_borrowed_b5 -= int(quantity_recovered_in_plant_b)
+                #     elif product_id == 3:
+                #         ball["remaining_borrowed_b"] = remaining_borrowed_b45 - int(quantity_recovered_in_plant_b)
+                #         remaining_borrowed_b45 -= int(quantity_recovered_in_plant_b)
+                #     elif product_id == 12:
+                #         ball["remaining_borrowed_b"] = remaining_borrowed_b15 - int(quantity_recovered_in_plant_b)
+                #         remaining_borrowed_b15 -= int(quantity_recovered_in_plant_b)
+                # if product_id == 1:
+                #     if quantity_recovered_in_plant_b10 > 0:
+                #         ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b10)
+                #         ball["remaining_borrowed_b"] = remaining_borrowed_b10 - int(quantity_recovered_in_plant_b10)
+                #         remaining_borrowed_b10 -= int(quantity_recovered_in_plant_b10)
+                # elif product_id == 2:
+                #     if quantity_recovered_in_plant_b5 > 0:
+                #         ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b5)
+                #         ball["remaining_borrowed_b"] = remaining_borrowed_b5 - int(quantity_recovered_in_plant_b5)
+                #         remaining_borrowed_b5 -= int(quantity_recovered_in_plant_b5)
+                # elif product_id == 3:
+                #     if quantity_recovered_in_plant_b45 > 0:
+                #         ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b45)
+                #         ball["remaining_borrowed_b"] = remaining_borrowed_b45 - int(quantity_recovered_in_plant_b45)
+                #         remaining_borrowed_b45 -= int(quantity_recovered_in_plant_b45)
+                # elif product_id == 12:
+                #     if quantity_recovered_in_plant_b15 > 0:
+                #         ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b15)
+                #         ball["remaining_borrowed_b"] = remaining_borrowed_b15 - int(quantity_recovered_in_plant_b15)
+                #         remaining_borrowed_b15 -= int(quantity_recovered_in_plant_b15)
+
             total_sales_by_date = 0
             for order in distribution.order_set.all():
 
