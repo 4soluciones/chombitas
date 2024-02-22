@@ -748,7 +748,7 @@ def new_cash_transfer_to_cash(request):
 
         else:
             data = {
-                'error': "No existe una Apertura de Caja, Favor de revisar los Control de Cajas"}
+                'error': "No existe una Apertura en Caja Origen, Favor de revisar los Control de Cajas"}
             response = JsonResponse(data)
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
             return response
@@ -760,7 +760,7 @@ def new_cash_transfer_to_cash(request):
             cash_destiny_obj = cashflow_set.first().cash
         else:
             data = {
-                'error': "No existe una Apertura de Caja, Favor de revisar los Control de Cajas"}
+                'error': "No existe una Apertura en Caja Destino, Favor de revisar los Control de Cajas"}
             response = JsonResponse(data)
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
             return response
@@ -1125,16 +1125,16 @@ def accept_cash_to_cash_transfer(request):
                 cash_transfer_obj.status = 'A'
                 cash_transfer_obj.save()
 
-                cash_transfer_action_obj = CashTransferAction(
+                cash_transfer_action_obj, _ = CashTransferAction.objects.update_or_create(
                     cash_transfer=cash_transfer_obj,
                     user=user_obj,
                     operation='A',
                     register_date=formatdate,
                 )
-                cash_transfer_action_obj.save()
+                # cash_transfer_action_obj.save()
 
                 cash_flow_origin_obj = CashFlow.objects.get(cash=cash_origin_obj, cash_transfer=cash_transfer_obj)
-                cash_flow_input_obj = CashFlow(
+                cash_flow_input_obj, _ = CashFlow.objects.update_or_create(
                     transaction_date=cash_destiny_obj_date,
                     cash=cash_destiny_obj,
                     description=cash_flow_origin_obj.description,
@@ -1142,7 +1142,7 @@ def accept_cash_to_cash_transfer(request):
                     operation_type='6',
                     user=user_obj,
                     type='E')
-                cash_flow_input_obj.save()
+                # cash_flow_input_obj.save()
         else:
             data = {
                 'error': "No existe una Apertura de Caja, Favor de revisar los Control de Cajas"}

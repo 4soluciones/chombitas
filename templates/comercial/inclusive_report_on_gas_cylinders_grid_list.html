@@ -8,8 +8,6 @@
     }
 </style>
 
-
-{{ programming_date_sin_timezone }}
 <table class="table table-sm table-bordered" id="excel-data-grid">
     <thead>
     <tr>
@@ -33,6 +31,10 @@
     <tr
         {% if programming.type == 'Guide' %}
             class=" table-primary"
+        {% elif programming.type == 'Distribution' %}
+            class=" table-success"
+        {% elif programming.type == 'Order' %}
+            class=" table-warning"
         {% endif %}
     >
         <td class="align-middle text-center">{{ programming.type|slice:"0:1" }}</td>
@@ -44,15 +46,40 @@
         {% for k, v in programming.gasCylinders.items %}
         <td class="align-middle text-center">{{ v }}</td>
         {% endfor %}
-        <td class="align-middle text-center"></td>
-        <td class="align-middle text-center"></td>
         <td class="align-middle text-center">
-            <button type="button" class="btn btn-sm btn-blue" data-toggle="modal" data-target="#exampleModal">
-                ASOCIAR PAGO
-            </button>
+            <ul class="list-group">
+
+                {% for deposit in programming.deposits %}
+                    <li class="list-group-item p-0 text-nowrap d-flex justify-content-between">
+
+                        <span>{{ deposit.transactionType }}</span>
+                        <span>S/ {{ deposit.transactionPayment|floatformat:1 }}</span>
+
+                    </li>
+                {% endfor %}
+
+            </ul>
+
         </td>
+        <td class="align-middle text-center">
+            <ul class="list-group">
 
+                {% for expense in programming.expenses %}
+                    <li class="list-group-item p-0 text-nowrap d-flex justify-content-between">
+                        <span>{{ expense.transactionType }}</span>
+                        <span>S/ {{ expense.transactionPayment|floatformat:1 }}</span>
+                    </li>
+                {% endfor %}
 
+            </ul>
+        </td>
+        <td class="align-middle text-center">
+            {% if programming.type == 'Guide' %}
+            <button type="button" class="btn btn-sm btn-blue btn-associate" pk="{{ programming.id }}" >
+                ASOCIAR DEPOSITOS Y GASTOS
+            </button>
+            {% endif %}
+        </td>
     </tr>
     {% endfor %}
 
@@ -61,12 +88,13 @@
 <tfoot>
 <tr>
     <td colspan="6" class="font-weight-bold text-right">TOTAL</td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
+    <td class="align-middle font-weight-bold text-center">{{ total_filled_gas_cylinders.B10 }}</td>
+    <td class="align-middle font-weight-bold text-center">{{ total_filled_gas_cylinders.B45 }}</td>
+    <td class="align-middle font-weight-bold text-center">{{ total_filled_gas_cylinders.B15 }}</td>
+    <td class="align-middle font-weight-bold text-center">{{ total_filled_gas_cylinders.B5 }}</td>
+
+    <td class="align-middle font-weight-bold text-right">S/ {{ total_deposits_and_expenses.total_deposits }}</td>
+    <td class="align-middle font-weight-bold text-right">S/ {{ total_deposits_and_expenses.total_expenses }}</td>
     <td></td>
 </tr>
 </tfoot>

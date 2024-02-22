@@ -837,3 +837,12 @@ class ClientProduct(models.Model):
     class Meta:
         verbose_name = 'Cliente producto'
         verbose_name_plural = 'Clientes productos'
+
+
+class GuideCashFlow(models.Model):
+    id = models.AutoField(primary_key=True)
+    guide = models.ForeignKey('Guide', on_delete=models.CASCADE, null=True, blank=True)
+    cash_flow = models.ForeignKey('accounting.CashFlow', on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.id)

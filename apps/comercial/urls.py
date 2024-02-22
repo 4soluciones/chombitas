@@ -107,6 +107,11 @@ urlpatterns = [
     path('get_distribution_deposit/', get_distribution_deposit, name='get_distribution_deposit'),
     path('save_distribution_deposit/', save_distribution_deposit, name='save_distribution_deposit'),
 
+    path('get_associate_deposit_or_expense/', get_associate_deposit_or_expense, name='get_associate_deposit_or_expense'),
+    path('get_distribution_mobil_fields/', get_distribution_mobil_fields, name='get_distribution_mobil_fields'),
+    path('get_distribution_mobil_by_date/', get_distribution_mobil_by_date, name='get_distribution_mobil_by_date'),
+    path('save_associate_distribution/', save_associate_distribution, name='save_associate_distribution'),
+
     # reports
     path('get_monthly_distribution_by_licence_plate/', login_required(get_monthly_distribution_by_licence_plate), name='get_monthly_distribution_by_licence_plate'),
     path('get_credits_from_clients_by_subsidiary/', login_required(get_credits_from_clients_by_subsidiary), name='get_credits_from_clients_by_subsidiary'),

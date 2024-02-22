@@ -33,26 +33,10 @@
         </div>
     </div>
 
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    ...
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Save changes</button>
-                </div>
-            </div>
-        </div>
-    </div>
+
+    <div class="modal fade" id="associateModal" tabindex="-1" role="dialog" aria-labelledby="associateLabel" aria-hidden="true"></div>
 {% endblock body %}
+
 
 {% block extrajs %}
     <script type="text/javascript">
@@ -69,9 +53,7 @@
 
             });
         }
-
-        $('#search-form').submit(function (event) {
-            event.preventDefault();
+        function getInclusiveReportOnGasCylinders(){
             let _data = new FormData($('#search-form').get(0));
             $("#btn-search").attr("disabled", "true");
             $.ajax({
@@ -96,6 +78,28 @@
             });
 
             $("#btn-search").removeAttr("disabled", "false");
+        }
+
+        $('#search-form').submit(function (event) {
+            event.preventDefault();
+            getInclusiveReportOnGasCylinders();
+        });
+
+        $(document).on('click', '.btn-associate', function () {
+            let search = $(this).attr('pk');
+            $.ajax({
+                url: '/comercial/get_associate_deposit_or_expense/',
+                dataType: 'json',
+                type: 'GET',
+                data: {'pk': search},
+                success: function (response) {
+                    $('#associateModal').html(response.form);
+                    $('#associateModal').modal('show');
+                },
+                fail: function (response) {
+                    console.log(response);
+                }
+            });
         });
     </script>
 {% endblock extrajs %}

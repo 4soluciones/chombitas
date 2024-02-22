@@ -156,7 +156,7 @@
             let r = confirm("¿Desea Actualizar los almacenes?");
             if (r === true) {
 
-                if (validateDetails()) {
+                if (validateDetails() && $('#data-grid-programming tbody tr[class="bg-primary"]').length) {
                     let programming = {
                         "Details": [],
                         "id_programming": $('#data-grid-programming tbody tr[class="bg-primary"]').attr('pk'),
