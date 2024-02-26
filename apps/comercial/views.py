@@ -3798,9 +3798,18 @@ def distribution_category(request):
                 item = {
                     'bill_number': p.bill_number,
                     'purchase_date': p.purchase_date,
-                    'total': p.total()
+                    'total': p.total(),
+                    'detail': []
                 }
-                total_detail+=p.total()
+                total_detail += p.total()
+                for d in p.purchasedetail_set.all():
+                    det = {
+                        'product': d.product.name,
+                        'quantity': d.quantity,
+                        'unit': d.unit.description,
+                        'price': d.price_unit
+                    }
+                    item['detail'].append(det)
                 row['purchase'].append(item)
             dictionary.append(row)
 
