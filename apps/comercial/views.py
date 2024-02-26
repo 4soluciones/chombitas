@@ -2039,15 +2039,35 @@ def get_spanish_month_names():
     return month_names
 
 
+def get_previous_balls_recovered_in_distribution(selected_datetime=None, truck_id=None, product__id=None):
+    q3 = DistributionDetail.objects.filter(
+        distribution_mobil__date_distribution__lt=selected_datetime.date(),
+        distribution_mobil__truck__id=truck_id,
+        status='R',
+        type='V',
+        product__id=product__id
+    ).values('product__id').annotate(sum_quantity_recovered_b=Sum(F('quantity'))).values(
+        'sum_quantity_recovered_b'
+    )
+
+    sum_quantity_recovered_b = 0
+    if q3.exists():
+        result2 = q3[0]
+        sum_quantity_recovered_b = result2.get('sum_quantity_recovered_b', 0)
+    return sum_quantity_recovered_b
+
+
 def get_previous_balls_recovered_in_plant(selected_datetime=None, truck_id=None, product__id=None):
     q2 = LoanPayment.objects.filter(
         order_detail__order__distribution_mobil__date_distribution__lt=selected_datetime.date(),
         order_detail__order__distribution_mobil__truck__id=truck_id,
         order_detail__unit__name__in=['B'],
-        product__id=product__id
+        product__id=product__id,
+        distribution_mobil__isnull=True
     ).values('product__id').annotate(sum_quantity_recovered_b=Sum(F('quantity'))).values(
         'sum_quantity_recovered_b'
     )
+    # print(q2.query)
     sum_quantity_recovered_b = 0
     if q2.exists():
         result2 = q2[0]
@@ -2093,10 +2113,14 @@ def get_ball_recovered_in_plant(product_id=None, distribution_mobil_id=None):
     recovered_in_plant_set = LoanPayment.objects.filter(
         order_detail__order__distribution_mobil__id=distribution_mobil_id,
         order_detail__unit__name__in=['B'],
-        product__id=product_id
+        product__id=product_id,
+        distribution_mobil__isnull=True
     ).values('product__id').annotate(sum_quantity_recovered_in_plant_b=Sum(F('quantity'))).values(
         'sum_quantity_recovered_in_plant_b'
     )
+    if 44 == distribution_mobil_id:
+        print(recovered_in_plant_set.query)
+
     quantity_recovered_in_plant_b = 0
 
     if recovered_in_plant_set.exists():
@@ -2105,7 +2129,7 @@ def get_ball_recovered_in_plant(product_id=None, distribution_mobil_id=None):
     return quantity_recovered_in_plant_b
 
 
-def get_previous_debt_for_in_the_car_balls(distribution_mobil_set=None, truck_id=None, product__id=None):
+def get_previous_debt_for_in_the_car_balls(distribution_mobil_set=None, truck_id=None, product__id=None, type_id=None):
     remaining_in_the_car_bg = 0
 
     if distribution_mobil_set.exists():
@@ -2120,6 +2144,7 @@ def get_previous_debt_for_in_the_car_balls(distribution_mobil_set=None, truck_id
             last_distribution_detail_set = DistributionDetail.objects.filter(
                 distribution_mobil__id=last_distribution_set.last().previous_distribution_id,
                 status='C',
+                type=type_id,
                 product__id=product__id
             )
             if last_distribution_detail_set.exists():
@@ -2300,6 +2325,15 @@ def get_monthly_distribution_by_licence_plate(request):
         previous_debt_for_borrowed_balls_b15 = get_previous_debt_for_borrowed_balls(
             selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=12)
 
+        previous_balls_recovered_in_distribution_b10 = get_previous_balls_recovered_in_distribution(
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=1)
+        previous_balls_recovered_in_distribution_b5 = get_previous_balls_recovered_in_distribution(
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=2)
+        previous_balls_recovered_in_distribution_b45 = get_previous_balls_recovered_in_distribution(
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=3)
+        previous_balls_recovered_in_distribution_b15 = get_previous_balls_recovered_in_distribution(
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=12)
+
         previous_balls_recovered_in_plant_b10 = get_previous_balls_recovered_in_plant(
             selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=1)
         previous_balls_recovered_in_plant_b5 = get_previous_balls_recovered_in_plant(
@@ -2309,10 +2343,10 @@ def get_monthly_distribution_by_licence_plate(request):
         previous_balls_recovered_in_plant_b15 = get_previous_balls_recovered_in_plant(
             selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=12)
 
-        remaining_borrowed_b10 = int(previous_debt_for_borrowed_balls_b10) - int(previous_balls_recovered_in_plant_b10)
-        remaining_borrowed_b5 = int(previous_debt_for_borrowed_balls_b5) - int(previous_balls_recovered_in_plant_b5)
-        remaining_borrowed_b45 = int(previous_debt_for_borrowed_balls_b45) - int(previous_balls_recovered_in_plant_b45)
-        remaining_borrowed_b15 = int(previous_debt_for_borrowed_balls_b15) - int(previous_balls_recovered_in_plant_b15)
+        remaining_borrowed_b10 = int(previous_debt_for_borrowed_balls_b10) - int(previous_balls_recovered_in_distribution_b10) - int(previous_balls_recovered_in_plant_b10)
+        remaining_borrowed_b5 = int(previous_debt_for_borrowed_balls_b5) - int(previous_balls_recovered_in_distribution_b5) - int(previous_balls_recovered_in_plant_b5)
+        remaining_borrowed_b45 = int(previous_debt_for_borrowed_balls_b45) - int(previous_balls_recovered_in_distribution_b45) - int(previous_balls_recovered_in_plant_b45)
+        remaining_borrowed_b15 = int(previous_debt_for_borrowed_balls_b15) - int(previous_balls_recovered_in_distribution_b15) - int(previous_balls_recovered_in_plant_b15)
 
         distribution_mobil_set = DistributionMobil.objects.filter(
             # date_distribution__month=month,
@@ -2325,18 +2359,32 @@ def get_monthly_distribution_by_licence_plate(request):
         ).order_by('date_distribution', 'id')
 
         remaining_in_the_car_bg10 = get_previous_debt_for_in_the_car_balls(
-            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=1)
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=1, type_id='L')
         remaining_in_the_car_bg5 = get_previous_debt_for_in_the_car_balls(
-            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=2)
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=2, type_id='L')
         remaining_in_the_car_bg45 = get_previous_debt_for_in_the_car_balls(
-            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=3)
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=3, type_id='L')
         remaining_in_the_car_bg15 = get_previous_debt_for_in_the_car_balls(
-            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=12)
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=12, type_id='L')
+
+        remaining_in_the_car_b10 = get_previous_debt_for_in_the_car_balls(
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=1, type_id='V')
+        remaining_in_the_car_b5 = get_previous_debt_for_in_the_car_balls(
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=2, type_id='V')
+        remaining_in_the_car_b45 = get_previous_debt_for_in_the_car_balls(
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=3, type_id='V')
+        remaining_in_the_car_b15 = get_previous_debt_for_in_the_car_balls(
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=12, type_id='V')
 
         initial_remaining_in_the_car_bg10 = remaining_in_the_car_bg10
         initial_remaining_in_the_car_bg5 = remaining_in_the_car_bg5
         initial_remaining_in_the_car_bg45 = remaining_in_the_car_bg45
         initial_remaining_in_the_car_bg15 = remaining_in_the_car_bg15
+
+        initial_remaining_in_the_car_b10 = remaining_in_the_car_b10
+        initial_remaining_in_the_car_b5 = remaining_in_the_car_b5
+        initial_remaining_in_the_car_b45 = remaining_in_the_car_b45
+        initial_remaining_in_the_car_b15 = remaining_in_the_car_b15
 
         initial_remaining_borrowed_b10 = remaining_borrowed_b10
         initial_remaining_borrowed_b5 = remaining_borrowed_b5
@@ -2379,35 +2427,35 @@ def get_monthly_distribution_by_licence_plate(request):
                 'date': '',
                 'B5': {
                     'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
-                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0,
+                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
                     'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b5}, 'total_sales': 0,
                     'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
                     'advanced_b': 0, 'remaining_borrowed_b': 0
                 },
                 'B10': {
                     'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
-                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0,
+                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
                     'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b10}, 'total_sales': 0,
                     'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
                     'advanced_b': 0, 'remaining_borrowed_b': 0
                 },
                 'B45': {
                     'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
-                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0,
+                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
                     'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b45}, 'total_sales': 0,
                     'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
                     'advanced_b': 0, 'remaining_borrowed_b': 0
                 },
                 'B15': {
                     'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
-                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0,
+                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
                     'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b15}, 'total_sales': 0,
                     'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
                     'advanced_b': 0, 'remaining_borrowed_b': 0
                 },
                 'B3': {
                     'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
-                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0,
+                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
                     'prices': {}, 'total_sales': 0,
                     'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
                     'advanced_b': 0, 'remaining_borrowed_b': 0
@@ -2436,6 +2484,26 @@ def get_monthly_distribution_by_licence_plate(request):
                 product_id=3, distribution_mobil_id=distribution.id)
             quantity_recovered_in_plant_b15 = get_ball_recovered_in_plant(
                 product_id=12, distribution_mobil_id=distribution.id)
+
+            if quantity_recovered_in_plant_b10 > 0:
+                distribution_obj["B10"]["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b10)
+                distribution_obj["B10"]["remaining_borrowed_b"] = remaining_borrowed_b10 - int(quantity_recovered_in_plant_b10)
+                remaining_borrowed_b10 -= int(quantity_recovered_in_plant_b10)
+
+            if quantity_recovered_in_plant_b5 > 0:
+                distribution_obj["B5"]["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b5)
+                distribution_obj["B5"]["remaining_borrowed_b"] = remaining_borrowed_b5 - int(quantity_recovered_in_plant_b5)
+                remaining_borrowed_b5 -= int(quantity_recovered_in_plant_b5)
+
+            if quantity_recovered_in_plant_b45 > 0:
+                distribution_obj["B45"]["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b45)
+                distribution_obj["B45"]["remaining_borrowed_b"] = remaining_borrowed_b45 - int(quantity_recovered_in_plant_b45)
+                remaining_borrowed_b45 -= int(quantity_recovered_in_plant_b45)
+
+            if quantity_recovered_in_plant_b15 > 0:
+                distribution_obj["B15"]["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b15)
+                distribution_obj["B15"]["remaining_borrowed_b"] = remaining_borrowed_b15 - int(quantity_recovered_in_plant_b15)
+                remaining_borrowed_b15 -= int(quantity_recovered_in_plant_b15)
 
             for detail in distribution.distributiondetail_set.all():
                 # last_distribution_detail_in_the_car_obj = None
@@ -2467,6 +2535,8 @@ def get_monthly_distribution_by_licence_plate(request):
                 # ball["in_the_car_bg"] = int(last_distribution_detail_in_the_car_obj.quantity)
                 if detail.status == "C" and detail.type == "L":
                     ball["in_the_car_bg"] = int(detail.quantity)
+                if detail.status == "C" and detail.type == "V":
+                    ball["in_the_car_b"] = int(detail.quantity)
                 if detail.status == "E" and detail.type == "L":
                     kardex_set = Kardex.objects.filter(distribution_detail=detail)
                     if kardex_set.exists():
@@ -2483,77 +2553,22 @@ def get_monthly_distribution_by_licence_plate(request):
                     ball["recovered_b"] += int(detail.quantity)
                     if product_id == 1:
 
-                        if quantity_recovered_in_plant_b10 > 0:
-                            ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b10)
-                            ball["remaining_borrowed_b"] = remaining_borrowed_b10 - int(quantity_recovered_in_plant_b10)
-                            remaining_borrowed_b10 -= int(quantity_recovered_in_plant_b10)
-
                         ball["remaining_borrowed_b"] = remaining_borrowed_b10 - int(detail.quantity)
                         remaining_borrowed_b10 -= int(detail.quantity)
                     elif product_id == 2:
-
-                        if quantity_recovered_in_plant_b5 > 0:
-                            ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b5)
-                            ball["remaining_borrowed_b"] = remaining_borrowed_b5 - int(quantity_recovered_in_plant_b5)
-                            remaining_borrowed_b5 -= int(quantity_recovered_in_plant_b5)
 
                         ball["remaining_borrowed_b"] = remaining_borrowed_b5 - int(detail.quantity)
                         remaining_borrowed_b5 -= int(detail.quantity)
                     elif product_id == 3:
 
-                        if quantity_recovered_in_plant_b45 > 0:
-                            ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b45)
-                            ball["remaining_borrowed_b"] = remaining_borrowed_b45 - int(quantity_recovered_in_plant_b45)
-                            remaining_borrowed_b45 -= int(quantity_recovered_in_plant_b45)
-
                         ball["remaining_borrowed_b"] = remaining_borrowed_b45 - int(detail.quantity)
                         remaining_borrowed_b45 -= int(detail.quantity)
                     elif product_id == 12:
-
-                        if quantity_recovered_in_plant_b15 > 0:
-                            ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b15)
-                            ball["remaining_borrowed_b"] = remaining_borrowed_b15 - int(quantity_recovered_in_plant_b15)
-                            remaining_borrowed_b15 -= int(quantity_recovered_in_plant_b15)
 
                         ball["remaining_borrowed_b"] = remaining_borrowed_b15 - int(detail.quantity)
                         remaining_borrowed_b15 -= int(detail.quantity)
                 if detail.status == "A" and detail.type == "V":
                     ball["advanced_b"] += int(detail.quantity)
-
-                # if quantity_recovered_in_plant_b > 0:
-                #     ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b)
-                #     if product_id == 1:
-                #         ball["remaining_borrowed_b"] = remaining_borrowed_b10 - int(quantity_recovered_in_plant_b)
-                #         remaining_borrowed_b10 -= int(quantity_recovered_in_plant_b)
-                #     elif product_id == 2:
-                #         ball["remaining_borrowed_b"] = remaining_borrowed_b5 - int(quantity_recovered_in_plant_b)
-                #         remaining_borrowed_b5 -= int(quantity_recovered_in_plant_b)
-                #     elif product_id == 3:
-                #         ball["remaining_borrowed_b"] = remaining_borrowed_b45 - int(quantity_recovered_in_plant_b)
-                #         remaining_borrowed_b45 -= int(quantity_recovered_in_plant_b)
-                #     elif product_id == 12:
-                #         ball["remaining_borrowed_b"] = remaining_borrowed_b15 - int(quantity_recovered_in_plant_b)
-                #         remaining_borrowed_b15 -= int(quantity_recovered_in_plant_b)
-                # if product_id == 1:
-                #     if quantity_recovered_in_plant_b10 > 0:
-                #         ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b10)
-                #         ball["remaining_borrowed_b"] = remaining_borrowed_b10 - int(quantity_recovered_in_plant_b10)
-                #         remaining_borrowed_b10 -= int(quantity_recovered_in_plant_b10)
-                # elif product_id == 2:
-                #     if quantity_recovered_in_plant_b5 > 0:
-                #         ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b5)
-                #         ball["remaining_borrowed_b"] = remaining_borrowed_b5 - int(quantity_recovered_in_plant_b5)
-                #         remaining_borrowed_b5 -= int(quantity_recovered_in_plant_b5)
-                # elif product_id == 3:
-                #     if quantity_recovered_in_plant_b45 > 0:
-                #         ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b45)
-                #         ball["remaining_borrowed_b"] = remaining_borrowed_b45 - int(quantity_recovered_in_plant_b45)
-                #         remaining_borrowed_b45 -= int(quantity_recovered_in_plant_b45)
-                # elif product_id == 12:
-                #     if quantity_recovered_in_plant_b15 > 0:
-                #         ball["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b15)
-                #         ball["remaining_borrowed_b"] = remaining_borrowed_b15 - int(quantity_recovered_in_plant_b15)
-                #         remaining_borrowed_b15 -= int(quantity_recovered_in_plant_b15)
 
             total_sales_by_date = 0
             for order in distribution.order_set.all():
@@ -2661,6 +2676,7 @@ def get_monthly_distribution_by_licence_plate(request):
         distributions = list(grouped_by_date.values())
         tpl = loader.get_template('comercial/monthly_distribution_by_licence_plate_grid_list.html')
         context = ({
+            'user_id': request.user.id,
             'distributions': distributions,
             'header_b10': header_b10,
             'header_b5': header_b5,
@@ -2671,6 +2687,11 @@ def get_monthly_distribution_by_licence_plate(request):
             'initial_remaining_in_the_car_bg45': int(initial_remaining_in_the_car_bg45),
             'initial_remaining_in_the_car_bg15': int(initial_remaining_in_the_car_bg15),
 
+            'initial_remaining_in_the_car_b10': int(initial_remaining_in_the_car_b10),
+            'initial_remaining_in_the_car_b5': int(initial_remaining_in_the_car_b5),
+            'initial_remaining_in_the_car_b45': int(initial_remaining_in_the_car_b45),
+            'initial_remaining_in_the_car_b15': int(initial_remaining_in_the_car_b15),
+
             'initial_remaining_borrowed_b10': int(initial_remaining_borrowed_b10),
             'initial_remaining_borrowed_b5': int(initial_remaining_borrowed_b5),
             'initial_remaining_borrowed_b45': int(initial_remaining_borrowed_b45),
@@ -2680,6 +2701,11 @@ def get_monthly_distribution_by_licence_plate(request):
             'initial_debt_for_borrowed_balls_b5': int(previous_debt_for_borrowed_balls_b5),
             'initial_debt_for_borrowed_balls_b45': int(previous_debt_for_borrowed_balls_b45),
             'initial_debt_for_borrowed_balls_b15': int(previous_debt_for_borrowed_balls_b15),
+
+            'initial_recovered_in_distribution_b10': int(previous_balls_recovered_in_distribution_b10),
+            'initial_recovered_in_distribution_b5': int(previous_balls_recovered_in_distribution_b5),
+            'initial_recovered_in_distribution_b45': int(previous_balls_recovered_in_distribution_b45),
+            'initial_recovered_in_distribution_b15': int(previous_balls_recovered_in_distribution_b15),
 
             'initial_recovered_in_plant_b10': int(previous_balls_recovered_in_plant_b10),
             'initial_recovered_in_plant_b5': int(previous_balls_recovered_in_plant_b5),
@@ -3723,6 +3749,56 @@ def get_inclusive_report_on_gas_cylinders(request):
             'total_deposits_and_expenses': total_deposits_and_expenses,
         })
         return JsonResponse({
+            'grid': tpl.render(context)
+        }, status=HTTPStatus.OK)
+    return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)
+
+
+def distribution_category(request):
+    if request.method == 'GET':
+        my_date = datetime.now()
+        date_now = my_date.strftime("%Y-%m-%d")
+
+        return render(request, 'comercial/report_distribution_category.html', {
+            'formatdate': date_now,
+            'category_set': Supplier._meta.get_field('sector').choices,
+        })
+    elif request.method == 'POST':
+        user_id = request.user.id
+        user_obj = User.objects.get(id=user_id)
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+        init = request.POST.get('init')
+        end = request.POST.get('end')
+        category = request.POST.get('category')
+
+        query_set = Truck.objects.filter(purchase__purchase_date__range=[init, end],
+                                         purchase__supplier__sector=category)
+        query = query_set.annotate(
+            total=Sum(F('purchase__purchasedetail__quantity') * F('purchase__purchasedetail__price_unit')))
+
+        dictionary = []
+        for t in query:
+            row = {
+                'license_plate': t.license_plate,
+                'total': t.total,
+                'purchase': []
+            }
+            for p in t.purchase_set.filter(purchase_date__range=[init, end],
+                                           supplier__sector=category):
+                item = {
+                    'bill_number': p.bill_number,
+                    'total': p.total()
+                }
+                row['purchase'].append(item)
+            dictionary.append(row)
+
+
+        tpl = loader.get_template('comercial/report_distribution_category_grid.html')
+        context = ({
+            'trucks': dictionary,
+        })
+        return JsonResponse({
+            'success': True,
             'grid': tpl.render(context)
         }, status=HTTPStatus.OK)
     return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)

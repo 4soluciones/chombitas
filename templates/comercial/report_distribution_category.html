@@ -1,0 +1,108 @@
+{% extends 'home.html' %}
+
+{% block title %}
+    Comercial | Reporte Categoria
+{% endblock title %}
+
+{% block body %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <form id="search-form" method="POST">
+                        {% csrf_token %}
+                        <div class="row">
+
+                            <div class="col-md-2">
+                                <label class="mb-1">Fecha Inicial</label>
+                                <input type="date" class="form-control" id="init" name="init" value="{{ formatdate }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="mb-1">Fecha Inicial</label>
+                                <input type="date" class="form-control" id="end" name="end" value="{{ formatdate }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="mb-1">Rubro</label>
+                                <select class="form-control" id="category" name="category">
+                                    <option value="0">Seleccione</option>
+                                    {% for c in category_set %}
+                                        <option value="{{ c.0 }}">{{ c.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2 align-self-end">
+                                <button type="button" class="btn btn-primary" onclick="SearchDistribution()"><i
+                                        class="fa fa-search"></i> Buscar
+                                </button>
+                            </div>
+                            <div class="col-md-4 align-self-end">
+                                <a onclick="excelTickets();" class="btn btn-success text-white m-1">
+                                    <span class="fa fa-file-excel"></span> Exportar
+                                </a>
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-body" id="category_distribution">
+
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock body %}
+
+
+{% block extrajs %}
+    <script type="text/javascript">
+    function excelTickets() {
+            $("#distribution_license_plate").table2excel({
+                // exclude CSS class
+                exclude: ".noExl",
+                name: "Worksheet vouchers",
+                filename: "reporte_de_compras_por_placa",//do not include extension
+                fileext: ".xlsx", // file extension
+                preserveColors: true
+            });
+        }
+        function SearchDistribution() {
+            let init = $('#init').val()
+            if (init === undefined || init === "") {
+                toastr.warning('Ingrese una fecha inicial valida')
+                return false
+            }
+            let end = $('#end').val()
+            if (end === undefined || end === "") {
+                toastr.warning('Ingrese una fecha final valida')
+                return false
+            }
+            let category = $('#category').val()
+            if (category === undefined || category === "" || category === "0") {
+                toastr.warning('Seleccione un rubro valido')
+                return false
+            }
+            let _data = new FormData($('#search-form').get(0));
+            $.ajax({
+                url: '/comercial/distribution_category/',
+                type: "POST",
+                data: _data,
+                cache: false,
+                processData: false,
+                contentType: false,
+                success: function (response, textStatus, xhr) {
+                    if (response.success) {
+                        if (xhr.status === 200) {
+                            $('#category_distribution').html(response.grid);
+                        }
+                    } else {
+                        toastr.error(response.message);
+                    }
+                },
+                error: function (jqXhr, textStatus, xhr) {
+
+                }
+            });
+        }
+    </script>
+{% endblock extrajs %}

@@ -123,5 +123,6 @@ urlpatterns = [
     path('report_guides_by_plate_grid/', login_required(report_guides_by_plate_grid), name='report_guides_by_plate_grid'),
     path('get_stock_unit_by_product_type/', login_required(get_stock_unit_by_product_type), name='get_stock_unit_by_product_type'),
     path('get_inclusive_report_on_gas_cylinders/', login_required(get_inclusive_report_on_gas_cylinders), name='get_inclusive_report_on_gas_cylinders'),
+    path('distribution_category/', login_required(distribution_category), name='distribution_category'),
 
 ]

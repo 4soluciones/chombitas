@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="row">
+    <div class="col-md-12">
+        <table class="table table-sm table-bordered" id="distribution_license_plate">
+            <thead>
+            <tr class="">
+                <td class="align-middle text-center bg-primary text-white">Nº</td>
+                <td class="align-middle text-center bg-primary text-white">Placa</td>
+                <td class="align-middle text-center bg-primary text-white">Factura</td>
+                <td class="align-middle text-center bg-primary text-white">Total Factura</td>
+                <td class="align-middle text-center bg-primary text-white">Total Placa</td>
+            </tr>
+            </thead>
+            <tbody>
+            {% for t in trucks %}
+                <tr>
+                    <td class="align-middle text-center" rowspan="{{ t.purchase|length }}">{{ forloop.counter }}</td>
+                    <td class="align-middle text-center" rowspan="{{ t.purchase|length }}">{{ t.license_plate }}{{ t.purchase|length }}</td>
+                    <td class="align-middle text-right" rowspan="{{ t.purchase|length }}">{{ t.total|floatformat:"2"|safe }}</td>
+                    {% for p in t.purchase %}
+                        {% if not forloop.first %}
+                            <tr>
+                        {% endif %}
+                        <td class="align-middle text-center">{{ p.bill_number }}</td>
+                        <td class="align-middle text-right">{{ p.total|floatformat:"2"|safe }}</td>
+                        </tr>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</body>
+</html>
