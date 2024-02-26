@@ -21,13 +21,13 @@
             {% for t in trucks %}
                 <tr>
                     <td class="align-middle text-center p-1" rowspan="{{ t.purchase|length }}">{{ forloop.counter }}</td>
-                    <td class="align-middle text-center p-1" rowspan="{{ t.purchase|length }}">{{ t.license_plate }}{{ t.purchase|length }}</td>
+                    <td class="align-middle text-center p-1 text-uppercase text-primary" rowspan="{{ t.purchase|length }}">{{ t.license_plate }}{{ t.purchase|length }}</td>
                     <td class="align-middle text-right p-1" rowspan="{{ t.purchase|length }}">{{ t.total|floatformat:"2"|safe }}</td>
                     {% for p in t.purchase %}
                         {% if not forloop.first %}
                             <tr>
                         {% endif %}
-                        <td class="align-middle text-left p-1">{{ p.bill_number }}</td>
+                        <td class="align-middle text-left p-1 text-uppercase">{{ p.bill_number }}</td>
                         <td class="align-middle text-right p-1">{{ p.total|floatformat:"2"|safe }}</td>
                         </tr>
                     {% endfor %}
