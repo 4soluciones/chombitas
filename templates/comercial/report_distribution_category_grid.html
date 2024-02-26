@@ -12,27 +12,34 @@
             <tr class="">
                 <td class="align-middle text-center bg-primary text-white">Nº</td>
                 <td class="align-middle text-center bg-primary text-white">Placa</td>
+                <td class="align-middle text-center bg-primary text-white">Total Placa</td>
                 <td class="align-middle text-center bg-primary text-white">Factura</td>
                 <td class="align-middle text-center bg-primary text-white">Total Factura</td>
-                <td class="align-middle text-center bg-primary text-white">Total Placa</td>
             </tr>
             </thead>
             <tbody>
             {% for t in trucks %}
                 <tr>
-                    <td class="align-middle text-center" rowspan="{{ t.purchase|length }}">{{ forloop.counter }}</td>
-                    <td class="align-middle text-center" rowspan="{{ t.purchase|length }}">{{ t.license_plate }}{{ t.purchase|length }}</td>
-                    <td class="align-middle text-right" rowspan="{{ t.purchase|length }}">{{ t.total|floatformat:"2"|safe }}</td>
+                    <td class="align-middle text-center p-1" rowspan="{{ t.purchase|length }}">{{ forloop.counter }}</td>
+                    <td class="align-middle text-center p-1" rowspan="{{ t.purchase|length }}">{{ t.license_plate }}{{ t.purchase|length }}</td>
+                    <td class="align-middle text-right p-1" rowspan="{{ t.purchase|length }}">{{ t.total|floatformat:"2"|safe }}</td>
                     {% for p in t.purchase %}
                         {% if not forloop.first %}
                             <tr>
                         {% endif %}
-                        <td class="align-middle text-center">{{ p.bill_number }}</td>
-                        <td class="align-middle text-right">{{ p.total|floatformat:"2"|safe }}</td>
+                        <td class="align-middle text-left p-1">{{ p.bill_number }}</td>
+                        <td class="align-middle text-right p-1">{{ p.total|floatformat:"2"|safe }}</td>
                         </tr>
                     {% endfor %}
                 </tr>
             {% endfor %}
+            <tr>
+                <td class="align-middle text-right"></td>
+                <td class="align-middle text-right font-weight-bold">TOTAL COMPRAS</td>
+                <td class="align-middle text-right font-weight-bold">{{ total_purchase|floatformat:"2"|safe }}</td>
+                <td class="align-middle text-right font-weight-bold">TOTAL DETALLES</td>
+                <td class="align-middle text-right font-weight-bold">{{ total_detail|floatformat:"2"|safe }}</td>
+            </tr>
             </tbody>
         </table>
     </div>

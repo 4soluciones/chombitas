@@ -2343,10 +2343,14 @@ def get_monthly_distribution_by_licence_plate(request):
         previous_balls_recovered_in_plant_b15 = get_previous_balls_recovered_in_plant(
             selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=12)
 
-        remaining_borrowed_b10 = int(previous_debt_for_borrowed_balls_b10) - int(previous_balls_recovered_in_distribution_b10) - int(previous_balls_recovered_in_plant_b10)
-        remaining_borrowed_b5 = int(previous_debt_for_borrowed_balls_b5) - int(previous_balls_recovered_in_distribution_b5) - int(previous_balls_recovered_in_plant_b5)
-        remaining_borrowed_b45 = int(previous_debt_for_borrowed_balls_b45) - int(previous_balls_recovered_in_distribution_b45) - int(previous_balls_recovered_in_plant_b45)
-        remaining_borrowed_b15 = int(previous_debt_for_borrowed_balls_b15) - int(previous_balls_recovered_in_distribution_b15) - int(previous_balls_recovered_in_plant_b15)
+        remaining_borrowed_b10 = int(previous_debt_for_borrowed_balls_b10) - int(
+            previous_balls_recovered_in_distribution_b10) - int(previous_balls_recovered_in_plant_b10)
+        remaining_borrowed_b5 = int(previous_debt_for_borrowed_balls_b5) - int(
+            previous_balls_recovered_in_distribution_b5) - int(previous_balls_recovered_in_plant_b5)
+        remaining_borrowed_b45 = int(previous_debt_for_borrowed_balls_b45) - int(
+            previous_balls_recovered_in_distribution_b45) - int(previous_balls_recovered_in_plant_b45)
+        remaining_borrowed_b15 = int(previous_debt_for_borrowed_balls_b15) - int(
+            previous_balls_recovered_in_distribution_b15) - int(previous_balls_recovered_in_plant_b15)
 
         distribution_mobil_set = DistributionMobil.objects.filter(
             # date_distribution__month=month,
@@ -2487,22 +2491,26 @@ def get_monthly_distribution_by_licence_plate(request):
 
             if quantity_recovered_in_plant_b10 > 0:
                 distribution_obj["B10"]["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b10)
-                distribution_obj["B10"]["remaining_borrowed_b"] = remaining_borrowed_b10 - int(quantity_recovered_in_plant_b10)
+                distribution_obj["B10"]["remaining_borrowed_b"] = remaining_borrowed_b10 - int(
+                    quantity_recovered_in_plant_b10)
                 remaining_borrowed_b10 -= int(quantity_recovered_in_plant_b10)
 
             if quantity_recovered_in_plant_b5 > 0:
                 distribution_obj["B5"]["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b5)
-                distribution_obj["B5"]["remaining_borrowed_b"] = remaining_borrowed_b5 - int(quantity_recovered_in_plant_b5)
+                distribution_obj["B5"]["remaining_borrowed_b"] = remaining_borrowed_b5 - int(
+                    quantity_recovered_in_plant_b5)
                 remaining_borrowed_b5 -= int(quantity_recovered_in_plant_b5)
 
             if quantity_recovered_in_plant_b45 > 0:
                 distribution_obj["B45"]["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b45)
-                distribution_obj["B45"]["remaining_borrowed_b"] = remaining_borrowed_b45 - int(quantity_recovered_in_plant_b45)
+                distribution_obj["B45"]["remaining_borrowed_b"] = remaining_borrowed_b45 - int(
+                    quantity_recovered_in_plant_b45)
                 remaining_borrowed_b45 -= int(quantity_recovered_in_plant_b45)
 
             if quantity_recovered_in_plant_b15 > 0:
                 distribution_obj["B15"]["recovered_in_plant_b"] += int(quantity_recovered_in_plant_b15)
-                distribution_obj["B15"]["remaining_borrowed_b"] = remaining_borrowed_b15 - int(quantity_recovered_in_plant_b15)
+                distribution_obj["B15"]["remaining_borrowed_b"] = remaining_borrowed_b15 - int(
+                    quantity_recovered_in_plant_b15)
                 remaining_borrowed_b15 -= int(quantity_recovered_in_plant_b15)
 
             for detail in distribution.distributiondetail_set.all():
@@ -3187,7 +3195,6 @@ def get_distribution_mobil_by_date(request):
         date_distribution = request.GET.get('distributionDate', '')
         subsidiary_destiny_id = int(request.GET.get('subsidiaryDestinyId', '0'))
         if date_distribution != '' and subsidiary_destiny_id > 0:
-
             distribution_mobil_set = DistributionMobil.objects.filter(
                 subsidiary_id=subsidiary_destiny_id,
                 status='F',
@@ -3312,7 +3319,7 @@ def save_associate_distribution(request):
 
         # distribution_mobil_id = int(request.GET.get('distributionId', '0'))
         # guide_id = int(request.GET.get('guideId', '0'))
-        if guide_id > 0 and distribution_mobil_id>0:
+        if guide_id > 0 and distribution_mobil_id > 0:
             guide_obj = Guide.objects.get(id=guide_id)
             cash_flow_set = CashFlow.objects.filter(distribution_mobil=distribution_mobil_id)
             for cf in cash_flow_set:
@@ -3383,7 +3390,6 @@ def save_distribution_deposit(request):
             allow_save = True
 
         if allow_save:
-
             new_deposit = {
                 'transaction_date': date_con_timezone,
                 'distribution_mobil': distribution_mobil_obj,
@@ -3592,7 +3598,8 @@ def get_inclusive_report_on_gas_cylinders(request):
                     programming['gasCylinders'][ball] += int(gd.quantity)
                     total_filled_gas_cylinders[ball] += int(gd.quantity)
 
-            cash_flow_set = CashFlow.objects.filter(guidecashflow__guide=g, guidecashflow__cash_flow__type__in=['E', 'D'])
+            cash_flow_set = CashFlow.objects.filter(guidecashflow__guide=g,
+                                                    guidecashflow__cash_flow__type__in=['E', 'D'])
             for cf in cash_flow_set:
                 cash_flow = {
                     'transactionType': cf.cash.name,
@@ -3777,25 +3784,30 @@ def distribution_category(request):
             total=Sum(F('purchase__purchasedetail__quantity') * F('purchase__purchasedetail__price_unit')))
 
         dictionary = []
+        total_purchase = decimal.Decimal(0.00)
+        total_detail = decimal.Decimal(0.00)
         for t in query:
             row = {
                 'license_plate': t.license_plate,
                 'total': t.total,
                 'purchase': []
             }
+            total_purchase += t.total
             for p in t.purchase_set.filter(purchase_date__range=[init, end],
                                            supplier__sector=category):
                 item = {
                     'bill_number': p.bill_number,
                     'total': p.total()
                 }
+                total_detail+=p.total()
                 row['purchase'].append(item)
             dictionary.append(row)
-
 
         tpl = loader.get_template('comercial/report_distribution_category_grid.html')
         context = ({
             'trucks': dictionary,
+            'total_purchase': total_purchase,
+            'total_detail': total_detail,
         })
         return JsonResponse({
             'success': True,
