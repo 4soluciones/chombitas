@@ -28,6 +28,7 @@
                             <tr>
                         {% endif %}
                         <td class="align-middle text-left p-1 text-uppercase">{{ p.bill_number }}</td>
+                        <td class="align-middle text-center p-1 text-uppercase">{{ p.purchase_date }}</td>
                         <td class="align-middle text-right p-1">{{ p.total|floatformat:"2"|safe }}</td>
                         </tr>
                     {% endfor %}

@@ -3797,6 +3797,7 @@ def distribution_category(request):
                                            supplier__sector=category):
                 item = {
                     'bill_number': p.bill_number,
+                    'purchase_date': p.purchase_date,
                     'total': p.total()
                 }
                 total_detail+=p.total()
