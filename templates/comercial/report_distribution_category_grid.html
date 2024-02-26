@@ -14,6 +14,7 @@
                 <td class="align-middle text-center bg-primary text-white">Placa</td>
                 <td class="align-middle text-center bg-primary text-white">Total Placa</td>
                 <td class="align-middle text-center bg-primary text-white">Factura</td>
+                <td class="align-middle text-center bg-primary text-white">Fecha</td>
                 <td class="align-middle text-center bg-primary text-white">Total Factura</td>
             </tr>
             </thead>
@@ -38,7 +39,7 @@
                 <td class="align-middle text-right"></td>
                 <td class="align-middle text-right font-weight-bold">TOTAL COMPRAS</td>
                 <td class="align-middle text-right font-weight-bold">{{ total_purchase|floatformat:"2"|safe }}</td>
-                <td class="align-middle text-right font-weight-bold">TOTAL DETALLES</td>
+                <td class="align-middle text-right font-weight-bold" colspan="2">TOTAL DETALLES</td>
                 <td class="align-middle text-right font-weight-bold">{{ total_detail|floatformat:"2"|safe }}</td>
             </tr>
             </tbody>
