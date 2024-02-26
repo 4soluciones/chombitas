@@ -3794,7 +3794,7 @@ def distribution_category(request):
             }
             total_purchase += t.total
             for p in t.purchase_set.filter(purchase_date__range=[init, end],
-                                           supplier__sector=category):
+                                           supplier__sector=category).order_by('purchase_date'):
                 item = {
                     'bill_number': p.bill_number,
                     'purchase_date': p.purchase_date,
