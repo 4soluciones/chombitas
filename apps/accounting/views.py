@@ -50,8 +50,7 @@ def get_purchases_by_date(request):
         pk = request.GET.get('pk', '')
         supplier_obj = Supplier.objects.get(id=pk)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
-        purchases_set = Purchase.objects.filter(purchase_date__range=[start_date, end_date], subsidiary=subsidiary_obj,
-                                                status='A', supplier=supplier_obj).order_by('purchase_date')
+        purchases_set = Purchase.objects.filter(purchase_date__range=[start_date, end_date], subsidiary=subsidiary_obj, supplier=supplier_obj).order_by('purchase_date')
 
         return JsonResponse({
             'grid': get_dict_purchases(purchases_set),
