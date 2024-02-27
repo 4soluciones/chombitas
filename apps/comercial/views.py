@@ -2343,15 +2343,6 @@ def get_monthly_distribution_by_licence_plate(request):
         previous_balls_recovered_in_plant_b15 = get_previous_balls_recovered_in_plant(
             selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=12)
 
-        remaining_borrowed_b10 = int(previous_debt_for_borrowed_balls_b10) - int(
-            previous_balls_recovered_in_distribution_b10) - int(previous_balls_recovered_in_plant_b10)
-        remaining_borrowed_b5 = int(previous_debt_for_borrowed_balls_b5) - int(
-            previous_balls_recovered_in_distribution_b5) - int(previous_balls_recovered_in_plant_b5)
-        remaining_borrowed_b45 = int(previous_debt_for_borrowed_balls_b45) - int(
-            previous_balls_recovered_in_distribution_b45) - int(previous_balls_recovered_in_plant_b45)
-        remaining_borrowed_b15 = int(previous_debt_for_borrowed_balls_b15) - int(
-            previous_balls_recovered_in_distribution_b15) - int(previous_balls_recovered_in_plant_b15)
-
         distribution_mobil_set = DistributionMobil.objects.filter(
             # date_distribution__month=month,
             # date_distribution__year=year,
@@ -2379,6 +2370,15 @@ def get_monthly_distribution_by_licence_plate(request):
             distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=3, type_id='V')
         remaining_in_the_car_b15 = get_previous_debt_for_in_the_car_balls(
             distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=12, type_id='V')
+
+        remaining_borrowed_b10 = int(previous_debt_for_borrowed_balls_b10) - int(
+            previous_balls_recovered_in_distribution_b10) - int(previous_balls_recovered_in_plant_b10)
+        remaining_borrowed_b5 = int(previous_debt_for_borrowed_balls_b5) - int(
+            previous_balls_recovered_in_distribution_b5) - int(previous_balls_recovered_in_plant_b5)
+        remaining_borrowed_b45 = int(previous_debt_for_borrowed_balls_b45) - int(
+            previous_balls_recovered_in_distribution_b45) - int(previous_balls_recovered_in_plant_b45)
+        remaining_borrowed_b15 = int(previous_debt_for_borrowed_balls_b15) - int(
+            previous_balls_recovered_in_distribution_b15) - int(previous_balls_recovered_in_plant_b15)
 
         initial_remaining_in_the_car_bg10 = remaining_in_the_car_bg10
         initial_remaining_in_the_car_bg5 = remaining_in_the_car_bg5
@@ -2545,6 +2545,7 @@ def get_monthly_distribution_by_licence_plate(request):
                     ball["in_the_car_bg"] = int(detail.quantity)
                 if detail.status == "C" and detail.type == "V":
                     ball["in_the_car_b"] = int(detail.quantity)
+                    ball["remaining_borrowed_b"] = remaining_borrowed_b10 + int(detail.quantity)
                 if detail.status == "E" and detail.type == "L":
                     kardex_set = Kardex.objects.filter(distribution_detail=detail)
                     if kardex_set.exists():
@@ -2654,7 +2655,7 @@ def get_monthly_distribution_by_licence_plate(request):
             bank = []
             dates_of_deposit = []
             codes_of_deposit = []
-            for deposit in distribution.cashflow_set.filter(type='D'):
+            for deposit in distribution.cashflow_set.filter(type__in=['D', 'E']):
                 distribution_obj["deposited"] += round(deposit.total, 1)
                 total_deposited += round(deposit.total, 1)
                 bank.append(deposit.cash.name)
@@ -3790,7 +3791,7 @@ def distribution_category(request):
             row = {
                 'license_plate': t.license_plate,
                 'total': t.total,
-                'purchase': []
+                'purchase': [],
             }
             total_purchase += t.total
             for p in t.purchase_set.filter(purchase_date__range=[init, end],

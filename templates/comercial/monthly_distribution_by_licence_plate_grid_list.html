@@ -143,7 +143,13 @@
         <td class="table-dark text-white">{% if user_id == 5 %}{{ initial_recovered_in_distribution_b10 }}{% endif %}</td>
         <td class="table-dark text-center text-danger">{% if user_id == 5 %}{{ initial_recovered_in_plant_b10 }}{% endif %}</td>
         <td class="table-dark text-white"></td>
-        <td class="table-dark text-white">{{ initial_remaining_borrowed_b10 }}</td>
+        <td class="table-dark text-white">
+            {% if initial_remaining_borrowed_b10 and initial_remaining_in_the_car_b10 %}
+                {{ initial_remaining_borrowed_b10|add:initial_remaining_in_the_car_b10 }}
+            {% else %}
+                N/A
+            {% endif %}
+        </td>
 
         <td colspan="3"></td>
         <td class="align-middle text-center table-success"></td>
@@ -155,7 +161,13 @@
         <td class="table-dark text-white">{% if user_id == 5 %}{{ initial_recovered_in_distribution_b5 }}{% endif %}</td>
         <td class="table-dark text-center text-danger">{% if user_id == 5 %}{{ initial_recovered_in_plant_b5 }}{% endif %}</td>
         <td class="table-dark text-white"></td>
-        <td class="table-dark text-white">{{ initial_remaining_borrowed_b5 }}</td>
+        <td class="table-dark text-white">
+            {% if initial_remaining_borrowed_b5 and initial_remaining_in_the_car_b5 %}
+                {{ initial_remaining_borrowed_b5|add:initial_remaining_in_the_car_b5 }}
+            {% else %}
+                N/A
+            {% endif %}
+        </td>
 
         <td colspan="3"></td>
         <td class="align-middle text-center table-success"></td>
@@ -167,7 +179,13 @@
         <td class="table-dark text-white">{% if user_id == 5 %}{{ initial_recovered_in_distribution_b45 }}{% endif %}</td>
         <td class="table-dark text-center text-danger">{% if user_id == 5 %}{{ initial_recovered_in_plant_b45 }}{% endif %}</td>
         <td class="table-dark text-white"></td>
-        <td class="table-dark text-white">{{ initial_remaining_borrowed_b45 }}</td>
+        <td class="table-dark text-white">
+            {% if initial_remaining_borrowed_b45 and initial_remaining_in_the_car_b45 %}
+                {{ initial_remaining_borrowed_b45|add:initial_remaining_in_the_car_b45 }}
+            {% else %}
+                N/A
+            {% endif %}
+        </td>
 
         <td colspan="3"></td>
         <td class="align-middle text-center table-success"></td>
@@ -179,7 +197,13 @@
         <td class="table-dark text-white">{% if user_id == 5 %}{{ initial_recovered_in_distribution_b15 }}{% endif %}</td>
         <td class="table-dark text-center text-danger">{% if user_id == 5 %}{{ initial_recovered_in_plant_b15 }}{% endif %}</td>
         <td class="table-dark text-white"></td>
-        <td class="table-dark text-white">{{ initial_remaining_borrowed_b15 }}</td>
+        <td class="table-dark text-white">
+            {% if initial_remaining_borrowed_b15 and initial_remaining_in_the_car_b15 %}
+                {{ initial_remaining_borrowed_b15|add:initial_remaining_in_the_car_b15 }}
+            {% else %}
+                N/A
+            {% endif %}
+        </td>
 
         <td class="align-middle text-center table-info"></td>
         <td colspan="5"></td>
