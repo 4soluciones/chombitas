@@ -50,7 +50,8 @@ def get_purchases_by_date(request):
         pk = request.GET.get('pk', '')
         supplier_obj = Supplier.objects.get(id=pk)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
-        purchases_set = Purchase.objects.filter(purchase_date__range=[start_date, end_date], subsidiary=subsidiary_obj, supplier=supplier_obj).order_by('purchase_date')
+        purchases_set = Purchase.objects.filter(purchase_date__range=[start_date, end_date], subsidiary=subsidiary_obj,
+                                                status='A', supplier=supplier_obj).order_by('purchase_date')
 
         return JsonResponse({
             'grid': get_dict_purchases(purchases_set),
@@ -179,8 +180,8 @@ def new_payment_purchase(request):
         transaction_payment_type = str(request.POST.get('transaction_payment_type'))
         purchase_id = int(request.POST.get('purchase'))
         purchase_obj = Purchase.objects.get(id=purchase_id)
-        purchases_set = Purchase.objects.filter(purchase_date__range=[start_date, end_date], subsidiary=subsidiary_obj,
-                                                status='A')
+        # purchases_set = Purchase.objects.filter(purchase_date__range=[start_date, end_date], subsidiary=subsidiary_obj,
+        #                                         status='A')
         date_converter = ''
         cash_flow_date = str(request.POST.get('id_date'))
         cash_flow_transact_date_deposit = str(request.POST.get('id_date_deposit'))
@@ -257,7 +258,8 @@ def new_payment_purchase(request):
             'message': 'Cambios guardados con exito.',
             'pay': round(purchase_pay, 2),
             'pay_date': formatdate,
-            'grid': get_dict_purchases(purchases_set),
+            'code': code_operation,
+            # 'grid': get_dict_purchases(purchases_set),
 
         }, status=HTTPStatus.OK)
     return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)
