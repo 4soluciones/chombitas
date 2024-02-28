@@ -3788,10 +3788,12 @@ def distribution_category(request):
         total_purchase = decimal.Decimal(0.00)
         total_detail = decimal.Decimal(0.00)
         for t in query:
+            rows = 0
             row = {
                 'license_plate': t.license_plate,
                 'total': t.total,
                 'purchase': [],
+                'rows': rows
             }
             total_purchase += t.total
             for p in t.purchase_set.filter(purchase_date__range=[init, end],
@@ -3800,7 +3802,8 @@ def distribution_category(request):
                     'bill_number': p.bill_number,
                     'purchase_date': p.purchase_date,
                     'total': p.total(),
-                    'detail': []
+                    'detail': [],
+                    'rows': 0
                 }
                 total_detail += p.total()
                 for d in p.purchasedetail_set.all():
@@ -3811,7 +3814,10 @@ def distribution_category(request):
                         'price': d.price_unit
                     }
                     item['detail'].append(det)
+                rows += len(item['detail'])
+                item['rows'] = len(item['detail'])
                 row['purchase'].append(item)
+            row['rows'] = rows
             dictionary.append(row)
 
         tpl = loader.get_template('comercial/report_distribution_category_grid.html')

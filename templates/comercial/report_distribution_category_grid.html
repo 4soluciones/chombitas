@@ -16,49 +16,65 @@
                 <td class="align-middle text-center bg-primary text-white">Factura</td>
                 <td class="align-middle text-center bg-primary text-white">Fecha</td>
                 <td class="align-middle text-center bg-primary text-white">Total Factura</td>
-                <td class="align-middle text-center bg-primary text-white">Detalle</td>
+                <td class="align-middle text-center bg-primary text-white">Descripcion</td>
+                <td class="align-middle text-center bg-primary text-white">Cantidad</td>
+                <td class="align-middle text-center bg-primary text-white">Unidad</td>
+                <td class="align-middle text-center bg-primary text-white">Precio</td>
             </tr>
             </thead>
             <tbody>
             {% for t in trucks %}
                 <tr>
                     <td class="align-middle text-center p-1"
-                        rowspan="{{ t.purchase|length }}">{{ forloop.counter }}</td>
+                        rowspan="{{ t.rows }}">{{ forloop.counter }}</td>
                     <td class="align-middle text-center p-1 text-uppercase text-primary"
-                        rowspan="{{ t.purchase|length }}">{{ t.license_plate }}</td>
+                        rowspan="{{ t.rows }}">{{ t.license_plate }}</td>
                     <td class="align-middle text-right p-1"
-                        rowspan="{{ t.purchase|length }}">{{ t.total|floatformat:"2"|safe }}</td>
+                        rowspan="{{ t.rows }}">{{ t.total|floatformat:"2"|safe }}</td>
                     {% for p in t.purchase %}
                         {% if not forloop.first %}
                             <tr>
                         {% endif %}
-                    <td class="align-middle text-left p-1 text-uppercase">{{ p.bill_number }}</td>
-                    <td class="align-middle text-center p-1 text-uppercase">{{ p.purchase_date }}</td>
-                    <td class="align-middle text-right p-1">{{ p.total|floatformat:"2"|safe }}</td>
-                    <td class="align-middle text-right p-0 border-0" style="width: 400px;">
-                        <table class="p-0 w-100">
-                          <thead>
-                          <tr class="text-center">
-                              <td class="align-middle bg-secondary text-white">Descripcion</td>
-                              <td class="align-middle bg-secondary text-white">Cantidad</td>
-                              <td class="align-middle bg-secondary text-white">Unidad</td>
-                              <td class="align-middle bg-secondary text-white">Precio</td>
-                          </tr>
-                          </thead>
-                            <tbody class="p-0">
-                            {% for d in p.detail %}
-                                <tr>
-                                    <td class="align-middle text-left p-1">{{ d.product }}</td>
-                                    <td class="align-middle text-right p-1">{{ d.quantity|floatformat:"2"|safe }}</td>
-                                    <td class="align-middle text-left p-1">{{ d.unit }}</td>
-                                    <td class="align-middle text-right p-1">{{ d.price|floatformat:"2"|safe }}</td>
-                                </tr>
-                            {% endfor %}
-
-                            </tbody>
-                        </table>
-                    </td>
-                    </tr>
+                    <td class="align-middle text-left p-1 text-uppercase"
+                        rowspan="{{ p.rows }}">{{ p.bill_number }}</td>
+                    <td class="align-middle text-center p-1 text-uppercase"
+                        rowspan="{{ p.rows }}">{{ p.purchase_date }}</td>
+                    <td class="align-middle text-right p-1"
+                        rowspan="{{ p.rows }}">{{ p.total|floatformat:"2"|safe }}</td>
+                    {% for d in p.detail %}
+                        {% if not forloop.first %}
+                            <tr>
+                        {% endif %}
+                        <td class="align-middle text-left p-1">{{ d.product }}</td>
+                        <td class="align-middle text-right p-1">{{ d.quantity|floatformat:"2"|safe }}</td>
+                        <td class="align-middle text-left p-1">{{ d.unit }}</td>
+                        <td class="align-middle text-right p-1">{{ d.price|floatformat:"2"|safe }}</td>
+                        </tr>
+                    {% endfor %}
+                        {#                    <td class="align-middle text-right p-0 border-0" style="width: 400px;">#}
+                        {#                        <table class="p-0 w-100">#}
+                        {#                          <thead>#}
+                        {#                          <tr class="text-center">#}
+                        {#                              <td class="align-middle bg-secondary text-white">Descripcion</td>#}
+                        {#                              <td class="align-middle bg-secondary text-white">Cantidad</td>#}
+                        {#                              <td class="align-middle bg-secondary text-white">Unidad</td>#}
+                        {#                              <td class="align-middle bg-secondary text-white">Precio</td>#}
+                        {#                          </tr>#}
+                        {#                          </thead>#}
+                        {#                            <tbody class="p-0">#}
+                        {#                            {% for d in p.detail %}#}
+                        {#                                <tr>#}
+                        {#                                    <td class="align-middle text-left p-1">{{ d.product }}</td>#}
+                        {#                                    <td class="align-middle text-right p-1">{{ d.quantity|floatformat:"2"|safe }}</td>#}
+                        {#                                    <td class="align-middle text-left p-1">{{ d.unit }}</td>#}
+                        {#                                    <td class="align-middle text-right p-1">{{ d.price|floatformat:"2"|safe }}</td>#}
+                        {#                                </tr>#}
+                        {#                            {% endfor %}#}
+                        {##}
+                        {#                            </tbody>#}
+                        {#                        </table>#}
+                        {#                    </td>#}
+                        </tr>
                     {% endfor %}
                 </tr>
             {% endfor %}
@@ -68,7 +84,7 @@
                 <td class="align-middle text-right font-weight-bold">{{ total_purchase|floatformat:"2"|safe }}</td>
                 <td class="align-middle text-right font-weight-bold" colspan="2">TOTAL DETALLES</td>
                 <td class="align-middle text-right font-weight-bold">{{ total_detail|floatformat:"2"|safe }}</td>
-                <td class="align-middle text-right font-weight-bold"></td>
+                <td class="align-middle text-right font-weight-bold" colspan="5"></td>
             </tr>
             </tbody>
         </table>
