@@ -2468,7 +2468,8 @@ def get_monthly_distribution_by_licence_plate(request):
                 'expense_1': 0, 'expense_2': 0, 'expense_3': 0, 'expense_4': 0, 'expense_5': 0,
                 'total_to_deposit': 0,
                 'remaining_total_to_deposit': 0,
-                'deposited': 0, 'balance': 0, 'bank': "", 'date_deposit': "", 'code_deposit': ""
+                'deposited': 0, 'balance': 0, 'bank': "", 'date_deposit': "", 'code_deposit': "",
+                'deposit_set': []
             }
         )
 
@@ -2655,12 +2656,18 @@ def get_monthly_distribution_by_licence_plate(request):
             bank = []
             dates_of_deposit = []
             codes_of_deposit = []
+            array_of_deposit = []
             for deposit in distribution.cashflow_set.filter(type__in=['D', 'E']):
                 distribution_obj["deposited"] += round(deposit.total, 1)
                 total_deposited += round(deposit.total, 1)
                 bank.append(deposit.cash.name)
                 dates_of_deposit.append(str(deposit.transaction_date.date()))
                 codes_of_deposit.append(str(deposit.operation_code))
+                if deposit.type == 'D':
+                    array_of_deposit.append({
+                        'id': deposit.id,
+                        'code': deposit.operation_code,
+                        'total': round(float(deposit.total), 1), 'revised': deposit.revised})
 
             distribution_obj['total_sold_by_date'] += total_sales_by_date
 
@@ -2681,6 +2688,7 @@ def get_monthly_distribution_by_licence_plate(request):
             distribution_obj['bank'] = string_of_banks
             distribution_obj['date_deposit'] = string_of_dates_of_deposit
             distribution_obj['code_deposit'] = string_of_codes_of_deposit
+            distribution_obj['deposit_set'] = array_of_deposit
 
         distributions = list(grouped_by_date.values())
         tpl = loader.get_template('comercial/monthly_distribution_by_licence_plate_grid_list.html')
@@ -2731,6 +2739,19 @@ def get_monthly_distribution_by_licence_plate(request):
             response = JsonResponse(data)
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
             return response
+
+
+def check_deposit_of_distribution(request):
+    if request.method == 'GET':
+        cash_flow_id = int(request.GET.get('cashFlowId', ''))
+        revised = bool(int(request.GET.get('revised', '')))
+        cash_flow_obj = CashFlow.objects.get(id=cash_flow_id)
+        cash_flow_obj.revised = revised
+        cash_flow_obj.save()
+
+        return JsonResponse({
+            'message': 'ok',
+        })
 
 
 def get_distribution_query(request):

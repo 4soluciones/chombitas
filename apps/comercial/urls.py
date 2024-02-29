@@ -114,6 +114,7 @@ urlpatterns = [
 
     # reports
     path('get_monthly_distribution_by_licence_plate/', login_required(get_monthly_distribution_by_licence_plate), name='get_monthly_distribution_by_licence_plate'),
+    path('check_deposit_of_distribution/', login_required(check_deposit_of_distribution), name='check_deposit_of_distribution'),
     path('get_credits_from_clients_by_subsidiary/', login_required(get_credits_from_clients_by_subsidiary), name='get_credits_from_clients_by_subsidiary'),
     path('get_expenses_by_licence_plate/', login_required(get_expenses_by_licence_plate), name='get_expenses_by_licence_plate'),
 

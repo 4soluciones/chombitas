@@ -41,7 +41,7 @@
 
         <td class="text-center" colspan="5">GASTOS</td>
         <td class="align-middle text-center table-danger  font-weight-bold" rowspan="2"><span class="text-rotated-90">TOTAL<br/>DEPOSITAR S/</span></td>
-            <td class="text-center" colspan="5">MOVIMIENTO DE EFECTIVO</td>
+            <td class="text-center" colspan="6">MOVIMIENTO DE EFECTIVO</td>
         <td class="align-middle text-center table-secondary  font-weight-bold" rowspan="2"><span class="text-rotated-90">TOTAL POR<br/>DEPOSITAR <br/>ACUMULADO S/</span></td>
 
     </tr>
@@ -127,6 +127,7 @@
             <td class="align-middle text-center"><span class="text-rotated-90">ENT. BANC</span></td>
             <td class="align-middle text-center"><span class="text-rotated-90">COD. OPE</span></td>
             <td class="align-middle text-center"><span class="text-rotated-90">FECHA</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90 text-primary font-weight-bold">REVISADO</span></td>
     </tr>
     </thead>
     <tbody>
@@ -208,7 +209,7 @@
         <td class="align-middle text-center table-info"></td>
         <td colspan="5"></td>
         <td class="align-middle text-center table-danger"></td>
-        <td colspan="5"></td>
+        <td colspan="6"></td>
         <td class="align-middle text-center table-secondary font-weight-bold"></td>
     </tr>
 
@@ -298,6 +299,7 @@
         <td class="align-middle text-nowrap">{{ distribution.bank }}</td>
         <td class="align-middle text-nowrap">{{ distribution.code_deposit }}</td>
         <td class="align-middle text-nowrap">{{ distribution.date_deposit }}</td>
+        <td class="align-middle text-nowrap is-revised" >{% if distribution.deposit_set %}{{ distribution.deposit_set }}{% endif %}</td>
         <td class="align-middle text-center table-secondary font-weight-bold">{{ distribution.remaining_total_to_deposit }}</td>
 
     </tr>
@@ -305,3 +307,52 @@
 
     </tbody>
 </table>
+<script>
+    $('table#excel-data-grid tbody tr').each(function (i){
+        let cell = $(this).find('td.is-revised');
+        const jsonString = cell.text().trim();
+        if(jsonString!=='[]' && jsonString!==''){
+
+            const cleanedString = jsonString.replace(/'/g, '"').replaceAll('False', 'false').replaceAll('True', 'true');
+            const dataObject = JSON.parse(cleanedString);
+
+            if(dataObject.length>0){
+                let strHtml = '';
+                for(let d = 0; d < dataObject.length; ++d){
+                    strHtml +=`<div class="custom-control custom-checkbox"><input type="checkbox" ${dataObject[d]["revised"]?"checked":""} value="${dataObject[d]["id"]}" class="custom-control-input" id="customCheck${dataObject[d]["id"]}" /><label class="custom-control-label" for="customCheck${dataObject[d]["id"]}">${dataObject[d]["total"]}</label></div>`;
+                }
+                cell.html(strHtml);
+            }
+
+        }
+
+
+    });
+$('table#excel-data-grid tbody tr td.is-revised input[type="checkbox"]').change(function(){
+    if ($(this).is(":checked")) {
+        checkedPay($(this).val(), true)
+    } else {
+        checkedPay($(this).val(), false)
+    }
+   });
+
+    function checkedPay(cashFlowId, revised) {
+
+            $.ajax({
+                url: '/comercial/check_deposit_of_distribution/',
+                async: true,
+                dataType: 'json',
+                type: 'GET',
+                data: {
+                    'cashFlowId': cashFlowId,
+                    'revised': revised?1:0,
+                },
+                success: function (response) {
+                    console.log(response.message)
+                },
+                fail: function (response) {
+                    console.log("error");
+                }
+            });
+        }
+</script>
