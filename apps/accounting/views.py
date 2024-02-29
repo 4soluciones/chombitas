@@ -1585,7 +1585,7 @@ def get_report_employees_salary(request):
     elif request.method == 'POST':
         month = int(request.POST.get('month'))
         year = int(request.POST.get('year'))
-        worker_set = Worker.objects.filter(situation__in=[1, 2, 3]).order_by('-employee__paternal_last_name')
+        worker_set = Worker.objects.filter(situation__in=[1, 2, 3], employee__is_enabled=True).order_by('-employee__paternal_last_name')
         cash_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='101')
         cash_deposit_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='104')
 
