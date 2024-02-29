@@ -32,7 +32,10 @@
 
                     {% for employee in employees %}
                         <tr class="text-center">
-                            <td></td>
+                            <td class="align-middle center-content item-state">
+                                <input type="checkbox" class="form-check-input state center-checkbox" id="{{ employee.id }}"
+                                        {% if employee.is_enabled %} checked{% endif %}>
+                            </td>
                             <td>
                                 <address class="text-left">
                                     <strong>{{ employee.paternal_last_name }} {{ employee.maternal_last_name|slice:":1" }}, {{ employee.names }}</strong><br>
@@ -46,11 +49,15 @@
                             <td class="align-middle">
                                 {% if employee.worker_set.count > 0 %}
                                     <address class="text-left">
-                                    <strong>Trabajador</strong><br>
-                                    Ocupación, <i>{{ employee.worker_set.last.occupation_private_sector.name }}</i><br>
-                                    Tipo de trabajador, <i>{{ employee.worker_set.last.get_worker_type.description }}</i><br>
-                                    Régimen de Aseguramiento de Salud, <i>{{ employee.worker_set.last.get_health_insurance_regime.description }}</i><br>
-                                    Régimen pensionario, <i>{{ employee.worker_set.last.get_pensioner_regime.description }}</i><br>
+                                        <strong>Trabajador</strong><br>
+                                        Ocupación,
+                                        <i>{{ employee.worker_set.last.occupation_private_sector.name }}</i><br>
+                                        Tipo de trabajador,
+                                        <i>{{ employee.worker_set.last.get_worker_type.description }}</i><br>
+                                        Régimen de Aseguramiento de Salud,
+                                        <i>{{ employee.worker_set.last.get_health_insurance_regime.description }}</i><br>
+                                        Régimen pensionario,
+                                        <i>{{ employee.worker_set.last.get_pensioner_regime.description }}</i><br>
                                     </address>
                                 {% else %}-{% endif %}</td>
                             <td class="align-middle">{{ employee.created_at|date:"SHORT_DATE_FORMAT" }} {{ employee.created_at|time:"H:i" }}</td>
@@ -71,7 +78,8 @@
                                             <i class="fas fa-edit"></i> Editar
                                         </a>
                                         {% if employee.worker_set.count == 0 %}
-                                            <a class="dropdown-item worker-designation" style="cursor: pointer;" pk="{{ employee.id }}">
+                                            <a class="dropdown-item worker-designation" style="cursor: pointer;"
+                                               pk="{{ employee.id }}">
                                                 <i class="fas fa-sync-alt"></i> Datos del trabajador
                                             </a>
                                         {% else %}
@@ -79,7 +87,8 @@
                                                pk="{{ employee.worker_set.last.id }}">
                                                 <i class="fas fa-sync-alt"></i> Modificar datos del trabajador
                                             </a>
-                                            <a class="dropdown-item worker-change-establishment" style="cursor: pointer;"
+                                            <a class="dropdown-item worker-change-establishment"
+                                               style="cursor: pointer;"
                                                pk="{{ employee.worker_set.last.id }}">
                                                 <i class="fas fa-sync-alt"></i> Modificar de sede
                                             </a>
@@ -88,11 +97,13 @@
                                                 <i class="fas fa-sync-alt"></i> Modificar de usuario
                                             </a>
                                         {% endif %}
-                                        <a class="dropdown-item staff-in-training-designation" style="cursor: pointer;" pk="{{ employee.id }}">
+                                        <a class="dropdown-item staff-in-training-designation" style="cursor: pointer;"
+                                           pk="{{ employee.id }}">
                                             <i class="fas fa-sync-alt"></i> Modalidad Personal en formación
                                         </a>
 
-                                        <a class="dropdown-item third-party-personnel-designation" style="cursor: pointer;"
+                                        <a class="dropdown-item third-party-personnel-designation"
+                                           style="cursor: pointer;"
                                            pk="{{ employee.id }}">
                                             <i class="fas fa-sync-alt"></i> Modalidad Personal de tercero
                                         </a>
@@ -133,3 +144,12 @@
 {% else %}
     <h1>No existen trabajadores registrados</h1>
 {% endif %}
+<style>
+    .center-content {
+        text-align: center;
+    }
+
+    .center-checkbox {
+        margin: auto;
+    }
+</style>
