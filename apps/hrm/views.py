@@ -43,7 +43,7 @@ class Home(TemplateView):
             'cusco_order_set': cusco_order_set,
             'vilcanota_order_set': vilcanota_order_set,
             'puerto_order_set': puerto_order_set,
-            #'sales_vs_expenses': get_sales_vs_expenses(),
+            # 'sales_vs_expenses': get_sales_vs_expenses(),
         }
         return context
 
@@ -85,14 +85,14 @@ def get_cash_flow_expenses(subsidiary_obj=None, start_date=None, end_date=None):
     my_date = datetime.now()
     cash_flow_set = CashFlow.objects.filter(
         order__distribution_mobil__date_distribution__range=(start_date, end_date),
-        #order__subsidiary_store__subsidiary_id=subsidiary_obj.id,
-        #order__distribution_mobil__date_distribution__year=my_date.year,
+        # order__subsidiary_store__subsidiary_id=subsidiary_obj.id,
+        # order__distribution_mobil__date_distribution__year=my_date.year,
         type='S'
     )
 
     if subsidiary_obj is not None:
         cash_flow_set = cash_flow_set.filter(order__distribution_mobil__truck__subsidiary_id=subsidiary_obj.id)
-    
+
     cash_flow_set = cash_flow_set.values(
         'order__distribution_mobil__truck__pk',
         'order__distribution_mobil__truck__license_plate',
@@ -104,8 +104,8 @@ def get_sales_distributions(subsidiary_obj=None, start_date=None, end_date=None)
     my_date = datetime.now()
     order_set = Order.objects.filter(
         distribution_mobil__date_distribution__range=(start_date, end_date),
-        #subsidiary_store__subsidiary_id=subsidiary_obj.id
-        #distribution_mobil__date_distribution__year=my_date.year
+        # subsidiary_store__subsidiary_id=subsidiary_obj.id
+        # distribution_mobil__date_distribution__year=my_date.year
     )
     if subsidiary_obj is not None:
         order_set = order_set.filter(distribution_mobil__truck__subsidiary_id=subsidiary_obj.id)
@@ -176,7 +176,6 @@ def get_distribution_45kg():
 
 
 def get_subsidiary_by_user_id(user_id):
-
     user_obj = User.objects.prefetch_related(
         Prefetch('worker_set__establishment_set__subsidiary'),
     ).get(id=user_id)
@@ -937,3 +936,28 @@ def update_worker(request):
             'success': True,
             # 'form': t.render(c),
         }, status=HTTPStatus.OK)
+
+
+def update_state_employee(request):
+    if request.method == 'GET':
+        pk = request.GET.get('pk', 0)
+        state = request.GET.get('state', 0)
+        if pk != '0' and pk != "":
+            employee_obj = Employee.objects.get(id=int(pk))
+            employee_obj.is_enabled = bool(int(state))
+            employee_obj.save()
+            if bool(int(state)):
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Trabajador Habilitado'
+                }, status=HTTPStatus.OK)
+            else:
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Trabajador Inhabilitado'
+                }, status=HTTPStatus.OK)
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'No se logro identificar el empleado'
+            }, status=HTTPStatus.OK)

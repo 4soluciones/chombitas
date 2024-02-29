@@ -18,4 +18,5 @@ urlpatterns = [
     path('update_worker_user/', update_worker_user, name='update_worker_user'),
     path('edit_worker_designation/', edit_worker_designation, name='edit_worker_designation'),
     path('update_worker/', login_required(update_worker), name='update_worker'),
+    path('update_state_employee/', login_required(update_state_employee), name='update_state_employee'),
 ]

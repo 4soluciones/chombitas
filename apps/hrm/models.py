@@ -178,6 +178,7 @@ class Employee(models.Model):
         'Fecha de expiracion de licencia', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_enabled = models.BooleanField(default=True)
 
     def __str__(self):
         return str(self.pk)
