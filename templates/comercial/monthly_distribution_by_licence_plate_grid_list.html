@@ -308,6 +308,7 @@
     </tbody>
 </table>
 <script>
+
     $('table#excel-data-grid tbody tr').each(function (i){
         let cell = $(this).find('td.is-revised');
         const jsonString = cell.text().trim();
@@ -328,13 +329,14 @@
 
 
     });
-$('table#excel-data-grid tbody tr td.is-revised input[type="checkbox"]').change(function(){
-    if ($(this).is(":checked")) {
-        checkedPay($(this).val(), true)
-    } else {
-        checkedPay($(this).val(), false)
-    }
-   });
+
+    $('table#excel-data-grid tbody tr td.is-revised input[type="checkbox"]').change(function(){
+        if ($(this).is(":checked")) {
+            checkedPay($(this).val(), true)
+        } else {
+            checkedPay($(this).val(), false)
+        }
+    });
 
     function checkedPay(cashFlowId, revised) {
 

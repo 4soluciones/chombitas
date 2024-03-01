@@ -2663,11 +2663,11 @@ def get_monthly_distribution_by_licence_plate(request):
                 bank.append(deposit.cash.name)
                 dates_of_deposit.append(str(deposit.transaction_date.date()))
                 codes_of_deposit.append(str(deposit.operation_code))
-                if deposit.type == 'D':
-                    array_of_deposit.append({
-                        'id': deposit.id,
-                        'code': deposit.operation_code,
-                        'total': round(float(deposit.total), 1), 'revised': deposit.revised})
+
+                array_of_deposit.append({
+                    'id': deposit.id,
+                    'code': deposit.operation_code,
+                    'total': round(float(deposit.total), 1), 'revised': deposit.revised})
 
             distribution_obj['total_sold_by_date'] += total_sales_by_date
 
