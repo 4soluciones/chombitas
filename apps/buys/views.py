@@ -2271,9 +2271,6 @@ def save_supplier(request):
 
 def general_purchasing(request):
     if request.method == 'GET':
-        user_id = request.user.id
-        user_obj = User.objects.get(id=user_id)
-        subsidiary_obj = get_subsidiary_by_user(user_obj)
         my_date = datetime.now()
 
         return render(request, 'buys/report_general_purchase.html', {
@@ -2293,16 +2290,31 @@ def general_purchasing_grid(request):
             purchase_query = Purchase.objects.filter(purchase_date__year=year, purchase_date__month=month)
             dictionary = []
             for p in purchase_query:
-                serial, number = p.bill_number.split("-")
+                bill_number = p.bill_number
+                if "-" in bill_number:
+                    serial, number = bill_number.split("-")
+                else:
+                    serial = ""
+                    number = ""
+                type_payment = ''
+                code = ''
+                banks = ''
+                if p.cashflow_set.exists():
+                    type_payment = p.cashflow_set.first().get_type_display()
+                    banks = p.cashflow_set.first().cash.name
+                    code = p.cashflow_set.first().operation_code
+                license_plate = ''
+                if p.truck:
+                    license_plate = p.truck.license_plate
                 row = {
                     'period': p.purchase_date.strftime("%Y-%m"),
                     'registration_date': p.purchase_date.strftime("%d-%m-%Y"),
-                    'type_payment': p.cashflow_set.first().get_type_display(),
+                    'type_payment': type_payment,
                     'check_number': '',
                     'cta_banks': '',
                     'gloss_cash': '',
-                    'banks': p.cashflow_set.first().cash.name,
-                    'code_operation': p.cashflow_set.first().operation_code,
+                    'banks': banks,
+                    'code_operation': code,
                     'period_1': '',
                     'receipt_date': p.purchase_date.strftime("%d-%m-%Y"),
                     'cancellation_date': '',
@@ -2314,7 +2326,7 @@ def general_purchasing_grid(request):
                     'gloss_supplier': p.supplier.get_sector_display(),
                     'gloss_accountant': p.supplier.get_sector_display(),
                     'area': p.get_category_display(),
-                    'license_plate': p.truck.license_plate,
+                    'license_plate': license_plate,
                     'total_check': p.total(),
                     'total_purchase': p.total(),
                     'cod_cta': '',
@@ -2354,10 +2366,10 @@ def general_purchasing_grid(request):
                 'message': 'Bien Hecho!',
                 'grid': tpl.render(context, request),
             }, status=HTTPStatus.OK)
-        except ValueError:
+        except Exception as e:
             month = None
             year = None
             return JsonResponse({
                 'success': False,
-                'message': 'Problemas con el mes y año!',
+                'message': str(e),
             }, status=HTTPStatus.OK)
