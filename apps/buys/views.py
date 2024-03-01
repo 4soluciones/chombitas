@@ -2267,3 +2267,97 @@ def save_supplier(request):
             return JsonResponse({
                 'message': str(e),
             }, status=HTTPStatus.OK)
+
+
+def general_purchasing(request):
+    if request.method == 'GET':
+        user_id = request.user.id
+        user_obj = User.objects.get(id=user_id)
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+        my_date = datetime.now()
+
+        return render(request, 'buys/report_general_purchase.html', {
+            'month': my_date.strftime("%Y-%m"),
+            'year': my_date.year,
+
+        })
+
+
+def general_purchasing_grid(request):
+    if request.method == 'GET':
+        month = request.GET.get('month', '')
+        try:
+            month_year = datetime.strptime(month, '%Y-%m')
+            month = month_year.month
+            year = month_year.year
+            purchase_query = Purchase.objects.filter(purchase_date__year=year, purchase_date__month=month)
+            dictionary = []
+            for p in purchase_query:
+                serial, number = p.bill_number.split("-")
+                row = {
+                    'period': p.purchase_date.strftime("%Y-%m"),
+                    'registration_date': p.purchase_date.strftime("%d-%m-%Y"),
+                    'type_payment': p.cashflow_set.first().get_type_display(),
+                    'check_number': '',
+                    'cta_banks': '',
+                    'gloss_cash': '',
+                    'banks': p.cashflow_set.first().cash.name,
+                    'code_operation': p.cashflow_set.first().operation_code,
+                    'period_1': '',
+                    'receipt_date': p.purchase_date.strftime("%d-%m-%Y"),
+                    'cancellation_date': '',
+                    'document_type': p.get_type_bill_display(),
+                    'serial': serial,
+                    'number': number,
+                    'ruc': p.supplier.ruc,
+                    'names': p.supplier.business_name,
+                    'gloss_supplier': p.supplier.get_sector_display(),
+                    'gloss_accountant': p.supplier.get_sector_display(),
+                    'area': p.get_category_display(),
+                    'license_plate': p.truck.license_plate,
+                    'total_check': p.total(),
+                    'total_purchase': p.total(),
+                    'cod_cta': '',
+                    'denomination': '',
+                    'bi': p.total() / decimal.Decimal(1.18),
+                    'igv': (p.total() / decimal.Decimal(1.18)) * decimal.Decimal(0.18),
+                    'bi_scf': p.total() / decimal.Decimal(1.18),
+                    'igv_scf': (p.total() / decimal.Decimal(1.18)) * decimal.Decimal(0.18),
+                    'not_taxed': p.total() if p.type_bill == 'T' else '',
+                    'rh': '',
+                    'perception': '',
+                    'ir_4ta_Cat': '',
+                    'date': '',
+                    'type_discount': '',
+                    'nro_discount': '',
+                    'amount_perception': '',
+                    'tc_mef': '',
+                    'tc_sunat': '',
+                    'dollar_amount': '',
+                    'dollar_amount_not_taxed': '',
+                    'dollar_perception': '',
+                    'dollar_date': '',
+                    'dollar_number': '',
+                    'amount_dollar': '',
+                    'observation_cash': '',
+                    'observation_expenses': '',
+                    'consultation': ''
+
+                }
+                dictionary.append(row)
+            tpl = loader.get_template('buys/report_general_purchase_grid.html')
+            context = ({
+                'dictionary': dictionary,
+            })
+            return JsonResponse({
+                'success': True,
+                'message': 'Bien Hecho!',
+                'grid': tpl.render(context, request),
+            }, status=HTTPStatus.OK)
+        except ValueError:
+            month = None
+            year = None
+            return JsonResponse({
+                'success': False,
+                'message': 'Problemas con el mes y año!',
+            }, status=HTTPStatus.OK)
