@@ -27,7 +27,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card-body" id="report_table"></div>
+            <div class="card-body table-responsive" id="report_table"></div>
             <div class="card-footer"></div>
         </div>
     </div>
@@ -37,6 +37,7 @@
 
 {% block extrajs %}
     <script type="text/javascript">
+
         function SearchPurchase() {
             if ($('#month').val() === "" || $('#month').val() === undefined) {
                 toastr.warning('Ingrese un mes y año', 'Advertencia')

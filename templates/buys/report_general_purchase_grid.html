@@ -1,5 +1,8 @@
-<table class="table table-bordered" id="table_purchase">
+<table class="table table-bordered" id="table_purchase"  style="width: 3500px;">
     <thead>
+    <tr>
+         <td class="align-middle bg-primary text-white font-weight-bold text-center" colspan="48">REPORTE DE COMPRAS</td>
+    </tr>
     <tr class="text-center bg-primary text-white">
         <td class="align-middle">PERIODO</td>
         <td class="align-middle">FECHA</td>
@@ -54,54 +57,70 @@
     <tbody>
    {% for p in dictionary %}
        <tr>
-         <td class="align-middle text-center">{{ p.period }}</td>
-         <td class="align-middle text-center">{{ p.registration_date }}</td>
-         <td class="align-middle text-center">{{ p.type_payment }}</td>
-         <td class="align-middle text-center">{{ p.check_number }}</td>
-         <td class="align-middle text-center">{{ p.cta_banks }}</td>
-         <td class="align-middle text-center">{{ p.gloss_cash }}</td>
-         <td class="align-middle text-center">{{ p.banks }}</td>
-         <td class="align-middle text-center">{{ p.code_operation }}</td>
-         <td class="align-middle text-center">{{ p.period_1 }}</td>
-         <td class="align-middle text-center">{{ p.receipt_date }}</td>
-         <td class="align-middle text-center">{{ p.cancellation_date }}</td>
-         <td class="align-middle text-center">{{ p.document_type }}</td>
-         <td class="align-middle text-center">{{ p.serial }}</td>
-         <td class="align-middle text-center">{{ p.number }}</td>
-         <td class="align-middle text-center">{{ p.ruc }}</td>
-         <td class="align-middle text-center">{{ p.names }}</td>
-         <td class="align-middle text-center">{{ p.gloss_supplier }}</td>
-         <td class="align-middle text-center">{{ p.gloss_accountant }}</td>
-         <td class="align-middle text-center">{{ p.area }}</td>
-         <td class="align-middle text-center">{{ p.license_plate }}</td>
-         <td class="align-middle text-center">{{ p.total_check|safe }}</td>
-         <td class="align-middle text-center">{{ p.total_purchase|safe }}</td>
-         <td class="align-middle text-center">{{ p.cod_cta }}</td>
-         <td class="align-middle text-center">{{ p.denomination }}</td>
-         <td class="align-middle text-center">{{ p.bi|safe }}</td>
-         <td class="align-middle text-center">{{ p.igv|safe }}</td>
-         <td class="align-middle text-center">{{ p.bi_scf|safe }}</td>
-         <td class="align-middle text-center">{{ p.igv_scf|safe }}</td>
-         <td class="align-middle text-center">{{ p.not_taxed|safe }}</td>
-         <td class="align-middle text-center">{{ p.rh }}</td>
-         <td class="align-middle text-center">{{ p.perception }}</td>
-         <td class="align-middle text-center">{{ p.ir_4ta_Cat }}</td>
-         <td class="align-middle text-center">{{ p.date }}</td>
-         <td class="align-middle text-center">{{ p.type_discount }}</td>
-         <td class="align-middle text-center">{{ p.nro_discount }}</td>
-         <td class="align-middle text-center">{{ p.amount_perception }}</td>
-         <td class="align-middle text-center">{{ p.tc_mef }}</td>
-         <td class="align-middle text-center">{{ p.tc_sunat }}</td>
-         <td class="align-middle text-center">{{ p.dollar_amount }}</td>
-         <td class="align-middle text-center">{{ p.dollar_amount_not_taxed }}</td>
-         <td class="align-middle text-center">{{ p.dollar_perception }}</td>
-         <td class="align-middle text-center">{{ p.dollar_date }}</td>
-         <td class="align-middle text-center">{{ p.dollar_number }}</td>
-         <td class="align-middle text-center">{{ p.amount_dollar }}</td>
-         <td class="align-middle text-center">{{ p.observation_cash }}</td>
-         <td class="align-middle text-center">{{ p.observation_expenses }}</td>
-         <td class="align-middle text-center">{{ p.consultation }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.period }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.registration_date }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.type_payment }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.check_number }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.cta_banks }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.gloss_cash }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.banks }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.code_operation }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.period_1 }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.receipt_date }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.cancellation_date }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.document_type }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.serial }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.number }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.ruc }}</td>
+         <td class="align-middle text-left nowrap p-1">{{ p.names }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.gloss_supplier }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.gloss_accountant }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.area }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.license_plate }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.total_check|safe }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.total_purchase|safe }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.cod_cta }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.denomination }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.bi|safe }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.igv|safe }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.bi_scf|safe }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.igv_scf|safe }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.not_taxed|safe }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.rh }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.perception }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.ir_4ta_Cat }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.date }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.type_discount }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.nro_serial }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.nro_discount }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.amount_perception }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.tc_mef }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.tc_sunat }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.dollar_amount }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.dollar_amount_not_taxed }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.dollar_perception }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.dollar_date }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.dollar_number }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.amount_dollar }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.observation_cash }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.observation_expenses }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.consultation }}</td>
        </tr>
     {% endfor %}
     </tbody>
 </table>
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    th, td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+    }
+    /* Evitar que el texto se divida en múltiples líneas */
+    .nowrap {
+        white-space: nowrap;
+    }
+</style>

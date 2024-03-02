@@ -6,7 +6,7 @@ from http import HTTPStatus
 
 from django.contrib.auth.models import User
 from django.core import serializers
-from django.db.models import Q, Sum, F, Prefetch, Subquery, OuterRef
+from django.db.models import Q, Sum, F, Prefetch, Subquery, OuterRef, ExpressionWrapper, DecimalField
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.template import loader
@@ -2287,28 +2287,50 @@ def general_purchasing_grid(request):
             month_year = datetime.strptime(month, '%Y-%m')
             month = month_year.month
             year = month_year.year
-            purchase_query = Purchase.objects.filter(purchase_date__year=year, purchase_date__month=month)
+            purchase_query = Purchase.objects.filter(
+                purchase_date__year=year,
+                purchase_date__month=month
+            ).select_related(
+                'supplier',
+                'truck',
+            ).annotate(
+                sum_total=Subquery(
+                    PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
+                        return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
+                )
+            ).prefetch_related(
+                Prefetch('cashflow_set', queryset=CashFlow.objects.select_related('purchase'))
+            ).values(
+                'purchase_date',
+                'bill_number',
+                'type_bill',
+                'category',
+                'sum_total',
+                'supplier__ruc',
+                'supplier__business_name',
+                'supplier__sector',
+                'truck__license_plate',
+                'cashflow__type',  # Usar 'cashflow__type' en lugar de 'cashflow_set__type'
+                'cashflow__cash__name',  # Usar 'cashflow__cash__name' en lugar de 'cashflow_set__cash__name'
+                'cashflow__operation_code',
+            )
             dictionary = []
-            for p in purchase_query:
-                bill_number = p.bill_number
+            for p in purchase_query.order_by('purchase_date'):
+                bill_number = p['bill_number']
                 if "-" in bill_number:
-                    serial, number = bill_number.split("-")
+                    serial, number = bill_number.split("-", 1)
                 else:
                     serial = ""
-                    number = ""
-                type_payment = ''
-                code = ''
-                banks = ''
-                if p.cashflow_set.exists():
-                    type_payment = p.cashflow_set.first().get_type_display()
-                    banks = p.cashflow_set.first().cash.name
-                    code = p.cashflow_set.first().operation_code
-                license_plate = ''
-                if p.truck:
-                    license_plate = p.truck.license_plate
+                    number = bill_number
+                total = round(p['sum_total'], 2)
+                type_payment = dict(CashFlow.TYPE_CHOICES).get(p['cashflow_set__type'],
+                                                               '') if 'cashflow_set__type' in p else ''
+                banks = p['cashflow_set__cash__name'] if 'cashflow_set__cash__name' in p else ''
+                code = p['cashflow_set__operation_code'] if 'cashflow_set__operation_code' in p else ''
+                license_plate = p['truck__license_plate'] if 'truck__license_plate' in p else ''
                 row = {
-                    'period': p.purchase_date.strftime("%Y-%m"),
-                    'registration_date': p.purchase_date.strftime("%d-%m-%Y"),
+                    'period': p['purchase_date'].strftime("%Y-%m"),
+                    'registration_date': p['purchase_date'].strftime("%d-%m-%Y"),
                     'type_payment': type_payment,
                     'check_number': '',
                     'cta_banks': '',
@@ -2316,31 +2338,32 @@ def general_purchasing_grid(request):
                     'banks': banks,
                     'code_operation': code,
                     'period_1': '',
-                    'receipt_date': p.purchase_date.strftime("%d-%m-%Y"),
+                    'receipt_date': p['purchase_date'].strftime("%d-%m-%Y"),
                     'cancellation_date': '',
-                    'document_type': p.get_type_bill_display(),
+                    'document_type': dict(Purchase.TYPE_CHOICES).get(p['type_bill'], ''),
                     'serial': serial,
                     'number': number,
-                    'ruc': p.supplier.ruc,
-                    'names': p.supplier.business_name,
-                    'gloss_supplier': p.supplier.get_sector_display(),
-                    'gloss_accountant': p.supplier.get_sector_display(),
-                    'area': p.get_category_display(),
+                    'ruc': p['supplier__ruc'],
+                    'names': p['supplier__business_name'],
+                    'gloss_supplier': dict(Supplier.SECTOR_CHOICES).get(p['supplier__sector'], ''),
+                    'gloss_accountant': p['supplier__sector'],
+                    'area': dict(Purchase.CATEGORY_CHOICES).get(p['category'], ''),
                     'license_plate': license_plate,
-                    'total_check': p.total(),
-                    'total_purchase': p.total(),
+                    'total_check': total,
+                    'total_purchase': total,
                     'cod_cta': '',
                     'denomination': '',
-                    'bi': p.total() / decimal.Decimal(1.18),
-                    'igv': (p.total() / decimal.Decimal(1.18)) * decimal.Decimal(0.18),
-                    'bi_scf': p.total() / decimal.Decimal(1.18),
-                    'igv_scf': (p.total() / decimal.Decimal(1.18)) * decimal.Decimal(0.18),
-                    'not_taxed': p.total() if p.type_bill == 'T' else '',
+                    'bi': round(total / decimal.Decimal(1.18), 2),
+                    'igv': round((total / decimal.Decimal(1.18)) * decimal.Decimal(0.18), 2),
+                    'bi_scf': round(total / decimal.Decimal(1.18), 2),
+                    'igv_scf': round((total / decimal.Decimal(1.18)) * decimal.Decimal(0.18), 2),
+                    'not_taxed': round(total, 2) if p['type_bill'] == 'T' else '',
                     'rh': '',
                     'perception': '',
                     'ir_4ta_Cat': '',
                     'date': '',
                     'type_discount': '',
+                    'nro_serial': '',
                     'nro_discount': '',
                     'amount_perception': '',
                     'tc_mef': '',
@@ -2357,6 +2380,74 @@ def general_purchasing_grid(request):
 
                 }
                 dictionary.append(row)
+            # for p in purchase_query:
+            #     bill_number = p.bill_number
+            #     if "-" in bill_number:
+            #         serial, number = bill_number.split("-", 1)
+            #     else:
+            #         serial = ""
+            #         number = bill_number
+            #     type_payment = ''
+            #     code = ''
+            #     banks = ''
+            #     if p.cashflow_set.exists():
+            #         type_payment = p.cashflow_set.first().get_type_display()
+            #         banks = p.cashflow_set.first().cash.name
+            #         code = p.cashflow_set.first().operation_code
+            #     license_plate = ''
+            #     if p.truck:
+            #         license_plate = p.truck.license_plate
+            #     row = {
+            #         'period': p.purchase_date.strftime("%Y-%m"),
+            #         'registration_date': p.purchase_date.strftime("%d-%m-%Y"),
+            #         'type_payment': type_payment,
+            #         'check_number': '',
+            #         'cta_banks': '',
+            #         'gloss_cash': '',
+            #         'banks': banks,
+            #         'code_operation': code,
+            #         'period_1': '',
+            #         'receipt_date': p.purchase_date.strftime("%d-%m-%Y"),
+            #         'cancellation_date': '',
+            #         'document_type': p.get_type_bill_display(),
+            #         'serial': serial,
+            #         'number': number,
+            #         'ruc': p.supplier.ruc,
+            #         'names': p.supplier.business_name,
+            #         'gloss_supplier': p.supplier.get_sector_display(),
+            #         'gloss_accountant': p.supplier.get_sector_display(),
+            #         'area': p.get_category_display(),
+            #         'license_plate': license_plate,
+            #         'total_check': p.total(),
+            #         'total_purchase': p.total(),
+            #         'cod_cta': '',
+            #         'denomination': '',
+            #         'bi': p.total() / decimal.Decimal(1.18),
+            #         'igv': (p.total() / decimal.Decimal(1.18)) * decimal.Decimal(0.18),
+            #         'bi_scf': p.total() / decimal.Decimal(1.18),
+            #         'igv_scf': (p.total() / decimal.Decimal(1.18)) * decimal.Decimal(0.18),
+            #         'not_taxed': p.total() if p.type_bill == 'T' else '',
+            #         'rh': '',
+            #         'perception': '',
+            #         'ir_4ta_Cat': '',
+            #         'date': '',
+            #         'type_discount': '',
+            #         'nro_discount': '',
+            #         'amount_perception': '',
+            #         'tc_mef': '',
+            #         'tc_sunat': '',
+            #         'dollar_amount': '',
+            #         'dollar_amount_not_taxed': '',
+            #         'dollar_perception': '',
+            #         'dollar_date': '',
+            #         'dollar_number': '',
+            #         'amount_dollar': '',
+            #         'observation_cash': '',
+            #         'observation_expenses': '',
+            #         'consultation': ''
+            #
+            #     }
+            #     dictionary.append(row)
             tpl = loader.get_template('buys/report_general_purchase_grid.html')
             context = ({
                 'dictionary': dictionary,
