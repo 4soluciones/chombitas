@@ -2330,7 +2330,7 @@ def general_purchasing_grid(request):
             for p in purchase_query.order_by('purchase_date'):
                 names = p['names']
                 if names.endswith(','):
-                    names = names[:-2]
+                    names = names[:-1]
                 bill_number = p['bill_number']
                 if "-" in bill_number:
                     serial, number = bill_number.split("-", 1)
