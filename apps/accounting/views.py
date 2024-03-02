@@ -187,6 +187,7 @@ def new_payment_purchase(request):
         cash_flow_transact_date_deposit = str(request.POST.get('id_date_deposit'))
         date_converter = datetime.strptime(cash_flow_transact_date_deposit, '%Y-%m-%d').date()
         formatdate = date_converter.strftime("%d-%m-%y")
+        code_operation = ''
 
         if transaction_payment_type == 'E':
             cash_id = str(request.POST.get('cash_efectivo'))

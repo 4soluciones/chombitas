@@ -1,3 +1,5 @@
+from django.contrib.postgres.aggregates import StringAgg
+from django.db.models.functions import Concat, Coalesce
 from django.shortcuts import render
 import decimal
 import json
@@ -6,7 +8,7 @@ from http import HTTPStatus
 
 from django.contrib.auth.models import User
 from django.core import serializers
-from django.db.models import Q, Sum, F, Prefetch, Subquery, OuterRef, ExpressionWrapper, DecimalField
+from django.db.models import Q, Sum, F, Prefetch, Subquery, OuterRef, ExpressionWrapper, DecimalField, Value
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.template import loader
@@ -2287,6 +2289,14 @@ def general_purchasing_grid(request):
             month_year = datetime.strptime(month, '%Y-%m')
             month = month_year.month
             year = month_year.year
+            product_names_subquery = PurchaseDetail.objects \
+                                         .filter(purchase_id=OuterRef('id')) \
+                                         .annotate(
+                concatenated_name=Concat(Coalesce('product__name', Value('')), Value(','))) \
+                                         .values('purchase_id') \
+                                         .annotate(names=StringAgg('concatenated_name', ' ')) \
+                                         .values('names')[:1]
+
             purchase_query = Purchase.objects.filter(
                 purchase_date__year=year,
                 purchase_date__month=month
@@ -2297,7 +2307,8 @@ def general_purchasing_grid(request):
                 sum_total=Subquery(
                     PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
                         return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
-                )
+                ),
+                names=Subquery(product_names_subquery)
             ).prefetch_related(
                 Prefetch('cashflow_set', queryset=CashFlow.objects.select_related('purchase'))
             ).values(
@@ -2313,9 +2324,13 @@ def general_purchasing_grid(request):
                 'cashflow__type',  # Usar 'cashflow__type' en lugar de 'cashflow_set__type'
                 'cashflow__cash__name',  # Usar 'cashflow__cash__name' en lugar de 'cashflow_set__cash__name'
                 'cashflow__operation_code',
+                'names',
             )
             dictionary = []
             for p in purchase_query.order_by('purchase_date'):
+                names = p['names']
+                if names.endswith(','):
+                    names = names[:-2]
                 bill_number = p['bill_number']
                 if "-" in bill_number:
                     serial, number = bill_number.split("-", 1)
@@ -2323,11 +2338,11 @@ def general_purchasing_grid(request):
                     serial = ""
                     number = bill_number
                 total = round(p['sum_total'], 2)
-                type_payment = dict(CashFlow.TYPE_CHOICES).get(p['cashflow_set__type'],
-                                                               '') if 'cashflow_set__type' in p else ''
-                banks = p['cashflow_set__cash__name'] if 'cashflow_set__cash__name' in p else ''
-                code = p['cashflow_set__operation_code'] if 'cashflow_set__operation_code' in p else ''
-                license_plate = p['truck__license_plate'] if 'truck__license_plate' in p else ''
+                type_payment = dict(CashFlow.TYPE_CHOICES).get(p['cashflow__type'],
+                                                               '').upper() if 'cashflow__type' in p else ''
+                banks = p['cashflow__cash__name'] if p['cashflow__cash__name'] is not None else ''
+                code = p['cashflow__operation_code'] if p['cashflow__operation_code'] is not None else ''
+                license_plate = p['truck__license_plate'] if p['truck__license_plate'] is not None else ''
                 row = {
                     'period': p['purchase_date'].strftime("%Y-%m"),
                     'registration_date': p['purchase_date'].strftime("%d-%m-%Y"),
@@ -2345,8 +2360,8 @@ def general_purchasing_grid(request):
                     'number': number,
                     'ruc': p['supplier__ruc'],
                     'names': p['supplier__business_name'],
-                    'gloss_supplier': dict(Supplier.SECTOR_CHOICES).get(p['supplier__sector'], ''),
-                    'gloss_accountant': p['supplier__sector'],
+                    'gloss_supplier': names,
+                    'gloss_accountant': dict(Supplier.SECTOR_CHOICES).get(p['supplier__sector'], ''),
                     'area': dict(Purchase.CATEGORY_CHOICES).get(p['category'], ''),
                     'license_plate': license_plate,
                     'total_check': total,
@@ -2448,6 +2463,33 @@ def general_purchasing_grid(request):
             #
             #     }
             #     dictionary.append(row)
+            # requirement_query = Requirement_buys.objects.filter(
+            #     purchase_date__year=year,
+            #     purchase_date__month=month
+            # ).select_related(
+            #     'supplier',
+            #     'truck',
+            # ).annotate(
+            #     sum_total=Subquery(
+            #         PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
+            #             return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
+            #     )
+            # ).prefetch_related(
+            #     Prefetch('cashflow_set', queryset=CashFlow.objects.select_related('purchase'))
+            # ).values(
+            #     'purchase_date',
+            #     'bill_number',
+            #     'type_bill',
+            #     'category',
+            #     'sum_total',
+            #     'supplier__ruc',
+            #     'supplier__business_name',
+            #     'supplier__sector',
+            #     'truck__license_plate',
+            #     'cashflow__type',  # Usar 'cashflow__type' en lugar de 'cashflow_set__type'
+            #     'cashflow__cash__name',  # Usar 'cashflow__cash__name' en lugar de 'cashflow_set__cash__name'
+            #     'cashflow__operation_code',
+            # )
             tpl = loader.get_template('buys/report_general_purchase_grid.html')
             context = ({
                 'dictionary': dictionary,

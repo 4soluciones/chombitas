@@ -45,7 +45,7 @@
                             <td class="align-middle text-center pay-row-date"
                                 rowspan="{{ p.rowspan }}">{{ lp.date|date:"d-m-y" }}</td>
                             <td class="align-middle text-center pay-row-operation"
-                                rowspan="{{ p.rowspan }}">{{ lp.operation_code }}</td>
+                                rowspan="{{ p.rowspan }}">{% if lp.operation_code %}{{ lp.operation_code }}{% endif %}</td>
                         {% endfor %}
                         <td class="align-middle text-center button-pay" class="p-1" rowspan="{{ p.rowspan }}">
                             <button type="button"
