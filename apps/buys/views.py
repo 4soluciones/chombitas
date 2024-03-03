@@ -2337,9 +2337,14 @@ def general_purchasing_grid(request):
                 else:
                     serial = ""
                     number = bill_number
-                total = round(p['sum_total'], 2)
-                type_payment = dict(CashFlow.TYPE_CHOICES).get(p['cashflow__type'],
-                                                               '').upper() if 'cashflow__type' in p else ''
+                total = round(p['sum_total'], 4)
+                type_payment = ''
+                if p['cashflow__type'] == 'S':
+                    type_payment = 'EFECTIVO'
+                elif p['cashflow__type'] == 'R':
+                    type_payment = 'DEPOSITO'
+                else:
+                    type_payment = ''
                 banks = p['cashflow__cash__name'] if p['cashflow__cash__name'] is not None else ''
                 code = p['cashflow__operation_code'] if p['cashflow__operation_code'] is not None else ''
                 license_plate = p['truck__license_plate'] if p['truck__license_plate'] is not None else ''
@@ -2368,11 +2373,11 @@ def general_purchasing_grid(request):
                     'total_purchase': total,
                     'cod_cta': '',
                     'denomination': '',
-                    'bi': round(total / decimal.Decimal(1.18), 2),
-                    'igv': round((total / decimal.Decimal(1.18)) * decimal.Decimal(0.18), 2),
-                    'bi_scf': round(total / decimal.Decimal(1.18), 2),
-                    'igv_scf': round((total / decimal.Decimal(1.18)) * decimal.Decimal(0.18), 2),
-                    'not_taxed': round(total, 2) if p['type_bill'] == 'T' else '',
+                    'bi': round(total / decimal.Decimal(1.18), 4),
+                    'igv': round((total / decimal.Decimal(1.18)) * decimal.Decimal(0.18), 4),
+                    'bi_scf': round(total / decimal.Decimal(1.18), 4),
+                    'igv_scf': round((total / decimal.Decimal(1.18)) * decimal.Decimal(0.18), 4),
+                    'not_taxed': round(total, 4) if p['type_bill'] == 'T' else '',
                     'rh': '',
                     'perception': '',
                     'ir_4ta_Cat': '',
