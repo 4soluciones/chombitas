@@ -489,7 +489,7 @@ def repay_loan(loan_payment_set=None):
 
     for lp in loan_payment_set:
 
-        if lp.quantity == 0:
+        if float(lp.quantity) == float(0):
             response += lp.price
 
     return response

@@ -2994,7 +2994,7 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                 'total': o.total,
                 'subtotal': 0,
                 'total_repay_loan': '{:,}'.format(
-                    decimal.Decimal(total_remaining_repay_loan(order_detail_set=order_detail_set)).quantize(
+                    decimal.Decimal(total_repay_loan(order_detail_set=order_detail_set)).quantize(
                         decimal.Decimal('0.00'),
                         rounding=decimal.ROUND_HALF_EVEN)),
                 'total_repay_loan_with_vouchers': total_repay_loan_with_vouchers(order_detail_set=order_detail_set),
@@ -3034,7 +3034,8 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                     _type = 'CANJEADO'
                 elif d.unit.name == 'B':
                     _type = 'PRESTADO'
-
+                elif d.unit.name == 'GBC':
+                    _type = ' BALON CLIENTE'
                 loan_payment_set = []
                 for lp in d.loanpayment_set.all():
                     _payment_type = '-'
@@ -3090,8 +3091,7 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                     'quantity_sold': d.quantity_sold,
                     'price_unit': d.price_unit,
                     'multiply': d.multiply,
-                    'return_loan': '{:,}'.format(
-                        round(float(return_loan(loan_payment_set=d.loanpayment_set.all())), 2)),
+                    'return_loan': '{:,}'.format(round(float(return_loan(loan_payment_set=d.loanpayment_set.all())), 2)),
                     'repay_loan': '{:,}'.format(round(float(repay_loan(loan_payment_set=d.loanpayment_set.all())), 2)),
                     'repay_loan_ball': repay_loan_ball(loan_payment_set=d.loanpayment_set.all()),
                     'repay_loan_with_vouchers': repay_loan_with_vouchers(loan_payment_set=d.loanpayment_set.all()),
