@@ -2944,7 +2944,9 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
     sum_quantity_total = 0
 
     other_query = Order.objects.filter(
-        client=client_obj
+        client=client_obj,
+        # id__in=[59,109,149,181,215]
+        create_at__date__lte='2023-12-01', create_at__date__gte=start_date
     ).annotate(
         total_to_pay_g_b10=calculate_total_to_pay_g(OuterRef('id'), 1),
         total_to_return_b_b10=calculate_total_to_return_b(OuterRef('id'), 1),
@@ -2954,7 +2956,10 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
         total_to_return_b_b45=calculate_total_to_return_b(OuterRef('id'), 3),
         total_to_pay_g_b15=calculate_total_to_pay_g(OuterRef('id'), 12),
         total_to_return_b_b15=calculate_total_to_return_b(OuterRef('id'), 12)
-    ).filter(Q(total_to_pay_g_b10__gt=0) | Q(total_to_return_b_b10__gt=0)).values_list('id', flat=True).distinct()
+    ).filter(
+        Q(total_to_pay_g_b10__gt=0)
+        | Q(total_to_return_b_b10__gt=0)
+    ).values_list('id', flat=True).distinct()
 
     if other_query.exists():
         sales_with_debt = list(other_query)
