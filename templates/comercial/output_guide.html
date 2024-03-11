@@ -1,4 +1,5 @@
 {% extends 'home.html' %}
+{% load static %}
 {% block title %}
     coronasoft.dev | Nota de salida
 {% endblock title %}
@@ -122,6 +123,9 @@
 {% endblock body %}
 
 {% block extrajs %}
+    <link rel="stylesheet" href="{% static 'css/jquery.mCustomScrollbar.css' %}">
+    <script src="{% static 'js/jquery.mCustomScrollbar.concat.min.js' %}"></script>
+
     <script type="text/javascript">
 
         {#loader = '<div class="container text-center pt-5 css-loading">' +#}
