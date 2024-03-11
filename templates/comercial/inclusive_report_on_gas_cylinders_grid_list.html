@@ -1,0 +1,101 @@
+<style>
+    .text-rotated-90{
+        transform: rotate(180deg);
+        white-space: nowrap;
+        writing-mode: vertical-rl;
+        padding: 0;
+        line-height: 0.9;
+    }
+</style>
+
+<table class="table table-sm table-bordered" id="excel-data-grid">
+    <thead>
+    <tr>
+        <td class="align-middle text-center font-small font-weight-bold">TIPO<br/>SALIDA</td>
+        <td class="align-middle text-center font-small font-weight-bold">GUIA</td>
+        <td class="align-middle text-center font-small font-weight-bold">VEHICULO</td>
+        <td class="align-middle text-center font-small font-weight-bold">CHOFER</td>
+        <td class="align-middle text-center font-small font-weight-bold">DESTINO</td>
+        <td class="align-middle text-center font-small font-weight-bold">CLIENTE</td>
+        <td class="align-middle text-center font-small font-weight-bold">10KG</td>
+        <td class="align-middle text-center font-small font-weight-bold">45KG</td>
+        <td class="align-middle text-center font-small font-weight-bold">15KG</td>
+        <td class="align-middle text-center font-small font-weight-bold">5KG</td>
+        <td class="align-middle text-center font-small font-weight-bold">DEPOSITO</td>
+        <td class="align-middle text-center font-small font-weight-bold">GASTO</td>
+        <td class="align-middle text-center font-small font-weight-bold"></td>
+    </tr>
+    </thead>
+    <tbody>
+    {% for programming in outputs %}
+    <tr
+        {% if programming.type == 'Guide' %}
+            class=" table-primary"
+        {% elif programming.type == 'Distribution' %}
+            class=" table-success"
+        {% elif programming.type == 'Order' %}
+            class=" table-warning"
+        {% endif %}
+    >
+        <td class="align-middle text-center">{{ programming.type|slice:"0:1" }}</td>
+        <td class="align-middle text-center">{{ programming.guideCode }}</td>
+        <td class="align-middle text-center">{{ programming.licensePlate }}</td>
+        <td class="align-middle text-center">{{ programming.pilot }}</td>
+        <td class="align-middle text-center">{{ programming.destiny }}</td>
+        <td class="align-middle text-center">{{ programming.client }}</td>
+        {% for k, v in programming.gasCylinders.items %}
+        <td class="align-middle text-center">{{ v }}</td>
+        {% endfor %}
+        <td class="align-middle text-center">
+            <ul class="list-group">
+
+                {% for deposit in programming.deposits %}
+                    <li class="list-group-item p-0 text-nowrap d-flex justify-content-between">
+
+                        <span>{{ deposit.transactionType }}</span>
+                        <span>S/ {{ deposit.transactionPayment|floatformat:1 }}</span>
+
+                    </li>
+                {% endfor %}
+
+            </ul>
+
+        </td>
+        <td class="align-middle text-center">
+            <ul class="list-group">
+
+                {% for expense in programming.expenses %}
+                    <li class="list-group-item p-0 text-nowrap d-flex justify-content-between">
+                        <span>{{ expense.transactionType }}</span>
+                        <span>S/ {{ expense.transactionPayment|floatformat:1 }}</span>
+                    </li>
+                {% endfor %}
+
+            </ul>
+        </td>
+        <td class="align-middle text-center">
+            {% if programming.type == 'Guide' %}
+            <button type="button" class="btn btn-sm btn-blue btn-associate" pk="{{ programming.id }}" >
+                ASOCIAR DEPOSITOS Y GASTOS
+            </button>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+
+
+    </tbody>
+<tfoot>
+<tr>
+    <td colspan="6" class="font-weight-bold text-right">TOTAL</td>
+    <td class="align-middle font-weight-bold text-center">{{ total_filled_gas_cylinders.B10 }}</td>
+    <td class="align-middle font-weight-bold text-center">{{ total_filled_gas_cylinders.B45 }}</td>
+    <td class="align-middle font-weight-bold text-center">{{ total_filled_gas_cylinders.B15 }}</td>
+    <td class="align-middle font-weight-bold text-center">{{ total_filled_gas_cylinders.B5 }}</td>
+
+    <td class="align-middle font-weight-bold text-right">S/ {{ total_deposits_and_expenses.total_deposits }}</td>
+    <td class="align-middle font-weight-bold text-right">S/ {{ total_deposits_and_expenses.total_expenses }}</td>
+    <td></td>
+</tr>
+</tfoot>
+</table>

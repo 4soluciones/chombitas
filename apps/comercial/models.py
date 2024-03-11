@@ -439,7 +439,7 @@ class DistributionMobil(models.Model):
         return round(total, 1)
 
     def calculate_total_deposits(self):
-        cash_flow_set = CashFlow.objects.filter(distribution_mobil=self, type='D')
+        cash_flow_set = CashFlow.objects.filter(distribution_mobil=self, type__in=['D', 'E'])
 
         total = 0
         for cf in cash_flow_set.all():
@@ -837,3 +837,12 @@ class ClientProduct(models.Model):
     class Meta:
         verbose_name = 'Cliente producto'
         verbose_name_plural = 'Clientes productos'
+
+
+class GuideCashFlow(models.Model):
+    id = models.AutoField(primary_key=True)
+    guide = models.ForeignKey('Guide', on_delete=models.CASCADE, null=True, blank=True)
+    cash_flow = models.ForeignKey('accounting.CashFlow', on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.id)

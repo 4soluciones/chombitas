@@ -2937,14 +2937,16 @@ def get_base_query(queryset=None):
         Prefetch(
             'cashflow_set', queryset=CashFlow.objects.select_related('cash')
         ),
-    ).select_related('distribution_mobil__truck', 'distribution_mobil__pilot', 'client').order_by('id')
+    ).select_related('distribution_mobil__truck', 'distribution_mobil__pilot', 'client').order_by('create_at', 'id')
 
 
 def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=None, subsidiary_obj=None):
     sum_quantity_total = 0
 
     other_query = Order.objects.filter(
-        client=client_obj
+        client=client_obj,
+        # id__in=[59,109,149,181,215]
+        create_at__date__lte='2023-12-01', create_at__date__gte=start_date
     ).annotate(
         total_to_pay_g_b10=calculate_total_to_pay_g(OuterRef('id'), 1),
         total_to_return_b_b10=calculate_total_to_return_b(OuterRef('id'), 1),
@@ -2954,7 +2956,10 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
         total_to_return_b_b45=calculate_total_to_return_b(OuterRef('id'), 3),
         total_to_pay_g_b15=calculate_total_to_pay_g(OuterRef('id'), 12),
         total_to_return_b_b15=calculate_total_to_return_b(OuterRef('id'), 12)
-    ).filter(Q(total_to_pay_g_b10__gt=0) | Q(total_to_return_b_b10__gt=0)).values_list('id', flat=True).distinct()
+    ).filter(
+        Q(total_to_pay_g_b10__gt=0)
+        | Q(total_to_return_b_b10__gt=0)
+    ).values_list('id', flat=True).distinct()
 
     if other_query.exists():
         sales_with_debt = list(other_query)
@@ -2994,7 +2999,7 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                 'total': o.total,
                 'subtotal': 0,
                 'total_repay_loan': '{:,}'.format(
-                    decimal.Decimal(total_remaining_repay_loan(order_detail_set=order_detail_set)).quantize(
+                    decimal.Decimal(total_repay_loan(order_detail_set=order_detail_set)).quantize(
                         decimal.Decimal('0.00'),
                         rounding=decimal.ROUND_HALF_EVEN)),
                 'total_repay_loan_with_vouchers': total_repay_loan_with_vouchers(order_detail_set=order_detail_set),
@@ -3034,7 +3039,8 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                     _type = 'CANJEADO'
                 elif d.unit.name == 'B':
                     _type = 'PRESTADO'
-
+                elif d.unit.name == 'GBC':
+                    _type = ' BALON CLIENTE'
                 loan_payment_set = []
                 for lp in d.loanpayment_set.all():
                     _payment_type = '-'
@@ -3090,8 +3096,7 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                     'quantity_sold': d.quantity_sold,
                     'price_unit': d.price_unit,
                     'multiply': d.multiply,
-                    'return_loan': '{:,}'.format(
-                        round(float(return_loan(loan_payment_set=d.loanpayment_set.all())), 2)),
+                    'return_loan': '{:,}'.format(round(float(return_loan(loan_payment_set=d.loanpayment_set.all())), 2)),
                     'repay_loan': '{:,}'.format(round(float(repay_loan(loan_payment_set=d.loanpayment_set.all())), 2)),
                     'repay_loan_ball': repay_loan_ball(loan_payment_set=d.loanpayment_set.all()),
                     'repay_loan_with_vouchers': repay_loan_with_vouchers(loan_payment_set=d.loanpayment_set.all()),
@@ -3224,7 +3229,7 @@ def get_order_detail_for_pay(request):
         cash_flow_of_distributions_with_deposits_set = None
         if order_obj.distribution_mobil is not None:
             cash_flow_of_distributions_with_deposits_set = CashFlow.objects.filter(
-                distribution_mobil__truck=order_obj.distribution_mobil.truck, type='D'
+                distribution_mobil__truck=order_obj.distribution_mobil.truck, type__in=['D', 'E']
             ).annotate(
                 total_subtracted=Coalesce(
                     Subquery(
@@ -3360,7 +3365,6 @@ def new_expense(request):
 
 
 def new_loan_payment(request):
-    data = dict()
     if request.method == 'POST':
         id_detail = int(request.POST.get('detail'))
         start_date = request.POST.get('start_date', '')
@@ -3443,8 +3447,6 @@ def new_loan_payment(request):
                                 cash_flow=cash_flow_deposit_obj
                             )
                             transaction_payment_obj.save()
-
-                        return True
 
                     if transaction_payment_type == 'D':
                         cash_flow_description = str(request.POST.get('description_deposit'))
@@ -6598,7 +6600,7 @@ def get_report_purchase_category_by_license_plate(request):
                 PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
                     return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
             )
-        )
+        ).order_by('purchase_date')
 
         query_sum = purchase_set.aggregate(Sum('sum_total'))
         purchases_sum_total = 0
@@ -6644,7 +6646,7 @@ def report_table(request, year=None):
             'sum_total_year': sum_total_year
         }
         for m in month_names:
-            if sector.index(c) == len(sector)-1:
+            if sector.index(c) == len(sector) - 1:
                 b10kg = get_balon_month_and_year2(year=year, month=month_names.index(m) + 1)
                 # b10kg = get_balon_month_and_year(year=year, month=month_names.index(m) + 1)
                 sum_sale_month[month_names.index(m)] = decimal.Decimal(b10kg)
@@ -6931,8 +6933,9 @@ def purchase_report_by_product_category(request):
                     sum_total_year += float_requirement_sum_total
                     sum_month[month_names.index(m)] += float_requirement_sum_total
                 elif value == 'PP':
-                    salary_total = CashFlow.objects.filter(salary__year=year,
-                                                           salary__month=month_names.index(m) + 1).aggregate(
+                    salary_total = CashFlow.objects.filter(transaction_date__year=year,
+                                                           transaction_date__month=month_names.index(m) + 1,
+                                                           salary__type__in=['S', 'G']).aggregate(
                         r=Coalesce(Sum('total'), decimal.Decimal(0.00))).get('r')
                     if salary_total is not None:
                         float_salary_total = float(salary_total)
@@ -6976,7 +6979,7 @@ def purchase_report_by_product_category(request):
 
             purchase_dict.append(category_row)
         # for m in month_names:
-        #     b10kg = get_balon_month_and_year2(year=year, month=month_names.index(m) + 1)
+        #     b10kg = get_balon_month_and_year(year=year, month=month_names.index(m) + 1)
         #     sum_sale_month[month_names.index(m)] = decimal.Decimal(b10kg)
         #     if decimal.Decimal(sum_month[month_names.index(m)]) > 0 and decimal.Decimal(b10kg) > 0:
         #         sum_cost_month[month_names.index(m)] = decimal.Decimal(

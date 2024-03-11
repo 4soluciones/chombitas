@@ -1,0 +1,126 @@
+<table class="table table-bordered" id="table_purchase"  style="width: 3500px;">
+    <thead>
+    <tr>
+         <td class="align-middle bg-primary text-white font-weight-bold text-center" colspan="48">REPORTE DE COMPRAS</td>
+    </tr>
+    <tr class="bg-primary text-white">
+        <td class="align-middle text-center">PERIODO</td>
+        <td class="align-middle text-center">FECHA</td>
+        <td class="align-middle text-center">T/D</td>
+        <td class="align-middle text-center">NUMERO CHEQUE</td>
+        <td class="align-middle text-center">CTA. BANCOS</td>
+        <td class="align-middle text-center">GLOSA</td>
+        <td class="align-middle text-center">BANCO</td>
+        <td class="align-middle text-center">Nº OP.</td>
+        <td class="align-middle text-center">PERIODO</td>
+        <td class="align-middle text-center">FECHA DE COMPROBANTE</td>
+        <td class="align-middle text-center">FECHA CANCELACION</td>
+        <td class="align-middle text-center">TIPO</td>
+        <td class="align-middle text-center">SERIE COMPROBANTE</td>
+        <td class="align-middle text-center">NUMERO COMPROBANTE</td>
+        <td class="align-middle text-center">R.U.C.</td>
+        <td class="align-middle text-center">NOMBRE O RAZON SOCIAL</td>
+        <td class="align-middle text-center">GLOSA O DESCRIPCION DEL GASTO</td>
+        <td class="align-middle text-center">GLOSA CONTABLE</td>
+        <td class="align-middle text-center">AREA</td>
+        <td class="align-middle text-center">PLACA</td>
+        <td class="align-middle text-center">TOTAL CHEQUE</td>
+        <td class="align-middle text-center">TOTAL COMPRAS</td>
+        <td class="align-middle text-center">CODIGO CTA.</td>
+        <td class="align-middle text-center">DENOMINACION</td>
+        <td class="align-middle text-center">B.I.</td>
+        <td class="align-middle text-center">I.G.V.</td>
+        <td class="align-middle text-center">B.I. SCF</td>
+        <td class="align-middle text-center">I.G.V. SCF</td>
+        <td class="align-middle text-center">NO GRAVADAS</td>
+        <td class="align-middle text-center">R/H BASE IMPONIBLE</td>
+        <td class="align-middle text-center">PERCEPCION</td>
+        <td class="align-middle text-center">I.R. 4TA CAT. 200202</td>
+        <td class="align-middle text-center">FECHA</td>
+        <td class="align-middle text-center">TIPO DCTO</td>
+        <td class="align-middle text-center">NRO. SERIE</td>
+        <td class="align-middle text-center">NRO. DCTO.</td>
+        <td class="align-middle text-center">IMPORTE PERCEPCION</td>
+        <td class="align-middle text-center">T/C MEF</td>
+        <td class="align-middle text-center">T/C SUNAT</td>
+        <td class="align-middle text-center">MONTO DOLARES</td>
+        <td class="align-middle text-center">MONTO NO GRAVADO DOLARES</td>
+        <td class="align-middle text-center">PERCECION EN DOLARES</td>
+        <td class="align-middle text-center">FECHA</td>
+        <td class="align-middle text-center">NUMERO</td>
+        <td class="align-middle text-center">MONTO</td>
+        <td class="align-middle text-center">OBSERVACION CAJA</td>
+        <td class="align-middle text-center">OBSERVACION GASTOS</td>
+        <td class="align-middle text-center">CONSULTA</td>
+    </tr>
+    </thead>
+    <tbody>
+   {% for p in dictionary %}
+       <tr>
+         <td class="align-middle text-center nowrap p-1">{{ p.period }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.registration_date }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.type_payment }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.check_number }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.cta_banks }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.gloss_cash }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.banks }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.code_operation }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.period_1 }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.receipt_date }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.cancellation_date }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.document_type }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.serial }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.number }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.ruc }}</td>
+         <td class="align-middle text-left nowrap p-1">{{ p.names }}</td>
+         <td class="align-middle text-left nowrap p-1">{{ p.gloss_supplier }}</td>
+         <td class="align-middle text-left nowrap p-1">{{ p.gloss_accountant }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.area }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.license_plate }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.total_check|safe }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.total_purchase|safe }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.cod_cta }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.denomination }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.bi|safe }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.igv|safe }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.bi_scf|safe }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.igv_scf|safe }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.not_taxed|safe }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.rh }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.perception }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.ir_4ta_Cat }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.date }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.type_discount }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.nro_serial }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.nro_discount }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.amount_perception }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.tc_mef }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.tc_sunat }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.dollar_amount }}</td>
+         <td class="align-middle text-right nowrap p-1">{{ p.dollar_amount_not_taxed }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.dollar_perception }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.dollar_date }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.dollar_number }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.amount_dollar }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.observation_cash }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.observation_expenses }}</td>
+         <td class="align-middle text-center nowrap p-1">{{ p.consultation }}</td>
+       </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<style>
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    th, td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+    }
+    /* Evitar que el texto se divida en múltiples líneas */
+    .nowrap {
+        white-space: nowrap;
+    }
+</style>

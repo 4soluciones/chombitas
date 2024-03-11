@@ -1,3 +1,5 @@
+from django.contrib.postgres.aggregates import StringAgg
+from django.db.models.functions import Concat, Coalesce
 from django.shortcuts import render
 import decimal
 import json
@@ -6,7 +8,7 @@ from http import HTTPStatus
 
 from django.contrib.auth.models import User
 from django.core import serializers
-from django.db.models import Q, Sum, F, Prefetch, Subquery, OuterRef
+from django.db.models import Q, Sum, F, Prefetch, Subquery, OuterRef, ExpressionWrapper, DecimalField, Value
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.template import loader
@@ -60,63 +62,75 @@ def save_purchase(request):
         # print(data_purchase)
 
         provider_id = str(data_purchase["ProviderId"])
-        type_bill = str(data_purchase["Type_bill"])
-        date = str(data_purchase["Date"])
-        invoice = str(data_purchase["Invoice"])
-        category = str(data_purchase["category"])
-        print(data_purchase["truck"])
-        if (data_purchase["truck"]) is not None:
-            truck_id = int(data_purchase["truck"])
-            truck_obj = Truck.objects.get(id=truck_id)
-            status = 'A'
+        if provider_id != "" or provider_id != "0":
+            type_bill = str(data_purchase["Type_bill"])
+            date = str(data_purchase["Date"])
+            invoice = str(data_purchase["Invoice"])
+            purchase_set = Purchase.objects.filter(bill_number__iexact=invoice)
+            if purchase_set.exists():
+                return JsonResponse({
+                    'success': False,
+                    'message': 'El numero de comprobante ya se encuentra registrado.',
+                }, status=HTTPStatus.OK)
+            category = str(data_purchase["category"])
+            print(data_purchase["truck"])
+            if (data_purchase["truck"]) is not None:
+                truck_id = int(data_purchase["truck"])
+                truck_obj = Truck.objects.get(id=truck_id)
+                status = 'A'
+            else:
+                truck_obj = None
+                status = 'S'
+            user_id = request.user.id
+            user_obj = User.objects.get(pk=int(user_id))
+
+            subsidiary_obj = get_subsidiary_by_user(user_obj)
+            print(subsidiary_obj)
+            supplier_obj = Supplier.objects.get(id=int(provider_id))
+
+            purchase_obj = Purchase(
+                supplier=supplier_obj,
+                purchase_date=date,
+                bill_number=invoice,
+                user=user_obj,
+                subsidiary=subsidiary_obj,
+                truck=truck_obj,
+                status=status,
+                type_bill=type_bill,
+                category=category
+            )
+            purchase_obj.save()
+
+            for detail in data_purchase['Details']:
+                quantity = decimal.Decimal(detail['Quantity'])
+                price = decimal.Decimal(detail['Price'])
+                # recuperamos del producto
+                product_id = int(detail['Product'])
+                product_obj = Product.objects.get(id=product_id)
+
+                # recuperamos la unidad
+                unit_id = int(detail['Unit'])
+                unit_obj = Unit.objects.get(id=unit_id)
+
+                new_purchase_detail = {
+                    'purchase': purchase_obj,
+                    'product': product_obj,
+                    'quantity': quantity,
+                    'unit': unit_obj,
+                    'price_unit': price,
+                }
+                new_purchase_detail_obj = PurchaseDetail.objects.create(**new_purchase_detail)
+                new_purchase_detail_obj.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Compra regitrada correctamente.',
+            }, status=HTTPStatus.OK)
         else:
-            truck_obj = None
-            status = 'S'
-        user_id = request.user.id
-        user_obj = User.objects.get(pk=int(user_id))
-
-        subsidiary_obj = get_subsidiary_by_user(user_obj)
-        print(subsidiary_obj)
-        supplier_obj = Supplier.objects.get(id=int(provider_id))
-
-        purchase_obj = Purchase(
-            supplier=supplier_obj,
-            purchase_date=date,
-            bill_number=invoice,
-            user=user_obj,
-            subsidiary=subsidiary_obj,
-            truck=truck_obj,
-            status=status,
-            type_bill=type_bill,
-            category=category
-        )
-        purchase_obj.save()
-
-        for detail in data_purchase['Details']:
-            quantity = decimal.Decimal(detail['Quantity'])
-            price = decimal.Decimal(detail['Price'])
-            # recuperamos del producto
-            product_id = int(detail['Product'])
-            product_obj = Product.objects.get(id=product_id)
-
-            # recuperamos la unidad
-            unit_id = int(detail['Unit'])
-            unit_obj = Unit.objects.get(id=unit_id)
-
-            new_purchase_detail = {
-                'purchase': purchase_obj,
-                'product': product_obj,
-                'quantity': quantity,
-                'unit': unit_obj,
-                'price_unit': price,
-            }
-            new_purchase_detail_obj = PurchaseDetail.objects.create(**new_purchase_detail)
-            new_purchase_detail_obj.save()
-
-        return JsonResponse({
-            'message': 'COMPRA REGISTRADA CORRECTAMENTE.',
-
-        }, status=HTTPStatus.OK)
+            return JsonResponse({
+                'success': False,
+                'message': 'Seleccion correctamente el proveedor.',
+            }, status=HTTPStatus.OK)
 
 
 # guardar detalle de compras en almacenes
@@ -2139,6 +2153,8 @@ def get_supplier(request):
                 'names': supplier_obj.business_name,
                 'phone': supplier_obj.phone,
                 'address': supplier_obj.address,
+                'email': supplier_obj.email,
+                'sector': supplier_obj.sector,
                 'message': 'Operacion exitosa'},
                 status=HTTPStatus.OK)
         else:
@@ -2212,27 +2228,286 @@ def save_supplier(request):
         data = json.loads(supplier_request)
         # print(data_purchase)
         try:
+            pk = str(data["pk"])
             document = str(data["document"])
             names = data["names"]
             address = data["address"]
             phone = data["phone"]
-            email = data["email"]
+            # email = data["email"]
             sector = data["sector"]
-            supplier_obj = Supplier(
-                ruc=document,
-                business_name=names,
-                name=document,
-                address=address,
-                phone=phone,
-                email=email,
-                sector=sector
-            )
-            supplier_obj.save()
-            return JsonResponse({
-                'pk': supplier_obj.id,
-                'message': 'PROVEEDOR REGISTRADO CORRECTAMENTE.',
-            }, status=HTTPStatus.OK)
+            if int(pk) > 0:
+                supplier_obj = Supplier.objects.get(id=int(pk))
+                supplier_obj.ruc = document
+                supplier_obj.business_name = names
+                supplier_obj.name = names
+                supplier_obj.address = address
+                supplier_obj.phone = phone
+                # supplier_obj.email = email
+                supplier_obj.sector = sector
+                supplier_obj.save()
+                return JsonResponse({
+                    'pk': supplier_obj.id,
+                    'message': 'PROVEEDOR ACTUALIZADO CORRECTAMENTE.',
+                }, status=HTTPStatus.OK)
+            else:
+                supplier_obj = Supplier(
+                    ruc=document,
+                    business_name=names,
+                    name=names,
+                    address=address,
+                    phone=phone,
+                    # email=email,
+                    sector=sector
+                )
+                supplier_obj.save()
+                return JsonResponse({
+                    'pk': supplier_obj.id,
+                    'message': 'PROVEEDOR REGISTRADO CORRECTAMENTE.',
+                }, status=HTTPStatus.OK)
+
         except Exception as e:
             return JsonResponse({
+                'message': str(e),
+            }, status=HTTPStatus.OK)
+
+
+def general_purchasing(request):
+    if request.method == 'GET':
+        my_date = datetime.now()
+
+        return render(request, 'buys/report_general_purchase.html', {
+            'month': my_date.strftime("%Y-%m"),
+            'year': my_date.year,
+
+        })
+
+
+def general_purchasing_grid(request):
+    if request.method == 'GET':
+        month = request.GET.get('month', '')
+        try:
+            month_year = datetime.strptime(month, '%Y-%m')
+            month = month_year.month
+            year = month_year.year
+            product_names_subquery = PurchaseDetail.objects \
+                                         .filter(purchase_id=OuterRef('id')) \
+                                         .annotate(
+                concatenated_name=Concat(Coalesce('product__name', Value('')), Value(','))) \
+                                         .values('purchase_id') \
+                                         .annotate(names=StringAgg('concatenated_name', ' ')) \
+                                         .values('names')[:1]
+
+            purchase_query = Purchase.objects.filter(
+                purchase_date__year=year,
+                purchase_date__month=month
+            ).select_related(
+                'supplier',
+                'truck',
+            ).annotate(
+                sum_total=Subquery(
+                    PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
+                        return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
+                ),
+                names=Subquery(product_names_subquery)
+            ).prefetch_related(
+                Prefetch('cashflow_set', queryset=CashFlow.objects.select_related('purchase'))
+            ).values(
+                'purchase_date',
+                'bill_number',
+                'type_bill',
+                'category',
+                'sum_total',
+                'supplier__ruc',
+                'supplier__business_name',
+                'supplier__sector',
+                'truck__license_plate',
+                'cashflow__type',  # Usar 'cashflow__type' en lugar de 'cashflow_set__type'
+                'cashflow__cash__name',  # Usar 'cashflow__cash__name' en lugar de 'cashflow_set__cash__name'
+                'cashflow__operation_code',
+                'names',
+            )
+            dictionary = []
+            for p in purchase_query.order_by('purchase_date'):
+                names = p['names']
+                if names.endswith(','):
+                    names = names[:-1]
+                bill_number = p['bill_number']
+                if "-" in bill_number:
+                    serial, number = bill_number.split("-", 1)
+                else:
+                    serial = ""
+                    number = bill_number
+                total = round(p['sum_total'], 4)
+                type_payment = ''
+                if p['cashflow__type'] == 'S':
+                    type_payment = 'EFECTIVO'
+                elif p['cashflow__type'] == 'R':
+                    type_payment = 'DEPOSITO'
+                else:
+                    type_payment = ''
+                banks = p['cashflow__cash__name'] if p['cashflow__cash__name'] is not None else ''
+                code = p['cashflow__operation_code'] if p['cashflow__operation_code'] is not None else ''
+                license_plate = p['truck__license_plate'] if p['truck__license_plate'] is not None else ''
+                row = {
+                    'period': p['purchase_date'].strftime("%Y-%m"),
+                    'registration_date': p['purchase_date'].strftime("%d-%m-%Y"),
+                    'type_payment': type_payment,
+                    'check_number': '',
+                    'cta_banks': '',
+                    'gloss_cash': '',
+                    'banks': banks,
+                    'code_operation': code,
+                    'period_1': '',
+                    'receipt_date': p['purchase_date'].strftime("%d-%m-%Y"),
+                    'cancellation_date': '',
+                    'document_type': dict(Purchase.TYPE_CHOICES).get(p['type_bill'], ''),
+                    'serial': serial,
+                    'number': number,
+                    'ruc': p['supplier__ruc'],
+                    'names': p['supplier__business_name'],
+                    'gloss_supplier': names,
+                    'gloss_accountant': dict(Supplier.SECTOR_CHOICES).get(p['supplier__sector'], ''),
+                    'area': dict(Purchase.CATEGORY_CHOICES).get(p['category'], ''),
+                    'license_plate': license_plate,
+                    'total_check': total,
+                    'total_purchase': total,
+                    'cod_cta': '',
+                    'denomination': '',
+                    'bi': round(total / decimal.Decimal(1.18), 4),
+                    'igv': round((total / decimal.Decimal(1.18)) * decimal.Decimal(0.18), 4),
+                    'bi_scf': round(total / decimal.Decimal(1.18), 4),
+                    'igv_scf': round((total / decimal.Decimal(1.18)) * decimal.Decimal(0.18), 4),
+                    'not_taxed': round(total, 4) if p['type_bill'] == 'T' else '',
+                    'rh': '',
+                    'perception': '',
+                    'ir_4ta_Cat': '',
+                    'date': '',
+                    'type_discount': '',
+                    'nro_serial': '',
+                    'nro_discount': '',
+                    'amount_perception': '',
+                    'tc_mef': '',
+                    'tc_sunat': '',
+                    'dollar_amount': '',
+                    'dollar_amount_not_taxed': '',
+                    'dollar_perception': '',
+                    'dollar_date': '',
+                    'dollar_number': '',
+                    'amount_dollar': '',
+                    'observation_cash': '',
+                    'observation_expenses': '',
+                    'consultation': ''
+
+                }
+                dictionary.append(row)
+            # for p in purchase_query:
+            #     bill_number = p.bill_number
+            #     if "-" in bill_number:
+            #         serial, number = bill_number.split("-", 1)
+            #     else:
+            #         serial = ""
+            #         number = bill_number
+            #     type_payment = ''
+            #     code = ''
+            #     banks = ''
+            #     if p.cashflow_set.exists():
+            #         type_payment = p.cashflow_set.first().get_type_display()
+            #         banks = p.cashflow_set.first().cash.name
+            #         code = p.cashflow_set.first().operation_code
+            #     license_plate = ''
+            #     if p.truck:
+            #         license_plate = p.truck.license_plate
+            #     row = {
+            #         'period': p.purchase_date.strftime("%Y-%m"),
+            #         'registration_date': p.purchase_date.strftime("%d-%m-%Y"),
+            #         'type_payment': type_payment,
+            #         'check_number': '',
+            #         'cta_banks': '',
+            #         'gloss_cash': '',
+            #         'banks': banks,
+            #         'code_operation': code,
+            #         'period_1': '',
+            #         'receipt_date': p.purchase_date.strftime("%d-%m-%Y"),
+            #         'cancellation_date': '',
+            #         'document_type': p.get_type_bill_display(),
+            #         'serial': serial,
+            #         'number': number,
+            #         'ruc': p.supplier.ruc,
+            #         'names': p.supplier.business_name,
+            #         'gloss_supplier': p.supplier.get_sector_display(),
+            #         'gloss_accountant': p.supplier.get_sector_display(),
+            #         'area': p.get_category_display(),
+            #         'license_plate': license_plate,
+            #         'total_check': p.total(),
+            #         'total_purchase': p.total(),
+            #         'cod_cta': '',
+            #         'denomination': '',
+            #         'bi': p.total() / decimal.Decimal(1.18),
+            #         'igv': (p.total() / decimal.Decimal(1.18)) * decimal.Decimal(0.18),
+            #         'bi_scf': p.total() / decimal.Decimal(1.18),
+            #         'igv_scf': (p.total() / decimal.Decimal(1.18)) * decimal.Decimal(0.18),
+            #         'not_taxed': p.total() if p.type_bill == 'T' else '',
+            #         'rh': '',
+            #         'perception': '',
+            #         'ir_4ta_Cat': '',
+            #         'date': '',
+            #         'type_discount': '',
+            #         'nro_discount': '',
+            #         'amount_perception': '',
+            #         'tc_mef': '',
+            #         'tc_sunat': '',
+            #         'dollar_amount': '',
+            #         'dollar_amount_not_taxed': '',
+            #         'dollar_perception': '',
+            #         'dollar_date': '',
+            #         'dollar_number': '',
+            #         'amount_dollar': '',
+            #         'observation_cash': '',
+            #         'observation_expenses': '',
+            #         'consultation': ''
+            #
+            #     }
+            #     dictionary.append(row)
+            # requirement_query = Requirement_buys.objects.filter(
+            #     purchase_date__year=year,
+            #     purchase_date__month=month
+            # ).select_related(
+            #     'supplier',
+            #     'truck',
+            # ).annotate(
+            #     sum_total=Subquery(
+            #         PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
+            #             return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
+            #     )
+            # ).prefetch_related(
+            #     Prefetch('cashflow_set', queryset=CashFlow.objects.select_related('purchase'))
+            # ).values(
+            #     'purchase_date',
+            #     'bill_number',
+            #     'type_bill',
+            #     'category',
+            #     'sum_total',
+            #     'supplier__ruc',
+            #     'supplier__business_name',
+            #     'supplier__sector',
+            #     'truck__license_plate',
+            #     'cashflow__type',  # Usar 'cashflow__type' en lugar de 'cashflow_set__type'
+            #     'cashflow__cash__name',  # Usar 'cashflow__cash__name' en lugar de 'cashflow_set__cash__name'
+            #     'cashflow__operation_code',
+            # )
+            tpl = loader.get_template('buys/report_general_purchase_grid.html')
+            context = ({
+                'dictionary': dictionary,
+            })
+            return JsonResponse({
+                'success': True,
+                'message': 'Bien Hecho!',
+                'grid': tpl.render(context, request),
+            }, status=HTTPStatus.OK)
+        except Exception as e:
+            month = None
+            year = None
+            return JsonResponse({
+                'success': False,
                 'message': str(e),
             }, status=HTTPStatus.OK)

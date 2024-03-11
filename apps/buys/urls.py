@@ -69,4 +69,6 @@ urlpatterns = [
     path('search_supplier/', search_supplier, name='search_supplier'),
     path('get_supplier/', get_supplier, name='get_supplier'),
     path('save_supplier/', save_supplier, name='save_supplier'),
+    path('general_purchasing/', general_purchasing, name='general_purchasing'),
+    path('general_purchasing_grid/', general_purchasing_grid, name='general_purchasing_grid'),
 ]

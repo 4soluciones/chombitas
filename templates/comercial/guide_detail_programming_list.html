@@ -14,9 +14,19 @@
                     <input type="date" class="form-control" id="end_date" name="end_date"
                            value="{{ date }}" required>
                 </div>
+                <div class="col-sm-12 pr-1 pl-2">
+                    <p class="card-text text-center">Sucursal</p>
+
+                    <select class="form-control" id="subsidiary_id" name="subsidiary_id">
+                        {% for subsidiary in subsidiaries %}
+                        <option value="{{ subsidiary.id }}" {% if subsidiary.id == current_subsidiary_obj.id %}selected{% endif %} >{{ subsidiary.name }}</option>
+                        {% endfor %}
+
+                    </select>
+                </div>
                 <div class="col-sm-12">
                     <p class="card-text">&nbsp;</p>
-                    <button type="submit" id="btn-search" class="btn btn-primary btn-block">Buscar
+                    <button type="button" id="btn-search" class="btn btn-primary btn-block">Buscar
                     </button>
                 </div>
 
@@ -30,7 +40,8 @@
                 <th scope="col" class="align-middle">Unidad</th>
                 <th scope="col" class="align-middle">Conductores</th>
                 <th scope="col" class="align-middle">Fechas</th>
-                <th scope="col" class="align-middle">Origen</th>
+                <th scope="col" class="align-middle">Ruta</th>
+                <th scope="col" class="align-middle">Tipo<br/>Guia</th>
                 <th scope="col" class="align-middle">Turno</th>
                 <th scope="col" class="align-middle">Guías</th>
             </tr>
@@ -38,11 +49,11 @@
             <tbody>
             {% for p in programmings %}
                 <tr pk="{{ p.id }}">
-                    <th scope="row" style="height: 20px;">{{ p.id }}</th>
-                    <td>
+                    <td class="align-middle">{{ p.id }}</td>
+                    <td class="align-middle">
                         <strong>Tracto: </strong>{{ p.truck.license_plate }} <br>
                         <strong>Remolque: </strong> {{ p.towing.license_plate }} </td>
-                    <td>
+                    <td class="align-middle">
                         {% for se in p.setemployee_set.all %}
                             {% if se.function == 'P' %}
                                 <strong>Piloto: </strong>{{ se.employee.paternal_last_name }}
@@ -58,11 +69,11 @@
                             {% endif %}
                         {% endfor %}
                     </td>
-                    <td>
+                    <td class="align-middle">
                         <strong>Fecha Salida: </strong>{{ p.departure_date|date:"SHORT_DATE_FORMAT" }}<br>
                         <strong>Fecha Llegada: </strong>{{ p.arrival_date|date:"SHORT_DATE_FORMAT" }}<br>
                     </td>
-                    <td>
+                    <td class="align-middle">
                         {% for r in p.route_set.all %}
                             {% if r.type == 'O' %}
                                 <strong>Origen: </strong> {{ r.subsidiary.name }}
@@ -74,8 +85,12 @@
                             {% endif %}
                         {% endfor %}
                     </td>
-                    <td>{{ p.order }} </td>
-                    <td>
+                    <td class="align-middle">
+                        {% if p.get_origin == current_subsidiary_obj %}SALIDA
+                        {% elif p.get_destiny == current_subsidiary_obj %}ENTRADA{% endif %}
+                    </td>
+                    <td class="align-middle">{{ p.order }} </td>
+                    <td class="align-middle">
                         <strong>Serie: </strong> {{ p.guide_set.all.first.serial }}<br>
                         <strong>Código: </strong> {{ p.guide_set.all.first.code }}
                     </td>

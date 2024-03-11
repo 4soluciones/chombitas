@@ -61,7 +61,13 @@
 
 
                     <td>{{ c.get_type_display|upper }}</td>
-                    <td>{{ c.description|upper }}</td>
+                    <td>
+                        {% if c.distribution_mobil %}
+                            {{ c.description|upper }} DE {{ c.distribution_mobil.pilot.full_name }}, {{ c.distribution_mobil.truck.license_plate }}
+                        {% else %}
+                            {{ c.description|upper }}
+                        {% endif %}
+                    </td>
                     <td>{{ c.order.client.names|upper|default_if_none:"-" }}</td>
                     <td>{{ c.get_document_type_attached_display|upper }}</td>
                     <td>{{ c.serial|default_if_none:"-" }}</td>

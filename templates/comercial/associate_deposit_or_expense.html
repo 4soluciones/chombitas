@@ -1,0 +1,161 @@
+<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+
+    <div class="modal-content modal-sm">
+
+        <div class="modal-header">
+            <h5 class="modal-title">Asociar Guia con depositos o gastos</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+
+
+
+        <form action="" method="POST" id="form-associate-distribution">
+            <div class="modal-body">
+                {% csrf_token %}
+
+                <input type="hidden" value="{{ guide_obj.id }}" id="guide-id" name="guide-id" />
+                <input type="hidden" value="{{ subsidiary_destiny_obj.id }}" id="subsidiary_destiny-id" name="subsidiary_destiny-id" />
+
+                <div class="form-group">
+                    <label for="subsidiary-destiny">Sucursal Destino</label>
+                    <input type="text" class="form-control" value="{{ subsidiary_destiny_obj.name }}" readonly />
+                </div>
+
+                <div class="form-group">
+                    <label for="truck-expense">Codigo de Guia</label>
+                    <input type="text" class="form-control" value="{{ guide_obj.code }}" readonly />
+                </div>
+
+                <div class="form-group">
+                    <label for="distribution-date">Fecha de distribuciones</label>
+                    <input type="date" class="form-control" value="{{ distribution_date }}" id="distribution-date" />
+                </div>
+
+                <div class="form-group">
+                    <label for="distribution-mobil-id">Distribuciones encontradas</label>
+                    <select class="form-control" id="distribution-mobil-id" name="distribution-mobil-id" required>
+                        <option value="0">SIN DISTRIBUCIONES</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="total-deposited">Total Depositado</label>
+                    <input type="text" inputmode="numeric" name="total-deposited" class="form-control" id="total-deposited" disabled value="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="total-expensed">Total Gastado</label>
+                    <input type="text" inputmode="numeric" name="total-expensed" class="form-control" id="total-expensed" disabled value="0">
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button id="save-expense" type="submit" class="btn btn-sm btn-primary">Asociar</button>
+            </div>
+
+
+        </form>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    function getDistributionList(){
+        let distributionDate = $('#distribution-date').val();
+        let subsidiaryDestinyId = $('#subsidiary_destiny-id').val();
+        $('#distribution-mobil-id').empty();
+        $.ajax({
+            url: '/comercial/get_distribution_mobil_by_date/',
+            async: true,
+            dataType: 'json',
+            type: 'GET',
+            data: {'distributionDate': distributionDate, 'subsidiaryDestinyId': subsidiaryDestinyId},
+            success: function (response) {
+                let distributionArray = response['distributions'];
+                if (distributionArray.length){
+
+                    let optionHTML = `<option value="${0}">${'ELIGE UNA DISTRIBUCION'}</option>`;
+                    $('#distribution-mobil-id').append(optionHTML);
+
+                    distributionArray.forEach( function(value, index, array) {
+                        let optionHTML = `<option value="${value['id']}">${value['truckLicensePlate'] + ' ' + value['pilotFullName']}</option>`;
+                        $('#distribution-mobil-id').append(optionHTML);
+                    });
+                }
+                else{
+                    toastr.warning('SIN DISTRIBUCIONES', '¡MENSAJE!');
+                    $('#total-deposited').val('');
+                    $('#total-expensed').val('');
+                }
+
+            },
+        });
+    }
+
+    $('#distribution-date').change(function () {
+            getDistributionList();
+    });
+
+    $('#distribution-mobil-id').change(function () {
+         let search = $(this).val();
+            $.ajax({
+                url: '/comercial/get_distribution_mobil_fields/',
+                dataType: 'json',
+                type: 'GET',
+                data: {'pk': search},
+                success: function (response) {
+
+                    $('#total-deposited').val(response['deposited']);
+                    $('#total-expensed').val(response['expensed']);
+
+                },
+                fail: function (response) {
+                    console.log(response);
+                }
+            });
+    });
+
+    $('#form-associate-distribution').submit(function (event) {
+        event.preventDefault();
+        if((Number($('#total-deposited').val()) > 0 || Number($('#total-expensed').val()) > 0) && Number($('#distribution-mobil-id').val()) > 0 ) {
+
+            let associateData = {
+                "distributionId": $('#distribution-mobil-id').val(),
+                "guideId": $('#guide-id').val()
+            }
+            let message = confirm("¿Esta seguro de asociar el deposito o gasto a la guia");
+            if (message) {
+                $.ajax({
+                    url: '/comercial/save_associate_distribution/',
+                    async: true,
+                    dataType: 'json', // for response
+                    type: 'GET',
+                    data: {'associateDistribution': JSON.stringify(associateData)},
+                    contentType: 'application/json;charset=UTF-8',
+                    headers: {"X-CSRFToken": '{{ csrf_token }}'},
+                    success: function (response, textStatus, xhr) {
+                        if (xhr.status == 200) {
+                            toastr.success(response.message, '¡MENSAJE!');
+
+                            $('#associateModal').modal('hide');
+
+                            getInclusiveReportOnGasCylinders();
+                        }
+                    },
+                    fail: function (response) {
+                        toastr.error("NO SE LOGRO REGISTRAR EL GASTO. ", '¡MENSAJE!');
+                    }
+                });
+
+            }
+        }else{
+            toastr.error("VERIFIQUE GASTO", '¡MENSAJE!');
+        }
+
+
+    });
+</script>

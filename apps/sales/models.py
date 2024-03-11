@@ -218,10 +218,15 @@ class Supplier(models.Model):
                       ('M', 'MANTENIMIENTO'),
                       ('PE', 'PEAJES'),
                       ('PP', 'PAGOS PERSONAL'),
+                      ('BA', 'BATERIAS'),
+                      ('SE', 'SERVICIOS'),
+                      ('SL', 'SERVICIO LLANTAS'),
+                      ('VA', 'VALVULA'),
+                      ('BL', 'BALON'),
                       ('O', 'OTROS'),)
     id = models.AutoField(primary_key=True)
-    name = models.CharField('Nombre', max_length=200, unique=True)
-    business_name = models.CharField('Razon social', max_length=45, null=True, blank=True)
+    name = models.CharField('Nombre', max_length=300, unique=True)
+    business_name = models.CharField('Razon social', max_length=300, null=True, blank=True)
     ruc = models.CharField('Ruc de la empresa', max_length=11, null=True, blank=True)
     phone = models.CharField('Telefono de la empresa', max_length=45, null=True, blank=True)
     address = models.CharField('Dirección de la empresa', max_length=200, null=True, blank=True)

@@ -299,7 +299,8 @@
                     let _row = $('tr.purchase[pk="'+ {{ purchase.id }} +'"]')
                     _row.find('td.pay-row').text(response.pay).css({'background-color': 'rgb(40, 167, 69)',});
                     _row.find('td.pay-row-date').text(response.pay_date);
-                    _row.find('td.button-pay').hide();
+                    _row.find('td.pay-row-operation').text(response.code);
+                    _row.find('td.button-pay').empty();
                 }
             },
             error: function (jqXhr, textStatus, xhr) {

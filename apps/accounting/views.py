@@ -180,13 +180,14 @@ def new_payment_purchase(request):
         transaction_payment_type = str(request.POST.get('transaction_payment_type'))
         purchase_id = int(request.POST.get('purchase'))
         purchase_obj = Purchase.objects.get(id=purchase_id)
-        purchases_set = Purchase.objects.filter(purchase_date__range=[start_date, end_date], subsidiary=subsidiary_obj,
-                                                status='A')
+        # purchases_set = Purchase.objects.filter(purchase_date__range=[start_date, end_date], subsidiary=subsidiary_obj,
+        #                                         status='A')
         date_converter = ''
         cash_flow_date = str(request.POST.get('id_date'))
         cash_flow_transact_date_deposit = str(request.POST.get('id_date_deposit'))
         date_converter = datetime.strptime(cash_flow_transact_date_deposit, '%Y-%m-%d').date()
         formatdate = date_converter.strftime("%d-%m-%y")
+        code_operation = ''
 
         if transaction_payment_type == 'E':
             cash_id = str(request.POST.get('cash_efectivo'))
@@ -258,7 +259,8 @@ def new_payment_purchase(request):
             'message': 'Cambios guardados con exito.',
             'pay': round(purchase_pay, 2),
             'pay_date': formatdate,
-            'grid': get_dict_purchases(purchases_set),
+            'code': code_operation,
+            # 'grid': get_dict_purchases(purchases_set),
 
         }, status=HTTPStatus.OK)
     return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)
@@ -748,7 +750,7 @@ def new_cash_transfer_to_cash(request):
 
         else:
             data = {
-                'error': "No existe una Apertura de Caja, Favor de revisar los Control de Cajas"}
+                'error': "No existe una Apertura en Caja Origen, Favor de revisar los Control de Cajas"}
             response = JsonResponse(data)
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
             return response
@@ -760,7 +762,7 @@ def new_cash_transfer_to_cash(request):
             cash_destiny_obj = cashflow_set.first().cash
         else:
             data = {
-                'error': "No existe una Apertura de Caja, Favor de revisar los Control de Cajas"}
+                'error': "No existe una Apertura en Caja Destino, Favor de revisar los Control de Cajas"}
             response = JsonResponse(data)
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
             return response
@@ -1125,16 +1127,16 @@ def accept_cash_to_cash_transfer(request):
                 cash_transfer_obj.status = 'A'
                 cash_transfer_obj.save()
 
-                cash_transfer_action_obj = CashTransferAction(
+                cash_transfer_action_obj, _ = CashTransferAction.objects.update_or_create(
                     cash_transfer=cash_transfer_obj,
                     user=user_obj,
                     operation='A',
                     register_date=formatdate,
                 )
-                cash_transfer_action_obj.save()
+                # cash_transfer_action_obj.save()
 
                 cash_flow_origin_obj = CashFlow.objects.get(cash=cash_origin_obj, cash_transfer=cash_transfer_obj)
-                cash_flow_input_obj = CashFlow(
+                cash_flow_input_obj, _ = CashFlow.objects.update_or_create(
                     transaction_date=cash_destiny_obj_date,
                     cash=cash_destiny_obj,
                     description=cash_flow_origin_obj.description,
@@ -1142,7 +1144,7 @@ def accept_cash_to_cash_transfer(request):
                     operation_type='6',
                     user=user_obj,
                     type='E')
-                cash_flow_input_obj.save()
+                # cash_flow_input_obj.save()
         else:
             data = {
                 'error': "No existe una Apertura de Caja, Favor de revisar los Control de Cajas"}
@@ -1584,7 +1586,7 @@ def get_report_employees_salary(request):
     elif request.method == 'POST':
         month = int(request.POST.get('month'))
         year = int(request.POST.get('year'))
-        worker_set = Worker.objects.filter(situation__in=[1, 2, 3]).order_by('-employee__paternal_last_name')
+        worker_set = Worker.objects.filter(situation__in=[1, 2, 3], employee__is_enabled=True).order_by('-employee__paternal_last_name')
         cash_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='101')
         cash_deposit_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='104')
 

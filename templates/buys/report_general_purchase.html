@@ -1,0 +1,80 @@
+{% extends 'home.html' %}
+
+{% block title %}
+    Compras | Reporte general
+{% endblock title %}
+
+{% block body %}
+    <div class="col-md-12 p-2">
+        <div class="card">
+            <div class="card-header">
+                <div class="row">
+                    <div class="form-group col-md-2 m-0">
+                        <label class="mb-0 text-primary font-weight-bold">Mes y Año</label>
+                        <input type="month" class="form-control font-weight-bold" value="{{ month }}" id="month"
+                               name="month">
+                    </div>
+                    <div class="form-group col-md-2 align-self-end text-right m-0">
+                        <button type="button" class="btn btn-primary" onclick="SearchPurchase()"><i class="fa fa-search"></i> Mostrar</button>
+                    </div>
+                    <div class="form-group col-md-2 align-self-end text-left m-0">
+                         <a onclick="excelTickets();" class="btn btn-success text-white">
+                        <span class="fa fa-file-excel"></span> Exportar
+                    </a>
+                    </div>
+                    <div class="col-md-6 align-self-center">
+                        <h5 class="text-primary">REPORTE DE COMPRAS POR MES Y AÑO</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body table-responsive" id="report_table"></div>
+            <div class="card-footer"></div>
+        </div>
+    </div>
+
+
+{% endblock body %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+
+        function SearchPurchase() {
+            if ($('#month').val() === "" || $('#month').val() === undefined) {
+                toastr.warning('Ingrese un mes y año', 'Advertencia')
+                return false
+            }
+            $.ajax({
+                url: '/buys/general_purchasing_grid/',
+                async: true,
+                dataType: 'json',
+                type: 'GET',
+                data: {
+                    'month': $('#month').val()
+                },
+                success: function (response) {
+                    if (response.success) {
+                        toastr.success(response.message)
+                        $('#report_table').html(response['grid']);
+                    } else {
+                        toastr.error(response.message)
+                    }
+                },
+                error: function (jqXhr, textStatus, xhr) {
+                    toastr.error(jqXhr.responseJSON.error, '¡Error!');
+                }
+            });
+        }
+        function excelTickets() {
+
+            $("#table_purchase").table2excel({
+                // exclude CSS class
+                exclude: ".noExl",
+                name: "Worksheet vouchers",
+                filename: "REPORTE DE COMPRAS",//do not include extension
+                fileext: ".xlsx", // file extension
+                preserveColors: true
+
+            });
+        }
+    </script>
+{% endblock extrajs %}
