@@ -33,7 +33,7 @@
             <td class="text-center table-dark text-white" colspan="6">FIERROS</td>
 
             <td class="text-center font-weight-bold" colspan="5">15KG</td>
-            <td class="table-warning text-center" colspan="{{ header_b45|length }}">PRECIOS</td>
+            <td class="table-warning text-center" colspan="{{ header_b15|length }}">PRECIOS</td>
         <td class="align-middle text-center table-info" rowspan="2"><span class="text-rotated-90">TOTAL<br/>VENTA S/</span></td>
             <td class="text-center table-dark text-white" colspan="6">FIERROS</td>
 
@@ -105,7 +105,7 @@
             <td class="align-middle text-center table-success"><span class="text-rotated-90">VENTA</span></td>
             <td class="align-middle text-center table-primary"><span class="text-rotated-90">QUEDA<br/>LLENOS</span></td>
             {% for pb15 in header_b15 %}
-                <td class="align-middle text-center table-warning"><span class="text-rotated-90">{{ pb45|safe }}</span></td>
+                <td class="align-middle text-center table-warning"><span class="text-rotated-90">{{ pb15|safe }}</span></td>
             {% empty %}
                 <td class="align-middle text-center table-warning"></td>
             {% endfor %}
