@@ -314,7 +314,7 @@
         const jsonString = cell.text().trim();
         if(jsonString!=='[]' && jsonString!==''){
 
-            const cleanedString = jsonString.replace(/'/g, '"').replaceAll('False', 'false').replaceAll('True', 'true');
+            const cleanedString = jsonString.replace(/'/g, '"').replaceAll('False', 'false').replaceAll('True', 'true').replaceAll('None', 'null');
             const dataObject = JSON.parse(cleanedString);
 
             if(dataObject.length>0){
