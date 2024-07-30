@@ -2347,12 +2347,11 @@ def get_monthly_distribution_by_licence_plate(request):
             # date_distribution__month=month,
             # date_distribution__year=year,
             date_distribution__range=[start_date_sin_timezone.date(), end_date_sin_timezone.date()],
-            truck__id=truck_id
+            truck__id=truck_id, order__isnull=False
         ).annotate(
             previous_distribution_id=Window(expression=Lag('id', default=0),
                                             order_by=(F('date_distribution').asc(), F('id').asc()))
-        ).order_by('date_distribution', 'id')
-
+        ).order_by('date_distribution', 'id').distinct('date_distribution', 'id')
         remaining_in_the_car_bg10 = get_previous_debt_for_in_the_car_balls(
             distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=1, type_id='L')
         remaining_in_the_car_bg5 = get_previous_debt_for_in_the_car_balls(
@@ -2657,6 +2656,7 @@ def get_monthly_distribution_by_licence_plate(request):
             dates_of_deposit = []
             codes_of_deposit = []
             array_of_deposit = []
+            # print(distribution.id)
             for deposit in distribution.cashflow_set.filter(type__in=['D', 'E']):
                 distribution_obj["deposited"] += round(deposit.total, 1)
                 total_deposited += round(deposit.total, 1)
@@ -2669,6 +2669,18 @@ def get_monthly_distribution_by_licence_plate(request):
                     'code': deposit.operation_code,
                     'total': round(float(deposit.total), 1), 'revised': deposit.revised})
 
+                bank_without_duplicates = list(set(bank))
+                string_of_banks = ", ".join(bank_without_duplicates)
+                dates_of_deposit_without_duplicates = list(set(dates_of_deposit))
+                string_of_dates_of_deposit = ", ".join(dates_of_deposit_without_duplicates)
+                codes_of_deposit_without_duplicates = list(set(codes_of_deposit))
+                string_of_codes_of_deposit = ", ".join(codes_of_deposit_without_duplicates)
+
+                distribution_obj['bank'] = string_of_banks
+                distribution_obj['date_deposit'] = string_of_dates_of_deposit
+                distribution_obj['code_deposit'] = string_of_codes_of_deposit
+                distribution_obj['deposit_set'] = array_of_deposit
+
             distribution_obj['total_sold_by_date'] += total_sales_by_date
 
             distribution_obj['total_to_deposit'] = total_sales_by_date - total_expenses
@@ -2678,18 +2690,7 @@ def get_monthly_distribution_by_licence_plate(request):
             remaining_total_to_deposit += (total_sales_by_date - total_expenses - total_deposited)
             distribution_obj['remaining_total_to_deposit'] = remaining_total_to_deposit
 
-            bank_without_duplicates = list(set(bank))
-            string_of_banks = ", ".join(bank_without_duplicates)
-            dates_of_deposit_without_duplicates = list(set(dates_of_deposit))
-            string_of_dates_of_deposit = ", ".join(dates_of_deposit_without_duplicates)
-            codes_of_deposit_without_duplicates = list(set(codes_of_deposit))
-            string_of_codes_of_deposit = ", ".join(codes_of_deposit_without_duplicates)
-
-            distribution_obj['bank'] = string_of_banks
-            distribution_obj['date_deposit'] = string_of_dates_of_deposit
-            distribution_obj['code_deposit'] = string_of_codes_of_deposit
-            distribution_obj['deposit_set'] = array_of_deposit
-
+            # print(list(grouped_by_date.values()))
         distributions = list(grouped_by_date.values())
         tpl = loader.get_template('comercial/monthly_distribution_by_licence_plate_grid_list.html')
         context = ({
