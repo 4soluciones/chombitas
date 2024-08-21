@@ -250,3 +250,78 @@ class RateRoutes(models.Model):
     class Meta:
         verbose_name = 'Ruta Tarifario'
         verbose_name_plural = 'Ruta Tarifarios'
+
+
+class PurchaseGas(models.Model):
+    TYPE_CHOICES = (('T', 'TICKET'), ('B', 'BOLETA'), ('F', 'FACTURA'), ('C', 'COTIZACION'))
+    id = models.AutoField(primary_key=True)
+    purchase_date = models.DateField('Fecha compra', null=True, blank=True)
+    purchase_number = models.CharField(max_length=100, null=True, blank=True)
+    user = models.ForeignKey(User, verbose_name='Usuario', on_delete=models.CASCADE, null=True, blank=True)
+    money_change = models.ForeignKey('MoneyChange', on_delete=models.CASCADE, null=True, blank=True)
+    subsidiary = models.ForeignKey(Subsidiary, on_delete=models.SET_NULL, null=True, blank=True)
+    type_purchase = models.CharField('Tipo de comprobante', max_length=1, choices=TYPE_CHOICES, default='F')
+    is_dollar = models.BooleanField('is Dollar', default=True)
+
+    def __str__(self):
+        return str(self.id)
+
+    class Meta:
+        verbose_name = 'Compra GLP'
+        verbose_name_plural = 'Compras GLP'
+
+    def count_details(self):
+        quantity = 0
+        if self.purchasedetailgas_set.exists():
+            quantity = self.purchasedetailgas_set.count()
+        return quantity
+
+    # def total(self):
+    #     response = 0
+    #     purchase_detail_set = PurchaseDetail.objects.filter(purchase__id=self.id)
+    #     for pd in purchase_detail_set:
+    #         response = response + (pd.quantity * pd.price_unit)
+    #     return response
+
+
+class PurchaseDetailGas(models.Model):
+    purchase = models.ForeignKey(PurchaseGas, on_delete=models.CASCADE, null=True, blank=True)
+    id = models.AutoField(primary_key=True)
+    supplier = models.ForeignKey(Supplier, verbose_name='Proveedor', on_delete=models.CASCADE, null=True, blank=True)
+    description = models.CharField('Descripcion', max_length=45, null=True, blank=True)
+    quantity = models.DecimalField('Cantidad comprada', max_digits=10, decimal_places=2, default=0)
+    unit = models.ForeignKey(Unit, on_delete=models.CASCADE, null=True, blank=True)
+    dollar_total_amount = models.DecimalField('Importe Total Dollar', max_digits=30, decimal_places=15, default=0)
+    dollar_total_base = models.DecimalField('Base Imponible Dollar', max_digits=30, decimal_places=15, default=0)
+    dollar_igv = models.DecimalField('Igv Dollar', max_digits=30, decimal_places=15, default=0)
+    dollar_untaxed_operations = models.DecimalField('No Gravadas Dollar', max_digits=30, decimal_places=15, default=0)
+    dollar_perception = models.DecimalField('Percepcion Dollar', max_digits=30, decimal_places=15, default=0)
+    total_amount = models.DecimalField('Importe Total Soles', max_digits=30, decimal_places=15, default=0)
+    total_base = models.DecimalField('Base Imponible Soles', max_digits=30, decimal_places=15, default=0)
+    igv = models.DecimalField('Igv Soles', max_digits=30, decimal_places=15, default=0)
+    untaxed_operations = models.DecimalField('No Gravadas Soles', max_digits=30, decimal_places=15, default=0)
+    perception = models.DecimalField('Percepcion Soles', max_digits=30, decimal_places=15, default=0)
+
+    def __str__(self):
+        return str(self.id)
+
+    def total_dollar(self):
+        return self.dollar_total_base + self.dollar_igv + self.dollar_untaxed_operations
+
+    def total(self):
+        return self.total_base + self.igv + self.untaxed_operations
+
+    class Meta:
+        verbose_name = 'Detalle compra GLP'
+        verbose_name_plural = 'Detalles de compra GLP'
+
+
+class MoneyChange(models.Model):
+    id = models.AutoField(primary_key=True)
+    search_date = models.DateField('Fecha de busqueda', null=True, blank=True)
+    sunat_date = models.DateField('Fecha de sunat', null=True, blank=True)
+    sell = models.DecimalField('Venta', max_digits=10, decimal_places=4, default=0)
+    buy = models.DecimalField('Compra', max_digits=10, decimal_places=4, default=0)
+
+    def __str__(self):
+        return str(self.id)

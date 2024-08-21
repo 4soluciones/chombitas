@@ -22,7 +22,7 @@ from apps.sales.views import kardex_input, kardex_ouput, kardex_initial, calcula
 from .models import *
 from ..sales.models import Product, Unit, Supplier, SubsidiaryStore, ProductStore, ProductDetail, Kardex, Cash, \
     CashFlow, TransactionPayment
-from ..sales.views_SUNAT import ApisNetPe
+from ..sales.views_SUNAT import ApisNetPe, query_apis_net_money
 
 APIS_TOKEN = "apis-token-1693.sJwdqJzDvppWBtjEtTuupNuH4GMgWpfc"
 api_net = ApisNetPe(APIS_TOKEN)
@@ -2137,6 +2137,67 @@ def search_supplier(request):
         })
 
 
+# def get_supplier_by_criteria(request):
+#     if request.method == 'GET':
+#         value = request.GET.get('value', '')
+#         array_value = value.split()
+#
+#         product_list = []
+#
+#         for i in range(0, len(array_value)):
+#             q = Q(name__icontains=array_value[i]) | Q(product_brand__name__icontains=array_value[i])
+#             if full_query is None:
+#                 full_query = q
+#             else:
+#                 full_query = full_query & q
+#
+#         product_set = product_query.filter(full_query, is_enabled=True).select_related(
+#             'product_family', 'product_brand').order_by('id')
+#
+#         if not product_set:
+#             data = {'error': 'NO EXISTE EL PRODUCTO, FAVOR DE INGRESAR PRODUCTO EXISTENTE.'}
+#             response = JsonResponse(data)
+#             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+#             return response
+#
+#         for e in product_set:
+#             unit_id = ''
+#             unit_name = ''
+#             price_sale = ''
+#             stock = 0
+#             product_store_id = ''
+#             product_store_set = ProductStore.objects.filter(product_id=e.id, subsidiary_store=subsidiary_store_obj)
+#
+#             if product_store_set.exists():
+#                 product_store_obj = product_store_set.first()
+#                 stock = product_store_obj.stock
+#                 product_store_id = product_store_obj.id
+#
+#             item_product_list = {
+#                 'id': e.id,
+#                 'name': e.name,
+#                 'brand': e.product_brand.name,
+#                 'unit_dict': [],
+#                 'stock': stock,
+#                 'product_store_id': product_store_id
+#             }
+#             if e.productdetail_set.exists():
+#                 for pd in e.productdetail_set.all():
+#                     item_unit = {
+#                         'unit_id': pd.unit.id,
+#                         'unit_name': pd.unit.name,
+#                         'price_sale': pd.price_sale,
+#                         'price_purchase': pd.price_purchase,
+#                         'quantity_minimum': pd.quantity_minimum
+#                     }
+#                     item_product_list.get('unit_dict').append(item_unit)
+#             product_list.append(item_product_list)
+#
+#         return JsonResponse({
+#             'productList': product_list,
+#         }, status=HTTPStatus.OK)
+
+
 def get_supplier(request):
     if request.method == 'GET':
         document = request.GET.get('document', '')
@@ -2511,3 +2572,59 @@ def general_purchasing_grid(request):
                 'success': False,
                 'message': str(e),
             }, status=HTTPStatus.OK)
+
+
+def get_type_change(request):
+    if request.method == 'GET':
+        mydate = datetime.now()
+        formatdate = mydate.strftime("%Y-%m-%d")
+        money_change_set = MoneyChange.objects.filter(search_date=formatdate)
+
+        if money_change_set.exists():
+            money_change_obj = money_change_set.first()
+            sell = money_change_obj.sell
+            buy = money_change_obj.buy
+
+            return JsonResponse({'sell': sell, 'buy': buy},
+                                status=HTTPStatus.OK)
+        else:
+            r = query_apis_net_money(formatdate)
+
+            if r.get('fecha_busqueda') == formatdate:
+                sell = round(r.get('venta'), 3)
+                buy = round(r.get('compra'), 3)
+                search_date = r.get('fecha_busqueda')
+                sunat_date = r.get('fecha_sunat')
+
+                money_change_obj = MoneyChange(
+                    search_date=search_date,
+                    sunat_date=sunat_date,
+                    sell=sell,
+                    buy=buy
+                )
+                money_change_obj.save()
+
+            else:
+                data = {'error': 'NO EXISTE TIPO DE CAMBIO'}
+                response = JsonResponse(data)
+                response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+                return response
+
+        return JsonResponse({'sell': sell, 'buy': buy},
+                            status=HTTPStatus.OK)
+
+    return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)
+
+
+def get_purchase_gas(request):
+    if request.method == 'GET':
+        supplier_set = Supplier.objects.all()
+        unit_set = Unit.objects.all()
+        my_date = datetime.now()
+        return render(request, 'buys/buys_gas.html', {
+            'supplier_set': supplier_set,
+            'unit_set': unit_set,
+            'date_now': my_date.strftime("%Y-%m-%d")
+        })
+
+

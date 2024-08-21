@@ -578,3 +578,36 @@ def correlative_receipt(truck_obj):
     number = OrderBill.objects.filter(serial=serial, type='2').aggregate(
         r=Coalesce(Max('n_receipt'), 0)).get('r')
     return number + 1
+
+
+def query_apis_net_money(date_now):
+    context = {}
+
+    url = 'https://api.apis.net.pe/v1/tipo-cambio-sunat?fecha={}'.format(date_now)
+    headers = {
+        "Content-Type": 'application/json',
+        'authorization': 'Bearer apis-token-1693.sJwdqJzDvppWBtjEtTuupNuH4GMgWpfc',
+    }
+
+    r = requests.get(url, headers=headers)
+
+    if r.status_code == 200:
+        result = r.json()
+
+        context = {
+            'success': True,
+            'fecha_busqueda': result.get('fecha'),
+            'fecha_sunat': result.get('fecha'),
+            'venta': result.get('venta'),
+            'compra': result.get('compra'),
+            'origen': result.get('origen'),
+            'moneda': result.get('moneda'),
+        }
+    else:
+        result = r.json()
+        context = {
+            'status': False,
+            'errors': '400 Bad Request',
+        }
+
+    return context

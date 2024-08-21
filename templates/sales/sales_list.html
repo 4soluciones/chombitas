@@ -155,10 +155,12 @@
             $("#id_client").find('option[value="0"]').attr('selected', 'selected');
             $("#id_client").trigger('change');
         }
-        ;
 
         {#Sirve para convertir select en autocompletar#}
         $('#id_client').select2({
+            theme: 'bootstrap4',
+        });
+        $('#truck_id').select2({
             theme: 'bootstrap4',
         });
         $('#id_client_name').select2({
@@ -377,6 +379,12 @@
             if (($('#type').val() == 'E') && ($('#id_serie').val() == '0')) {
                 toastr.warning('¡Favor de completar la serie!', 'Error de Llenado!');
                 $('#id_serie').focus();
+                return false;
+            }
+            if (($('#type').val() !== 'E') && ($('#truck_id').val() == '0')) {
+                toastr.warning('¡Favor de seleccionar una Placa!', 'Error de Llenado!');
+                $('#truck_id').focus();
+                return false;
             }
             // Comprobar si hay filas en los detalles
             if (hasRowDetails() == false) {
@@ -392,6 +400,7 @@
                 "Distribution": $('#id_distribution').val(),
                 "Type": $('#type').val(),
                 "Serie": $('#id_serie').val(),
+                "Truck": $('#truck_id').val(),
                 "BillType": sessionStorage.BillType,
                 "Date": $('#date').val(),
                 "Demo": ($('#demo').is(':checked')) ? 1 : 0

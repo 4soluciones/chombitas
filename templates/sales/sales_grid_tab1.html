@@ -76,11 +76,25 @@
 
                         </div>
                         <div class="form-group col-md-4 text-uppercase small mt-2 mb-0 pl-1 pr-3 text-center">
-                            <label for="hour"><strong>Fecha y Hora</strong> </label>
-                            <input type="date" class="form-control form-control-sm" style="width:100%" id="date"
-                                   value="{{ date }}"
-                                   placeholder="Fecha">
-
+                            <div class="form-row mt-1 m-0 p-0">
+                                <div class="col-sm-6 text-left">
+                                    <label for="date"><strong>Fecha y Hora</strong> </label>
+                                    <input type="date" class="form-control form-control-sm" style="width:100%" id="date"
+                                           value="{{ date }}"
+                                           placeholder="Fecha">
+                                </div>
+                                <div class="col-sm-6">
+                                    <label for="truck_id"><strong>Placa</strong></label>
+                                    <select id="truck_id" name="truck"
+                                            class="form-control form-control-sm"
+                                            aria-selected="Text input with radio button">
+                                        <option selected value="0">Sin Placa</option>
+                                        {% for t in truck_set %}
+                                            <option value="{{ t.id }}">{{ t.license_plate }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
                             <div class="form-row mt-2 m-0 p-1">
                                 <div class="input-group input-group-sm mb-2 series" style="width:100%">
                                     <div class="input-group-prepend">

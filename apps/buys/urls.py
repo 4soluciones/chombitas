@@ -71,4 +71,8 @@ urlpatterns = [
     path('save_supplier/', save_supplier, name='save_supplier'),
     path('general_purchasing/', general_purchasing, name='general_purchasing'),
     path('general_purchasing_grid/', general_purchasing_grid, name='general_purchasing_grid'),
+
+    # BUY GAS
+    path('get_purchase_gas/', get_purchase_gas, name='get_purchase_gas'),
+    path('get_type_change/', login_required(get_type_change), name='get_type_change'),
 ]

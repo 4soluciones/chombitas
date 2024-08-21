@@ -852,6 +852,7 @@ class SalesList(View):
         contexto['choices_payments'] = TransactionPayment._meta.get_field('type').choices
         contexto['electronic_invoice'] = letter
         contexto['series'] = series_set
+        contexto['truck_set'] = Truck.objects.all()
         return contexto
 
     def get(self, request, *args, **kwargs):
@@ -1081,6 +1082,7 @@ def create_order_detail(request):
         # order_id = str(data_sale["Orden"])
         distribution_id = str(data_sale["Distribution"])
         serie = str(data_sale["Serie"])
+        truck_id = str(data_sale["Truck"])
         _type = str(data_sale["Type"])
         _bill_type = str(data_sale["BillType"])
         msg_sunat = ''
@@ -1088,6 +1090,10 @@ def create_order_detail(request):
         _date = str(data_sale["Date"])
         is_demo = bool(int(data_sale["Demo"]))
         value_is_demo = ''
+
+        if truck_id != '0':
+            truck_obj = Truck.objects.get(id=int(truck_id))
+
         if is_demo:
             value_is_demo = 'D'
         else:
@@ -3243,6 +3249,7 @@ def get_order_detail_for_pay(request):
                 ),
                 total_cash_flow=F('total') - F('total_subtracted')
             ).filter(total_cash_flow__gt=0)
+        # else:
 
         tpl = loader.get_template('sales/new_payment_from_lending.html')
         context = ({

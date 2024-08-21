@@ -82,7 +82,7 @@ urlpatterns = [
     path('stock_product/', login_required(get_stock_product_store), name='stock_product'),
     path('stock_product_all/', login_required(get_stock_product_store_all), name='stock_product_all'),
 
-    # PDFKIT
+    # PDFKITorder_list
     path('kardex_glp_pdf/<int:pk>/', login_required(kardex_glp_pdf), name='kardex_glp_pdf'),
     path('account_order_list_pdf/<int:pk>/',
          login_required(account_order_list_pdf), name='account_order_list_pdf'),

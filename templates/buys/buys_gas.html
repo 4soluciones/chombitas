@@ -1,0 +1,504 @@
+{% extends 'home.html' %}
+{% block title %}
+    Compras GLP
+{% endblock title %}
+
+{% block body %}
+
+    <div class="card">
+        <div class="card-body bg-light">
+            <div class="row mt-5 roboto-condensed-regular">
+                <div class="col-sm-1"></div>
+                <div class="col-sm-10">
+                    <h5 class="card-title roboto-condensed-regular text-uppercase font-weight-bold">Ingreso de Compras
+                        GLP</h5>
+                    <div class="align-items-center justify-content-center p-2" style="height: 100vh;">
+                        <form id="buy-form" action="{% url 'buys:save_purchase' %}" method="POST">
+                            {% csrf_token %}
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <label class="m-0" for="purchase_number">Numero comprobante</label>
+                                            <input type="text" class="form-control" id="purchase_number"
+                                                   name="purchase_number" required
+                                                   placeholder="Numero Comprobante"
+                                                   value="">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="m-0" for="purchase_date">Fecha compra</label>
+                                            <input type="date" class="form-control" id="purchase_date"
+                                                   name="purchase_date"
+                                                   value="{{ date_now }}" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="m-0 text-light" for="save">Registrar</label>
+                                            <button type="button" id="save" class="btn btn-success btn-block pl-1 pr-1">
+                                                Registrar Compra
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <label class="m-0" for="id_type_bill">Tipo Comprobante</label>
+                                            <select class="form-control" id="id_type_bill" name="type_bill"
+                                                    required>
+                                                <option value="T">TICKET</option>
+                                                <option value="B">BOLETA</option>
+                                                <option selected value="F">FACTURA</option>
+                                                <option value="C">COTIZACION</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="row">
+                                                <div class="col-sm-5">
+                                                    <label class="m-0 text-light" for="btn-type-change">type</label>
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-secondary btn-block"
+                                                            id="btn-type-change">Tipo de Cambio:
+                                                    </button>
+                                                </div>
+                                                <div class="col-sm-7">
+                                                    <label class="m-0 text-light" for="type_change">button</label>
+                                                    <input type="text" class="form-control text-center font-weight-bold"
+                                                           id="type_change" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="m-0 text-light" for="add-detail">Agregar</label>
+                                            <button type="button" id="add-detail"
+                                                    class="btn btn-primary btn-block pl-1 pr-1">
+                                                Agregar Detalles
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body p-1" id="render-form" style="height: 300px;">
+                                    <div class="table-responsive" id="render-table-details">
+                                        <table id="id_detail_grid"
+                                               class="table table-sm table-striped align-content-center table-bordered response">
+                                            <thead>
+                                            <tr class="text-center" style="height: 20px; background-color: #80d0e7">
+                                                <th class="align-middle" style="width: 2%">Item</th>
+                                                <th class="align-middle" style="width: 20%">Proveedor</th>
+                                                <th class="align-middle" style="width: 5%">Cantidad</th>
+                                                <th class="align-middle" style="width: 21%">Descripcion</th>
+                                                <th class="align-middle table-success text-black-50" style="width: 7%">
+                                                    Importe Total (USD)
+                                                </th>
+                                                <th class="align-middle table-success text-black-50" style="width: 7%">
+                                                    No Gravadas (USD)
+                                                </th>
+                                                <th class="align-middle table-success text-black-50" style="width: 7%">
+                                                    Percepcion (USD)
+                                                </th>
+                                                <th class="align-middle table-primary text-black-50" style="width: 7%">
+                                                    Base Imponible (S/)
+                                                </th>
+                                                <th class="align-middle table-primary text-black-50" style="width: 7%">
+                                                    IGV (S/)
+                                                </th>
+                                                <th class="align-middle table-primary text-black-50" style="width: 7%">
+                                                    No Gravadas (S/)
+                                                </th>
+                                                <th class="align-middle table-primary text-black-50" style="width: 7%">
+                                                    Importe Total (S/)
+                                                </th>
+                                                <th class="align-middle" style="width: 3%"><i class="fas fa-trash"></i>
+                                                </th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id="details">
+                                            <tr supplier="">
+                                                <td class="text-center item-number align-middle">1</td>
+                                                <td class="align-middle text-left item-supplier">
+                                                    <input type="text"
+                                                           class="form-control text-uppercase supplier-table dropdown-toggle"
+                                                           data-toggle="dropdown" aria-expanded="false"
+                                                           placeholder="Ingrese proveedor...">
+                                                    <div class="dropdown-menu"></div>
+                                                </td>
+                                                <td class="text-right item-quantity">
+                                                    <input type="text" aria-label=""
+                                                           class="form-control quantity text-right">
+                                                </td>
+                                                <td class="item-description">
+                                                    <input type="text" aria-label="" class="form-control description"
+                                                           placeholder="Descripcion del producto">
+                                                </td>
+                                                <td class="text-right item-dollar-total-amount">
+                                                    <input type="number"
+                                                           aria-label=""
+                                                           class="form-control dollar-total-amount text-right ">
+                                                </td>
+                                                <td class="text-right item-dollar-untaxed">
+                                                    <input type="number"
+                                                           aria-label=""
+                                                           class="form-control dollar-untaxed text-right ">
+                                                </td>
+                                                <td class="text-center item-perception">
+                                                    <input type="number"
+                                                           aria-label=""
+                                                           class="form-control dollar-perception text-right ">
+                                                </td>
+                                                <td class="text-center item-total-base">
+                                                    <input type="number"
+                                                           aria-label="" class="form-control total_base text-right ">
+                                                </td>
+                                                <td class="text-center item-igv">
+                                                    <input type="number"
+                                                           aria-label="" class="form-control igv text-right ">
+                                                </td>
+                                                <td class="text-center item-untaxed">
+                                                    <input type="number"
+                                                           aria-label="" class="form-control untaxed text-right ">
+                                                </td>
+                                                <td class="text-center item-total_amount">
+                                                    <input type="number"
+                                                           aria-label="" class="form-control total_amount text-right ">
+                                                </td>
+                                                <td class="text-center delete"></td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="col-sm-1"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modal-supplier" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content modal-sm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">REGISTRAR PROVEEDOR</h5>
+                    <button type="button" class="close" onclick="limper()" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="m-0">Numero documento</label>
+                            <input type="text" class="form-control" id="s_document" name="s_document">
+                            <input type="hidden" value="0" id="id_provider" name="id_provider">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="m-0">Razon Social/Nombres</label>
+                            <input type="text" class="form-control" id="s_names" name="s_names">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="m-0">Direccion</label>
+                            <input type="text" class="form-control" id="s_address" name="s_address">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="m-0">Telefono</label>
+                            <input type="text" class="form-control" id="s_phone" name="s_phone">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label class="m-0">Sector</label>
+                            <select class="form-control" id="s_sector" name="s_sector">
+                                {% for s in sector_set %}
+                                    <option value="{{ s.0 }}">{{ s.1 }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="close-supplier" onclick="Limpiar()"
+                            data-dismiss="modal">Cancelar
+                    </button>
+                    <button type="button" onclick="SaveSupplier()" class="btn btn-primary">Registrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Chrome, Safari, Edge, Opera */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Firefox */
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+{% endblock body %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+
+        $(document).on('click', '#btn-type-change', function (e) {
+            let _input_type_change = $('#type_change')
+
+            $.ajax({
+                url: '/buys/get_type_change/',
+                async: true,
+                dataType: 'json', // for response
+                type: 'GET',
+                data: {},
+                contentType: 'application/json;charset=UTF-8',
+                headers: {"X-CSRFToken": '{{ csrf_token }}'},
+                success: function (response, textStatus, xhr) {
+                    if (xhr.status === 200) {
+                        _input_type_change.val(response.buy);
+                    }
+                },
+                error: function (jqXhr, textStatus, xhr) {
+                    if (jqXhr.status === 500) {
+                        toastr.error(jqXhr.responseJSON.error, 'Mensaje');
+                    } else {
+                        if (textStatus === 'timeout') {
+                            toastr.error('Failed from timeout', 'Mensaje');
+                        } else {
+                            console.log(" STATUS: " + xhr + " " + textStatus);
+                        }
+                    }
+                    {#$('#loading-666').hide();#}
+                },
+            });
+            return false;
+        });
+        $("#btn-type-change").trigger('click');
+
+        $(document).on('click', '#add-detail', function () {
+
+            $('#id_detail_grid > tbody').append(
+                '<tr supplier="">' +
+                '<td class="text-center item-number align-middle">' + '</td>' +
+                '<td class="align-middle text-left item-supplier">' +
+                '<input type="text" class="form-control text-uppercase supplier-table dropdown-toggle" ' +
+                '               data-toggle="dropdown" aria-expanded="false" placeholder="Ingrese proveedor...">' + '<div class="dropdown-menu"></div>' + '</td>' +
+                '<td class="text-right item-quantity">' + '<input type="text" aria-label="" class="form-control quantity text-right">' + '</td>' +
+                '<td class="item-description">' + '<input type="text" aria-label="" class="form-control description" placeholder="Descripcion del producto"' + '</td>' +
+                '<td class="text-right item-dollar-total-amount">' +
+                '<input type="number" aria-label="" class="form-control dollar-total-amount text-right">' + '</td>' +
+                '<td class="text-right item-dollar-untaxed">' +
+                '<input type="number" aria-label="" class="form-control dollar-untaxed text-right">' + '</td>' +
+                '<td class="text-center item-perception">' + '<input type="number" aria-label="" class="form-control dollar-perception text-right">' + '</td>' +
+                '<td class="text-center item-total-base">' + '<input type="number" aria-label="" class="form-control total_base text-right">' + '</td>' +
+                '<td class="text-center item-igv">' + '<input type="number" aria-label="" class="form-control igv text-right">' + '</td>' +
+                '<td class="text-center item-untaxed">' + '<input type="number" aria-label="" class="form-control untaxed text-right">' + '</td>' +
+                '<td class="text-center item-total_amount">' + '<input type="number" aria-label="" class="form-control total_amount text-right">' + '</td>' +
+                '<td class="align-middle text-center"> ' + '<button type="button" onclick="deleteItem(this)" class="btn btn-danger delete-detail"><i class="fa fa-trash"></i></button>' + '</td>' +
+                '</tr>');
+            counter()
+        });
+
+        function counter() {
+            let l = 1;
+            $('#details tr').each(function () {
+                $(this).attr('i', l);
+                $(this).children('td:nth-child(1)').text(l);
+                l++;
+            });
+
+        }
+
+        function deleteItem(btn) {
+            btn.parentNode.parentNode.remove();
+            counter();
+        }
+
+        $(document).on('focusin', '.supplier-table', function (e) {
+            let _tr = $(this).parent('td').parent('tr')
+            $(this).val(' ');
+            let _select = _tr.find('td.unit select.unit-product');
+            _select.empty();
+            let option = $('<option>').val(0).text('Seleccione');
+            _select.append(option);
+            $(this).parent('td').find('div.dropdown-menu').css({
+                'background-color': 'transparent',
+                'border': 'transparent',
+
+            })
+        });
+
+        $(document).on('keypress', '.supplier-table', function (e) {
+
+            $(this).parent('td').find('div.dropdown-menu').empty();
+
+            if (e.keyCode === 13) {
+                e.preventDefault()
+                $(this).trigger("enterKey");
+                let _supplier_name = $(this).val();
+                let _td = $(this).parent('td')
+                let _menu = _td.find('.dropdown-menu')
+                if (_supplier_name.length > 3) {
+                    $.ajax({
+                        url: '/buys/search_supplier/',
+                        async: true,
+                        dataType: 'json', // for response
+                        type: 'GET',
+                        data: {
+                            'search': _supplier_name.trim(),
+                        },
+                        contentType: 'application/json;charset=UTF-8',
+                        headers: {"X-CSRFToken": '{{ csrf_token }}'},
+                        success: function (response, textStatus, xhr) {
+                            if (xhr.status === 200) {
+                                console.log(response.product)
+                                let list = response.product;
+                                if (list.length !== 0) {
+                                    _menu.css({
+                                        'background-color': '#fff',
+                                        'border': '1px solid rgba(0,0,0,.15)',
+                                        'margin-top': '10px'
+                                    })
+                                    for (let i = 0; i < list.length; i++) {
+                                        _menu.append(`<a class="dropdown-item item" href="#" data-id="${list[i].pk}">${list[i].ruc} - ${list[i].business_name}</a>`)
+                                    }
+                                } else {
+                                    toastr.warning('NO SE ENCONTRO PROVEEDOR', 'Error de llenado');
+                                    return false;
+                                }
+                            }
+                        },
+                        error: function (jqXhr, textStatus, xhr) {
+                            if (jqXhr.status === 500) {
+                                toastr.error(jqXhr.responseJSON.error, 'Mensaje');
+                            } else {
+                                if (textStatus === 'timeout') {
+                                    toastr.error('Failed from timeout', 'Mensaje');
+                                } else {
+                                    console.log(" STATUS: " + xhr + " " + textStatus);
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    toastr.warning('Para la busqueda ingrese minimo 3 caracteres', 'Error de llenado');
+                    return false;
+                }
+            }
+        });
+
+        $(document).on('click', '.item', function (e) {
+
+            let _supplier_id = $(this).attr('data-id');
+            let _supplier_name = $(this).text();
+            let _tr = $(this).parent('div.dropdown-menu').parent('td').parent('tr')
+            let _td = $(this).parent('div.dropdown-menu').parent('td')
+            _tr.attr('supplier', _supplier_id);
+            _td.find('input.supplier-table').val(_supplier_name);
+            $(this).parent('div.dropdown-menu').empty()
+            $(this).parent('div.dropdown-menu').addClass('hide')
+        });
+
+
+        $('#buy-form').submit(function (event) {
+            event.preventDefault();
+            if ($("#id_detail_data_grid tbody tr").length > 0) {
+                let Detail_purchase = {
+                    "Details": [],
+                    "Invoice": $('#id_factura').val(),
+                    "ProviderId": $('#ProviderId').val(),
+                    "Date": $('#id_fechacompra').val(),
+                    "truck": $('#id-truck').val(),
+                    "Type_bill": $('#id_type_bill').val(),
+                    "category": $('#id-category').val()
+                };
+                // Recorre cada detalle de producto (son 2 arrays) each -> recorre
+
+                $("#id_detail_data_grid tbody tr").each(function () {
+                    var detailObj = {
+                        "Product": $(this).attr('product'),
+                        "Quantity": $(this).find("td.item-quantity").text(),
+                        "Unit": $(this).find("td.item-unit").attr('pu'),
+                        "Price": $(this).find("td.item-price").text(),
+                    };
+                    Detail_purchase.Details.push(detailObj);
+
+                });
+                $.ajax({
+
+                    url: '/buys/save_purchase/',
+                    async: true,
+                    dataType: 'json', // for response
+                    type: 'GET',
+                    data: {'purchase': JSON.stringify(Detail_purchase)},
+                    contentType: 'application/json;charset=UTF-8',
+                    headers: {"X-CSRFToken": '{{ csrf_token }}'},
+                    success: function (response, textStatus, xhr) {
+                        if (xhr.status === 200) {
+                            if (response.success) {
+                                toastr.success(response.message, '¡RESULTADO!');
+                                setTimeout(() => {
+                                    location.reload();
+                                }, 200);
+                            } else {
+                                toastr.error(response.message, '¡RESULTADO!');
+                            }
+
+                        }
+                    },
+                    error: function (jqXhr, textStatus, xhr) {
+                        toastr.error("ERROR. ", '¡INCONCEBIBLE!');
+                    }
+                });
+
+            } else {
+                toastr.warning("PARA REALIZAR LA COMPRA NECESITA AGREGAR PRODUCTOS. ", '¡ADVERTENCIA!');
+            }
+        });
+
+
+        $('.dollar-untaxed').keyup(function () {
+
+            let tr = $(this).closest('tr');
+            let _type_change = $('#type_change').val();
+            let dollar_untaxed = $(this).val();
+            let untaxed = tr.find('td.item-untaxed input.untaxed')
+            untaxed.val((dollar_untaxed * _type_change).toFixed(2))
+            $('.total_amount').trigger()
+        });
+
+        $('.dollar-total-amount').keyup(function () {
+
+            let tr = $(this).closest('tr');
+            let _type_change = $('#type_change').val();
+            let dollar_total_amount = $(this).val();
+            let total_base = tr.find('td.item-total-base input.total_base')
+            let igv = tr.find('td.item-igv input.igv')
+            let _total_base = ((dollar_total_amount * _type_change) / 1.18).toFixed(2)
+            total_base.val(_total_base)
+            let _igv = (_total_base * 0.18).toFixed(2)
+            igv.val(_igv)
+            $('.total_amount').trigger()
+
+        });
+
+        $('.total_amount').keyup(function (){
+
+            let tr = $(this).closest('tr');
+            let _total_amount = $(this);
+            let _total_base = tr.find('td.item-total-base input.total_base').val();
+            let _igv = tr.find('td.item-igv input.igv').val();
+            let _untaxed = tr.find('td.item-untaxed input.untaxed').val();
+            _total_amount.val((_total_base + _igv + _untaxed).toFixed(2))
+        });
+
+
+    </script>
+{% endblock extrajs %}
