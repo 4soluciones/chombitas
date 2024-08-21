@@ -370,24 +370,24 @@
         function createSales() {
 
             // Comprobar si hay un cliente seleccionado
-            if (($('#id_client option:selected').val() == '0') && ($('#id_client_name option:selected').val() == '0')) {
+            if (($('#id_client option:selected').val() === '0') && ($('#id_client_name option:selected').val() === '0')) {
                 toastr.warning('¡Elija un cliente porfavor!', 'Error de Llenado!');
                 $('#id_client').focus();
                 return false;
             }
             //Comprobar si selecciono serie
-            if (($('#type').val() == 'E') && ($('#id_serie').val() == '0')) {
+            if (($('#type').val() === 'E') && ($('#id_serie').val() === '0')) {
                 toastr.warning('¡Favor de completar la serie!', 'Error de Llenado!');
                 $('#id_serie').focus();
                 return false;
             }
-            if (($('#type').val() !== 'E') && ($('#truck_id').val() == '0')) {
+            if (($('#type').val() !== 'E') && ($('#truck_id').val() === '0')) {
                 toastr.warning('¡Favor de seleccionar una Placa!', 'Error de Llenado!');
                 $('#truck_id').focus();
                 return false;
             }
             // Comprobar si hay filas en los detalles
-            if (hasRowDetails() == false) {
+            if (hasRowDetails() === false) {
                 toastr.warning('¡Elija los productos..!', 'Error de Llenado!');
                 return false;
             }

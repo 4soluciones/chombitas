@@ -3249,7 +3249,22 @@ def get_order_detail_for_pay(request):
                 ),
                 total_cash_flow=F('total') - F('total_subtracted')
             ).filter(total_cash_flow__gt=0)
-        # else:
+        else:
+            cash_flow_of_distributions_with_deposits_set = CashFlow.objects.filter(
+                distribution_mobil__truck=order_obj.truck, type__in=['D', 'E']
+            ).annotate(
+                total_subtracted=Coalesce(
+                    Subquery(
+                        TransactionPayment.objects.filter(
+                            cash_flow_id=OuterRef('id'), type='PFD'
+                        ).values('cash_flow_id').annotate(
+                            total_payment=Coalesce(Sum('payment'), decimal.Decimal(0.00))
+                        ).values('total_payment')[:1],
+                        output_field=models.DecimalField()
+                    ), decimal.Decimal(0.00)
+                ),
+                total_cash_flow=F('total') - F('total_subtracted')
+            ).filter(total_cash_flow__gt=0)
 
         tpl = loader.get_template('sales/new_payment_from_lending.html')
         context = ({
