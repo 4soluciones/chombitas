@@ -2628,3 +2628,57 @@ def get_purchase_gas(request):
         })
 
 
+@csrf_exempt
+def save_purchase_gas(request):
+    if request.method == 'POST':
+        user_id = request.user.id
+        user_obj = User.objects.get(id=int(user_id))
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+        purchase_number = request.POST.get('purchase_number', '')
+        purchase_date = request.POST.get('purchase_date', '')
+        type_bill = request.POST.get('type_bill', '')
+        type_change = request.POST.get('type_change', '')
+        detail = json.loads(request.POST.get('detail', ''))
+
+        purchase_gas_obj = PurchaseGas(
+            purchase_date=purchase_date,
+            purchase_number=purchase_number,
+            user=user_obj,
+            money_change=decimal.Decimal(type_change),
+            subsidiary=subsidiary_obj,
+            type_purchase=type_bill,
+        )
+        purchase_gas_obj.save()
+
+        for d in detail:
+            supplier_id = int(d['supplierID'])
+            supplier_obj = Supplier.objects.get(id=supplier_id)
+            description = str(d['description'])
+            quantity = d['quantity']
+            dollar_total_amount = d['dollarImport']
+            dollar_untaxed_operations = d['dollarUntaxed']
+            dollar_perception = d['dollarPerception']
+            total_base = d['totalBase']
+            igv = d['totalIgv']
+            untaxed_operations = d['totalUntaxed']
+            total_amount = d['totalImport']
+
+            purchase_detail_gas_obj = PurchaseDetailGas(
+                purchase=purchase_gas_obj,
+                supplier=supplier_obj,
+                description=description,
+                quantity=quantity,
+                dollar_total_amount=dollar_total_amount,
+                dollar_untaxed_operations=dollar_untaxed_operations,
+                dollar_perception=dollar_perception,
+                total_base=total_base,
+                igv=igv,
+                untaxed_operations=untaxed_operations,
+                total_amount=total_amount,
+            )
+            purchase_detail_gas_obj.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Compra regitrada correctamente.',
+        }, status=HTTPStatus.OK)

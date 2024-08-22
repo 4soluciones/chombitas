@@ -75,4 +75,5 @@ urlpatterns = [
     # BUY GAS
     path('get_purchase_gas/', get_purchase_gas, name='get_purchase_gas'),
     path('get_type_change/', login_required(get_type_change), name='get_type_change'),
+    path('save_purchase_gas/', login_required(save_purchase_gas), name='save_purchase_gas'),
 ]

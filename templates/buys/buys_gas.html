@@ -13,7 +13,7 @@
                     <h5 class="card-title roboto-condensed-regular text-uppercase font-weight-bold">Ingreso de Compras
                         GLP</h5>
                     <div class="align-items-center justify-content-center p-2" style="height: 100vh;">
-                        <form id="buy-form" action="{% url 'buys:save_purchase' %}" method="POST">
+                        <form id="buy-form" action="{% url 'buys:save_purchase_gas' %}" method="POST">
                             {% csrf_token %}
                             <div class="card">
                                 <div class="card-header">
@@ -33,7 +33,7 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="m-0 text-light" for="save">Registrar</label>
-                                            <button type="button" id="save" class="btn btn-success btn-block pl-1 pr-1">
+                                            <button type="submit" id="save" class="btn btn-success btn-block pl-1 pr-1">
                                                 Registrar Compra
                                             </button>
                                         </div>
@@ -62,6 +62,7 @@
                                                 <div class="col-sm-7">
                                                     <label class="m-0 text-light" for="type_change">button</label>
                                                     <input type="text" class="form-control text-center font-weight-bold"
+                                                           name="type_change"
                                                            id="type_change" required>
                                                 </div>
                                             </div>
@@ -129,34 +130,34 @@
                                                            placeholder="Descripcion del producto">
                                                 </td>
                                                 <td class="text-right item-dollar-total-amount">
-                                                    <input type="number"
+                                                    <input type="text"
                                                            aria-label=""
-                                                           class="form-control dollar-total-amount text-right ">
+                                                           class="form-control dollar-total-amount text-right" required>
                                                 </td>
                                                 <td class="text-right item-dollar-untaxed">
-                                                    <input type="number"
+                                                    <input type="text"
                                                            aria-label=""
                                                            class="form-control dollar-untaxed text-right ">
                                                 </td>
                                                 <td class="text-center item-perception">
-                                                    <input type="number"
+                                                    <input type="text"
                                                            aria-label=""
                                                            class="form-control dollar-perception text-right ">
                                                 </td>
                                                 <td class="text-center item-total-base">
-                                                    <input type="number"
+                                                    <input type="text"
                                                            aria-label="" class="form-control total_base text-right ">
                                                 </td>
                                                 <td class="text-center item-igv">
-                                                    <input type="number"
+                                                    <input type="text"
                                                            aria-label="" class="form-control igv text-right ">
                                                 </td>
                                                 <td class="text-center item-untaxed">
-                                                    <input type="number"
+                                                    <input type="text"
                                                            aria-label="" class="form-control untaxed text-right ">
                                                 </td>
                                                 <td class="text-center item-total_amount">
-                                                    <input type="number"
+                                                    <input type="text"
                                                            aria-label="" class="form-control total_amount text-right ">
                                                 </td>
                                                 <td class="text-center delete"></td>
@@ -293,14 +294,14 @@
                 '<td class="text-right item-quantity">' + '<input type="text" aria-label="" class="form-control quantity text-right">' + '</td>' +
                 '<td class="item-description">' + '<input type="text" aria-label="" class="form-control description" placeholder="Descripcion del producto"' + '</td>' +
                 '<td class="text-right item-dollar-total-amount">' +
-                '<input type="number" aria-label="" class="form-control dollar-total-amount text-right">' + '</td>' +
+                '<input type="text" aria-label="" class="form-control dollar-total-amount text-right">' + '</td>' +
                 '<td class="text-right item-dollar-untaxed">' +
-                '<input type="number" aria-label="" class="form-control dollar-untaxed text-right">' + '</td>' +
-                '<td class="text-center item-perception">' + '<input type="number" aria-label="" class="form-control dollar-perception text-right">' + '</td>' +
-                '<td class="text-center item-total-base">' + '<input type="number" aria-label="" class="form-control total_base text-right">' + '</td>' +
-                '<td class="text-center item-igv">' + '<input type="number" aria-label="" class="form-control igv text-right">' + '</td>' +
-                '<td class="text-center item-untaxed">' + '<input type="number" aria-label="" class="form-control untaxed text-right">' + '</td>' +
-                '<td class="text-center item-total_amount">' + '<input type="number" aria-label="" class="form-control total_amount text-right">' + '</td>' +
+                '<input type="text" aria-label="" class="form-control dollar-untaxed text-right">' + '</td>' +
+                '<td class="text-center item-perception">' + '<input type="text" aria-label="" class="form-control dollar-perception text-right">' + '</td>' +
+                '<td class="text-center item-total-base">' + '<input type="text" aria-label="" class="form-control total_base text-right">' + '</td>' +
+                '<td class="text-center item-igv">' + '<input type="text" aria-label="" class="form-control igv text-right">' + '</td>' +
+                '<td class="text-center item-untaxed">' + '<input type="text" aria-label="" class="form-control untaxed text-right">' + '</td>' +
+                '<td class="text-center item-total_amount">' + '<input type="text" aria-label="" class="form-control total_amount text-right">' + '</td>' +
                 '<td class="align-middle text-center"> ' + '<button type="button" onclick="deleteItem(this)" class="btn btn-danger delete-detail"><i class="fa fa-trash"></i></button>' + '</td>' +
                 '</tr>');
             counter()
@@ -409,36 +410,36 @@
 
         $('#buy-form').submit(function (event) {
             event.preventDefault();
-            if ($("#id_detail_data_grid tbody tr").length > 0) {
-                let Detail_purchase = {
-                    "Details": [],
-                    "Invoice": $('#id_factura').val(),
-                    "ProviderId": $('#ProviderId').val(),
-                    "Date": $('#id_fechacompra').val(),
-                    "truck": $('#id-truck').val(),
-                    "Type_bill": $('#id_type_bill').val(),
-                    "category": $('#id-category').val()
-                };
-                // Recorre cada detalle de producto (son 2 arrays) each -> recorre
+            let detailPurchase = []
+            if ($("#id_detail_grid tbody tr").length > 0) {
 
-                $("#id_detail_data_grid tbody tr").each(function () {
-                    var detailObj = {
-                        "Product": $(this).attr('product'),
-                        "Quantity": $(this).find("td.item-quantity").text(),
-                        "Unit": $(this).find("td.item-unit").attr('pu'),
-                        "Price": $(this).find("td.item-price").text(),
+                $("#id_detail_grid tbody tr").each(function () {
+                    let detailObj = {
+                        supplierID: $(this).attr('supplier'),
+                        quantity: Number($(this).find("td.item-quantity input.quantity").val()),
+                        description: $(this).find("td.item-description input.description").val(),
+                        dollarImport: Number($(this).find("td.item-dollar-total-amount input.dollar-total-amount").val()),
+                        dollarUntaxed: Number($(this).find("td.item-dollar-untaxed input.dollar-untaxed").val()),
+                        dollarPerception: Number($(this).find("td.item-perception input.dollar-perception").val()),
+                        totalBase: Number($(this).find("td.item-total-base input.total_base").val()),
+                        totalIgv: Number($(this).find("td.item-igv input.igv").val()),
+                        totalUntaxed: Number($(this).find("td.item-untaxed input.untaxed").val()),
+                        totalImport: Number($(this).find("td.item-total_amount input.total_amount").val()),
                     };
-                    Detail_purchase.Details.push(detailObj);
-
+                    detailPurchase.push(detailObj);
                 });
+                let data = new FormData($('#buy-form').get(0));
+                data.append('detail', JSON.stringify(detailPurchase));
+                $('#save').prop('disabled', true)
                 $.ajax({
-
-                    url: '/buys/save_purchase/',
+                    url: $(this).attr("action"),
                     async: true,
                     dataType: 'json', // for response
-                    type: 'GET',
-                    data: {'purchase': JSON.stringify(Detail_purchase)},
-                    contentType: 'application/json;charset=UTF-8',
+                    type: 'POST',
+                    cache: false,
+                    processData: false,
+                    data: data,
+                    contentType: false,
                     headers: {"X-CSRFToken": '{{ csrf_token }}'},
                     success: function (response, textStatus, xhr) {
                         if (xhr.status === 200) {
@@ -446,9 +447,9 @@
                                 toastr.success(response.message, '¡RESULTADO!');
                                 setTimeout(() => {
                                     location.reload();
-                                }, 200);
+                                }, 1000);
                             } else {
-                                toastr.error(response.message, '¡RESULTADO!');
+                                toastr.error(response.message, '¡ERROR!');
                             }
 
                         }
@@ -463,18 +464,17 @@
             }
         });
 
-
-        $('.dollar-untaxed').keyup(function () {
+        $(document).on('keyup', '.dollar-untaxed', function () {
 
             let tr = $(this).closest('tr');
             let _type_change = $('#type_change').val();
             let dollar_untaxed = $(this).val();
             let untaxed = tr.find('td.item-untaxed input.untaxed')
             untaxed.val((dollar_untaxed * _type_change).toFixed(2))
-            $('.total_amount').trigger()
+            calculateTotalMoney(tr)
         });
 
-        $('.dollar-total-amount').keyup(function () {
+        $(document).on('keyup', '.dollar-total-amount', function () {
 
             let tr = $(this).closest('tr');
             let _type_change = $('#type_change').val();
@@ -485,20 +485,17 @@
             total_base.val(_total_base)
             let _igv = (_total_base * 0.18).toFixed(2)
             igv.val(_igv)
-            $('.total_amount').trigger()
-
+            calculateTotalMoney(tr)
         });
 
-        $('.total_amount').keyup(function (){
+        function calculateTotalMoney(tr) {
 
-            let tr = $(this).closest('tr');
-            let _total_amount = $(this);
-            let _total_base = tr.find('td.item-total-base input.total_base').val();
-            let _igv = tr.find('td.item-igv input.igv').val();
-            let _untaxed = tr.find('td.item-untaxed input.untaxed').val();
-            _total_amount.val((_total_base + _igv + _untaxed).toFixed(2))
-        });
-
+            let total_base = Number(tr.find('td.item-total-base input.total_base').val())
+            let igv = Number(tr.find('td.item-igv input.igv').val())
+            let untaxed = Number(tr.find('td.item-untaxed input.untaxed').val())
+            let total = (total_base + igv + untaxed).toFixed(2)
+            tr.find('td.item-total_amount input.total_amount').val(total)
+        }
 
     </script>
 {% endblock extrajs %}

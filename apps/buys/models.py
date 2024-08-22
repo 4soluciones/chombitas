@@ -258,7 +258,7 @@ class PurchaseGas(models.Model):
     purchase_date = models.DateField('Fecha compra', null=True, blank=True)
     purchase_number = models.CharField(max_length=100, null=True, blank=True)
     user = models.ForeignKey(User, verbose_name='Usuario', on_delete=models.CASCADE, null=True, blank=True)
-    money_change = models.ForeignKey('MoneyChange', on_delete=models.CASCADE, null=True, blank=True)
+    money_change = models.DecimalField('Tipo de Cambio', max_digits=30, decimal_places=15, default=0)
     subsidiary = models.ForeignKey(Subsidiary, on_delete=models.SET_NULL, null=True, blank=True)
     type_purchase = models.CharField('Tipo de comprobante', max_length=1, choices=TYPE_CHOICES, default='F')
     is_dollar = models.BooleanField('is Dollar', default=True)
@@ -285,8 +285,8 @@ class PurchaseGas(models.Model):
 
 
 class PurchaseDetailGas(models.Model):
-    purchase = models.ForeignKey(PurchaseGas, on_delete=models.CASCADE, null=True, blank=True)
     id = models.AutoField(primary_key=True)
+    purchase = models.ForeignKey(PurchaseGas, on_delete=models.CASCADE, null=True, blank=True)
     supplier = models.ForeignKey(Supplier, verbose_name='Proveedor', on_delete=models.CASCADE, null=True, blank=True)
     description = models.CharField('Descripcion', max_length=45, null=True, blank=True)
     quantity = models.DecimalField('Cantidad comprada', max_digits=10, decimal_places=2, default=0)
