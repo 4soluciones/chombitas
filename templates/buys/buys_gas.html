@@ -21,7 +21,7 @@
                                         <div class="col-md-4">
                                             <label class="m-0" for="purchase_number">Numero comprobante</label>
                                             <input type="text" class="form-control" id="purchase_number"
-                                                   name="purchase_number" required
+                                                   name="purchase_number" required autocomplete="off"
                                                    placeholder="Numero Comprobante"
                                                    value="">
                                         </div>
@@ -410,6 +410,27 @@
 
         $('#buy-form').submit(function (event) {
             event.preventDefault();
+            if (hasRowSupplier() === false) {
+                toastr.warning('Favor de completar los proveedores');
+                return false
+            }
+            if (hasRowQuantities() === false) {
+                toastr.warning('Favor de completar las cantidades');
+                return false
+            }
+            if (hasRowQDescription() === false) {
+                toastr.warning('Favor de completar las descripciones');
+                return false
+            }
+            if (hasRowQImportDollar() === false) {
+                toastr.warning('Favor de completar el importe en dolares');
+                return false
+            }
+            if (hasRowQImportUntaxed() === false) {
+                toastr.warning('Favor de completar las no gravadas');
+                return false
+            }
+
             let detailPurchase = []
             if ($("#id_detail_grid tbody tr").length > 0) {
 
@@ -451,7 +472,6 @@
                             } else {
                                 toastr.error(response.message, '¡ERROR!');
                             }
-
                         }
                     },
                     error: function (jqXhr, textStatus, xhr) {
@@ -495,6 +515,52 @@
             let untaxed = Number(tr.find('td.item-untaxed input.untaxed').val())
             let total = (total_base + igv + untaxed).toFixed(2)
             tr.find('td.item-total_amount input.total_amount').val(total)
+        }
+
+        function hasRowSupplier() {
+            var response = false;
+            $('#id_detail_grid tbody tr td.item-supplier input.supplier-table').each(function () {
+                if ($(this).val() !== '') {
+                    response = true
+                }
+            });
+            return response
+        }
+        function hasRowQuantities() {
+            var response = false;
+            $('#id_detail_grid tbody tr td.item-quantity input.quantity').each(function () {
+                if ($(this).val() !== '') {
+                    response = true
+                }
+            });
+            return response
+        }
+        function hasRowQDescription() {
+            var response = false;
+            $('#id_detail_grid tbody tr td.item-description input.description').each(function () {
+                if ($(this).val() !== '') {
+                    response = true
+                }
+            });
+            return response
+        }
+        function hasRowQImportDollar() {
+            var response = false;
+            $('#id_detail_grid tbody tr td.item-dollar-total-amount input.dollar-total-amount').each(function () {
+                if ($(this).val() !== '') {
+                    response = true
+                }
+            });
+            return response
+        }
+        function hasRowQImportUntaxed() {
+            var response = false;
+            $('#id_detail_grid tbody tr td.item-dollar-untaxed input.dollar-untaxed').each(function () {
+                if ($(this).val() !== '') {
+                    response = true
+                }
+            });
+            return response
         }
 
     </script>
