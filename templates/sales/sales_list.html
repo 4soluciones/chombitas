@@ -381,11 +381,11 @@
                 $('#id_serie').focus();
                 return false;
             }
-            if (($('#type').val() !== 'E') && ($('#truck_id').val() === '0')) {
+            /*if (($('#type').val() !== 'E') && ($('#truck_id').val() === '0')) {
                 toastr.warning('¡Favor de seleccionar una Placa!', 'Error de Llenado!');
                 $('#truck_id').focus();
                 return false;
-            }
+            }*/
             // Comprobar si hay filas en los detalles
             if (hasRowDetails() === false) {
                 toastr.warning('¡Elija los productos..!', 'Error de Llenado!');
