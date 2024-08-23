@@ -8,7 +8,8 @@ from http import HTTPStatus
 
 from django.contrib.auth.models import User
 from django.core import serializers
-from django.db.models import Q, Sum, F, Prefetch, Subquery, OuterRef, ExpressionWrapper, DecimalField, Value
+from django.db.models import Q, Sum, F, Prefetch, Subquery, OuterRef, ExpressionWrapper, DecimalField, Value, Case, \
+    When, CharField, Max
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.template import loader
@@ -2350,68 +2351,193 @@ def general_purchasing_grid(request):
             month_year = datetime.strptime(month, '%Y-%m')
             month = month_year.month
             year = month_year.year
-            product_names_subquery = PurchaseDetail.objects \
-                                         .filter(purchase_id=OuterRef('id')) \
-                                         .annotate(
-                concatenated_name=Concat(Coalesce('product__name', Value('')), Value(','))) \
-                                         .values('purchase_id') \
-                                         .annotate(names=StringAgg('concatenated_name', ' ')) \
-                                         .values('names')[:1]
 
-            purchase_query = Purchase.objects.filter(
+            is_glp_purchases = Purchase.objects.filter(
                 purchase_date__year=year,
-                purchase_date__month=month
-            ).select_related(
-                'supplier',
-                'truck',
+                purchase_date__month=month,
+                is_purchase_glp=True
+            )
+
+            not_glp_purchases = Purchase.objects.filter(
+                purchase_date__year=year,
+                purchase_date__month=month,
+                is_purchase_glp=False
+            )
+
+            product_names_subquery = PurchaseDetail.objects.filter(
+                purchase_id=OuterRef('purchase_id')
             ).annotate(
-                sum_total=Subquery(
-                    PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
-                        return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
-                ),
-                names=Subquery(product_names_subquery)
-            ).prefetch_related(
-                Prefetch('cashflow_set', queryset=CashFlow.objects.select_related('purchase'))
+                concatenated_name=Concat(Coalesce('product__name', Value('')), Value(','))
+            ).values('purchase_id').annotate(
+                names=StringAgg('concatenated_name', delimiter=' ')
+            ).values('names')[:1]
+
+            # Subconsulta para obtener la suma total por purchase_id
+            sum_total_subquery = PurchaseDetail.objects.filter(
+                purchase_id=OuterRef('purchase_id')
+            ).values('purchase_id').annotate(
+                return_sum_total=Sum(F('quantity') * F('price_unit'))
+            ).values('return_sum_total')[:1]
+
+            # Consulta para GLP (sin agrupar por purchase_id)
+            glp_details = PurchaseDetail.objects.filter(
+                purchase__in=is_glp_purchases
+            ).select_related(
+                'supplier', 'purchase', 'purchase__cashflow', 'purchase__truck'
             ).values(
-                'purchase_date',
-                'bill_number',
-                'type_bill',
-                'category',
-                'sum_total',
+                'purchase__id',
+                'purchase__purchase_date',
+                'purchase__bill_number',
+                'purchase__type_bill',
+                'purchase__category',
                 'supplier__ruc',
                 'supplier__business_name',
                 'supplier__sector',
-                'truck__license_plate',
-                'cashflow__type',  # Usar 'cashflow__type' en lugar de 'cashflow_set__type'
-                'cashflow__cash__name',  # Usar 'cashflow__cash__name' en lugar de 'cashflow_set__cash__name'
-                'cashflow__operation_code',
-                'names',
-            )
+                'purchase__truck__license_plate',
+                'purchase__cashflow__type',
+                'purchase__cashflow__cash__name',
+                'purchase__cashflow__operation_code',
+                'purchase__is_purchase_glp',
+                'description',
+                'quantity',
+                'total_amount',
+                'purchase__money_change',
+                'dollar_total_amount',
+                'dollar_untaxed_operations',
+                'dollar_perception',
+            ).annotate(
+                names=Subquery(product_names_subquery),
+            ).order_by('purchase__purchase_date')
+
+            # Consulta para no GLP (agrupando por purchase_id)
+            not_glp_details = PurchaseDetail.objects.filter(
+                purchase__in=not_glp_purchases
+            ).select_related(
+                'supplier', 'purchase', 'purchase__cashflow', 'purchase__truck'
+            ).values(
+                'purchase__id',
+                'purchase__purchase_date',
+                'purchase__bill_number',
+                'purchase__type_bill',
+                'purchase__category',
+                'purchase__supplier__ruc',
+                'purchase__supplier__business_name',
+                'purchase__supplier__sector',
+                'purchase__truck__license_plate',
+                'purchase__cashflow__type',
+                'purchase__cashflow__cash__name',
+                'purchase__cashflow__operation_code',
+                'purchase__is_purchase_glp'
+            ).annotate(
+                return_sum_total=Sum(F('quantity') * F('price_unit')),
+                names=Subquery(product_names_subquery),
+                sum_total=Subquery(sum_total_subquery)
+            ).order_by('purchase__purchase_date')
+
+            results = list(glp_details) + list(not_glp_details)
+            purchase_query = sorted(results, key=lambda x: x['purchase__purchase_date'])
+
+            # product_names_subquery = PurchaseDetail.objects.filter(
+            #     purchase=OuterRef('pk')
+            # ).annotate(
+            #     concatenated_name=Concat(Coalesce('product__name', Value('')), Value(','))
+            # ).values('purchase').annotate(
+            #     names=StringAgg('concatenated_name', delimiter=' ')
+            # ).values('names')[:1]
+            #
+            # purchase_query = Purchase.objects.filter(
+            #     purchase_date__year=year,
+            #     purchase_date__month=month
+            #     # purchase_date='2024-08-23'
+            # ).select_related(
+            #     'supplier',
+            #     'truck',
+            # ).annotate(
+            #     sum_total=Subquery(
+            #         PurchaseDetail.objects.filter(purchase_id=OuterRef('id')).values('purchase_id').annotate(
+            #             return_sum_total=Sum(F('quantity') * F('price_unit'))).values('return_sum_total')[:1]
+            #     ),
+            #     names=Subquery(product_names_subquery),
+            # ).prefetch_related(
+            #     Prefetch('cashflow_set', queryset=CashFlow.objects.select_related('purchase'))
+            # ).values(
+            #     'purchase_date',
+            #     'bill_number',
+            #     'type_bill',
+            #     'category',
+            #     'sum_total',
+            #     'supplier__ruc',
+            #     'supplier__business_name',
+            #     'supplier__sector',
+            #     'truck__license_plate',
+            #     'cashflow__type',  # Usar 'cashflow__type' en lugar de 'cashflow_set__type'
+            #     'cashflow__cash__name',  # Usar 'cashflow__cash__name' en lugar de 'cashflow_set__cash__name'
+            #     'cashflow__operation_code',
+            #     'names',
+            #     'is_purchase_glp'
+            # )
+            # print(purchase_query)
+            # supplier_dict = []
+            # if purchase_query.filter(is_purchase_glp=True).exists():
+            #     glp_purchase_ids = purchase_query.filter(is_purchase_glp=True).values_list('id', flat=True)
+            #     purchase_details = PurchaseDetail.objects.filter(purchase_id__in=glp_purchase_ids).select_related(
+            #         'supplier')
+            #
+            #     for detail in purchase_details:
+            #         supplier_dict.append(detail.supplier.business_name)
+            # print(supplier_dict)
             dictionary = []
-            for p in purchase_query.order_by('purchase_date'):
+            for p in purchase_query:
                 names = p['names']
                 if names.endswith(','):
                     names = names[:-1]
-                bill_number = p['bill_number']
+
+                bill_number = p['purchase__bill_number']
                 if "-" in bill_number:
                     serial, number = bill_number.split("-", 1)
                 else:
                     serial = ""
                     number = bill_number
-                total = round(p['sum_total'], 4)
-                type_payment = ''
-                if p['cashflow__type'] == 'S':
+
+                if p['purchase__cashflow__type'] == 'S':
                     type_payment = 'EFECTIVO'
-                elif p['cashflow__type'] == 'R':
+                elif p['purchase__cashflow__type'] == 'R':
                     type_payment = 'DEPOSITO'
                 else:
                     type_payment = ''
-                banks = p['cashflow__cash__name'] if p['cashflow__cash__name'] is not None else ''
-                code = p['cashflow__operation_code'] if p['cashflow__operation_code'] is not None else ''
-                license_plate = p['truck__license_plate'] if p['truck__license_plate'] is not None else ''
+                banks = p['purchase__cashflow__cash__name'] if p['purchase__cashflow__cash__name'] is not None else ''
+                code = p['purchase__cashflow__operation_code'] if p['purchase__cashflow__operation_code'] is not None else ''
+                license_plate = p['purchase__truck__license_plate'] if p['purchase__truck__license_plate'] is not None else ''
+
+                if p['purchase__is_purchase_glp']:
+                    supplier_ruc = p['supplier__ruc']
+                    supplier_name = p['supplier__business_name']
+                    supplier_sector = p['supplier__sector']
+                    des1, des2 = p['description'].split(' KG DE ', 1)
+                    new_string1 = des1.strip()
+                    quantity = str(round(p['quantity'], 0))
+                    new_string2 = f'{quantity} KG DE {des2.strip()}'
+                    description = f'{new_string1} {new_string2}'
+                    total = round(p['total_amount'], 2)
+                    money_change = round(p["purchase__money_change"], 2)
+                    dollar_amount = f'{round(p["dollar_total_amount"], 2):,}'
+                    dollar_untaxed = f'{round(p["dollar_untaxed_operations"], 2):,}'
+                    dollar_perception = f'{round(p["dollar_perception"], 2):,}'
+                else:
+                    supplier_ruc = p['purchase__supplier__ruc']
+                    supplier_name = p['purchase__supplier__business_name']
+                    supplier_sector = p['purchase__supplier__sector']
+                    description = names
+                    total = round(p['sum_total'], 2)
+                    money_change = ''
+                    dollar_amount = ''
+                    dollar_untaxed = ''
+                    dollar_perception = ''
+
                 row = {
-                    'period': p['purchase_date'].strftime("%Y-%m"),
-                    'registration_date': p['purchase_date'].strftime("%d-%m-%Y"),
+                    'id': p['purchase__id'],
+                    'period': p['purchase__purchase_date'].strftime("%Y-%m"),
+                    'registration_date': p['purchase__purchase_date'].strftime("%d-%m-%Y"),
                     'type_payment': type_payment,
                     'check_number': '',
                     'cta_banks': '',
@@ -2419,26 +2545,26 @@ def general_purchasing_grid(request):
                     'banks': banks,
                     'code_operation': code,
                     'period_1': '',
-                    'receipt_date': p['purchase_date'].strftime("%d-%m-%Y"),
+                    'receipt_date': p['purchase__purchase_date'].strftime("%d-%m-%Y"),
                     'cancellation_date': '',
-                    'document_type': dict(Purchase.TYPE_CHOICES).get(p['type_bill'], ''),
-                    'serial': serial,
+                    'document_type': dict(Purchase.TYPE_CHOICES).get(p['purchase__type_bill'], ''),
+                    'serial': serial.upper(),
                     'number': number,
-                    'ruc': p['supplier__ruc'],
-                    'names': p['supplier__business_name'],
-                    'gloss_supplier': names,
-                    'gloss_accountant': dict(Supplier.SECTOR_CHOICES).get(p['supplier__sector'], ''),
-                    'area': dict(Purchase.CATEGORY_CHOICES).get(p['category'], ''),
+                    'ruc': supplier_ruc,
+                    'names': supplier_name,
+                    'gloss_supplier': description,
+                    'gloss_accountant': dict(Supplier.SECTOR_CHOICES).get(supplier_sector, ''),
+                    'area': dict(Purchase.CATEGORY_CHOICES).get(p['purchase__category'], ''),
                     'license_plate': license_plate,
-                    'total_check': total,
-                    'total_purchase': total,
+                    'total_check': f'{total:,.2f}',
+                    'total_purchase': f'{total:,.2f}',
                     'cod_cta': '',
                     'denomination': '',
-                    'bi': round(total / decimal.Decimal(1.18), 4),
-                    'igv': round((total / decimal.Decimal(1.18)) * decimal.Decimal(0.18), 4),
-                    'bi_scf': round(total / decimal.Decimal(1.18), 4),
-                    'igv_scf': round((total / decimal.Decimal(1.18)) * decimal.Decimal(0.18), 4),
-                    'not_taxed': round(total, 4) if p['type_bill'] == 'T' else '',
+                    'bi': f'{round(total / decimal.Decimal(1.18), 2):,.2f}',
+                    'igv': f'{round((total / decimal.Decimal(1.18)) * decimal.Decimal(0.18), 2):,.2f}',
+                    'bi_scf': f'{round(total / decimal.Decimal(1.18), 2):,.2f}',
+                    'igv_scf': f'{round((total / decimal.Decimal(1.18)) * decimal.Decimal(0.18), 2):,.2f}',
+                    'not_taxed': round(total, 2) if p['purchase__type_bill'] == 'T' else '',
                     'rh': '',
                     'perception': '',
                     'ir_4ta_Cat': '',
@@ -2448,10 +2574,10 @@ def general_purchasing_grid(request):
                     'nro_discount': '',
                     'amount_perception': '',
                     'tc_mef': '',
-                    'tc_sunat': '',
-                    'dollar_amount': '',
-                    'dollar_amount_not_taxed': '',
-                    'dollar_perception': '',
+                    'tc_sunat': money_change,
+                    'dollar_amount': dollar_amount,
+                    'dollar_amount_not_taxed': dollar_untaxed,
+                    'dollar_perception': dollar_perception,
                     'dollar_date': '',
                     'dollar_number': '',
                     'amount_dollar': '',
@@ -2562,10 +2688,11 @@ def general_purchasing_grid(request):
             })
             return JsonResponse({
                 'success': True,
-                'message': 'Bien Hecho!',
+                'message': 'Reporte Generado',
                 'grid': tpl.render(context, request),
             }, status=HTTPStatus.OK)
         except Exception as e:
+            print(e)
             month = None
             year = None
             return JsonResponse({
@@ -2640,13 +2767,17 @@ def save_purchase_gas(request):
         type_change = request.POST.get('type_change', '')
         detail = json.loads(request.POST.get('detail', ''))
 
-        purchase_gas_obj = PurchaseGas(
+        purchase_gas_obj = Purchase(
             purchase_date=purchase_date,
-            purchase_number=purchase_number,
+            bill_number=purchase_number,
             user=user_obj,
             money_change=decimal.Decimal(type_change),
             subsidiary=subsidiary_obj,
-            type_purchase=type_bill,
+            type_bill=type_bill,
+            is_dollar=True,
+            is_purchase_glp=True,
+            status='G',
+            category='G'
         )
         purchase_gas_obj.save()
 
@@ -2663,7 +2794,7 @@ def save_purchase_gas(request):
             untaxed_operations = d['totalUntaxed']
             total_amount = d['totalImport']
 
-            purchase_detail_gas_obj = PurchaseDetailGas(
+            purchase_detail_gas_obj = PurchaseDetail(
                 purchase=purchase_gas_obj,
                 supplier=supplier_obj,
                 description=description,

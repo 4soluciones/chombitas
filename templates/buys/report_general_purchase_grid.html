@@ -1,4 +1,4 @@
-<table class="table table-bordered" id="table_purchase"  style="width: 3500px;">
+<table class="table table-bordered roboto-condensed-regular" id="table_purchase"  style="width: 3500px;">
     <thead>
     <tr>
          <td class="align-middle bg-primary text-white font-weight-bold text-center" colspan="48">REPORTE DE COMPRAS</td>
@@ -56,7 +56,7 @@
     </thead>
     <tbody>
    {% for p in dictionary %}
-       <tr>
+       <tr id="{{ p.id }}">
          <td class="align-middle text-center nowrap p-1">{{ p.period }}</td>
          <td class="align-middle text-center nowrap p-1">{{ p.registration_date }}</td>
          <td class="align-middle text-center nowrap p-1">{{ p.type_payment }}</td>
