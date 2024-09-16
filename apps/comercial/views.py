@@ -2347,7 +2347,7 @@ def get_monthly_distribution_by_licence_plate(request):
             # date_distribution__month=month,
             # date_distribution__year=year,
             date_distribution__range=[start_date_sin_timezone.date(), end_date_sin_timezone.date()],
-            truck__id=truck_id, order__isnull=False
+            truck__id=truck_id,
         ).annotate(
             previous_distribution_id=Window(expression=Lag('id', default=0),
                                             order_by=(F('date_distribution').asc(), F('id').asc()))
