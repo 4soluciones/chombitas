@@ -3102,7 +3102,8 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                     'quantity_sold': d.quantity_sold,
                     'price_unit': d.price_unit,
                     'multiply': d.multiply,
-                    'return_loan': '{:,}'.format(round(float(return_loan(loan_payment_set=d.loanpayment_set.all())), 2)),
+                    'return_loan': '{:,}'.format(
+                        round(float(return_loan(loan_payment_set=d.loanpayment_set.all())), 2)),
                     'repay_loan': '{:,}'.format(round(float(repay_loan(loan_payment_set=d.loanpayment_set.all())), 2)),
                     'repay_loan_ball': repay_loan_ball(loan_payment_set=d.loanpayment_set.all()),
                     'repay_loan_with_vouchers': repay_loan_with_vouchers(loan_payment_set=d.loanpayment_set.all()),
@@ -3313,6 +3314,40 @@ def get_expenses(request):
         }, status=HTTPStatus.OK)
 
 
+def get_outgo(request):
+    if request.method == 'GET':
+        transactionaccount_obj = TransactionAccount.objects.all()
+        user_id = request.user.id
+        order = request.GET.get('order', '')
+        order_obj = None
+        if order:
+            order_obj = Order.objects.get(id=int(order))
+        start_date = request.GET.get('start_date', '')
+        end_date = request.GET.get('end_date', '')
+        user_obj = User.objects.get(id=user_id)
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+        tpl = loader.get_template('sales/new_outgo.html')
+        cash_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='101')
+        cash_deposit_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='104')
+        mydate = datetime.now()
+        formatdate = mydate.strftime("%Y-%m-%d")
+
+        context = ({
+            'order_obj': order_obj,
+            'choices_document': TransactionAccount._meta.get_field('document_type_attached').choices,
+            'transactionaccount': transactionaccount_obj,
+            'choices_account': cash_set,
+            'choices_account_bank': cash_deposit_set,
+            'date': formatdate,
+            'start_date': start_date,
+            'end_date': end_date
+        })
+
+        return JsonResponse({
+            'grid': tpl.render(context, request),
+        }, status=HTTPStatus.OK)
+
+
 def new_expense(request):
     if request.method == 'POST':
         transaction_date = str(request.POST.get('id_date'))
@@ -3408,7 +3443,8 @@ def new_loan_payment(request):
                 return response
             if len(request.POST.get('loan_payment', '')) > 0:
                 val = decimal.Decimal(request.POST.get('loan_payment'))
-                if 0 < val <= detail_obj.order.total_remaining_repay_loan():
+                # if 0 < val <= detail_obj.order.total_remaining_repay_loan():
+                if val > 0:
                     transaction_payment_type = str(request.POST.get('transaction_payment_type'))
                     number_of_vouchers = decimal.Decimal(
                         request.POST.get('number_of_vouchers', '0'))

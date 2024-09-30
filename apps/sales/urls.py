@@ -99,6 +99,7 @@ urlpatterns = [
          name='get_order_detail_for_ball_change'),
     path('new_ball_change/', login_required(new_ball_change), name='new_ball_change'),
     path('get_expenses/', login_required(get_expenses), name='get_expenses'),
+    path('get_outgo/', login_required(get_outgo), name='get_outgo'),
     path('new_expense/', login_required(new_expense), name='new_expense'),
 
     # GENERADOR DE BOLETAS

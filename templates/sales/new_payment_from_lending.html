@@ -736,7 +736,7 @@
 
         }
         else {
-            toastr.warning('valor por encima de la deuda', 'Inconcebible')
+            toastr.warning('valor por encima de la deuda...', 'Inconcebible')
             $('#id_total_deposit_to_subtract').val('');
             $('#id_total_expense_to_subtract').val('');
             $('#id_total_deposited_available').val(initialTotalDepositedAvailable);
@@ -806,10 +806,10 @@
             let _pay = parseFloat($('td.pay-loan').text().replace(",", "."));
             let _value = parseFloat($('#id_loan_payment').val());
             let _transaction_payment_type = $('#id_transaction_payment_type').val();
-            if (_value > _pay) {
-                toastr.warning('valor por encima de la deuda', 'Inconcebible')
-                return false;
-            }
+            {#if (_value > _pay) {#}
+            {#    toastr.warning('valor por encima de la deuda', 'Inconcebible')#}
+            {#    return false;#}
+            {# }#}
             if (_transaction_payment_type === 'F') {
                 let _number_of_vouchers = parseFloat($('#id_number_of_vouchers').val());
                 if (number_test(_number_of_vouchers) === true) {
@@ -837,10 +837,10 @@
                         return false;
                     }
 
-                    if (_value_to_pay > _pay) {
-                        toastr.warning('valor por encima de la deuda', 'Inconcebible')
-                        return false;
-                    }
+                    {#if (_value_to_pay > _pay) {#}
+                    {#    toastr.warning('valor por encima de la deuda', 'Inconcebible')#}
+                    {#    return false;#}
+                    {# }#}
 
                 }
             }
