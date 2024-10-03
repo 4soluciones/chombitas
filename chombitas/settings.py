@@ -40,14 +40,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'imagekit',
-    'apps.dishes',
     'apps.users',
     'apps.hrm',
-    'apps.apidishes',
     'apps.comercial',
     'apps.sales',
     'apps.buys',
-    'apps.vetstore',
     'apps.accounting',
     'import_export',
     'rest_framework',
@@ -95,9 +92,9 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'vjgas',
         'USER': 'postgres',
-        'PASSWORD': 'postgres',
+        'PASSWORD': 'italo',
         'HOST': 'localhost',
-        'PORT': '',
+        'PORT': '5432',
     }
 }
 
@@ -137,15 +134,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 # URL para usar cuando se hace referencia a archivos estáticos ubicados en STATIC_ROOT.
-STATIC_URL = '/static/'
+STATIC_URL = 'static/'
 # URL que maneja los medios servidos MEDIA_ROOT, utilizados para administrar archivos almacenados
 MEDIA_URL = '/media/'
 # Este ajuste define los lugares adicionales de staticfiles en la aplicación
 # STATICFILES_DIRS = (BASE_DIR, 'static')
 
 # La ruta absoluta al directorio donde collectstaticrecopilará archivos estáticos para su implementación
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles/')
-# STATIC_ROOT = (BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
 
 # Ruta absoluta del sistema de archivos al directorio que contendrá los archivos cargados por el usuario .
 MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles/')
@@ -154,3 +153,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles/')
 
 LOGIN_REDIRECT_URL = reverse_lazy('dashboard')
 LOGOUT_REDIRECT_URL = reverse_lazy('login')
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
