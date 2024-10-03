@@ -193,7 +193,7 @@ class CashFlow(models.Model):
     ('0', 'Ninguno'))
     TYPE_CHOICES = (
     ('A', 'Apertura'), ('C', 'Cierre'), ('E', 'Entrada'), ('S', 'Salida'), ('D', 'Deposito'), ('R', 'Retiro'),
-    ('T', 'Transferencia'),)
+    ('T', 'Transferencia'), ('G', 'Gastos'))
     transaction_date = models.DateTimeField(auto_now_add=False, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     description = models.CharField('Descripcion', max_length=200, null=True, blank=True)

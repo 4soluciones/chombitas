@@ -3319,6 +3319,8 @@ def get_outgo(request):
         transactionaccount_obj = TransactionAccount.objects.all()
         user_id = request.user.id
         order = request.GET.get('order', '')
+        detail = int(request.GET.get('d'))
+        detail_obj = OrderDetail.objects.get(id=detail)
         order_obj = None
         if order:
             order_obj = Order.objects.get(id=int(order))
@@ -3340,7 +3342,8 @@ def get_outgo(request):
             'choices_account_bank': cash_deposit_set,
             'date': formatdate,
             'start_date': start_date,
-            'end_date': end_date
+            'end_date': end_date,
+            'detail_obj': detail_obj
         })
 
         return JsonResponse({
@@ -3787,6 +3790,100 @@ def new_loan_payment(request):
             'message': 'Cambios guardados con exito.',
             'grid': get_dict_orders(client_obj=detail_obj.order.client, is_pdf=False, start_date=start_date,
                                     end_date=end_date, subsidiary_obj=subsidiary_obj),
+        }, status=HTTPStatus.OK)
+    return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)
+
+
+def new_outgo(request):
+    if request.method == 'POST':
+        transaction_date = str(request.POST.get('id_date'))
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        type_document = str(request.POST.get('id_transaction_document_type'))
+        serie = str(request.POST.get('id_serie'))
+        nro = str(request.POST.get('id_nro'))
+        total_pay = str(request.POST.get('pay-loan')).replace(',', '.')
+        order = int(request.POST.get('id_order'))
+        detail = int(request.POST.get('detail'))
+        detail_obj = OrderDetail.objects.get(id=detail)
+        order_obj = Order.objects.get(id=order)
+        subtotal = str(request.POST.get('id_subtotal'))
+        igv = str(request.POST.get('igv'))
+        user_id = request.user.id
+        user_obj = User.objects.get(id=user_id)
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+        serie_obj = None
+        nro_obj = None
+        if serie:
+            serie_obj = serie
+        if nro:
+            nro_obj = nro
+        description_expense = str(request.POST.get('id_description'))
+        total = str(request.POST.get('id_amount'))
+        _account = str(request.POST.get('id_cash'))
+        cashflow_set = CashFlow.objects.filter(cash_id=_account, transaction_date__date=transaction_date, type='A')
+        check_closed = CashFlow.objects.filter(type='C', transaction_date__date=transaction_date, cash_id=_account)
+
+        if cashflow_set.count() > 0:
+            cash_obj = cashflow_set.first().cash
+
+            if check_closed:
+                data = {'error': "La caja seleccionada se encuentra cerrada, favor de seleccionar otra"}
+                response = JsonResponse(data)
+                response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+                return response
+
+            # if decimal.Decimal(total) > decimal.Decimal(total_pay):
+            #     data = {
+            #         'error': "El monto excede al total de la deuda"}
+            #     response = JsonResponse(data)
+            #     response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+            #     return response
+        else:
+            data = {'error': "No existe una Apertura de Caja"}
+            response = JsonResponse(data)
+            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+            return response
+
+        cashflow_obj = CashFlow(
+            transaction_date=transaction_date,
+            document_type_attached=type_document,
+            serial=serie_obj,
+            n_receipt=nro_obj,
+            description=description_expense,
+            subtotal=subtotal,
+            igv=igv,
+            total=total,
+            order=order_obj,
+            type='G',
+            cash=cash_obj,
+            user=user_obj
+        )
+        cashflow_obj.save()
+
+        loan_payment_obj = LoanPayment(
+            price=total,
+            quantity=detail_obj.quantity_sold,
+            product=detail_obj.product,
+            order_detail=detail_obj,
+            operation_date=transaction_date
+        )
+        loan_payment_obj.save()
+
+        transaction_payment_obj = TransactionPayment(
+            payment=total,
+            number_of_vouchers=0,
+            type='E',
+            operation_code=cashflow_obj.operation_code,
+            loan_payment=loan_payment_obj,
+            cash_flow=cashflow_obj
+        )
+        transaction_payment_obj.save()
+
+        return JsonResponse({
+            'message': 'Registro guardado correctamente.',
+            'grid': get_dict_orders(client_obj=order_obj.client, is_pdf=False, start_date=start_date, end_date=end_date,
+                                    subsidiary_obj=subsidiary_obj)
         }, status=HTTPStatus.OK)
     return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)
 

@@ -2,6 +2,7 @@
     {% csrf_token %}
 
     <input type="hidden" id="id_order" name="id_order" value="{{ order_obj.id }}" required>
+    <input type="hidden" id="detail" name="detail" value="{{ detail_obj.id }}" required>
     <input type="hidden" id="id_start_date" name="start_date" value="{{ start_date }}">
     <input type="hidden" id="id_end_date" name="end_date" value="{{ end_date }}">
     <input type="hidden" id="pay-loan" name="pay-loan" class="pay-loan"
@@ -198,7 +199,7 @@
         $('#btn-save').attr("disabled", "true");
 
         $.ajax({
-            url: '/sales/new_expense/',
+            url: '/sales/new_outgo/',
             type: "POST",
             data: data,
             cache: false,

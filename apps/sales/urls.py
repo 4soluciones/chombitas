@@ -45,6 +45,7 @@ urlpatterns = [
     path('get_rate_product/', get_rate_product, name='get_rate_product'),
     path('create_order_detail/', create_order_detail, name='create_order_detail'),
     path('query_dni/', query_dni, name='query_dni'),
+    path('new_outgo/', login_required(new_outgo), name='new_outgo'),
 
     path('generate_invoice/', generate_invoice, name='generate_invoice'),
     path('get_sales_by_subsidiary_store/', get_sales_by_subsidiary_store,

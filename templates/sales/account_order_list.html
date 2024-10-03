@@ -180,7 +180,7 @@
                                 <button type="button"
                                         class="btn btn-outline-danger btn-sm btn-block btn-outgo"
                                         data-toggle="modal"
-                                        data-target="#modal-outgo" pk="{{ o.id }}"><i class="fab fa-product-hunt"></i>
+                                        data-target="#modal-outgo" pk="{{ o.id }}" d="{{ d.id }}"><i class="fab fa-product-hunt"></i>
                                 </button>
                             </td>
                         {% else %}
@@ -602,6 +602,8 @@
 
     $(document).on('click', '.btn-outgo', function () {
         let order = $(this).attr('pk');
+        let d = $(this).attr('d');
+        console.log("detalle: ",d)
 
         let $tr = $('#table-dictionary').find('tr[info="' + order + '"]');
 
@@ -620,6 +622,7 @@
             type: 'GET',
             data: {
                 'order': order,
+                'd': d,
                 'start_date': _start_date,
                 'end_date': _end_date,
             },
@@ -627,7 +630,7 @@
                 $('#outgo').html(response.grid);
                 $('#id_driver').val($td_pilot);
                 $('#id_plate').val($td_plate);
-                $('#id_order').val(_order_id);
+                $('#id_order').val(order);
                 $('.pay-loan').val($td_pay_loan);
             },
             fail: function (response) {
