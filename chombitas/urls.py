@@ -29,9 +29,6 @@ from apps.users.views import Login, logoutUser
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('dishes/', include(('apps.dishes.urls', 'dishes'))),
-    path('api/v1/', include(('apps.apidishes.urls', 'apidishes'))),
-    path('vetstore/', include(('apps.vetstore.urls', 'vetstore'))),
     path('hrm/', include(('apps.hrm.urls', 'hrm'))),
     path('comercial/', include(('apps.comercial.urls', 'comercial'))),
     path('sales/', include(('apps.sales.urls', 'sales'))),
@@ -41,7 +38,7 @@ urlpatterns = [
     path('', login_required(Home.as_view()), name='dashboard'),
     path('accounts/login/', Login.as_view(), name='login'),
     path('logout/', login_required(logoutUser), name='logout'),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 # if settings.DEBUG:
 #     urlpatterns += [
 #         static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
