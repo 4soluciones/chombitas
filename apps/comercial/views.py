@@ -867,6 +867,25 @@ def input_guide(request):
     })
 
 
+def get_distribution_summary(request):
+    if request.method == 'GET':
+        pk = request.GET.get('pk', '')
+        # distribution_mobil_obj = DistributionMobil.objects.get(id=int(pk))
+        distribution_detail_set = DistributionDetail.objects.filter(distribution_mobil_id=int(pk)).select_related('unit', 'product').order_by('id')
+        order_detail_set = OrderDetail.objects.filter(order__distribution_mobil_id=int(pk))
+        loan_payment_set = LoanPayment.objects.filter(distribution_mobil_id=int(pk))
+        tpl = loader.get_template('comercial/monthly_distribution_summary.html')
+        context = ({
+            'distribution_detail_set': distribution_detail_set,
+            'order_detail_set': order_detail_set,
+            'loan_payment_set': loan_payment_set,
+        })
+        return JsonResponse({
+            'success': True,
+            'grid': tpl.render(context),
+        }, status=HTTPStatus.OK)
+
+
 def get_products_by_subsidiary_store(request):
     if request.method == 'GET':
         pk = request.GET.get('pk', '')
@@ -2286,6 +2305,9 @@ def get_expenses_by_licence_plate(request):
             return response
 
 
+def get_monthly_sales_by_client(request):
+    if request.method == 'GET':
+        client_set = Client.objects.filter()
 def get_monthly_distribution_by_licence_plate(request):
     if request.method == 'GET':
         truck_set = Truck.objects.filter(distributionmobil__isnull=False).distinct('license_plate').order_by(
@@ -2427,7 +2449,9 @@ def get_monthly_distribution_by_licence_plate(request):
 
         grouped_by_date = defaultdict(
             lambda: {
+                'id': '',
                 'date': '',
+                'ids': [],
                 'B5': {
                     'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
                     'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
@@ -2477,8 +2501,11 @@ def get_monthly_distribution_by_licence_plate(request):
         for distribution in distribution_mobil_set:
 
             date_str = distribution.date_distribution.strftime('%d-%b').upper()
-            distribution_obj = grouped_by_date[date_str]
-            distribution_obj['date'] = date_str.replace('JAN', 'ENE')
+            distribution_obj = grouped_by_date[distribution.id]
+            # distribution_obj = grouped_by_date[date_str]
+            distribution_obj['date'] = date_str.replace('JAN', 'ENE').replace('AUG', 'AGO')
+            # distribution_obj['ids'].append(distribution.id)
+            distribution_obj['id'] = distribution.id
 
             quantity_recovered_in_plant_b10 = get_ball_recovered_in_plant(
                 product_id=1, distribution_mobil_id=distribution.id)
@@ -2738,7 +2765,7 @@ def get_monthly_distribution_by_licence_plate(request):
         else:
             data = {'error': "No hay operaciones registradas"}
             response = JsonResponse(data)
-            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+            response.status_code = HTTPStatus.ACCEPTED
             return response
 
 

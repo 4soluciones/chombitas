@@ -126,4 +126,7 @@ urlpatterns = [
     path('get_inclusive_report_on_gas_cylinders/', login_required(get_inclusive_report_on_gas_cylinders), name='get_inclusive_report_on_gas_cylinders'),
     path('distribution_category/', login_required(distribution_category), name='distribution_category'),
 
+    path('get_distribution_summary/', login_required(get_distribution_summary), name='get_distribution_summary'),
+    path('get_monthly_sales_by_client/', login_required(get_monthly_sales_by_client), name='get_monthly_sales_by_client'),
+
 ]

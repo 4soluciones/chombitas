@@ -216,7 +216,12 @@
 {% for distribution in distributions %}
 
     <tr>
-        <td class="align-middle text-center text-nowrap table-info">{{ distribution.date }}</td>
+        <td class="align-middle text-center text-nowrap table-info">
+            <button type="button" value="{{ distribution.id }}" class="btn btn-sm px-1 py-0 distribution-summary" data-toggle="modal" data-target="#staticBackdrop">{{ distribution.date }}</button>
+{#            {{ distribution.id }}#}
+
+{#            {% for id in distribution.ids %}<button type="button" value="{{ id }}" class="btn btn-link px-1 py-0 distribution-summary" data-toggle="modal" data-target="#staticBackdrop">{{ id }}</button>{% endfor %}#}
+        </td>
 
         <td class="align-middle text-center">{{ distribution.B10.extracted_bg }}</td>
         <td class="align-middle text-center">{{ distribution.B10.returned_b }}</td>

@@ -1,0 +1,83 @@
+<fieldset>
+    <legend class="h5">DETALLES</legend>
+    <table class="table table-sm table-bordered">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">PROD</th>
+            <th scope="col">CANT</th>
+            <th scope="col">TIPO</th>
+            <th scope="col">ESTADO</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in distribution_detail_set %}
+            <tr>
+                <th scope="row">{{ d.id }}</th>
+                <td>{{ d.product.name }}</td>
+                <td>{{ d.quantity|safe }}</td>
+                <td>{{ d.get_type_display }}</td>
+                <td>{{ d.get_status_display }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</fieldset>
+{% if order_detail_set %}
+<fieldset>
+    <legend class="h5">VENTAS</legend>
+    <table class="table table-sm table-bordered">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">PROD</th>
+            <th scope="col">CANT</th>
+            <th scope="col">UND</th>
+            <th scope="col">VENTA ID</th>
+            <th scope="col">VENTA FECHA</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in order_detail_set %}
+            <tr>
+                <th scope="row">{{ d.id }}</th>
+                <td>{{ d.product.name }}</td>
+                <td>{{ d.quantity_sold|safe }}</td>
+                <td>{{ d.unit.name }}</td>
+                <td>{{ d.order.id }}</td>
+                <td>{{ d.order.create_at }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</fieldset>
+{% endif %}
+{% if loan_payment_set %}
+<fieldset>
+    <legend class="h5">RECUPERACIONES</legend>
+    <table class="table table-sm table-bordered">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">PROD</th>
+            <th scope="col">CANT</th>
+            <th scope="col">PRE</th>
+            <th scope="col">DET VENTA ID</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in loan_payment_set %}
+            <tr>
+                <th scope="row">{{ d.id }}</th>
+                <td>{{ d.product.name }}</td>
+                <td>{{ d.quantity|safe }}</td>
+                <td>{{ d.price|safe }}</td>
+                <td>{{ d.order_detail.id }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</fieldset>
+{% endif %}
+
+
