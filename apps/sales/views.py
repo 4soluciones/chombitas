@@ -3818,7 +3818,7 @@ def new_outgo(request):
             serie_obj = serie
         if nro:
             nro_obj = nro
-        description_expense = str(request.POST.get('id_description'))
+        description_expense = str(request.POST.get('id_description')) + str("Orden Nro "+str(order_obj.correlative_sale))
         total = str(request.POST.get('id_amount'))
         _account = str(request.POST.get('id_cash'))
         cashflow_set = CashFlow.objects.filter(cash_id=_account, transaction_date__date=transaction_date, type='A')
@@ -3844,6 +3844,21 @@ def new_outgo(request):
             response = JsonResponse(data)
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
             return response
+        cashflow_obj = CashFlow(
+            transaction_date=transaction_date,
+            document_type_attached=type_document,
+            serial=serie_obj,
+            n_receipt=nro_obj,
+            description=description_expense,
+            subtotal=subtotal,
+            igv=igv,
+            total=total,
+            order=order_obj,
+            type='E',
+            cash=cash_obj,
+            user=user_obj
+        )
+        cashflow_obj.save()
 
         cashflow_obj = CashFlow(
             transaction_date=transaction_date,
@@ -3855,7 +3870,7 @@ def new_outgo(request):
             igv=igv,
             total=total,
             order=order_obj,
-            type='G',
+            type='S',
             cash=cash_obj,
             user=user_obj
         )
@@ -3863,7 +3878,7 @@ def new_outgo(request):
 
         loan_payment_obj = LoanPayment(
             price=total,
-            quantity=detail_obj.quantity_sold,
+            quantity=0,
             product=detail_obj.product,
             order_detail=detail_obj,
             operation_date=transaction_date
