@@ -873,12 +873,15 @@ def get_distribution_summary(request):
         # distribution_mobil_obj = DistributionMobil.objects.get(id=int(pk))
         distribution_detail_set = DistributionDetail.objects.filter(distribution_mobil_id=int(pk)).select_related('unit', 'product').order_by('id')
         order_detail_set = OrderDetail.objects.filter(order__distribution_mobil_id=int(pk))
-        loan_payment_set = LoanPayment.objects.filter(distribution_mobil_id=int(pk))
+        recovery_set = LoanPayment.objects.filter(distribution_mobil_id=int(pk))
+        payed_set = LoanPayment.objects.filter(order_detail__order__distribution_mobil_id=int(pk))
         tpl = loader.get_template('comercial/monthly_distribution_summary.html')
         context = ({
             'distribution_detail_set': distribution_detail_set,
             'order_detail_set': order_detail_set,
-            'loan_payment_set': loan_payment_set,
+            'distribution_id': pk,
+            'recovery_set': recovery_set,
+            'payed_set': payed_set,
         })
         return JsonResponse({
             'success': True,
@@ -2076,6 +2079,26 @@ def get_previous_balls_recovered_in_distribution(selected_datetime=None, truck_i
     return sum_quantity_recovered_b
 
 
+def get_previous_balls_payed_in_plant(selected_datetime=None, truck_id=None, product__id=None):
+    q2 = LoanPayment.objects.filter(
+        order_detail__order__distribution_mobil__date_distribution__lt=selected_datetime.date(),
+        order_detail__order__distribution_mobil__truck__id=truck_id,
+        order_detail__unit__name__in=['B'],
+        product__id=product__id,
+        distribution_mobil__isnull=False
+    ).filter(
+        ~Q(order_detail__order__distribution_mobil=F('distribution_mobil'))
+    ).values('product__id').annotate(sum_price_payed_b=Sum(F('quantity'))).values(
+        'sum_price_payed_b'
+    )
+    # print(q2.query)
+    sum_price_payed_b = 0
+    if q2.exists():
+        result2 = q2[0]
+        sum_price_payed_b = result2.get('sum_price_payed_b', 0)
+    return sum_price_payed_b
+
+
 def get_previous_balls_recovered_in_plant(selected_datetime=None, truck_id=None, product__id=None):
     q2 = LoanPayment.objects.filter(
         order_detail__order__distribution_mobil__date_distribution__lt=selected_datetime.date(),
@@ -2137,8 +2160,6 @@ def get_ball_recovered_in_plant(product_id=None, distribution_mobil_id=None):
     ).values('product__id').annotate(sum_quantity_recovered_in_plant_b=Sum(F('quantity'))).values(
         'sum_quantity_recovered_in_plant_b'
     )
-    if 44 == distribution_mobil_id:
-        print(recovered_in_plant_set.query)
 
     quantity_recovered_in_plant_b = 0
 
@@ -2146,6 +2167,24 @@ def get_ball_recovered_in_plant(product_id=None, distribution_mobil_id=None):
         recovered_in_plant_obj = recovered_in_plant_set[0]
         quantity_recovered_in_plant_b = recovered_in_plant_obj.get('sum_quantity_recovered_in_plant_b', 0)
     return quantity_recovered_in_plant_b
+
+
+def get_ball_payed_in_plant(product_id=None, distribution_mobil_id=None):
+    payed_in_plant_set = LoanPayment.objects.filter(
+        order_detail__order__distribution_mobil__id=distribution_mobil_id,
+        order_detail__unit__name__in=['B'],
+        product__id=product_id,
+        distribution_mobil__isnull=False
+    ).values('product__id').annotate(sum_quantity_payed_in_plant_b=Sum(F('quantity'))).values(
+        'sum_quantity_payed_in_plant_b'
+    )
+
+    quantity_payed_in_plant_b = 0
+
+    if payed_in_plant_set.exists():
+        payed_in_plant_obj = payed_in_plant_set[0]
+        quantity_payed_in_plant_b = payed_in_plant_obj.get('sum_quantity_payed_in_plant_b', 0)
+    return quantity_payed_in_plant_b
 
 
 def get_previous_debt_for_in_the_car_balls(distribution_mobil_set=None, truck_id=None, product__id=None, type_id=None):
@@ -2252,6 +2291,7 @@ def get_expenses_by_licence_plate(request):
         if pilots:
             grouped_by_pilot = defaultdict(
                 lambda: {
+                    'id': 0, 'descriptions': [],
                     'pilot_id': '', 'pilot_name': '',
                     'expense_1': 0, 'expense_2': 0, 'expense_3': 0, 'expense_4': 0, 'expense_5': 0, 'total_expenses': 0,
                     'date_expense_1': "", 'date_expense_2': "", 'date_expense_3': "", 'date_expense_4': "",
@@ -2259,34 +2299,39 @@ def get_expenses_by_licence_plate(request):
                 }
             )
 
-            for pilot_id in pilots:
-                data_obj = grouped_by_pilot[pilot_id]
-                pilot_obj = Employee.objects.get(id=pilot_id)
-                data_obj['pilot_id'] = pilot_id
-                data_obj['pilot_name'] = pilot_obj.full_name()
-                total_expenses = 0
-                for expense in base_query_set:
-                    if expense.description == "PETROLEO":
-                        data_obj["expense_1"] += round(expense.total, 1)
-                        date_str = expense.transaction_date.strftime('%d-%b').upper()
-                        data_obj['date_expense_1'] = date_str.replace('JAN', 'ENE')
-                    if expense.description == "VIATICO":
-                        data_obj["expense_2"] += round(expense.total, 1)
-                        date_str = expense.transaction_date.strftime('%d-%b').upper()
-                        data_obj['date_expense_2'] = date_str.replace('JAN', 'ENE')
-                    if expense.description == "FERIADO Y SUELDO":
-                        data_obj["expense_3"] += round(expense.total, 1)
-                        date_str = expense.transaction_date.strftime('%d-%b').upper()
-                        data_obj['date_expense_3'] = date_str.replace('JAN', 'ENE')
-                    if expense.description == "MANTENIMIENTO":
-                        data_obj["expense_4"] += round(expense.total, 1)
-                        date_str = expense.transaction_date.strftime('%d-%b').upper()
-                        data_obj['date_expense_4'] = date_str.replace('JAN', 'ENE')
-                    if expense.description == "OTROS GASTOS":
-                        data_obj["expense_5"] += round(expense.total, 1)
-                        date_str = expense.transaction_date.strftime('%d-%b').upper()
-                        data_obj['date_expense_5'] = date_str.replace('JAN', 'ENE')
-                    total_expenses += round(expense.total, 1)
+            # for pilot_id in pilots:
+            #     data_obj = grouped_by_pilot[pilot_id]
+            #     pilot_obj = Employee.objects.get(id=pilot_id)
+            #     data_obj['pilot_id'] = pilot_id
+            #     data_obj['pilot_name'] = pilot_obj.full_name()
+
+            total_expenses = 0
+            for expense in base_query_set:
+                data_obj = grouped_by_pilot[expense.transaction_date]
+                data_obj['pilot_id'] = expense.distribution_mobil.pilot_id
+                data_obj['pilot_name'] = expense.distribution_mobil.pilot.full_name()
+                if expense.description == "PETROLEO":
+                    data_obj["expense_1"] += round(expense.total, 1)
+                    date_str = expense.transaction_date.strftime('%d-%b').upper()
+                    data_obj['date_expense_1'] = date_str.replace('JAN', 'ENE')
+                if expense.description == "VIATICO":
+                    data_obj["expense_2"] += round(expense.total, 1)
+                    date_str = expense.transaction_date.strftime('%d-%b').upper()
+                    data_obj['date_expense_2'] = date_str.replace('JAN', 'ENE')
+                if expense.description == "FERIADO Y SUELDO":
+                    data_obj["expense_3"] += round(expense.total, 1)
+                    date_str = expense.transaction_date.strftime('%d-%b').upper()
+                    data_obj['date_expense_3'] = date_str.replace('JAN', 'ENE')
+                if expense.description == "MANTENIMIENTO":
+                    data_obj["expense_4"] += round(expense.total, 1)
+                    date_str = expense.transaction_date.strftime('%d-%b').upper()
+                    data_obj['date_expense_4'] = date_str.replace('JAN', 'ENE')
+                if expense.description == "OTROS GASTOS":
+                    data_obj["expense_5"] += round(expense.total, 1)
+                    data_obj["descriptions"].append(expense.observation)
+                    date_str = expense.transaction_date.strftime('%d-%b').upper()
+                    data_obj['date_expense_5'] = date_str.replace('JAN', 'ENE')
+                total_expenses += round(expense.total, 1)
                 data_obj['total_expenses'] = total_expenses
 
             pilots_with_expenses = list(grouped_by_pilot.values())
@@ -2364,6 +2409,9 @@ def get_monthly_distribution_by_licence_plate(request):
             selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=3)
         previous_balls_recovered_in_plant_b15 = get_previous_balls_recovered_in_plant(
             selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=12)
+
+        previous_balls_payed_in_plant_b10 = get_previous_balls_payed_in_plant(
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=1)
 
         distribution_mobil_set = DistributionMobil.objects.filter(
             # date_distribution__month=month,
@@ -2457,42 +2505,43 @@ def get_monthly_distribution_by_licence_plate(request):
                     'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
                     'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b5}, 'total_sales': 0,
                     'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
-                    'advanced_b': 0, 'remaining_borrowed_b': 0
+                    'advanced_b': 0, 'payed_in_plant_b': 0, 'remaining_borrowed_b': 0
                 },
                 'B10': {
                     'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
                     'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
                     'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b10}, 'total_sales': 0,
                     'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
-                    'advanced_b': 0, 'remaining_borrowed_b': 0
+                    'advanced_b': 0, 'payed_in_plant_b': 0, 'remaining_borrowed_b': 0
                 },
                 'B45': {
                     'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
                     'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
                     'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b45}, 'total_sales': 0,
                     'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
-                    'advanced_b': 0, 'remaining_borrowed_b': 0
+                    'advanced_b': 0, 'payed_in_plant_b': 0, 'remaining_borrowed_b': 0
                 },
                 'B15': {
                     'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
                     'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
                     'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b15}, 'total_sales': 0,
                     'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
-                    'advanced_b': 0, 'remaining_borrowed_b': 0
+                    'advanced_b': 0, 'payed_in_plant_b': 0, 'remaining_borrowed_b': 0
                 },
                 'B3': {
                     'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
                     'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
                     'prices': {}, 'total_sales': 0,
                     'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
-                    'advanced_b': 0, 'remaining_borrowed_b': 0
+                    'advanced_b': 0, 'payed_in_plant_b': 0, 'remaining_borrowed_b': 0
                 },
                 'total_sold_by_date': 0,
                 'expense_1': 0, 'expense_2': 0, 'expense_3': 0, 'expense_4': 0, 'expense_5': 0,
                 'total_to_deposit': 0,
                 'remaining_total_to_deposit': 0,
                 'deposited': 0, 'balance': 0, 'bank': "", 'date_deposit': "", 'code_deposit': "",
-                'deposit_set': []
+                'deposit_set': [],
+                'other_expenses': [],
             }
         )
 
@@ -2539,6 +2588,31 @@ def get_monthly_distribution_by_licence_plate(request):
                 distribution_obj["B15"]["remaining_borrowed_b"] = remaining_borrowed_b15 - int(
                     quantity_recovered_in_plant_b15)
                 remaining_borrowed_b15 -= int(quantity_recovered_in_plant_b15)
+
+            quantity_payed_in_plant_b10 = get_ball_payed_in_plant(product_id=1, distribution_mobil_id=distribution.id)
+            quantity_payed_in_plant_b5 = get_ball_payed_in_plant(product_id=2, distribution_mobil_id=distribution.id)
+            quantity_payed_in_plant_b45 = get_ball_payed_in_plant(product_id=3, distribution_mobil_id=distribution.id)
+            quantity_payed_in_plant_b15 = get_ball_payed_in_plant(product_id=12, distribution_mobil_id=distribution.id)
+
+            if quantity_payed_in_plant_b10 > 0:
+                distribution_obj["B10"]["payed_in_plant_b"] += int(quantity_payed_in_plant_b10)
+                distribution_obj["B10"]["remaining_borrowed_b"] = remaining_borrowed_b10 - int(quantity_payed_in_plant_b10)
+                remaining_borrowed_b10 -= int(quantity_payed_in_plant_b10)
+
+            if quantity_payed_in_plant_b5 > 0:
+                distribution_obj["B5"]["payed_in_plant_b"] += int(quantity_payed_in_plant_b5)
+                distribution_obj["B5"]["remaining_borrowed_b"] = remaining_borrowed_b5 - int(quantity_payed_in_plant_b5)
+                remaining_borrowed_b5 -= int(quantity_payed_in_plant_b5)
+
+            if quantity_payed_in_plant_b45 > 0:
+                distribution_obj["B45"]["payed_in_plant_b"] += int(quantity_payed_in_plant_b45)
+                distribution_obj["B45"]["remaining_borrowed_b"] = remaining_borrowed_b45 - int(quantity_payed_in_plant_b45)
+                remaining_borrowed_b45 -= int(quantity_payed_in_plant_b45)
+
+            if quantity_payed_in_plant_b15 > 0:
+                distribution_obj["B15"]["payed_in_plant_b"] += int(quantity_payed_in_plant_b15)
+                distribution_obj["B15"]["remaining_borrowed_b"] = remaining_borrowed_b15 - int(quantity_payed_in_plant_b15)
+                remaining_borrowed_b15 -= int(quantity_payed_in_plant_b15)
 
             for detail in distribution.distributiondetail_set.all():
                 # last_distribution_detail_in_the_car_obj = None
@@ -2676,6 +2750,7 @@ def get_monthly_distribution_by_licence_plate(request):
                     distribution_obj["expense_4"] += round(expense.total, 1)
                 if expense.description == "OTROS GASTOS":
                     distribution_obj["expense_5"] += round(expense.total, 1)
+                    distribution_obj["other_expenses"].append(expense.observation)
                 total_expenses += round(expense.total, 1)
 
             total_deposited = 0
@@ -2720,6 +2795,7 @@ def get_monthly_distribution_by_licence_plate(request):
             # print(list(grouped_by_date.values()))
         distributions = list(grouped_by_date.values())
         tpl = loader.get_template('comercial/monthly_distribution_by_licence_plate_grid_list.html')
+
         context = ({
             'user_id': request.user.id,
             'distributions': distributions,
@@ -2756,8 +2832,9 @@ def get_monthly_distribution_by_licence_plate(request):
             'initial_recovered_in_plant_b5': int(previous_balls_recovered_in_plant_b5),
             'initial_recovered_in_plant_b45': int(previous_balls_recovered_in_plant_b45),
             'initial_recovered_in_plant_b15': int(previous_balls_recovered_in_plant_b15),
-        })
 
+            'initial_payed_in_plant_b10': int(previous_balls_payed_in_plant_b10),
+        })
         if distribution_mobil_set:
             return JsonResponse({
                 'grid': tpl.render(context)

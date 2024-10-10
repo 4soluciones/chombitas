@@ -134,6 +134,11 @@ class Product(models.Model):
     def __str__(self):
         return str(self.name) + " - " + str(self.code)
 
+    def get_photo_url(self):
+        if self.photo:
+            return self.photo.url
+        return '/static/assets/default.png'
+
     def calculate_minimum_unit(self):
         response = ProductDetail.objects.filter(product__id=self.id).values('product__id').annotate(
             minimum=Min('quantity_minimum'))

@@ -1,5 +1,5 @@
 <fieldset>
-    <legend class="h5">DETALLES</legend>
+    <legend class="h5">DETALLES DE DISTRIBUCION {{ distribution_id }}</legend>
     <table class="table table-sm table-bordered">
         <thead>
         <tr>
@@ -25,7 +25,7 @@
 </fieldset>
 {% if order_detail_set %}
 <fieldset>
-    <legend class="h5">VENTAS</legend>
+    <legend class="h5">BALONES VENDIDOS</legend>
     <table class="table table-sm table-bordered">
         <thead>
         <tr>
@@ -52,7 +52,8 @@
     </table>
 </fieldset>
 {% endif %}
-{% if loan_payment_set %}
+
+{% if recovery_set %}
 <fieldset>
     <legend class="h5">RECUPERACIONES</legend>
     <table class="table table-sm table-bordered">
@@ -66,7 +67,36 @@
         </tr>
         </thead>
         <tbody>
-        {% for d in loan_payment_set %}
+        {% for d in recovery_set %}
+            <tr>
+                <th scope="row">{{ d.id }}</th>
+                <td>{{ d.product.name }}</td>
+                <td>{{ d.quantity|safe }}</td>
+                <td>{{ d.price|safe }}</td>
+                <td>{{ d.order_detail.id }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</fieldset>
+{% endif %}
+
+
+{% if payed_set %}
+<fieldset>
+    <legend class="h5">BALONES PAGADOS</legend>
+    <table class="table table-sm table-bordered">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">PROD</th>
+            <th scope="col">CANT</th>
+            <th scope="col">PRE</th>
+            <th scope="col">DET VENTA ID</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in payed_set %}
             <tr>
                 <th scope="row">{{ d.id }}</th>
                 <td>{{ d.product.name }}</td>
