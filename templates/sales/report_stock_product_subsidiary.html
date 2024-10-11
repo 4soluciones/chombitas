@@ -76,12 +76,14 @@
                 <thead>
                 <tr class="text-center text-white font-weight-normal" style="background: #787879">
                     <th class="th-sm p-2 font-weight-normal" style="width: 5%;">N°</th>
-                    <th class="th-sm p-2 font-weight-normal" style="width: 15%;">PLACA VEHICULO</th>
+                    <th class="th-sm p-2 font-weight-normal" style="width: 10%;">PLACA VEHICULO</th>
                     <th class="th-sm p-2 font-weight-normal" style="width: 25%;">CONDUCTOR</th>
+                    <th class="th-sm p-2 font-weight-normal" style="width: 10%;">Debe</th>
                     <th class="th-sm p-2 font-weight-normal" style="width: 5%;">Nº</th>
-                    <th class="th-sm p-2 font-weight-normal" style="width: 20%;">Producto</th>
+                    <th class="th-sm p-2 font-weight-normal" style="width: 15%;">Producto</th>
                     <th class="th-sm p-2 font-weight-normal" style="width: 20%;">Unidad</th>
                     <th class="th-sm p-2 font-weight-normal" style="width: 10%;">Stock</th>
+
                 </tr>
                 </thead>
                 <tbody>
@@ -94,6 +96,9 @@
                         <td class="align-middle" rowspan="{{ d.count }}"><span
                                 class="badge badge-pill bg-success text-white pt-2 pb-2 font-weight-normal"
                                 style="font-size: 13px; width: 80%;">{{ d.pilot }}</span></td>
+                        <td class="align-middle" rowspan="{{ d.count }}">
+                            {{ d.borrowed }}
+                        </td>
                         {% for dm in d.distribution %}
                             {% if not forloop.first %}
                                 <tr>

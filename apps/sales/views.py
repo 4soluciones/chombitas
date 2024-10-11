@@ -1,5 +1,5 @@
 import pytz
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, Lag
 from django.shortcuts import render
 from django.views.generic import TemplateView, View, CreateView, UpdateView
 from django.views.decorators.csrf import csrf_exempt
@@ -7,7 +7,6 @@ from django.forms.models import model_to_dict
 from django.http import JsonResponse, HttpResponse
 from http import HTTPStatus
 from .format_dates import validate
-from django.db.models import Q, Count
 from .models import *
 from .forms import *
 from apps.hrm.models import Subsidiary, District, DocumentType, Employee, Worker
@@ -22,7 +21,6 @@ import math
 import random
 import requests
 import concurrent.futures
-
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.fields.files import ImageFieldFile
 from django.template import loader
@@ -32,7 +30,7 @@ from django.core import serializers
 from apps.sales.views_SUNAT import send_bill_nubefact, send_receipt_nubefact, correlative_receipt
 from apps.sales.number_to_letters import numero_a_letras, numero_a_moneda
 from django.utils import timezone
-from django.db.models import Min, Sum, Max, Q, F, Prefetch, Subquery, OuterRef, Value
+from django.db.models import Min, Sum, Max, Q, F, Prefetch, Subquery, OuterRef, Value, Window, Q, Count
 from django.db.models.functions import Greatest
 from django.db.models.functions import (
     ExtractDay, ExtractMonth, ExtractQuarter, ExtractWeek,
@@ -3818,7 +3816,8 @@ def new_outgo(request):
             serie_obj = serie
         if nro:
             nro_obj = nro
-        description_expense = str(request.POST.get('id_description')) + str("Orden Nro "+str(order_obj.correlative_sale))
+        description_expense = str(request.POST.get('id_description')) + str(
+            "Orden Nro " + str(order_obj.correlative_sale))
         total = str(request.POST.get('id_amount'))
         _account = str(request.POST.get('id_cash'))
         cashflow_set = CashFlow.objects.filter(cash_id=_account, transaction_date__date=transaction_date, type='A')
@@ -4111,7 +4110,7 @@ def get_stock_product_store(request):
     product_set = Product.objects.all()
     # dic_stock = ['num':valor]
     dic_stock = {}
-    for p in product_set.all():
+    for p in product_set.filter(product_subcategory_id__in=[4, 5]):
         stock_ = ProductStore.objects.filter(product__id=p.id,
                                              subsidiary_store__subsidiary=subsidiary_obj).aggregate(
             r=Coalesce(Sum('stock'), decimal.Decimal(0.00))).get('r')
@@ -4124,6 +4123,7 @@ def get_stock_product_store(request):
     distribution_dictionary = []
     tid = {"B5": 0, "B10": 0, "B15": 0, "B45": 0}
     fid = {"F5": 0, "F10": 0, "F15": 0, "F45": 0}
+    deb = {"D5": 0, "D10": 0, "D15": 0, "D45": 0}
     for t in truck_set.all():
         truck_obj = Truck.objects.get(id=int(t.id))
         distribution_list = DistributionMobil.objects.filter(status='F', truck=truck_obj,
@@ -4131,12 +4131,14 @@ def get_stock_product_store(request):
 
         if distribution_list['id__max'] is not None:
             distribution_mobil_obj = DistributionMobil.objects.get(id=int(distribution_list['id__max']))
+            borrowed = get_borrowed_irons(truck=truck_obj)
             new = {
                 'id_m': distribution_mobil_obj.id,
                 'truck': distribution_mobil_obj.truck.license_plate,
                 'pilot': distribution_mobil_obj.pilot.full_name(),
                 'distribution': [],
-                'count': 0
+                'count': 0,
+                'borrowed': borrowed
             }
             details_list = DistributionDetail.objects.filter(status='C', distribution_mobil=distribution_mobil_obj)
             if details_list.exists():
@@ -4176,6 +4178,111 @@ def get_stock_product_store(request):
         'tid': tid,
         'fid': fid,
     })
+
+
+def get_borrowed_irons(truck=None):
+    from ..comercial.views import get_previous_debt_for_in_the_car_balls, get_previous_balls_recovered_in_plant, \
+        get_previous_balls_recovered_in_distribution, get_previous_debt_for_borrowed_balls, get_ball_recovered_in_plant
+    distribution_mobil_set = DistributionMobil.objects.filter(truck=truck).annotate(
+        previous_distribution_id=Window(expression=Lag('id', default=0),
+                                        order_by=(F('date_distribution').asc(), F('id').asc()))
+    ).order_by('date_distribution', 'id').distinct('date_distribution', 'id')
+    start_date_sin_timezone = datetime.now()
+    l = ''
+    if truck.license_plate == 'D3W-835':
+        l = truck.license_plate
+    b5 = 0
+    b10 = 0
+    b15 = 0
+    b45 = 0
+    balon = []
+    for distribution in distribution_mobil_set:
+        # Balones recuperados en planta (b5, b10, b15, b45)
+        quantity_recovered_in_plant_b10 = get_ball_recovered_in_plant(
+            product_id=1, distribution_mobil_id=distribution.id)
+        quantity_recovered_in_plant_b5 = get_ball_recovered_in_plant(
+            product_id=2, distribution_mobil_id=distribution.id)
+        quantity_recovered_in_plant_b45 = get_ball_recovered_in_plant(
+            product_id=3, distribution_mobil_id=distribution.id)
+        quantity_recovered_in_plant_b15 = get_ball_recovered_in_plant(
+            product_id=12, distribution_mobil_id=distribution.id)
+
+        # Deuda anterior por balones prestadas (b5, b10, b15, b45)
+        previous_debt_for_borrowed_balls_b10 = get_previous_debt_for_borrowed_balls(
+            selected_datetime=start_date_sin_timezone, truck_id=truck.id, product__id=1)
+        previous_debt_for_borrowed_balls_b5 = get_previous_debt_for_borrowed_balls(
+            selected_datetime=start_date_sin_timezone, truck_id=truck.id, product__id=2)
+        previous_debt_for_borrowed_balls_b45 = get_previous_debt_for_borrowed_balls(
+            selected_datetime=start_date_sin_timezone, truck_id=truck.id, product__id=3)
+        previous_debt_for_borrowed_balls_b15 = get_previous_debt_for_borrowed_balls(
+            selected_datetime=start_date_sin_timezone, truck_id=truck.id, product__id=12)
+
+        # Balones anteriores recuperadas en distribucion
+        previous_balls_recovered_in_distribution_b10 = get_previous_balls_recovered_in_distribution(
+            selected_datetime=start_date_sin_timezone, truck_id=truck.id, product__id=1)
+        previous_balls_recovered_in_distribution_b5 = get_previous_balls_recovered_in_distribution(
+            selected_datetime=start_date_sin_timezone, truck_id=truck.id, product__id=2)
+        previous_balls_recovered_in_distribution_b45 = get_previous_balls_recovered_in_distribution(
+            selected_datetime=start_date_sin_timezone, truck_id=truck.id, product__id=3)
+        previous_balls_recovered_in_distribution_b15 = get_previous_balls_recovered_in_distribution(
+            selected_datetime=start_date_sin_timezone, truck_id=truck.id, product__id=12)
+
+        # Balones anteriores recuperadas en planta
+        previous_balls_recovered_in_plant_b10 = get_previous_balls_recovered_in_plant(
+            selected_datetime=start_date_sin_timezone, truck_id=truck.id, product__id=1)
+        previous_balls_recovered_in_plant_b5 = get_previous_balls_recovered_in_plant(
+            selected_datetime=start_date_sin_timezone, truck_id=truck.id, product__id=2)
+        previous_balls_recovered_in_plant_b45 = get_previous_balls_recovered_in_plant(
+            selected_datetime=start_date_sin_timezone, truck_id=truck.id, product__id=3)
+        previous_balls_recovered_in_plant_b15 = get_previous_balls_recovered_in_plant(
+            selected_datetime=start_date_sin_timezone, truck_id=truck.id, product__id=12)
+
+        # Balones en el vehiculo
+        remaining_in_the_car_bg10 = get_previous_debt_for_in_the_car_balls(
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck.id, product__id=1, type_id='L')
+        remaining_in_the_car_bg5 = get_previous_debt_for_in_the_car_balls(
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck.id, product__id=2, type_id='L')
+        remaining_in_the_car_bg45 = get_previous_debt_for_in_the_car_balls(
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck.id, product__id=3, type_id='L')
+        remaining_in_the_car_bg15 = get_previous_debt_for_in_the_car_balls(
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck.id, product__id=12, type_id='L')
+
+        remaining_in_the_car_b10 = get_previous_debt_for_in_the_car_balls(
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck.id, product__id=1, type_id='V')
+        remaining_in_the_car_b5 = get_previous_debt_for_in_the_car_balls(
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck.id, product__id=2, type_id='V')
+        remaining_in_the_car_b45 = get_previous_debt_for_in_the_car_balls(
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck.id, product__id=3, type_id='V')
+        remaining_in_the_car_b15 = get_previous_debt_for_in_the_car_balls(
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck.id, product__id=12, type_id='V')
+
+        remaining_borrowed_b10 = int(previous_debt_for_borrowed_balls_b10) - int(
+            previous_balls_recovered_in_distribution_b10) - int(previous_balls_recovered_in_plant_b10)
+        remaining_borrowed_b5 = int(previous_debt_for_borrowed_balls_b5) - int(
+            previous_balls_recovered_in_distribution_b5) - int(previous_balls_recovered_in_plant_b5)
+        remaining_borrowed_b45 = int(previous_debt_for_borrowed_balls_b45) - int(
+            previous_balls_recovered_in_distribution_b45) - int(previous_balls_recovered_in_plant_b45)
+        remaining_borrowed_b15 = int(previous_debt_for_borrowed_balls_b15) - int(
+            previous_balls_recovered_in_distribution_b15) - int(previous_balls_recovered_in_plant_b15)
+        if quantity_recovered_in_plant_b10 > 0:
+            b10 = + remaining_borrowed_b10 - int(quantity_recovered_in_plant_b10)
+            remaining_borrowed_b10 -= int(quantity_recovered_in_plant_b10)
+        if quantity_recovered_in_plant_b5 > 0:
+            b5 = + remaining_borrowed_b5 - int(quantity_recovered_in_plant_b5)
+            remaining_borrowed_b5 -= int(quantity_recovered_in_plant_b5)
+        if quantity_recovered_in_plant_b15 > 0:
+            b15 = + remaining_borrowed_b15 - int(quantity_recovered_in_plant_b15)
+            remaining_borrowed_b15 -= int(quantity_recovered_in_plant_b15)
+        if quantity_recovered_in_plant_b45 > 0:
+            b45 = + remaining_borrowed_b45 - int(quantity_recovered_in_plant_b45)
+            remaining_borrowed_b45 -= int(quantity_recovered_in_plant_b45)
+    owes_irons = {
+        'B5': b5,
+        'B10': b10,
+        'B15': b15,
+        'B45': b45,
+    }
+    return owes_irons
 
 
 def get_product_recipe_view(request):
