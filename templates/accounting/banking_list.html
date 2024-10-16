@@ -5,64 +5,62 @@
 {% endblock title %}
 
 {% block body %}
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-sm-6">
-                <form class="form-inline" id="search-form" method="POST">
-                    {% csrf_token %}
-                    <label class="my-1 mr-2" for="id-cash">Banco</label>
-                    <select class="custom-select my-1 mr-sm-2" id="id-cash" name="cash" required>
-                        <option value="" disabled selected>SELECCIONE...</option>
+    <div class="container-fluid roboto-condensed-regular">
+        <div class="card bg-light mt-2">
+            <div class="row m-3">
+                <div class="col-sm-6">
+                    <form class="form-inline" id="search-form" method="POST">
+                        {% csrf_token %}
+                        <label class="my-1 mr-2" for="id-cash">Entidad Bancaria:</label>
+                        <select class="custom-select my-1 mr-sm-2" id="id-cash" name="cash" required>
+                            <option value="" disabled selected>Seleccione</option>
+                            {% for c in only_bank_set %}
+                                <option value="{{ c.pk }}">{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
 
-                        {% for c in only_bank_set %}
-                            <option value="{{ c.pk }}">{{ c.name }}</option>
-                        {% endfor %}
+                        <label class="my-1 mr-2" for="id-start-date">Fecha Inicial:</label>
+                        <input type="date" class="form-control my-1 mr-sm-2" id="id-start-date" name="start-date"
+                               value="{{ formatdate }}">
 
-                    </select>
+                        <label class="my-1 mr-2" for="id-end-date">Fecha final:</label>
+                        <input type="date" class="form-control my-1 mr-sm-2" id="id-end-date" name="end-date"
+                               value="{{ formatdate }}">
 
-                    <label class="my-1 mr-2" for="id-start-date">Fecha Inicial</label>
-                    <input type="date" class="form-control my-1 mr-sm-2" id="id-start-date" name="start-date"
-                           value="{{ formatdate }}">
+                        <button type="submit" class="btn btn-primary my-1">
+                            <i class="fas fa-search-dollar" id="btn-search"></i> Buscar
+                        </button>
+                    </form>
 
-                    <label class="my-1 mr-2" for="id-end-date">Fecha final</label>
-                    <input type="date" class="form-control my-1 mr-sm-2" id="id-end-date" name="end-date"
-                           value="{{ formatdate }}">
-
-                    <button type="submit" class="btn btn-primary my-1">
-                        <i class="fas fa-search-dollar" id="btn-search"></i> Buscar
+                </div>
+                <div class="col-sm-6">
+                    <button type="button" class="btn btn-danger m-1" data-toggle="modal"
+                            data-target="#modal-transaction">
+                        <i class="fas fa-comments-dollar"></i> Movimientos
                     </button>
 
-                </form>
+                    <button type="button" class="btn btn-success m-1" data-toggle="modal" data-target="#modal-transfer">
+                        <i class="fas fa-exchange-alt"></i> Transferencias
+                    </button>
 
-            </div>
-            <div class="col-sm-6">
-                <button type="button" class="btn btn-danger m-1" data-toggle="modal" data-target="#modal-transaction">
-                    <i class="fas fa-comments-dollar"></i> Movimientos
-                </button>
+                    <button type="button" class="btn btn-success m-1" data-toggle="modal"
+                            data-target="#modal-transfer-to-cash" disabled>
+                        <i class="fas fa-random"></i> Transferencias a caja
+                    </button>
 
-                <button type="button" class="btn btn-success m-1" data-toggle="modal" data-target="#modal-transfer">
-                    <i class="fas fa-exchange-alt"></i> Transferencias
-                </button>
-
-                <button type="button" class="btn btn-success m-1" data-toggle="modal"
-                        data-target="#modal-transfer-to-cash" disabled>
-                    <i class="fas fa-random"></i> Transferencias a caja
-                </button>
-
+                </div>
             </div>
         </div>
-
-
         <div id="account-grid-list"></div>
-
     </div>
+
 
     <div class="modal" id="modal-transaction" tabindex="-1" role="dialog">
 
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header pb-2 pt-2">
-                    <h4 class="modal-title mb-3 mt-3">Movimientos bancarios</h4>
+                    <h4 class="modal-title mb-3 mt-3 roboto-condensed-regular font-weight-bold">Ingresar Movimiento</h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -117,7 +115,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body" id="modal-edit"> </div>
+                <div class="modal-body" id="modal-edit"></div>
 
             </div>
         </div>
@@ -192,14 +190,14 @@
                 processData: false,
                 contentType: false,
                 success: function (response, textStatus, xhr) {
-                    if (xhr.status == 200) {
+                    if (xhr.status === 200) {
                         // $('#product-detail-grid').html(response.grid);
                         $('#modal-transaction').modal('hide');
                         toastr.success(response['message'], '¡Bien hecho!');
                     }
                 },
                 error: function (jqXhr, textStatus, xhr) {
-                    if (jqXhr.status == 500) {
+                    if (jqXhr.status === 500) {
                         toastr.error(jqXhr.responseJSON.error, '¡Inconcebible!');
                     }
                 }

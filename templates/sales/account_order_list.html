@@ -1,5 +1,6 @@
+{% load operations %}
 <div class="card-header text-center text-uppercase bg-light font-weight-bold">
-    <h2> {{ client_obj }} </h2>
+    <h2 class="roboto-condensed-regular font-weight-bold"> {{ client_obj }} </h2>
     <label>Deuda Pendiente Actual: S/ {{ difference_debt }}</label>
 </div>
 
@@ -48,8 +49,8 @@
 {#{% endif %}#}
 
 
-<div class="" id="grid-dictionary" style="overflow:scroll;width: 100%;height: 45em">
-    <table class="table table-sm table-bordered" id="table-dictionary" style="border-collapse: collapse;">
+<div class="bg-light" id="grid-dictionary" style="overflow:scroll;width: 100%;height: 45em">
+    <table class="table table-sm table-bordered" id="table-dictionary" style="border-collapse: collapse; font-size: 12px">
         {% if not is_pdf %}
             <thead>{% endif %}
         <tr class="text-white small text-uppercase">
@@ -57,9 +58,9 @@
             <td class="bg-primary noExl">ID</td>
             <td class="bg-primary noExl">TIPO</td>
             {#        <td class="bg-primary">CLIENTE</td>#}
-            <td class="bg-success noExl">PLACA</td>
-            <td class="bg-success noExl">RESPONSABLE</td>
-            <td class="bg-primary">FECHA</td>
+            <td class="bg-success text-center noExl">PLACA <br> REPONSABLE</td>
+{#            <td class="bg-success noExl">RESPONSABLE</td>#}
+            <td class="bg-primary" style="width: 3%">FECHA</td>
             {#        <td class="bg-primary">ESTADO</td>#}
 
             <td class="bg-info">PROD.</td>
@@ -73,14 +74,14 @@
             <td class="bg-danger head-spending noExl">GASTOS</td>
 
             {#            <td class="bg-secondary">FECHA OPERACIÓN</td>#}
-            <td class="bg-secondary">CANTIDAD ENTREGADA BALONES</td>
-            <td class="bg-secondary">CANTIDAD VALES FISE</td>
+            <td class="bg-secondary">CANT. ENTREGADA BALONES</td>
+            <td class="bg-secondary">CANT. VALES FISE</td>
             <td class="bg-secondary">MONTO PAGADO</td>
-            <td class="bg-secondary">PLACA</td>
+{#            <td class="bg-secondary">PLACA</td>#}
             <td class="bg-secondary">FECHA OPERACIÓN</td>
-            <td class="bg-secondary">TIPO PAGO</td>
-            <td class="bg-secondary">TOTAL CANTIDAD ENTREGADA BALONES</td>
-            <td class="bg-secondary">TOTAL CANTIDAD VALES FISE</td>
+            <td class="bg-secondary align-middle text-center">TIPO PAGO</td>
+            <td class="bg-secondary">TOTAL CANT. ENTREGADA BALONES</td>
+            <td class="bg-secondary">TOTAL CANT. VALES FISE</td>
             <td class="bg-secondary">TOTAL PAGADO GLP</td>
             <td class="bg-secondary">TOTAL PAGADO BALONES</td>
             <td class="bg-secondary">TOTAL CANTIDAD CAMBIADA</td>
@@ -93,47 +94,48 @@
             <td class="bg-primary">TOTAL BALONES DEVUELTO</td>
             <td class="bg-info">PAGO FALTANTE BALONES</td>
             <td class="bg-primary">PAGO FALTANTE GLP</td>
-            <td class="bg-primary">CANTIDAD FALTANTE BALONES</td>
-            <td class="bg-primary">CANTIDAD DE BALONES CAMBIADOS</td>
+            <td class="bg-primary">CANT. FALTANTE BALONES</td>
+            <td class="bg-primary">CANT. BALON CAMBIADO</td>
         </tr>
         {% if not is_pdf %}</thead>{% endif %}
         {% if not is_pdf %}
             <tbody>{% endif %}
         {% for o in dictionary %}
             <tr info="{{ o.id }}" class="{% if o.is_review %}green{% endif %}">
-
                 <td class="align-middle text-center rowspan noExl" rowspan="{{ o.rowspan }}">
                     <input type="checkbox" class="check-sales" value="S">
                 </td>
                 <td class="align-middle text-center id-obj noExl" rowspan="{{ o.rowspan }}">{{ o.id }}</td>
                 <td class="align-middle text-center noExl" rowspan="{{ o.rowspan }}">
-                    {% if o.type == 'VENTA' %}
-                        <span class="text-success font-weight-bolder ">{{ o.type }}</span>
-                    {% else %}
-                        <span class="text-dark font-weight-bolder">{{ o.type }}</span>
-                    {% endif %}
+                    <div class="d-flex flex-column align-items-center justify-content-center">
+                        {% if o.type == 'VENTA' %}
+                            <span class="text-success font-weight-bolder ">{{ o.type }}</span>
+                        {% else %}
+                            <span class="text-dark font-weight-bolder">{{ o.type }}</span>
+                        {% endif %}
 
-                    {% if o.is_review %}
-                        <div class="form-check form-switch">
-                            <label class="form-check-label" for="id_is_review_{{ o.id }}">
-                                <input class="form-check-input review" type="checkbox" id="id_is_review_{{ o.id }}"
-                                       checked>
-                                <span class="review-text">Revisado</span></label>
-                        </div>
-                    {% else %}
-                        <div class="form-check form-switch">
-                            <label class="form-check-label" for="id_is_review_{{ o.id }}">
+                        {% if o.is_review %}
+                            <div class="form-check form-switch">
+                                <label class="form-check-label text-center" for="id_is_review_{{ o.id }}">
+                                    <input class="form-check-input review" type="checkbox" id="id_is_review_{{ o.id }}"
+                                           checked>
+                                    <span class="review-text">Check</span></label>
+                            </div>
+                        {% else %}
+                            <div class="form-check form-switch pl-0">
+                                <label class="form-check-label" for="id_is_review_{{ o.id }}">
+                                    <span class="review-text">No Check</span></label><br>
                                 <input class="form-check-input review" type="checkbox" id="id_is_review_{{ o.id }}">
-                                <span class="review-text">No revisado</span></label>
-                        </div>
-                    {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
                 </td>
                 {#            <td class="align-middle text-center" rowspan="{{ o.rowspan }}">{{ o.client }}</td>#}
-                <td class="align-middle text-center plate noExl"
-                    rowspan="{{ o.rowspan }}">{{ o.distribution_mobil.0.license_plate }}</td>
-                <td class="align-middle text-center pilot noExl"
-                    rowspan="{{ o.rowspan }}">{{ o.distribution_mobil.0.pilot }}</td>
-                <td class="align-middle text-center" rowspan="{{ o.rowspan }}">{{ o.date|date:"d-m-y" }}</td>
+                <td class="align-middle text-left plate noExl" rowspan="{{ o.rowspan }}">
+                    <span class="font-weight-bold">{{ o.distribution_mobil.0.license_plate }}</span><br>{{ o.distribution_mobil.0.pilot }}
+                </td>
+{#                <td class="align-middle text-center pilot noExl" rowspan="{{ o.rowspan }}">{{ o.distribution_mobil.0.pilot }}</td>#}
+                <td class="align-middle text-center" rowspan="{{ o.rowspan }}">{{ o.date|date:"d/m/y" }}</td>
                 {#            <td class="align-middle text-center" rowspan="{{ o.rowspan }}">{{ o.status }}</td>#}
 
                 {% for d in o.order_detail_set %}
@@ -152,16 +154,16 @@
                     </td>
                     <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                         rowspan="{{ d.rowspan }}">{{ d.type }}</td>
-                    <td class="align-middle text-center quantity-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
+                    <td class="align-middle text-center quantity-obj font-weight-bold {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                         rowspan="{{ d.rowspan }}">{{ d.quantity_sold|floatformat:0 }}</td>
                     <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
-                        rowspan="{{ d.rowspan }}">{{ d.price_unit }}</td>
+                        rowspan="{{ d.rowspan }}">{{ d.price_unit|replace_round_separator }}</td>
                     <td class="align-middle text-center total-obj {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
-                        rowspan="{{ d.rowspan }}">{{ d.multiply|floatformat:2 }}</td>
+                        rowspan="{{ d.rowspan }}">{{ d.multiply|replace_round_separator }}</td>
                     {#llamar a el modal de expense#}
                     {% if forloop.first %}
                         <td class="align-middle text-primary text-right font-weight-bold {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
-                            rowspan="{{ o.rowspan }}">{{ o.subtotal|safe }}</td>
+                            rowspan="{{ o.rowspan }}">{{ o.subtotal|replace_round_separator }}</td>
                     {% endif %}
 
                     {% if d.has_spending %}
@@ -200,8 +202,8 @@
                                     {{ l.price }}
                                 {% endif %}
                             </td>
-                            <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.license_plate }}</td>
-                            <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.operation_date|date:"d-m-y" }}</td>
+{#                            <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.license_plate }}</td>#}
+                            <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">{{ l.operation_date|date:"d/m/y" }}</td>
                             <td class="align-middle text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">
                                 {% if l.type != 'Deposito' %}
                                     {{ l.type }}
@@ -242,7 +244,7 @@
 
                             <td class="align-middle text-success text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                 rowspan="{{ d.rowspan }}">{{ d.ball_changes }}</td>
-                            <td class="align-top text-success text-center noExl {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
+                            <td class="align-middle text-success text-center noExl {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
                                 rowspan="{{ d.rowspan }}">
 
                                 {% if d.unit == 'G' %}
@@ -314,8 +316,8 @@
                                         {{ l.price }}
                                     {% endif %}
                                 </td>
-                                <td class="align-middle text-center">{{ l.license_plate }}</td>
-                                <td class="align-middle text-center">{{ l.operation_date|date:"d-m-y" }}</td>
+{#                                <td class="align-middle text-center">{{ l.license_plate }}</td>#}
+                                <td class="align-middle text-center">{{ l.operation_date|date:"d/m/y" }}</td>
                                 <td class="align-middle text-center">
                                     {% if l.type != 'Deposito' %}
                                         {{ l.type }}
@@ -350,7 +352,7 @@
 
                     {% empty %}
                         <td class="align-middle text-primary text-center {% if o.is_review %}td-green o-{{ o.id }}{% endif %}"
-                            colspan="11">SIN PAGOS
+                            colspan="10">SIN PAGOS
                         </td>
                         <td class=" noExl {% if o.is_review %}td-green o-{{ o.id }}{% endif %}">
                             {% if d.unit == 'G' %}
@@ -387,7 +389,6 @@
                         {% if not o.has_loans %}
 
                             {% if o.order_detail_set.0.id == d.id %}
-
                                 {% if o.details_count > 0 %}
 
                                     {#                                    <td class="align-middle text-primary text-right"#}
@@ -404,7 +405,6 @@
                                     <td class="align-middle text-info font-weight-bold text-right"
                                         rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan_ball }}</td>
 
-
                                     <td class="align-middle text-primary text-right total-remaining-repay-loan-obj pay-loan-rest"
                                         rowspan="{{ o.rowspan }}">{{ o.total_remaining_repay_loan }}</td>
                                     <td class="align-middle text-primary text-right total-remaining-return-loan-obj"
@@ -413,8 +413,6 @@
                                         rowspan="{{ o.rowspan }}">{{ o.total_ball_changes }}</td>
 
                                 {% endif %}
-
-
 
                             {% endif %}
                         {% else %}
@@ -463,19 +461,20 @@
         {% if not is_pdf %}</tbody>{% endif %}
         {% if not is_pdf %}
             <tfoot>{% endif %}
-        <tr class="colcount ">
-            <td colspan="9" class="colcount-quantity"></td>
-            <td class="align-middle text-primary text-right">{{ sum_quantity_total|floatformat:0 }}</td>
-            <td colspan="16" class="colcount-total"></td>
+        <tr class="colcount font-weight-bold" style="font-size: 14px; border: 2px solid #000000; background-color: #ddead7">
+            <td colspan="7" class="colcount-quantity"></td>
+            <td class="align-middle text-primary text-right font-weight-bold" style="border: 2px solid #000000;">TOTAL:</td>
+            <td class="align-middle text-primary text-right font-weight-bold" style="border: 2px solid #000000;">{{ sum_quantity_total|floatformat:0 }}</td>
+            <td colspan="15" class="colcount-total"></td>
             {#            <td class="align-middle text-primary text-right">{{ sum_total }}</td>#}
-            <td class="align-middle text-primary text-right">{{ sum_total_repay_loan }}</td>
-            <td class="align-middle text-danger text-right">{{ sum_total_cash_flow_spending }}</td>
-            <td class="align-middle text-primary text-right">{{ sum_total_repay_loan_with_vouchers }}</td>
-            <td class="align-middle text-primary text-right">{{ sum_total_return_loan }}</td>
-            <td class="align-middle text-info text-right">{{ sum_total_remaining_repay_loan_ball }}</td>
-            <td class="align-middle text-primary text-right">{{ sum_total_remaining_repay_loan }}</td>
-            <td class="align-middle text-primary text-right">{{ sum_total_remaining_return_loan }}</td>
-            <td class="align-middle text-warning text-right">{{ sum_total_ball_changes }}</td>
+            <td class="align-middle text-primary text-right" style="border: 2px solid #000000;">{{ sum_total_repay_loan }}</td>
+            <td class="align-middle text-danger text-right" style="border: 2px solid #000000;">{{ sum_total_cash_flow_spending }}</td>
+            <td class="align-middle text-primary text-right" style="border: 2px solid #000000;">{{ sum_total_repay_loan_with_vouchers }}</td>
+            <td class="align-middle text-primary text-right" style="border: 2px solid #000000;">{{ sum_total_return_loan }}</td>
+            <td class="align-middle text-info text-right" style="border: 2px solid #000000;">{{ sum_total_remaining_repay_loan_ball }}</td>
+            <td class="align-middle text-primary text-right" style="border: 2px solid #000000;">{{ sum_total_remaining_repay_loan }}</td>
+            <td class="align-middle text-primary text-right" style="border: 2px solid #000000;">{{ sum_total_remaining_return_loan }}</td>
+            <td class="align-middle text-warning text-right" style="border: 2px solid #000000;">{{ sum_total_ball_changes }}</td>
         </tr>
         {% if not is_pdf %}</tfoot>{% endif %}
     </table>

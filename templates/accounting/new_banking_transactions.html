@@ -1,132 +1,136 @@
-<form class="needs-validation" id="new-bank-transaction-form" method="POST">
+{% load operations %}
+<div class="card">
+    <div class="card-body bg-light roboto-condensed-regular">
+        <form class="needs-validation" id="new-bank-transaction-form" method="POST">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="mb-3">
+                        <label for="id-bank-cash">Entidad Bancaria:</label>
+                        <select class="custom-select my-1 mr-sm-2"
+                                id="id-bank-cash" name="bank-cash">
+                            <option value="" disabled selected>Seleccione...</option>
+                            {% for c in only_bank_set %}
+                                <option value="{{ c.pk }}"
+                                        current-balance="{{ c.current_balance|replace_round_separator|default_if_none:"0" }}"
+                                        account-number="{{ c.account_number|default:"-" }}">{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="invalid-feedback">
+                            Valid account name is required.
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <label for="id-bank-account">Número de cuenta:</label>
+                    <input type="text" class="form-control text-uppercase text-center" id="id-bank-account"
+                           name="bank-account"
+                           readonly>
+                    <div class="invalid-feedback">
+                        Valid account code is required.
+                    </div>
+                </div>
+                <div class="col-sm-4 text-right">
+                    <label for="id-bank-current-balance">Saldo actual:</label>
+                    <input type="text"
+                           class="form-control decimal text-right"
+                           id="id-bank-current-balance"
+                           name="bank-current-balance" readonly>
+                    <div class="invalid-feedback">
+                        Valid value name is required.
+                    </div>
+                </div>
+            </div>
 
-    {% csrf_token %}
+            <hr class="mt-1 mb-4">
 
-    <div class="mb-3">
-        <label for="id-bank-cash">Entidad Bancaria</label>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="id-bank-operation-type">Tipo de Operación:</label>
 
-        <select class="custom-select my-1 mr-sm-2"
-                id="id-bank-cash" name="bank-cash">
-            <option value="" disabled selected>SELECCIONE...</option>
+                    <select class="custom-select my-1 mr-sm-2" id="id-bank-operation-type" name="bank-operation-type"
+                            required>
+                        <option value="" disabled selected>Seleccione...</option>
 
-            {% for c in only_bank_set %}
-                <option value="{{ c.pk }}"
-                        current-balance="{{ c.current_balance|floatformat:2|default_if_none:"0" }}"
-                        account-number="{{ c.account_number|default:"-" }}">{{ c.name }}</option>
-            {% endfor %}
+                        {% for item in choices_operation_types %}
+                            <option value="{{ item.0 }}">{{ item.1|upper }}</option>
+                        {% endfor %}
 
-        </select>
+                    </select>
 
-        <div class="invalid-feedback">
-            Valid account name is required.
-        </div>
+                    <div class="invalid-feedback">
+                        Valid account name is required.
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4 text-right">
+                    <label for="id-bank-total">Monto:</label>
+                    <input type="text"
+                           class="form-control decimal text-right"
+                           id="id-bank-total"
+                           name="bank-total" required>
+                    <div class="invalid-feedback">
+                        Valid value name is required.
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <label for="amount_sell_input" class="text-light">Monto para amortizar venta</label>
+                    <div class="d-block">
+                        <div class="custom-control">
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" name="amount-sell-input"
+                                       class="custom-control-input mt-3" id="amount_sell_input">
+                                <label class="custom-control-label"
+                                       for="amount_sell_input">Amortiza venta</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label for="id-bank-operation-date">Fecha de registro:</label>
+                    <input type="date" class="form-control"
+                           id="id-bank-operation-date"
+                           name="bank-operation-date"
+                           value="{{ formatdate }}"
+                           required>
+                    <div class="invalid-feedback">
+                        Valid date is required.
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="id-bank-operation-code">Codigo de Operación:</label>
+                    <input type="text"
+                           class="form-control text-uppercase"
+                           id="id-bank-operation-code"
+                           maxlength="45"
+                           name="bank-operation-code">
+                    <div class="invalid-feedback">
+                        Valid value name is required.
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="mb-3">
+                <label for="id-bank-description">Descripción:</label>
+                <input type="text"
+                       class="form-control text-uppercase"
+                       id="id-bank-description"
+                       maxlength="100"
+                       name="bank-description" required>
+                <div class="invalid-feedback">
+                    Valid value name is required.
+                </div>
+            </div>
+
+
+            <hr class="mb-4">
+            <button class="btn btn-primary btn-lg btn-block" type="submit" id="btn-bank-operation-save">Guardar</button>
+        </form>
     </div>
-
-    <div class="row">
-
-
-        <div class="col-md-6 mb-3">
-            <label for="id-bank-account">Número de cuenta</label>
-            <input type="text" class="form-control text-uppercase" id="id-bank-account" name="bank-account"
-                   readonly>
-            <div class="invalid-feedback">
-                Valid account code is required.
-            </div>
-        </div>
-
-
-        <div class="col-md-6 mb-3">
-            <label for="id-bank-current-balance">Saldo actual</label>
-            <input type="text"
-                   class="form-control decimal"
-                   id="id-bank-current-balance"
-                   name="bank-current-balance" readonly>
-            <div class="invalid-feedback">
-                Valid value name is required.
-            </div>
-        </div>
-
-    </div>
-
-
-    <hr class="mb-4">
-
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            <label for="id-bank-operation-type">Operación Bancaria</label>
-
-            <select class="custom-select my-1 mr-sm-2" id="id-bank-operation-type" name="bank-operation-type" required>
-                <option value="" disabled selected>SELECCIONE...</option>
-
-                {% for item in choices_operation_types %}
-                    <option value="{{ item.0 }}">{{ item.1|upper }}</option>
-                {% endfor %}
-
-            </select>
-
-            <div class="invalid-feedback">
-                Valid account name is required.
-            </div>
-        </div>
-
-
-        <div class="col-md-6 mb-3">
-            <label for="id-bank-total">Monto</label>
-            <input type="text"
-                   class="form-control decimal"
-                   id="id-bank-total"
-                   name="bank-total" required>
-            <div class="invalid-feedback">
-                Valid value name is required.
-            </div>
-        </div>
-    </div>
-
-
-    <div class="row">
-
-
-        <div class="col-md-6 mb-3">
-            <label for="id-bank-operation-date">Fecha de registro</label>
-            <input type="date" class="form-control"
-                   id="id-bank-operation-date"
-                   name="bank-operation-date"
-                   value="{{ formatdate }}"
-                   required>
-            <div class="invalid-feedback">
-                Valid date is required.
-            </div>
-        </div>
-
-
-        <div class="col-md-6 mb-3">
-            <label for="id-bank-operation-code">Cod Dep / Tranf.</label>
-            <input type="text"
-                   class="form-control text-uppercase"
-                   id="id-bank-operation-code"
-                   maxlength="45"
-                   name="bank-operation-code">
-            <div class="invalid-feedback">
-                Valid value name is required.
-            </div>
-        </div>
-
-
-    </div>
-
-    <div class="mb-3">
-        <label for="id-bank-description">Concepto</label>
-        <input type="text"
-               class="form-control text-uppercase"
-               id="id-bank-description"
-               maxlength="100"
-               name="bank-description" required>
-        <div class="invalid-feedback">
-            Valid value name is required.
-        </div>
-    </div>
-
-
-    <hr class="mb-4">
-    <button class="btn btn-primary btn-lg btn-block" type="submit" id="btn-bank-operation-save">Guardar</button>
-</form>
+</div>

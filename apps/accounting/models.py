@@ -219,6 +219,7 @@ class CashFlow(models.Model):
     distribution_mobil = models.ForeignKey('comercial.DistributionMobil', on_delete=models.CASCADE, null=True, blank=True)
     observation = models.CharField('Observation', max_length=400, null=True, blank=True)
     revised = models.BooleanField(default=False)
+    amortizable_amount = models.BooleanField(default=False)
 
     def calculate_total_missing(self):
 

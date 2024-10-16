@@ -60,4 +60,9 @@ urlpatterns = [
     # Tributes
     path('report_tributary/', login_required(report_tributary), name='report_tributary'),
     path('save_register_tributary/', login_required(save_register_tributary), name='save_register_tributary'),
+
+    # FOUNDS APPROVE
+    path('get_amortizable_amount_by_cash/', login_required(get_amortizable_amount_by_cash), name='get_amortizable_amount_by_cash'),
+    path('get_amount_amortizable_by_cash_flow/', login_required(get_amount_amortizable_by_cash_flow), name='get_amount_amortizable_by_cash_flow'),
+
 ]

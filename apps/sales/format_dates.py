@@ -10,7 +10,7 @@ def utc_to_local(utc_dt):
 
 def validate(date_text):
     try:
-        if date_text != datetime.strptime(date_text, "%Y-%m-%d").strftime('%Y-%m-%d'):
+        if str(date_text) != str(datetime.strptime(date_text, "%Y-%m-%d").strftime('%Y-%m-%d')):
             raise ValueError
         return True
     except ValueError:

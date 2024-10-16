@@ -1,7 +1,7 @@
 {% extends 'home.html' %}
 
 {% block title %}
-    coronasoft.dev | lista de Ordenes
+    Estado de Cuenta
 {% endblock title %}
 
 {% block body %}
@@ -9,29 +9,29 @@
         <div class="col-sm-12 p-0">
             <div class="card">
                 <div class="card-body text-center font-weight-bolder pb-1">
-                    <h2>LISTADO DE ORDENES</h2>
+                    <h2 class="roboto-condensed-regular font-weight-bold">LISTADO DE ORDENES</h2>
                 </div>
             </div>
         </div>
     </div>
-    <div class="container-fluid">
+    <div class="container-fluid roboto-condensed-regular">
         <div class="card-header text-left mt-2 mb-1 p-1">
             <div class="form-inline mt-0 mb-0 p-0">
 
-                <label class="my-1 mr-2" for="id-start-date">Fecha Inicial</label>
+                <label class="my-1 mr-2" for="id-start-date">Fecha Inicial:</label>
                 <input type="date" class="form-control my-1 mr-sm-2"
                        id="id-start-date"
                        name="start-date"
                        value="{{ formatdate }}">
 
-                <label class="my-1 mr-2" for="id-end-date">Fecha final</label>
+                <label class="my-1 mr-2" for="id-end-date">Fecha Final:</label>
                 <input type="date" class="form-control my-1 mr-sm-2"
                        id="id-end-date"
                        name="end-date"
                        value="{{ formatdate }}">
 
 
-                <label class="mr-2 ml-2">Cliente</label>
+                <label class="mr-2 ml-2">Cliente:</label>
 
                 <select class="form-control" id="id_client">
                     <option value="0">Seleccione</option>
@@ -66,18 +66,20 @@
     </div>
 
     {#    MODAL DE PAGOS#}
-    <div class="modal fade" id="modal-payment" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    <div class="modal fade" id="modal-payment" data-backdrop="static" data-keyboard="false"
+         tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
          aria-hidden="true">
 
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header text-center">
-                    <h5 class="modal-title" id="exampleModalLabel1">Devolver prestamo / Cambiar balon</h5>
+                    <h5 class="modal-title roboto-condensed-regular font-weight-bold" id="exampleModalLabel1">DEVOLVER
+                        PRESTAMO / PAGAR DEUDA</h5>
                     <button type="button" class="close ml-0" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body" id="lending">
+                <div class="modal-body p-1" id="lending">
                     ...
                 </div>
                 <div class="modal-footer">
@@ -109,7 +111,7 @@
         </div>
     </div>
 
-      <div class="modal fade" id="modal-outgo" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    <div class="modal fade" id="modal-outgo" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
          aria-hidden="true">
 
         <div class="modal-dialog modal-xl">
@@ -198,29 +200,7 @@
             '</div>' +
             '</div>';
 
-        $('#id_client').change(function () {
-
-            /*let _search = $(this).val();
-
-            $('#table-order').empty();
-            $('#table-order').html(loader);
-            $.ajax({
-                url: '/sales/get_orders_by_client/',
-                async: true,
-                dataType: 'json',
-                type: 'GET',
-                data: {'client_id': _search},
-                success: function (response) {
-                    $('#table-order').html(response['grid']);
-
-                    array_glp_indexes = [];
-                    $('#massive-payment span.badge').text((0).toFixed(2));
-                    $('#massive-return span.badge').text((0).toFixed(2));
-
-
-                },
-            });*/
-        });
+        //$('#id_client').change(function () {});
 
         $('#btn-search').click(function () {
 
@@ -533,8 +513,8 @@
             let lp_id = $(this).attr("lp_id")
             let _input = $(this)
 
-             if (this.checked) {
-                 $.ajax({
+            if (this.checked) {
+                $.ajax({
                     url: '/sales/check_review_pay/',
                     async: true,
                     dataType: 'json',
@@ -549,9 +529,8 @@
                         console.log("error");
                     }
                 });
-             }
-             else{
-                 $.ajax({
+            } else {
+                $.ajax({
                     url: '/sales/check_review_pay/',
                     async: true,
                     dataType: 'json',
@@ -566,12 +545,14 @@
                         console.log("error");
                     }
                 });
-             }
+            }
 
             /*if ($row.hasClass("green")) {
                 $row.removeClass('green');
 
-                {#console.log("false");#}
+
+
+            {#console.log("false");#}
                 let pk = $row.attr("info");
                 $('td.td-green.o-' + pk).removeClass('td-green').removeClass('o-' + pk);
 
@@ -585,7 +566,9 @@
                         'pk': pk,
                     },
                     success: function (response) {
-                        {#$('#lending').html(response.grid);#}
+
+
+            {#$('#lending').html(response.grid);#}
                     },
                     fail: function (response) {
                         console.log("error");
@@ -594,8 +577,12 @@
             } else {
                 $row.addClass('green');
                 $row.find('td span.review-text').text('Pago revisado');
-                {#console.log("true")#}
-                {#console.log($row.attr("info"))#}
+
+
+            {#console.log("true")#}
+
+
+            {#console.log($row.attr("info"))#}
                 let pk = $row.attr("info")
                 $.ajax({
                     url: '/sales/check_review/',
@@ -606,7 +593,9 @@
                         'pk': pk,
                     },
                     success: function (response) {
-                        {#$('#lending').html(response.grid);#}
+
+
+            {#$('#lending').html(response.grid);#}
                     },
                     fail: function (response) {
                         console.log("error");
@@ -616,7 +605,104 @@
             }*/
         });
 
+        /****************************************************PAYMENT_FROM_LENDING*********************/
 
+        /*$(document).on('change', '#id_transaction_payment_type', function () {
+        //$('#id_transaction_payment_type').change(function ()
+            let type = $(this).val();
+            if (type === 'E') {
+                $('#cash').css('display', 'table');
+                $('#deposit, #fises, #approved-funds, #distribution-funds').css('display', 'none');
+                $('#id_cash').trigger('change');
+            } else if (type === 'D') {
+                $('#deposit').css('display', 'table');
+                $('#cash, #fises, #approved-funds, #distribution-funds').css('display', 'none');
+            } else if (type === 'F') {
+                $('#fises').css('display', 'table');
+                $('#cash, #deposit, #approved-funds, #distribution-funds').css('display', 'none');
+            } else if (type === 'V' || type === 'C') {
+                $('#cash, #deposit, #fises, #approved-funds, #distribution-funds').css('display', 'none');
+            } else if (type === 'PFD') {
+                $('#distribution-funds').css('display', 'table');
+                $('#cash, #deposit, #fises, #approved-funds').css('display', 'none');
+            } else if (type === 'FA') {
+                $('#approved-funds').css('display', 'table');
+                $('#cash, #deposit, #fises, #distribution-funds').css('display', 'none');
+            }
+
+            if (type === 'D' || type === 'V') {
+                $('#id_code_operation').removeAttr('disabled').css('color', '#495057');
+            } else {
+                $('#id_code_operation').attr('disabled', 'disabled').css('color', '#e9ecef');
+
+                if (type === 'F') {
+                    $('#id_number_of_vouchers, #id_price_of_vouchers').removeAttr('disabled').css('color', '#495057');
+                } else {
+                    $('#id_number_of_vouchers, #id_price_of_vouchers').attr('disabled', 'disabled').css('color', '#e9ecef');
+                }
+            }
+
+        });*/
+        $(document).on('change', '#id_transaction_payment_type', function () {
+            const type = $(this).val();
+
+            // Ocultar todas las secciones al inicio
+            const sections = ['#cash', '#deposit', '#fises', '#approved-funds', '#distribution-funds'];
+            $(sections.join(', ')).hide();  // Usa hide() en lugar de cambiar directamente el estilo
+
+            // Mostrar la sección correspondiente según el tipo seleccionado
+            switch (type) {
+                case 'E':
+                    $('#cash').show();
+                    $('#id_cash').trigger('change');
+                    break;
+                case 'D':
+                    $('#deposit').show();
+                    break;
+                case 'F':
+                    $('#fises').show();
+                    break;
+                case 'PFD':
+                    $('#distribution-funds').show();
+                    break;
+                case 'FA':
+                    $('#approved-funds').show();
+                    break;
+            }
+
+            // Habilitar o deshabilitar el campo de código de operación según el tipo
+            const isCodeEnabled = (type === 'D' || type === 'V');
+            $('#id_code_operation').prop('disabled', !isCodeEnabled)
+                .css('color', isCodeEnabled ? '#495057' : '#e9ecef');
+
+            // Habilitar o deshabilitar los campos de vouchers según el tipo 'F'
+            const isVoucherEnabled = (type === 'F');
+            $('#id_number_of_vouchers, #id_price_of_vouchers').prop('disabled', !isVoucherEnabled)
+                .css('color', isVoucherEnabled ? '#495057' : '#e9ecef');
+        });
+
+        $(document).on('change', '#id_transaction_payment_type2', function () {
+            //$('#id_transaction_payment_type2').change(function () {
+
+            let type = $(this).val();
+
+            if (type === 'E') {
+                $('#cash2').css('display', 'table');
+                $('#deposit2').css('display', 'none');
+                $('#id_cash').trigger('change');
+            } else if (type === 'D') {
+                $('#deposit2').css('display', 'table');
+                $('#cash2').css('display', 'none');
+            } else {
+                $('#cash2, #deposit2').css('display', 'none');
+            }
+
+            if (type === 'D' || type === 'V') {
+                $('#id_code_operation2').removeAttr('disabled').css('color', '#495057');
+            } else {
+                $('#id_code_operation2').attr('disabled', 'disabled').css('color', '#e9ecef');
+            }
+        });
 
 
     </script>

@@ -340,15 +340,11 @@ def get_cash_control_list(request):
     elif request.method == 'POST':
         id_cash = int(request.POST.get('cash'))
         start_date = str(request.POST.get('start-date'))
-        end_date = str(request.POST.get('end-date'))
-
-        if start_date == end_date:
+        # end_date = str(request.POST.get('end-date'))
+        cash_flow_set = ''
+        if start_date:
             cash_flow_set = CashFlow.objects.filter(transaction_date__date=start_date, cash__id=id_cash).order_by('id')
-        else:
-            cash_flow_set = CashFlow.objects.filter(transaction_date__date__range=[start_date, end_date],
-                                                    cash__id=id_cash).order_by('id')
 
-        has_rows = False
         if cash_flow_set:
             has_rows = True
         else:
@@ -637,6 +633,11 @@ def new_bank_transaction(request):
         _code = request.POST.get('bank-operation-code')
         _description = request.POST.get('bank-description')
 
+        _amount_sell = request.POST.get('amount-sell-input')
+        amortizable_amount = False
+        if _amount_sell == 'on':
+            amortizable_amount = True
+
         bank_obj = Cash.objects.get(id=int(_bank))
 
         if _total <= 0:
@@ -656,6 +657,8 @@ def new_bank_transaction(request):
             _type = 'R'
         elif _operation == '4':  # Bank withdrawal
             _type = 'R'
+        else:
+            _type = '0'
 
         cash_flow_obj = CashFlow(
             transaction_date=_date,
@@ -665,7 +668,9 @@ def new_bank_transaction(request):
             operation_type=_operation,
             operation_code=_code,
             user=user_obj,
-            type=_type)
+            type=_type,
+            amortizable_amount=amortizable_amount
+        )
         cash_flow_obj.save()
 
         return JsonResponse({
@@ -683,9 +688,12 @@ def new_cash_disbursement(request):
         _operation_method = request.POST.get('operationMethod')
         _igv = request.POST.get('igv', '0.00')
         _sub_total = request.POST.get('subtotal', '0.00')
+        _amount_sell = request.POST.get('amount-sell-input')
+        amortizable_amount = False
+        if _amount_sell == 'on':
+            amortizable_amount = True
 
         cash_obj = Cash.objects.get(id=int(_cash))
-
         cash_flow_set = CashFlow.objects.filter(transaction_date__date=_date, cash=cash_obj)
 
         if cash_flow_set:
@@ -708,11 +716,12 @@ def new_cash_disbursement(request):
                     igv=_igv,
                     subtotal=_sub_total,
                     user=user_obj,
-                    type=_operation_method)
+                    type=_operation_method,
+                    amortizable_amount=amortizable_amount
+                )
                 cash_flow_obj.save()
-
         else:
-            data = {'error': "Caja sin aperturar"}
+            data = {'error': "Caja sin Aperturar"}
             response = JsonResponse(data)
             response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
             return response
@@ -922,7 +931,8 @@ def get_bank_control_list(request):
         other_subsidiary_set = Subsidiary.objects.exclude(id=subsidiary_obj.id)
 
         cash_set = Cash.objects.filter(subsidiary=subsidiary_obj)
-        only_bank_set = cash_set.filter(accounting_account__code__startswith='1041')
+        # only_bank_set = cash_set.filter(accounting_account__code__startswith='1041')
+        only_bank_set = Cash.objects.filter(accounting_account__code__startswith='1041')
         ours_cash_set = Cash.objects.filter(accounting_account__code__startswith='101')
         only_other_bank_set = Cash.objects.filter(accounting_account__code__startswith='1041').exclude(
             subsidiary=subsidiary_obj)
@@ -1586,7 +1596,8 @@ def get_report_employees_salary(request):
     elif request.method == 'POST':
         month = int(request.POST.get('month'))
         year = int(request.POST.get('year'))
-        worker_set = Worker.objects.filter(situation__in=[1, 2, 3], employee__is_enabled=True).order_by('-employee__paternal_last_name')
+        worker_set = Worker.objects.filter(situation__in=[1, 2, 3], employee__is_enabled=True).order_by(
+            '-employee__paternal_last_name')
         cash_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='101')
         cash_deposit_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='104')
 
@@ -1904,7 +1915,8 @@ def report_tributary(request):
                             requirement_sum_total = decimal.Decimal(0.00)
                         purchase_base_total = float((decimal.Decimal(float_purchases_sum_total) + decimal.Decimal(
                             requirement_sum_total)) / decimal.Decimal(1.18))
-                        purchase_igv_total = float(float(decimal.Decimal(float_purchases_sum_total)+decimal.Decimal(requirement_sum_total)) - purchase_base_total)
+                        purchase_igv_total = float(float(decimal.Decimal(float_purchases_sum_total) + decimal.Decimal(
+                            requirement_sum_total)) - purchase_base_total)
 
                         purchase_base_total = purchase_base_total
                         purchase_igv_total = purchase_igv_total
@@ -1981,8 +1993,10 @@ def report_tributary(request):
                     else:
                         requirement_sum_total = decimal.Decimal(0.00)
 
-                    purchase_base_total = float((decimal.Decimal(float_purchases_sum_total)+decimal.Decimal(requirement_sum_total)) / decimal.Decimal(1.18))
-                    purchase_igv_total = float(float(decimal.Decimal(float_purchases_sum_total)+decimal.Decimal(requirement_sum_total)) - purchase_base_total)
+                    purchase_base_total = float((decimal.Decimal(float_purchases_sum_total) + decimal.Decimal(
+                        requirement_sum_total)) / decimal.Decimal(1.18))
+                    purchase_igv_total = float(float(decimal.Decimal(float_purchases_sum_total) + decimal.Decimal(
+                        requirement_sum_total)) - purchase_base_total)
 
                     purchase_base_total = purchase_base_total
                     purchase_igv_total = purchase_igv_total
@@ -2077,3 +2091,32 @@ def save_register_tributary(request):
             'message': 'Se registro correctamente.',
         })
     return JsonResponse({'error': True, 'message': 'Error de peticion.'})
+
+
+def get_amortizable_amount_by_cash(request):
+    if request.method == 'GET':
+        cash_id = int(request.GET.get('cash_id', ''))
+        cash_obj = Cash.objects.get(id=cash_id)
+        amortizable_set = CashFlow.objects.filter(cash=cash_obj, amortizable_amount=True, total__gt=0)
+        # loan_payment_set = LoanPayment.objects.filter(cash_flow=)
+        amortizable_list = [
+            {'id': a.id,
+             'date': a.transaction_date.strftime("%d/%m/%Y"),
+             'description': a.description,
+             'total': '{:,}'.format(round(a.total, 2))
+             } for a in amortizable_set]
+
+        return JsonResponse({'amortizable_set': amortizable_list}, status=HTTPStatus.OK)
+    return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)
+
+
+def get_amount_amortizable_by_cash_flow(request):
+    if request.method == 'GET':
+        cash_flow_id = int(request.GET.get('cash_flow_id', ''))
+        cash_flow_obj = CashFlow.objects.get(id=cash_flow_id)
+        total_price = LoanPayment.objects.filter(cash_flow=cash_flow_obj).aggregate(total=Sum('price'))['total']
+        total_consumed = total_price if total_price is not None else 0
+        total_available = decimal.Decimal(cash_flow_obj.total) - decimal.Decimal(total_consumed)
+
+        return JsonResponse({'total_available': str(round(total_available, 2))}, status=HTTPStatus.OK)
+    return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)

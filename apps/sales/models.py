@@ -541,8 +541,7 @@ class OrderDetail(models.Model):
 
 class TransactionPayment(models.Model):
     TYPE_CHOICES = (('E', 'Efectivo'), ('D', 'Deposito'), ('F', 'FISE'),
-                    ('PFD', 'Fondos de distribucion')
-                    )
+                    ('PFD', 'Fondos de distribucion'), ('FA', 'Fondos Aprobados'))
     id = models.AutoField(primary_key=True)
     payment = models.DecimalField('Pago', max_digits=10, decimal_places=2, default=0)
     type = models.CharField('Tipo de pago', max_length=3, choices=TYPE_CHOICES, default='E', )
@@ -736,6 +735,7 @@ class LoanPayment(models.Model):
     requirement_detail_buys = models.ForeignKey('buys.RequirementDetail_buys', on_delete=models.SET_NULL, null=True,
                                                 blank=True)
     is_check = models.BooleanField('check', default=False)
+    cash_flow = models.ForeignKey('accounting.CashFlow', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return str(self.id)

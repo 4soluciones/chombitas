@@ -187,6 +187,9 @@ class Employee(models.Model):
         # return str(self.names) + ' ' + str(self.paternal_last_name) + ' ' + str(self.maternal_last_name)
         return '{} {} {}'.format(self.names, self.paternal_last_name, self.maternal_last_name)
 
+    def simple_name(self):
+        return '{} {}'.format(self.names, self.paternal_last_name)
+
     class Meta:
         verbose_name = 'Datos personales del trabajador'
         verbose_name_plural = 'Datos personales de los trabajadores'

@@ -3028,7 +3028,7 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
             pilot = '-'
             if o.distribution_mobil:
                 license_plate = o.distribution_mobil.truck.license_plate
-                pilot = o.distribution_mobil.pilot.full_name
+                pilot = o.distribution_mobil.pilot.simple_name()
             distribution_mobil = {
                 'license_plate': license_plate,
                 'pilot': pilot,
@@ -3229,6 +3229,7 @@ def get_order_detail_for_pay(request):
         order_obj = Order.objects.get(orderdetail=detail_obj)
         cash_set = Cash.objects.filter(subsidiary=subsidiary_obj, accounting_account__code__startswith='101')
         cash_deposit_set = Cash.objects.filter(accounting_account__code__startswith='104')
+        cashes_all_set = cash_set.union(cash_deposit_set).order_by('-subsidiary_id', 'accounting_account')
         mydate = datetime.now()
         formatdate = mydate.strftime("%Y-%m-%d")
         cash_flow_of_distributions_with_deposits_set = None
@@ -3270,6 +3271,7 @@ def get_order_detail_for_pay(request):
             'choices_payments': TransactionPayment._meta.get_field('type').choices,
             'detail': detail_obj,
             'order': order_obj,
+            'cashes_all_set': cashes_all_set,
             'choices_account': cash_set,
             'choices_account_bank': cash_deposit_set,
             'date': formatdate,
@@ -3453,7 +3455,129 @@ def new_loan_payment(request):
 
                     payment = val
 
-                    if transaction_payment_type == 'PFD':
+                    if transaction_payment_type == 'E':
+
+                        cash_flow_transact_date = str(request.POST.get('id_date'))
+                        cash_flow_description = str(request.POST.get('id_description'))
+                        cash_id = str(request.POST.get('id_cash_efectivo'))
+                        cash_obj = Cash.objects.get(id=cash_id)
+                        order_obj = detail_obj.order
+                        cashflow_set = CashFlow.objects.filter(cash_id=cash_id,
+                                                               transaction_date__date=cash_flow_transact_date, type='A')
+                        if cashflow_set.count() > 0:
+                            cash_obj = cashflow_set.first().cash
+                        else:
+                            data = {'error': "No existe una Apertura de Caja, Favor de revisar las Control de Cajas"}
+                            response = JsonResponse(data)
+                            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+                            return response
+
+                        cashflow_obj = CashFlow(
+                            transaction_date=cash_flow_transact_date,
+                            document_type_attached='O',
+                            description=cash_flow_description,
+                            order=order_obj,
+                            type='E',
+                            total=payment,
+                            cash=cash_obj,
+                            user=user_obj
+                        )
+                        cashflow_obj.save()
+
+                        loan_payment_obj = LoanPayment(
+                            price=payment,
+                            quantity=quantity,
+                            product=detail_obj.product,
+                            order_detail=detail_obj,
+                            operation_date=_operation_date
+                        )
+                        loan_payment_obj.save()
+
+                        transaction_payment_obj = TransactionPayment(
+                            payment=payment,
+                            number_of_vouchers=number_of_vouchers,
+                            type=transaction_payment_type,
+                            operation_code=code_operation,
+                            loan_payment=loan_payment_obj
+                        )
+                        transaction_payment_obj.save()
+
+                    elif transaction_payment_type == 'D':
+                        cash_flow_description = str(request.POST.get('description_deposit'))
+                        cash_flow_transact_date_deposit = str(request.POST.get('id_date_deposit'))
+                        cash_id = str(request.POST.get('id_cash_deposit'))
+                        cash_obj = Cash.objects.get(id=cash_id)
+                        order_obj = detail_obj.order
+
+                        cashflow_obj = CashFlow(
+                            transaction_date=cash_flow_transact_date_deposit,
+                            document_type_attached='O',
+                            description=cash_flow_description,
+                            order=order_obj,
+                            type='D',
+                            operation_code=code_operation,
+                            total=payment,
+                            cash=cash_obj,
+                            user=user_obj
+                        )
+                        cashflow_obj.save()
+
+                        loan_payment_obj = LoanPayment(
+                            price=payment,
+                            quantity=quantity,
+                            product=detail_obj.product,
+                            order_detail=detail_obj,
+                            operation_date=_operation_date
+                        )
+                        loan_payment_obj.save()
+
+                        transaction_payment_obj = TransactionPayment(
+                            payment=payment,
+                            number_of_vouchers=number_of_vouchers,
+                            type=transaction_payment_type,
+                            operation_code=code_operation,
+                            loan_payment=loan_payment_obj
+                        )
+                        transaction_payment_obj.save()
+
+                    elif transaction_payment_type == 'F':
+                        cash_flow_description = str(request.POST.get('id_description_deposit_fise'))
+                        cash_flow_transact_date_deposit = str(request.POST.get('id_date_desposit_fise'))
+                        cash_id = str(request.POST.get('id_cash_deposit_fise'))
+                        cash_obj = Cash.objects.get(id=cash_id)
+                        order_obj = detail_obj.order
+
+                        cashflow_obj = CashFlow(
+                            transaction_date=cash_flow_transact_date_deposit,
+                            document_type_attached='O',
+                            description=cash_flow_description,
+                            order=order_obj,
+                            type='D',
+                            operation_code=code_operation,
+                            total=payment,
+                            cash=cash_obj,
+                            user=user_obj
+                        )
+                        cashflow_obj.save()
+
+                        loan_payment_obj = LoanPayment(
+                            price=payment,
+                            quantity=quantity,
+                            product=detail_obj.product,
+                            order_detail=detail_obj,
+                        )
+                        loan_payment_obj.save()
+
+                        transaction_payment_obj = TransactionPayment(
+                            payment=payment,
+                            number_of_vouchers=number_of_vouchers,
+                            type=transaction_payment_type,
+                            operation_code=code_operation,
+                            loan_payment=loan_payment_obj
+                        )
+                        transaction_payment_obj.save()
+
+                    elif transaction_payment_type == 'PFD':
                         cash_flow_expense_id = int(request.POST.get('cash-flow-expense-id'))
                         cash_flow_deposit_id = int(request.POST.get('cash-flow-deposit-id'))
                         str_total_expense_to_subtract = str(request.POST.get('total_expense_to_subtract')).strip()
@@ -3507,127 +3631,37 @@ def new_loan_payment(request):
                             )
                             transaction_payment_obj.save()
 
-                    if transaction_payment_type == 'D':
-                        cash_flow_description = str(request.POST.get('description_deposit'))
-                        cash_flow_transact_date_deposit = str(request.POST.get('id_date_deposit'))
-                        cash_id = str(request.POST.get('id_cash_deposit'))
-                        cash_obj = Cash.objects.get(id=cash_id)
-                        order_obj = detail_obj.order
-
-                        cashflow_obj = CashFlow(
-                            transaction_date=cash_flow_transact_date_deposit,
-                            document_type_attached='O',
-                            description=cash_flow_description,
-                            order=order_obj,
-                            type='D',
-                            operation_code=code_operation,
-                            total=payment,
-                            cash=cash_obj,
-                            user=user_obj
-                        )
-                        cashflow_obj.save()
+                    elif transaction_payment_type == 'FA':
+                        entity_cash_id = int(request.POST.get('all_cashes'))
+                        entity_amortizable_amount_id = int(request.POST.get('amortizable_amount'))
+                        amount_pay = decimal.Decimal(request.POST.get('loan_payment'))
+                        cash_flow_obj = CashFlow.objects.get(id=entity_amortizable_amount_id)
 
                         loan_payment_obj = LoanPayment(
-                            price=payment,
-                            quantity=quantity,
+                            price=amount_pay,
+                            quantity=0,
                             product=detail_obj.product,
                             order_detail=detail_obj,
-                            operation_date=_operation_date
+                            operation_date=_operation_date,
+                            cash_flow=cash_flow_obj
                         )
                         loan_payment_obj.save()
 
                         transaction_payment_obj = TransactionPayment(
-                            payment=payment,
+                            payment=amount_pay,
                             number_of_vouchers=number_of_vouchers,
                             type=transaction_payment_type,
-                            operation_code=code_operation,
-                            loan_payment=loan_payment_obj
+                            operation_code=cash_flow_obj.operation_code,
+                            loan_payment=loan_payment_obj,
+                            cash_flow=cash_flow_obj
                         )
                         transaction_payment_obj.save()
 
-                    if transaction_payment_type == 'E':
-
-                        cash_flow_transact_date = str(request.POST.get('id_date'))
-                        cash_flow_description = str(request.POST.get('id_description'))
-                        cash_id = str(request.POST.get('id_cash_efectivo'))
-                        cash_obj = Cash.objects.get(id=cash_id)
-                        order_obj = detail_obj.order
-                        cashflow_set = CashFlow.objects.filter(cash_id=cash_id,
-                                                               transaction_date__date=cash_flow_transact_date, type='A')
-                        if cashflow_set.count() > 0:
-                            cash_obj = cashflow_set.first().cash
-                        else:
-                            data = {'error': "No existe una Apertura de Caja, Favor de revisar las Control de Cajas"}
-                            response = JsonResponse(data)
-                            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
-                            return response
-
-                        cashflow_obj = CashFlow(
-                            transaction_date=cash_flow_transact_date,
-                            document_type_attached='O',
-                            description=cash_flow_description,
-                            order=order_obj,
-                            type='E',
-                            total=payment,
-                            cash=cash_obj,
-                            user=user_obj
-                        )
-                        cashflow_obj.save()
-
-                        loan_payment_obj = LoanPayment(
-                            price=payment,
-                            quantity=quantity,
-                            product=detail_obj.product,
-                            order_detail=detail_obj,
-                            operation_date=_operation_date
-                        )
-                        loan_payment_obj.save()
-
-                        transaction_payment_obj = TransactionPayment(
-                            payment=payment,
-                            number_of_vouchers=number_of_vouchers,
-                            type=transaction_payment_type,
-                            operation_code=code_operation,
-                            loan_payment=loan_payment_obj
-                        )
-                        transaction_payment_obj.save()
-
-                    if transaction_payment_type == 'F':
-                        cash_flow_description = str(request.POST.get('id_description_deposit_fise'))
-                        cash_flow_transact_date_deposit = str(request.POST.get('id_date_desposit_fise'))
-                        cash_id = str(request.POST.get('id_cash_deposit_fise'))
-                        cash_obj = Cash.objects.get(id=cash_id)
-                        order_obj = detail_obj.order
-
-                        cashflow_obj = CashFlow(
-                            transaction_date=cash_flow_transact_date_deposit,
-                            document_type_attached='O',
-                            description=cash_flow_description,
-                            order=order_obj,
-                            type='D',
-                            operation_code=code_operation,
-                            total=payment,
-                            cash=cash_obj,
-                            user=user_obj
-                        )
-                        cashflow_obj.save()
-
-                        loan_payment_obj = LoanPayment(
-                            price=payment,
-                            quantity=quantity,
-                            product=detail_obj.product,
-                            order_detail=detail_obj,
-                        )
-                        loan_payment_obj.save()
-
-                        transaction_payment_obj = TransactionPayment(
-                            payment=payment,
-                            number_of_vouchers=number_of_vouchers,
-                            type=transaction_payment_type,
-                            operation_code=code_operation,
-                            loan_payment=loan_payment_obj
-                        )
-                        transaction_payment_obj.save()
+            else:
+                data = {'error': "INGRESE UN VALOR EN EL MONTO A PAGAR MAYOR A CERO"}
+                response = JsonResponse(data)
+                response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+                return response
 
         else:
             if option == 'B':

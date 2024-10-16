@@ -1,54 +1,50 @@
+{% load operations %}
 {% if cash_flow_set %}
-
     <div class="table-responsive mt-3">
-        <table class="table table-bordered">
+        <table class="table table-bordered bg-light">
             <thead>
             <tr>
-                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold">Fecha</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold">Operacion</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold">Descripcion de
+                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold" style="width: 5%">Fecha</th>
+                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold" style="width: 10%">Operación</th>
+                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold" style="width: 32%">Descripcion de
                     la
-                    operacion
+                    operación
                 </th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold">ENTRADA</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold">SALIDA</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold">Nro. Operacion
+                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold" style="width: 5%">ENTRADA</th>
+                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold" style="width: 5%">SALIDA</th>
+                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold" style="width: 10%">Nro. Operación
                 </th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold">Cliente</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold">Placa</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold">Responsable</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold">Usuario</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold">Editar</th>
+                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold" style="width: 10%">Cliente</th>
+                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold" style="width: 5%">Placa</th>
+{#                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold" style="width: 5%">Responsable</th>#}
+                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold" style="width: 15%">Usuario</th>
+                <th class="text-uppercase text-center align-middle bg-light text-dark font-weight-bold" style="width: 3%"><i class="fas fa-edit"></i></th>
             </tr>
             </thead>
             <tbody id="cash-grid">
-
             {% for c in cash_flow_set %}
-                <tr class=" {% if c.type == 'R' %}text-danger  font-weight-light
-                            {% elif c.type == 'D' %}text-info  font-weight-light
+                <tr class=" {% if c.type == 'R' %}text-danger font-weight-light
+                            {% elif c.type == 'D' %}text-dark font-weight-light
                             {% endif %}" pk="{{ c.id }}">
-
-                    <td class="text-center transaction-date">{{ c.transaction_date|date:"d/m/Y" }}</td>
-                    <td class="text-center">{{ c.get_type_display|upper }}</td>
-                    <td class="text-center description-cash">{{ c.description|upper|default_if_none:"-" }}  </td>
-                    <td class="text-right">{% if c.type == 'D' %}{{ c.total|floatformat:2 }}{% endif %}</td>
-                    <td class="text-right">{% if c.type == 'R' %}{{ c.total|floatformat:2 }}{% endif %}</td>
-                    <td class="text-center">{{ c.operation_code }}</td>
-                    <td class="text-center">{{ c.order.client }}</td>
-                    <td class="text-center">{{ c.order.distribution_mobil.truck.license_plate }}</td>
-                    <td class="text-center">{{ c.order.distribution_mobil.pilot.full_name }}</td>
-                    <td class="text-center">{{ c.user.worker_set.last.employee.full_name | upper |default_if_none:"-" }}</td>
-                    <td class="text-center">
+                    <td class="text-center transaction-date p-1">{{ c.transaction_date|date:"d/m/Y" }}</td>
+                    <td class="text-center p-1">{{ c.get_type_display|upper }}</td>
+                    <td class="text-center description-cash p-1">{{ c.description|upper|default_if_none:"-" }}  </td>
+                    <td class="text-right p-1">{% if c.type == 'D' %}{{ c.total|replace_round_separator }}{% endif %}</td>
+                    <td class="text-right p-1">{% if c.type == 'R' %}{{ c.total|replace_round_separator }}{% endif %}</td>
+                    <td class="text-center p-1">{{ c.operation_code }}</td>
+                    <td class="text-center p-1">{{ c.order.client }}</td>
+                    <td class="text-center p-1">{{ c.order.distribution_mobil.truck.license_plate }}</td>
+{#                    <td class="text-center">{{ c.order.distribution_mobil.pilot.full_name }}</td>#}
+                    <td class="text-center p-1">{{ c.user.worker_set.last.employee.full_name | upper |default_if_none:"-" }}</td>
+                    <td class="text-center p-1">
                         <a  class="btn-sm btn-outline-warning text-dark btn-edit"
                             data-toggle="modal"
                             data-target="#exampleModalCenter"
                             pk="{{ c.id }}">
                         <i class="fas fa-edit"></i></a></td>
                 </tr>
-
             {% endfor %}
             </tbody>
-
             <tfoot>
             <tr>
                 <td colspan="3"></td>

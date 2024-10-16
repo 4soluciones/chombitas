@@ -1,44 +1,40 @@
+{% load operations %}
 {% if cash_flow_set %}
 
     <div class="table-responsive mt-3">
-        <table class="table table-bordered">
+        <table class="table table-bordered bg-light">
             <thead>
             <tr>
-                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold">Estado</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold">Fecha</th>
+                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold" style="width: 5%">Estado</th>
+                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold" style="width: 10%">DATOS de caja</th>
 
-                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold">TOTAL ENTRADAS</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold">TOTAL SALIDAS</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold">SALDO ACTUAL</th>
+{#                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold" style="width: 5%">TOTAL ENTRADAS</th>#}
+{#                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold" style="width: 5%">TOTAL SALIDAS</th>#}
+{#                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold" style="width: 5%">SALDO ACTUAL</th>#}
 
-                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold">Operacion</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold">Descripcion de la
+                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold" style="width: 5%">Operación</th>
+                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold" style="width: 37%">Descripcion de la
                     operacion
                 </th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold">Cliente</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold">Tipo de doc</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold">
+                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold" style="width: 5%">Cliente</th>
+                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold" style="width: 4%">doc.</th>
+                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold" style="width: 3%">
                     Serie {{ cash_set.count }}</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold">Numero</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold">subtotal</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold">Igv</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold">total</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold">Placa</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold">Responsable</th>
-                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold">Usuario</th>
+                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold" style="width: 3%">Numero</th>
+                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold" style="width: 5%">subtotal</th>
+                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold" style="width: 5%">Igv</th>
+                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold" style="width: 5%">total</th>
+                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold" style="width: 3%">Placa</th>
+{#                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold" style="width: 5%">Responsable</th>#}
+                <th class="text-uppercase text-center align-middle bg-light text-dark small font-weight-bold" style="width: 10%">Usuario</th>
             </tr>
             </thead>
             <tbody>
 
             {% for c in cash_flow_set %}
-                <tr class=" {% if c.type == 'S' %}text-danger font-weight-bold
-                            {% elif c.type == 'E' %}text-primary font-weight-bold
-                            {% elif c.type == 'A' %}text-warning font-weight-bold
-                            {% elif c.type == 'C' %}text-info font-weight-bold
-                            {% endif %}">
+                <tr class="{% if c.type == 'S' %}text-danger font-weight-bold{% elif c.type == 'E' %}text-primary font-weight-bold{% elif c.type == 'A' %}text-warning font-weight-bold{% elif c.type == 'C' %}text-info font-weight-bold{% endif %}">
                     {% if forloop.first %}
-
-                        <td class="align-middle" rowspan="{{ cash_flow_set.count }}">
+                        <td class="align-top" rowspan="{{ cash_flow_set.count }}">
                             <button status="{% if c.return_status %}A{% else %}C{% endif %}"
                                     date="{{ c.transaction_date|date:"Y-m-d" }}"
                                     pk="{{ c.pk }}" type="button"
@@ -46,50 +42,60 @@
                                  {% if c.return_status %}<i class="fas fa-door-closed"></i> Cerrado {% else %}<i class="fas fa-door-open"></i> Abierto {% endif %}
                             </button>
                         </td>
-                        <td class="align-middle text-success font-weight-bold"
-                            rowspan="{{ cash_flow_set.count }}">{{ c.transaction_date|date:"d/m/Y" }}</td>
-                        <td class="align-middle text-success font-weight-bold"
-                            rowspan="{{ cash_flow_set.count }}">{{ c.return_inputs|floatformat:2 }}</td>
-                        <td class="align-middle text-success font-weight-bold"
-                            rowspan="{{ cash_flow_set.count }}">{{ c.return_outputs|floatformat:2 }}</td>
-                        <td class="align-middle text-success font-weight-bold"
-                            rowspan="{{ cash_flow_set.count }}">{{ c.return_balance|floatformat:2 }}</td>
-
-
+                        <td class="align-top text-success text-uppercase font-weight-bold p-1" rowspan="{{ cash_flow_set.count }}">
+                            <div class="row mb-2">
+                                <div class="col-sm-4">Fecha: </div>
+                                <div class="col-sm-8 text-right"><span class="text-warning">{{ c.transaction_date|date:"d/m/Y" }}</span></div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4">Entradas: </div>
+                                <div class="col-sm-8 text-right"><span class="text-dark">S/ {{ c.return_inputs|replace_round_separator }}</span></div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4">Salidas: </div>
+                                <div class="col-sm-8 text-right"><span class="text-dark">S/ {{ c.return_outputs|replace_round_separator }}</span></div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-4">Saldo: </div>
+                                <div class="col-sm-8 text-right"><span class="text-dark">S/ {{ c.return_balance|replace_round_separator }}</span></div>
+                            </div>
+{#                            Fecha: <span class="text-dark">{{ c.transaction_date|date:"d/m/Y" }}</span><br>#}
+{#                            Total Entradas: <span class="text-dark">{{ c.return_inputs|floatformat:2 }}</span><br>#}
+{#                            Total Salidas: <span class="text-dark">{{ c.return_outputs|floatformat:2 }}</span><br>#}
+{#                            Saldo Actual: <span class="text-dark">{{ c.return_balance|floatformat:2 }}</span>#}
+                        </td>
+{#                        <td class="align-top text-success font-weight-bold"#}
+{#                            rowspan="{{ cash_flow_set.count }}">{{ c.return_inputs|floatformat:2 }}</td>#}
+{#                        <td class="align-top text-success font-weight-bold"#}
+{#                            rowspan="{{ cash_flow_set.count }}">{{ c.return_outputs|floatformat:2 }}</td>#}
+{#                        <td class="align-top text-success font-weight-bold"#}
+{#                            rowspan="{{ cash_flow_set.count }}">{{ c.return_balance|floatformat:2 }}</td>#}
                     {% endif %}
-
-
-
-                    <td>{{ c.get_type_display|upper }}</td>
-                    <td>
+                    <td class="align-top text-center p-1">{{ c.get_type_display|upper }}</td>
+                    <td class="p-1">
                         {% if c.distribution_mobil %}
                             {{ c.description|upper }} DE {{ c.distribution_mobil.pilot.full_name }}, {{ c.distribution_mobil.truck.license_plate }}
                         {% else %}
                             {{ c.description|upper }}
                         {% endif %}
                     </td>
-                    <td>{{ c.order.client.names|upper|default_if_none:"-" }}</td>
-                    <td>{{ c.get_document_type_attached_display|upper }}</td>
-                    <td>{{ c.serial|default_if_none:"-" }}</td>
-                    <td>{{ c.n_receipt|default_if_none:"-" }}</td>
-                    <td class="text-right">{{ c.subtotal|floatformat:2 }}</td>
-                    <td class="text-right">{{ c.igv|floatformat:2 }}</td>
-                    <td class="text-right">{{ c.total|floatformat:2 }}</td>
-                    <td>{{ c.order.distribution_mobil.truck.license_plate }}</td>
-                    <td>{{ c.order.distribution_mobil.pilot.full_name }}</td>
-                    <td>{{ c.user.worker_set.last.employee.full_name | upper |default_if_none:"-" }}</td>
+                    <td class="align-top text-center p-1">{{ c.order.client.names|upper|default_if_none:"-" }}</td>
+                    <td class="align-top text-center p-1">{{ c.get_document_type_attached_display|upper }}</td>
+                    <td class="align-top text-center p-1">{{ c.serial|default_if_none:"-" }}</td>
+                    <td class="align-top text-center p-1">{{ c.n_receipt|default_if_none:"-" }}</td>
+                    <td class="text-right p-1">{{ c.subtotal|replace_round_separator }}</td>
+                    <td class="text-right p-1">{{ c.igv|replace_round_separator }}</td>
+                    <td class="text-right p-1">{{ c.total|replace_round_separator }}</td>
+                    <td class="p-1">{{ c.order.distribution_mobil.truck.license_plate }}</td>
+{#                    <td>{{ c.order.distribution_mobil.pilot.full_name }}</td>#}
+                    <td class="align-top text-center p-1">{{ c.user.worker_set.last.employee.full_name | upper |default_if_none:"-" }}</td>
                 </tr>
-
-
-
-
             {% endfor %}
-
         </table>
     </div>
 {% else %}
     <div class="alert alert-info alert-dismissible fade show mt-3" role="alert">
-        <strong>Atencion!</strong> Tu debes ingresar una fecha primero.
+        <strong>Atencion!</strong> Seleccione una Fecha Valida.
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>

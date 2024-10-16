@@ -1,3 +1,4 @@
+import decimal
 from django import template
 
 register = template.Library()
@@ -34,3 +35,18 @@ def get(d, k):
 @register.filter(name='get_element')
 def get_element(d, k):
     return d[k]
+
+
+@register.filter(name='replace_round_separator')
+def replace_round_separator(value):
+    if value is not None and value != '':
+        value = float(value)
+        decimal_part = value - int(value)
+        decimal_str = f"{decimal_part:.3f}"[2:]
+        if int(decimal_str[2]) > 0:
+            rounded_value = round(value, 3)
+        else:
+            rounded_value = round(decimal.Decimal(value), 2)
+        formatted_value = '{:,.{}f}'.format(rounded_value, 3 if int(decimal_str[2]) > 0 else 2).replace(',', 'X').replace('.', ',').replace('X', '.')
+        return formatted_value
+    return value
