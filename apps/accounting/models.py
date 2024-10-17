@@ -220,6 +220,9 @@ class CashFlow(models.Model):
     observation = models.CharField('Observation', max_length=400, null=True, blank=True)
     revised = models.BooleanField(default=False)
     amortizable_amount = models.BooleanField(default=False)
+    check_pay = models.BooleanField(default=False)
+    user_check = models.ForeignKey(User, verbose_name='Usuario Check', on_delete=models.CASCADE, null=True, blank=True,
+                                   related_name='user_check')
 
     def calculate_total_missing(self):
 

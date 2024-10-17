@@ -65,4 +65,6 @@ urlpatterns = [
     path('get_amortizable_amount_by_cash/', login_required(get_amortizable_amount_by_cash), name='get_amortizable_amount_by_cash'),
     path('get_amount_amortizable_by_cash_flow/', login_required(get_amount_amortizable_by_cash_flow), name='get_amount_amortizable_by_cash_flow'),
 
+    # CHECK DEPOSIT
+    path('check_deposit/', login_required(check_deposit), name='check_deposit'),
 ]

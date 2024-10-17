@@ -254,19 +254,63 @@
                 processData: false,
                 contentType: false,
                 success: function (response, textStatus, xhr) {
-                    if (xhr.status == 200) {
+                    if (xhr.status === 200) {
                         // $('#product-detail-grid').html(response.grid);
                         $('#modal-transfer-to-cash').modal('hide');
                         toastr.success(response['message'], '¡Bien hecho!');
                     }
                 },
                 error: function (jqXhr, textStatus, xhr) {
-                    if (jqXhr.status == 500) {
+                    if (jqXhr.status === 500) {
                         toastr.error(jqXhr.responseJSON.error, '¡Inconcebible!');
                     }
                 }
             });
             $('#btn-btc-cash-save').removeAttr("disabled", "false");
+        });
+
+        $(document).on('click', '.check-review', function () {
+
+            let cf_id = $(this).attr("cf_id");
+            let _input = $(this);
+            let _tr = $(this).closest('td').parent('tr');
+            let td_check_user = _tr.find('td.check-user');
+            if (this.checked) {
+                $.ajax({
+                    url: '/accounting/check_deposit/',
+                    async: true,
+                    dataType: 'json',
+                    type: 'GET',
+                    data: {
+                        'cf_id': cf_id,
+                    },
+                    success: function (response) {
+                        td_check_user.text(response.user_name);
+                        _tr.css('background-color', '#d8f5c6');
+                        //_input.prop('disabled', true);
+                    },
+                    fail: function (response) {
+                        console.log("error");
+                    }
+                });
+            } else {
+                $.ajax({
+                    url: '/accounting/check_deposit/',
+                    async: true,
+                    dataType: 'json',
+                    type: 'GET',
+                    data: {
+                        'cf_id': cf_id,
+                    },
+                    success: function (response) {
+                        td_check_user.text('');
+                        _tr.css('background-color', 'initial');
+                    },
+                    fail: function (response) {
+                        console.log("error");
+                    }
+                });
+            }
         });
 
 

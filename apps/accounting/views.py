@@ -953,10 +953,10 @@ def get_bank_control_list(request):
 
         if start_date == end_date:
             cash_flow_set = CashFlow.objects.filter(transaction_date__date=start_date, cash__id=id_cash).order_by(
-                'transaction_date')
+                'transaction_date', 'id')
         else:
             cash_flow_set = CashFlow.objects.filter(transaction_date__date__range=[start_date, end_date],
-                                                    cash__id=id_cash).order_by('transaction_date')
+                                                    cash__id=id_cash).order_by('transaction_date', 'id')
         inputs_set = cash_flow_set.filter(type='D').values('cash').annotate(totals=Sum('total'))
         outputs_set = cash_flow_set.filter(type='R').values('cash').annotate(totals=Sum('total'))
         transfers_set = cash_flow_set.filter(type='T').values('cash').annotate(totals=Sum('total'))
@@ -2120,3 +2120,24 @@ def get_amount_amortizable_by_cash_flow(request):
 
         return JsonResponse({'total_available': str(round(total_available, 2))}, status=HTTPStatus.OK)
     return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)
+
+
+def check_deposit(request):
+    if request.method == 'GET':
+        cf_id = request.GET.get('cf_id', '')
+        cash_flow_obj = CashFlow.objects.get(id=cf_id)
+        user_id = request.user.id
+        user_obj = User.objects.get(id=user_id)
+        if cash_flow_obj.check_pay is False:
+            cash_flow_obj.check_pay = True
+            cash_flow_obj.user_check = user_obj
+            cash_flow_obj.save()
+        else:
+            cash_flow_obj.check_pay = False
+            cash_flow_obj.user_check = None
+            cash_flow_obj.save()
+
+        return JsonResponse({
+            'success': True,
+            'user_name': user_obj.worker_set.last().employee.simple_name()
+        })
