@@ -1,0 +1,273 @@
+
+
+<style>
+    .text-rotated-90{
+        transform: rotate(180deg);
+        white-space: nowrap;
+        writing-mode: vertical-rl;
+        padding: 0;
+        line-height: 0.9;
+    }
+</style>
+
+<table class="table table-sm table-bordered" id="excel-data-grid">
+    <thead>
+    <tr>
+        <td class="align-middle text-center table-info" rowspan="2">FECHA</td>
+
+            <td class="text-center font-weight-bold" colspan="4">10KG</td>
+            <td class="table-warning text-center" colspan="{{ header_b10|length }}">PRECIOS</td>
+        <td class="align-middle text-center table-info" rowspan="2"><span class="text-rotated-90">TOTAL<br/>VENTA S/</span></td>
+            <td class="text-center table-dark text-white" colspan="6">FIERROS</td>
+
+            <td class="text-center font-weight-bold" colspan="4">5KG</td>
+            <td class="table-warning text-center" colspan="{{ header_b5|length }}">PRECIOS</td>
+        <td class="align-middle text-center table-info" rowspan="2"><span class="text-rotated-90">TOTAL<br/>VENTA S/</span></td>
+            <td class="text-center table-dark text-white" colspan="6">FIERROS</td>
+
+            <td class="text-center font-weight-bold" colspan="4">45KG</td>
+            <td class="table-warning text-center" colspan="{{ header_b45|length }}">PRECIOS</td>
+        <td class="align-middle text-center table-info" rowspan="2"><span class="text-rotated-90">TOTAL<br/>VENTA S/</span></td>
+            <td class="text-center table-dark text-white" colspan="6">FIERROS</td>
+
+            <td class="text-center font-weight-bold" colspan="4">15KG</td>
+            <td class="table-warning text-center" colspan="{{ header_b15|length }}">PRECIOS</td>
+        <td class="align-middle text-center table-info" rowspan="2"><span class="text-rotated-90">TOTAL<br/>VENTA S/</span></td>
+            <td class="text-center table-dark text-white" colspan="6">FIERROS</td>
+
+        <td class="align-middle text-center table-info  font-weight-bold" rowspan="2"><span class="text-rotated-90">TOTAL<br/>VENTA DEL<br/>DIA S/</span></td>
+
+        <td class="text-center" colspan="1">GASTOS</td>
+        <td class="align-middle text-center table-danger  font-weight-bold" rowspan="2"><span class="text-rotated-90">TOTAL<br/>DEPOSITAR S/</span></td>
+            <td class="text-center" colspan="6">MOVIMIENTO DE EFECTIVO</td>
+        <td class="align-middle text-center table-secondary  font-weight-bold" rowspan="2"><span class="text-rotated-90">TOTAL POR<br/>DEPOSITAR <br/>ACUMULADO S/</span></td>
+
+    </tr>
+    <tr>
+            <td class="align-middle text-center"><span class="text-rotated-90">LLENO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">VACIO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">CAMBIOS</span></td>
+            <td class="align-middle text-center table-success"><span class="text-rotated-90">VENTA</span></td>
+            {% for pb10 in header_b10 %}
+                <td class="align-middle text-center table-warning"><span class="text-rotated-90">{{ pb10|safe }}</span></td>
+            {% empty %}
+                <td class="align-middle text-center table-warning"></td>
+            {% endfor %}
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">PRESTADOS</span></td>
+        <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">VENDIDOS</span></td>
+        <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">RECUPERADOS</span></td>
+                <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">DEBE FIERROS</span></td>
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">IMPORTE</span></td>
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">IMPORTE PAGADO</span></td>
+
+
+            <td class="align-middle text-center"><span class="text-rotated-90">LLENO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">VACIO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">CAMBIOS</span></td>
+            <td class="align-middle text-center table-success"><span class="text-rotated-90">VENTA</span></td>
+            {% for pb5 in header_b5 %}
+                <td class="align-middle text-center table-warning"><span class="text-rotated-90">{{ pb5|safe }}</span></td>
+            {% empty %}
+                <td class="align-middle text-center table-warning"></td>
+            {% endfor %}
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">PRESTADOS</span></td>
+        <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">VENDIDOS</span></td>
+        <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">RECUPERADOS</span></td>
+                <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">DEBE FIERROS</span></td>
+
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">IMPORTE</span></td>
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">IMPORTE PAGADO</span></td>
+
+
+            <td class="align-middle text-center"><span class="text-rotated-90">LLENO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">VACIO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">CAMBIOS</span></td>
+            <td class="align-middle text-center table-success"><span class="text-rotated-90">VENTA</span></td>
+            {% for pb45 in header_b45 %}
+                <td class="align-middle text-center table-warning"><span class="text-rotated-90">{{ pb45|safe }}</span></td>
+            {% empty %}
+                <td class="align-middle text-center table-warning"></td>
+            {% endfor %}
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">PRESTADOS</span></td>
+        <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">VENDIDOS</span></td>
+        <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">RECUPERADOS</span></td>
+                <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">DEBE FIERROS</span></td>
+
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">IMPORTE</span></td>
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">IMPORTE PAGADO</span></td>
+
+            <td class="align-middle text-center"><span class="text-rotated-90">LLENO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">VACIO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">CAMBIOS</span></td>
+            <td class="align-middle text-center table-success"><span class="text-rotated-90">VENTA</span></td>
+            {% for pb15 in header_b15 %}
+                <td class="align-middle text-center table-warning"><span class="text-rotated-90">{{ pb15|safe }}</span></td>
+            {% empty %}
+                <td class="align-middle text-center table-warning"></td>
+            {% endfor %}
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">PRESTADOS</span></td>
+        <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">VENDIDOS</span></td>
+        <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">RECUPERADOS</span></td>
+                <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">DEBE FIERROS</span></td>
+
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">IMPORTE</span></td>
+            <td class="align-middle text-center table-dark text-white"><span class="text-rotated-90">IMPORTE PAGADO</span></td>
+
+            <td class="align-middle text-center"><span class="text-rotated-90">OTROS GASTOS</span></td>
+
+            <td class="align-middle text-center"><span class="text-rotated-90">DEPOSITO<br/>Y/O<br/>EFECTIVO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">SALDO</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">ENT. BANC</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">COD. OPE</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90">FECHA</span></td>
+            <td class="align-middle text-center"><span class="text-rotated-90 text-primary font-weight-bold">REVISADO</span></td>
+    </tr>
+    </thead>
+    <tbody>
+
+
+{% for order in orders %}
+
+    <tr>
+        <td class="align-middle text-center text-nowrap table-info">{{ order.date }}</td>
+
+        <td class="align-middle text-center">{{ order.B10.quantity_sold }}</td>
+        <td class="align-middle text-center">{{ order.B10.quantity_sold_b }}</td>
+        <td class="align-middle text-center">{{ order.B10.quantity_changed }}</td>
+        <td class="align-middle text-center table-success">{{ order.B10.quantity_sold_g }}</td>
+
+        {% for key, value in order.B10.prices.items  %}
+            <td class="align-middle text-center table-warning">{{ value.quantity }}</td>
+        {% endfor %}
+
+        <td class="align-middle text-center table-info">{{ order.B10.total_sales }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B10.quantity_sold_b }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B10.payed_in_plant_b }}</td>
+        <td class="align-middle table-dark text-center text-white">{{ order.B10.recovered_in_plant_b }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B10.remaining_borrowed_b }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B10.total_b }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B10.total_payed_b }}</td>
+
+        <td class="align-middle text-center">{{ order.B5.quantity_sold }}</td>
+        <td class="align-middle text-center">{{ order.B5.quantity_sold_b }}</td>
+        <td class="align-middle text-center">{{ order.B5.quantity_changed }}</td>
+        <td class="align-middle text-center table-success">{{ order.B5.quantity_sold_g }}</td>
+        {% for key, value in order.B5.prices.items  %}
+            <td class="align-middle text-center table-warning">{{ value.quantity }}</td>
+        {% endfor %}
+        <td class="align-middle text-center table-info">{{ order.B5.total_sales }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B5.quantity_sold_b }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B5.payed_in_plant_b }}</td>
+        <td class="align-middle table-dark text-center text-white">{{ order.B5.recovered_in_plant_b }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B5.remaining_borrowed_b }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B5.total_b }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B5.total_payed_b }}</td>
+
+        <td class="align-middle text-center">{{ order.B45.quantity_sold }}</td>
+        <td class="align-middle text-center">{{ order.B45.quantity_sold_b }}</td>
+        <td class="align-middle text-center">{{ order.B45.quantity_changed }}</td>
+        <td class="align-middle text-center table-success">{{ order.B45.quantity_sold_g }}</td>
+        {% for key, value in order.B45.prices.items  %}
+            <td class="align-middle text-center table-warning">{{ value.quantity }}</td>
+        {% endfor %}
+        <td class="align-middle text-center table-info">{{ order.B45.total_sales }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B45.quantity_sold_b }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B45.payed_in_plant_b }}</td>
+        <td class="align-middle table-dark text-center text-white">{{ order.B45.recovered_in_plant_b }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B45.remaining_borrowed_b }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B45.total_b }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B45.total_payed_b }}</td>
+
+        <td class="align-middle text-center">{{ order.B15.quantity_sold }}</td>
+        <td class="align-middle text-center">{{ order.B15.quantity_sold_b }}</td>
+        <td class="align-middle text-center">{{ order.B15.quantity_changed }}</td>
+        <td class="align-middle text-center table-success">{{ order.B15.quantity_sold_g }}</td>
+        {% for key, value in order.B15.prices.items  %}
+            <td class="align-middle text-center table-warning">{{ value.quantity }}</td>
+        {% endfor %}
+        <td class="align-middle text-center table-info">{{ order.B15.total_sales }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B15.quantity_sold_b }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B15.payed_in_plant_b }}</td>
+        <td class="align-middle table-dark text-center text-white">{{ order.B15.recovered_in_plant_b }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B15.remaining_borrowed_b }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B15.total_b }}</td>
+        <td class="align-middle table-dark text-white">{{ order.B15.total_payed_b }}</td>
+
+        <td class="align-middle text-center table-info font-weight-bold">{{ order.total_sold_by_date }}</td>
+
+        <td class="align-middle text-nowrap">
+
+
+<button type="button" class="btn btn-light" data-toggle="tooltip" data-placement="top" title="{% for oe in order.other_expenses %}{{ oe }}{% endfor %}">
+  {{ order.expenses }}
+</button>
+
+
+        </td>
+
+        <td class="align-middle text-center table-danger font-weight-bold">{{ order.total_to_deposit }}</td>
+
+        <td class="align-middle text-nowrap">{{ order.deposited }}</td>
+        <td class="align-middle text-nowrap">{{ order.balance }}</td>
+        <td class="align-middle text-nowrap">{{ order.bank }}</td>
+        <td class="align-middle text-nowrap">{{ order.code_deposit }}</td>
+        <td class="align-middle text-nowrap">{{ order.date_deposit }}</td>
+        <td class="align-middle text-nowrap is-revised" >{% if order.deposit_set %}{{ order.deposit_set }}{% endif %}</td>
+        <td class="align-middle text-center table-secondary font-weight-bold">{{ order.remaining_total_to_deposit }}</td>
+
+    </tr>
+{% endfor %}
+
+    </tbody>
+</table>
+<script>
+
+    $('table#excel-data-grid tbody tr').each(function (i){
+        let cell = $(this).find('td.is-revised');
+        const jsonString = cell.text().trim();
+        if(jsonString!=='[]' && jsonString!==''){
+
+            const cleanedString = jsonString.replace(/'/g, '"').replaceAll('False', 'false').replaceAll('True', 'true').replaceAll('None', 'null');
+            const dataObject = JSON.parse(cleanedString);
+
+            if(dataObject.length>0){
+                let strHtml = '';
+                for(let d = 0; d < dataObject.length; ++d){
+                    strHtml +=`<div class="custom-control custom-checkbox"><input type="checkbox" ${dataObject[d]["revised"]?"checked":""} value="${dataObject[d]["id"]}" class="custom-control-input" id="customCheck${dataObject[d]["id"]}" /><label class="custom-control-label" for="customCheck${dataObject[d]["id"]}">${dataObject[d]["total"]}</label></div>`;
+                }
+                cell.html(strHtml);
+            }
+
+        }
+
+
+    });
+
+    $('table#excel-data-grid tbody tr td.is-revised input[type="checkbox"]').change(function(){
+        if ($(this).is(":checked")) {
+            checkedPay($(this).val(), true)
+        } else {
+            checkedPay($(this).val(), false)
+        }
+    });
+
+    function checkedPay(cashFlowId, revised) {
+
+            $.ajax({
+                url: '/comercial/check_deposit_of_distribution/',
+                async: true,
+                dataType: 'json',
+                type: 'GET',
+                data: {
+                    'cashFlowId': cashFlowId,
+                    'revised': revised?1:0,
+                },
+                success: function (response) {
+                    console.log(response.message)
+                },
+                fail: function (response) {
+                    console.log("error");
+                }
+            });
+        }
+</script>

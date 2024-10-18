@@ -2352,7 +2352,307 @@ def get_expenses_by_licence_plate(request):
 
 def get_monthly_sales_by_client(request):
     if request.method == 'GET':
-        client_set = Client.objects.filter()
+        user_id = request.user.id
+        user_obj = User.objects.get(id=user_id)
+        subsidiary_obj = get_subsidiary_by_user(user_obj)
+        client_set = Client.objects.filter(clientassociate__subsidiary=subsidiary_obj).distinct()
+        my_date = datetime.now()
+        formatdate = my_date.strftime("%Y-%m-%d")
+        return render(request, 'comercial/monthly_distribution_by_client_list.html', {
+            'month_set': get_spanish_month_names(),
+            'current_year': datetime.now().year,
+            'current_month': datetime.now().month,
+            'year_set': get_consecutive_years(),
+            'formatdate': formatdate,
+            'client_set': client_set
+        })
+    elif request.method == 'POST':
+        client_id = int(request.POST.get('client'))
+        start_date = str(request.POST.get('start-date'))
+        end_date = str(request.POST.get('end-date'))
+        start_date_sin_timezone = datetime.strptime(start_date, '%Y-%m-%d')
+        end_date_sin_timezone = datetime.strptime(end_date, '%Y-%m-%d')
+
+        order_set = Order.objects.filter(
+            create_at__date__range=[start_date_sin_timezone.date(), end_date_sin_timezone.date()],
+            client__id=client_id, type='V'
+        ).annotate(
+            previous_order_id=Window(expression=Lag('id', default=0), order_by=(F('create_at').asc(), F('id').asc()))
+        ).prefetch_related(
+            Prefetch(
+                'orderdetail_set', queryset=OrderDetail.objects.select_related('product', 'unit').prefetch_related(
+                    Prefetch(
+                        'loanpayment_set',
+                        queryset=LoanPayment.objects.prefetch_related(
+                            Prefetch(
+                                'transactionpayment_set',
+                                queryset=TransactionPayment.objects.select_related('loan_payment', 'cash_flow')
+                            )
+                        )
+                    ),
+                    Prefetch('ballchange_set'),
+                )
+            ),
+            Prefetch(
+                'cashflow_set', queryset=CashFlow.objects.select_related('cash')
+            ),
+        ).order_by('create_at', 'id').distinct('create_at', 'id')
+
+        base_query_set = OrderDetail.objects.filter(
+            # order__distribution_mobil__date_distribution__month=month,
+            # order__distribution_mobil__date_distribution__year=year,
+            order__create_at__date__range=[start_date_sin_timezone.date(),
+                                                                 end_date_sin_timezone.date()],
+            order__client__id=client_id, order__type='V',
+            unit__name__in=['G', 'GBC']
+        )
+
+        header_b10 = list(base_query_set.filter(product__id=1).values_list('price_unit', flat=True).distinct())
+        header_b5 = list(base_query_set.filter(product__id=2).values_list('price_unit', flat=True).distinct())
+        header_b45 = list(base_query_set.filter(product__id=3).values_list('price_unit', flat=True).distinct())
+        header_b15 = list(base_query_set.filter(product__id=12).values_list('price_unit', flat=True).distinct())
+
+        if len(header_b10) == 0:
+            header_b10 = [""]
+        if len(header_b5) == 0:
+            header_b5 = [""]
+        if len(header_b45) == 0:
+            header_b45 = [""]
+        if len(header_b15) == 0:
+            header_b15 = [""]
+
+        remaining_borrowed_b10 = int(0)
+        remaining_borrowed_b5 = int(0)
+        remaining_borrowed_b45 = int(0)
+        remaining_borrowed_b15 = int(0)
+
+        grouped_by_date = defaultdict(
+            lambda: {
+                'id': '',
+                'date': '',
+                'ids': [],
+                'B5': {
+                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0, 'quantity_changed': 0,
+                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
+                    'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b5}, 'total_sales': 0, 'total_b': 0,'total_payed_b': 0,
+                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
+                    'advanced_b': 0, 'payed_in_plant_b': 0, 'remaining_borrowed_b': 0
+                },
+                'B10': {
+                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0, 'quantity_changed': 0,
+                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
+                    'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b10}, 'total_sales': 0, 'total_b': 0,'total_payed_b': 0,
+                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
+                    'advanced_b': 0, 'payed_in_plant_b': 0, 'remaining_borrowed_b': 0
+                },
+                'B45': {
+                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0, 'quantity_changed': 0,
+                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
+                    'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b45}, 'total_sales': 0, 'total_b': 0,'total_payed_b': 0,
+                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
+                    'advanced_b': 0, 'payed_in_plant_b': 0, 'remaining_borrowed_b': 0
+                },
+                'B15': {
+                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0, 'quantity_changed': 0,
+                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
+                    'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b15}, 'total_sales': 0, 'total_b': 0,'total_payed_b': 0,
+                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
+                    'advanced_b': 0, 'payed_in_plant_b': 0, 'remaining_borrowed_b': 0
+                },
+                'B3': {
+                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0, 'quantity_changed': 0,
+                    'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
+                    'prices': {}, 'total_sales': 0, 'total_b': 0,'total_payed_b': 0,
+                    'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
+                    'advanced_b': 0, 'payed_in_plant_b': 0, 'remaining_borrowed_b': 0
+                },
+                'total_sold_by_date': 0,
+                'expenses': 0,
+                'total_to_deposit': 0,
+                'remaining_total_to_deposit': 0,
+                'deposited': 0, 'balance': 0, 'bank': "", 'date_deposit': "", 'code_deposit': "",
+                'deposit_set': [],
+                'other_expenses': [],
+            }
+        )
+
+        remaining_total_to_deposit = 0
+        total_sales_by_date = 0
+        for order in order_set:
+
+            date_str = order.create_at.strftime('%d-%b').upper()
+            order_obj = grouped_by_date[order.id]
+            order_obj['date'] = date_str.replace('JAN', 'ENE').replace('AUG', 'AGO')
+            order_obj['id'] = order.id
+
+            total_expenses = 0
+            bank = []
+            dates_of_deposit = []
+            codes_of_deposit = []
+            array_of_deposit = []
+
+            for od in order.orderdetail_set.all():
+                product_id = od.product.id
+                ball = None
+                value = od.price_unit
+                if product_id == 1:  # B10KG
+                    ball = order_obj["B10"]
+                    if value not in header_b10:
+                        value = 0
+                elif product_id == 2:  # B5KG
+                    ball = order_obj["B5"]
+                    if value not in header_b5:
+                        value = 0
+                elif product_id == 3:  # B45KG
+                    ball = order_obj["B45"]
+                    if value not in header_b45:
+                        value = 0
+                elif product_id == 12:  # B15KG
+                    ball = order_obj["B15"]
+                    if value not in header_b15:
+                        value = 0
+
+                if value > 0:
+                    ball['prices'][value]["quantity"] += int(od.quantity_sold)
+                    ball['prices'][value]['subtotal'] = ball['prices'][value]['quantity'] * od.price_unit
+                    ball["total_sales"] += round(od.quantity_sold * od.price_unit, 1)
+
+                if od.unit.name in ['G', 'GBC']:
+                    ball["quantity_sold_g"] += int(od.quantity_sold)
+                    ball["quantity_sold"] += int(od.quantity_sold)
+                    order_obj['total_sold_by_date'] += round(od.quantity_sold * od.price_unit, 1)
+                if od.unit.name == 'B':
+                    ball["quantity_sold_b"] += int(od.quantity_sold)
+                    ball["total_b"] = round(ball["quantity_sold_b"] * od.price_unit, 1)
+                    order_obj['total_sold_by_date'] += round(od.quantity_sold * od.price_unit, 1)
+                    # ball["quantity_sold"] += int(od.quantity_sold)
+                    if product_id == 1:
+                        ball["remaining_borrowed_b"] = int(remaining_borrowed_b10) + ball["quantity_sold_b"]
+                        remaining_borrowed_b10 += ball["quantity_sold_b"]
+                    elif product_id == 2:
+                        ball["remaining_borrowed_b"] = int(remaining_borrowed_b5) + ball["quantity_sold_b"]
+                        remaining_borrowed_b5 += ball["quantity_sold_b"]
+                    elif product_id == 3:
+                        ball["remaining_borrowed_b"] = int(remaining_borrowed_b45) + ball["quantity_sold_b"]
+                        remaining_borrowed_b45 += ball["quantity_sold_b"]
+                    elif product_id == 12:
+                        ball["remaining_borrowed_b"] = int(remaining_borrowed_b15) + ball["quantity_sold_b"]
+                        remaining_borrowed_b15 += ball["quantity_sold_b"]
+
+                for b in od.ballchange_set.all():
+                    ball["quantity_changed"] += int(b.quantity)
+                    ball["quantity_sold"] += int(b.quantity)
+
+                for lp in od.loanpayment_set.all():
+
+                    if lp.quantity > 0:
+                        if lp.transactionpayment_set.exists():  # payments of balls
+                            ball["payed_in_plant_b"] += int(lp.quantity)
+                            # if product_id == 1:
+                            ball["remaining_borrowed_b"] -= int(lp.quantity)
+                            # for tp in lp.transactionpayment_set.all():
+                            #     cash_flow_set = CashFlow.objects.filter(total=tp.payment, transaction_date__date=tp.loan_payment.operation_date, order_id=order.id)
+                            #     if cash_flow_set.exists():
+                            #         cash_flow_obj = cash_flow_set.last()
+                            #         bank.append(cash_flow_obj.cash.name)
+                            #         dates_of_deposit.append(str(cash_flow_obj.transaction_date.date()))
+                            #         codes_of_deposit.append(str(cash_flow_obj.operation_code))
+                            #         array_of_deposit.append({
+                            #             'id': cash_flow_obj.id,
+                            #             'code': cash_flow_obj.operation_code,
+                            #             'total': round(float(cash_flow_obj.total), 1), 'revised': cash_flow_obj.revised})
+
+                        else:  # returns of balls
+                            ball["recovered_in_plant_b"] += int(lp.quantity)
+                            # if product_id == 1:
+                            ball["remaining_borrowed_b"] -= int(lp.quantity)
+                        ball["total_payed_b"] += round(lp.quantity * lp.price, 1)
+                        order_obj['total_sold_by_date'] -= round(lp.quantity * lp.price, 1)
+                    else:
+
+                        for tp in lp.transactionpayment_set.all():
+
+                            if tp.cash_flow is not None:
+                                if tp.type == 'FA':  # payments with approved funds
+                                    order_obj["deposited"] += round(lp.price, 1)
+                                    bank.append(tp.cash_flow.cash.name)
+                                    dates_of_deposit.append(str(tp.cash_flow.transaction_date.date()))
+                                    operation_code = ""
+                                    if tp.cash_flow.operation_code is not None:
+                                        operation_code = tp.cash_flow.operation_code
+                                    codes_of_deposit.append(str(operation_code))
+                                    array_of_deposit.append({
+                                        'id': tp.cash_flow.id,
+                                        'code': operation_code,
+                                        'total': round(float(lp.price), 1),
+                                        'revised': tp.cash_flow.revised})
+                                elif tp.cash_flow.type == 'S':  # payments with outputs of expenses
+                                    order_obj["expenses"] += round(tp.cash_flow.total, 1)
+                                    order_obj["other_expenses"].append(tp.cash_flow.description)
+                                    total_expenses += round(tp.cash_flow.total, 1)
+                            else:  # payments to the cash and deposit
+                                order_obj["deposited"] += round(lp.price, 1)
+                                cash_flow_set = CashFlow.objects.filter(total=tp.payment,
+                                                                        transaction_date__date=tp.loan_payment.operation_date,
+                                                                        order_id=order.id)
+                                if cash_flow_set.exists():
+                                    cash_flow_obj = cash_flow_set.last()
+                                    bank.append(cash_flow_obj.cash.name)
+                                    dates_of_deposit.append(str(cash_flow_obj.transaction_date.date()))
+                                    operation_code = ""
+                                    if cash_flow_obj.operation_code is not None:
+                                        operation_code = cash_flow_obj.operation_code
+                                    codes_of_deposit.append(str(operation_code))
+                                    array_of_deposit.append({
+                                        'id': cash_flow_obj.id,
+                                        'code': operation_code,
+                                        'total': round(float(cash_flow_obj.total), 1),
+                                        'revised': cash_flow_obj.revised})
+
+            # bank_without_duplicates = list(set(bank))
+            string_of_banks = ", ".join(bank)
+
+            # dates_of_deposit_without_duplicates = list(set(dates_of_deposit))
+            string_of_dates_of_deposit = ", ".join(dates_of_deposit)
+
+            # codes_of_deposit_without_duplicates = list(set(codes_of_deposit))
+            string_of_codes_of_deposit = ", ".join(codes_of_deposit)
+
+            order_obj['bank'] = string_of_banks
+            order_obj['date_deposit'] = string_of_dates_of_deposit
+            order_obj['code_deposit'] = string_of_codes_of_deposit
+            order_obj['deposit_set'] = array_of_deposit
+
+            order_obj['total_to_deposit'] = order_obj['total_sold_by_date'] - order_obj["expenses"]
+
+            order_obj['balance'] = order_obj['total_to_deposit'] - order_obj["deposited"]
+            total_sales_by_date += order_obj['balance']
+            order_obj['remaining_total_to_deposit'] = total_sales_by_date
+
+        orders = list(grouped_by_date.values())
+        tpl = loader.get_template('comercial/monthly_distribution_by_client_grid_list.html')
+
+        context = ({
+            'user_id': request.user.id,
+            'orders': orders,
+            'header_b10': header_b10,
+            'header_b5': header_b5,
+            'header_b45': header_b45,
+            'header_b15': header_b15,
+
+
+        })
+        if order_set:
+            return JsonResponse({
+                'grid': tpl.render(context)
+            }, status=HTTPStatus.OK)
+        else:
+            data = {'error': "No hay operaciones registradas"}
+            response = JsonResponse(data)
+            response.status_code = HTTPStatus.ACCEPTED
+            return response
+
+
 def get_monthly_distribution_by_licence_plate(request):
     if request.method == 'GET':
         truck_set = Truck.objects.filter(distributionmobil__isnull=False).distinct('license_plate').order_by(
