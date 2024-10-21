@@ -31,7 +31,7 @@ from apps.sales.views_SUNAT import send_bill_nubefact, send_receipt_nubefact, co
 from apps.sales.number_to_letters import numero_a_letras, numero_a_moneda
 from django.utils import timezone
 from django.db.models import Min, Sum, Max, Q, F, Prefetch, Subquery, OuterRef, Value, Window, Q, Count, FloatField, \
-    DecimalField, IntegerField
+    DecimalField, IntegerField, Case, When
 from django.db.models.functions import Greatest
 from django.db.models.functions import (
     ExtractDay, ExtractMonth, ExtractQuarter, ExtractWeek,
