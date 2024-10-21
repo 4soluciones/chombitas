@@ -4136,7 +4136,7 @@ def PerceptronList(request):
         })
 
 
-def get_stock_product_store(request):
+def get_stock_product_stores(request):
     user_id = request.user.id
     user_obj = User.objects.get(id=user_id)
     subsidiary_obj = get_subsidiary_by_user(user_obj)
@@ -4205,6 +4205,116 @@ def get_stock_product_store(request):
                         fid['F15'] = fid['F15'] + dt_dist.quantity
 
                 distribution_dictionary.append(new)
+
+    return render(request, 'sales/report_stock_product_subsidiary.html', {
+        'subsidiary_store_set': subsidiary_store_obj,
+        'dictionary': distribution_dictionary,
+        'dic_stock': dic_stock,
+        'tid': tid,
+        'fid': fid,
+    })
+
+
+def get_stock_product_store(request):
+    user_id = request.user.id
+    user_obj = User.objects.get(id=user_id)
+    subsidiary_obj = get_subsidiary_by_user(user_obj)
+    subsidiary_store_obj = SubsidiaryStore.objects.filter(subsidiary=subsidiary_obj)
+    truck_set = Truck.objects.filter(subsidiary=subsidiary_obj, drive_type='R')
+    product_set = Product.objects.all()
+    dic_stock = {}
+    for p in product_set.filter(product_subcategory_id__in=[4, 5]):
+        stock_ = ProductStore.objects.filter(product__id=p.id,
+                                             subsidiary_store__subsidiary=subsidiary_obj).aggregate(
+            r=Coalesce(Sum('stock'), decimal.Decimal(0.00))).get('r')
+        # row = {
+        #     p.id: stock_['stock__sum'],
+        # }s
+        dic_stock[p.id] = stock_
+        # dic_stock.append(row)
+        # dic_stock[p.id] = {'id': p.id, 'name': p.name, 'stock': stock_['stock__sum']}
+    distribution_dictionary = []
+    tid = {"B5": 0, "B10": 0, "B15": 0, "B45": 0}
+    fid = {"F5": 0, "F10": 0, "F15": 0, "F45": 0}
+    for t in truck_set.all():
+        truck_obj = Truck.objects.get(id=int(t.id))
+        distribution_list = DistributionMobil.objects.filter(status='F', truck=truck_obj,
+                                                             subsidiary=subsidiary_obj).aggregate(Max('id'))
+        product_ids = [2, 1, 12, 3]
+        products = Product.objects.filter(id__in=product_ids)
+
+        if distribution_list['id__max'] is not None:
+            distribution_mobil_obj = DistributionMobil.objects.get(id=int(distribution_list['id__max']))
+            new = {
+                'id_m': distribution_mobil_obj.id,
+                'truck': distribution_mobil_obj.truck.license_plate,
+                'pilot': distribution_mobil_obj.pilot.full_name(),
+                'distribution': [],
+                'count': 4
+            }
+            for p in products:
+                aggregated_data = DistributionDetail.objects.filter(
+                    distribution_mobil__truck=truck_obj,
+                    type__in=['V', 'L'],
+                    distribution_mobil__status='F'
+                ).aggregate(
+                    s=Sum(Case(
+                        When(status__in=['E', 'A'], product__id=p.id, then=Coalesce('quantity', Value(0))),
+                        output_field=DecimalField()
+                    )),
+                    e=Sum(Case(
+                        When(status__in=['D', 'C'], product__id=p.id, then=Coalesce('quantity', Value(0))),
+                        output_field=DecimalField()
+                    ))
+                )
+                total_loanpayment = LoanPayment.objects.filter(
+                    order_detail__order__distribution_mobil__truck=truck_obj,
+                    distribution_mobil__isnull=True,
+                    product__id=p.id
+                ).aggregate(
+                    total_quantity=Coalesce(Sum('quantity'), decimal.Decimal(0))
+                ).get('total_quantity')
+                v = total_loanpayment or decimal.Decimal(0)
+                s = aggregated_data.get('s') or decimal.Decimal(0)
+                e = aggregated_data.get('e') or decimal.Decimal(0)
+                t = s - e - v
+                details_list = DistributionDetail.objects.filter(status='C', distribution_mobil=distribution_mobil_obj,
+                                                                 product__id=p.id).aggregate(
+                    irons_filled=Sum(Case(
+                        When(unit__name='BG', then=Coalesce('quantity', Value(0))),
+                        output_field=DecimalField()
+                    )),
+                    irons_empty=Sum(Case(
+                        When(unit__name='B', then=Coalesce('quantity', Value(0))),
+                        output_field=DecimalField()
+                    ))
+                )
+                irons_filled = details_list.get('irons_filled') or decimal.Decimal(0)
+                irons_empty = details_list.get('irons_empty') or decimal.Decimal(0)
+                details_mobil = {
+                    'id_d': p.id,
+                    'product': p.name,
+                    'quantity': t,
+                    'numbers': {
+                        'quantity_irons_loaned': t,
+                        'quantity_irons_filled_car': irons_filled,
+                        'quantity_empty_irons_car': irons_empty,
+                    }
+                }
+                new.get('distribution').append(details_mobil)
+                if p.id == 1:
+                    tid['B10'] = tid['B10'] + irons_filled
+                    fid['F10'] = fid['F10'] + irons_empty + t
+                elif p.id == 2:
+                    tid['B5'] = tid['B5'] + irons_filled
+                    fid['F5'] = fid['F5'] + irons_empty + t
+                elif p.id == 3:
+                    tid['B45'] = tid['B45'] + irons_filled
+                    fid['F45'] = fid['F45'] + irons_empty + t
+                elif p.id == 12:
+                    tid['B15'] = tid['B15'] + irons_filled
+                    fid['F15'] = fid['F15'] + irons_empty + t
+            distribution_dictionary.append(new)
 
     return render(request, 'sales/report_stock_product_subsidiary.html', {
         'subsidiary_store_set': subsidiary_store_obj,
@@ -5753,7 +5863,6 @@ def report_payments_by_client(request):
 
 
 def report_ball_all_mass(request):
-
     if request.method == 'GET':
 
         my_date = datetime.now()
@@ -5825,7 +5934,7 @@ def report_ball_all_mass(request):
 
         distribution_mobil_set = DistributionMobil.objects.filter(
             date_distribution__range=[start_date_sin_timezone, end_date_sin_timezone]
-        ) .filter(id__in=[q['max'] for q in queryset]).select_related(
+        ).filter(id__in=[q['max'] for q in queryset]).select_related(
             'subsidiary').prefetch_related(
             Prefetch(
                 'distributiondetail_set',
@@ -6083,19 +6192,22 @@ def report_ball_all_mass(request):
             ),
             sum_entries=Subquery(
                 Kardex.objects.filter(
-                    product_store__id=OuterRef('id'), operation='E', create_at__date__range=[start_date_sin_timezone, end_date_sin_timezone]
+                    product_store__id=OuterRef('id'), operation='E',
+                    create_at__date__range=[start_date_sin_timezone, end_date_sin_timezone]
                 ).values('product_store__id').annotate(
                     sum_quantity_of_entry=Sum(F('quantity'))
                 ).values('sum_quantity_of_entry')[:1]
             ),
             sum_departures=Subquery(
                 Kardex.objects.filter(
-                    product_store__id=OuterRef('id'), operation='S', create_at__date__range=[start_date_sin_timezone, end_date_sin_timezone]
+                    product_store__id=OuterRef('id'), operation='S',
+                    create_at__date__range=[start_date_sin_timezone, end_date_sin_timezone]
                 ).values('product_store__id').annotate(
                     sum_quantity_of_departure=Sum(F('quantity'))
                 ).values('sum_quantity_of_departure')[:1]
             ),
-            total_balance=Cast(Coalesce(F('initial_quantity') + F('sum_entries') - F('sum_departures'), Value(0)), output_field=IntegerField())
+            total_balance=Cast(Coalesce(F('initial_quantity') + F('sum_entries') - F('sum_departures'), Value(0)),
+                               output_field=IntegerField())
         )
 
         balls_in_irons = {}
@@ -6166,7 +6278,8 @@ def report_ball_all_mass(request):
             order__type__in=['R', 'V'],
         ).select_related('order__subsidiary', 'product').prefetch_related(
             Prefetch('loanpayment_set', queryset=LoanPayment.objects.only('id', 'order_detail__id', 'quantity'))
-        ).only('id', 'quantity_sold', 'order__subsidiary__id', 'order__subsidiary__name', 'product__id', 'product__name', )
+        ).only('id', 'quantity_sold', 'order__subsidiary__id', 'order__subsidiary__name', 'product__id',
+               'product__name', )
 
         for od in order_detail_set:
             subsidiary_key = od.order.subsidiary.id
@@ -6292,19 +6405,22 @@ def report_ball_all_mass(request):
             ),
             sum_entries=Subquery(
                 Kardex.objects.filter(
-                    product_store__id=OuterRef('id'), operation='E', create_at__date__range=[start_date_sin_timezone, end_date_sin_timezone]
+                    product_store__id=OuterRef('id'), operation='E',
+                    create_at__date__range=[start_date_sin_timezone, end_date_sin_timezone]
                 ).values('product_store__id').annotate(
                     sum_quantity_of_entry=Sum(F('quantity'))
                 ).values('sum_quantity_of_entry')[:1]
             ),
             sum_departures=Subquery(
                 Kardex.objects.filter(
-                    product_store__id=OuterRef('id'), operation='S', create_at__date__range=[start_date_sin_timezone, end_date_sin_timezone]
+                    product_store__id=OuterRef('id'), operation='S',
+                    create_at__date__range=[start_date_sin_timezone, end_date_sin_timezone]
                 ).values('product_store__id').annotate(
                     sum_quantity_of_departure=Sum(F('quantity'))
                 ).values('sum_quantity_of_departure')[:1]
             ),
-            total_balance=Cast(Coalesce(F('initial_quantity') + F('sum_entries') - F('sum_departures'), Value(0)), output_field=IntegerField())
+            total_balance=Cast(Coalesce(F('initial_quantity') + F('sum_entries') - F('sum_departures'), Value(0)),
+                               output_field=IntegerField())
         )
 
         # print(product_store_in_ball)
