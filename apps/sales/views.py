@@ -1,5 +1,5 @@
 import pytz
-from django.db.models.functions import Coalesce, Lag
+from django.db.models.functions import Coalesce, Lag, Cast
 from django.shortcuts import render
 from django.views.generic import TemplateView, View, CreateView, UpdateView
 from django.views.decorators.csrf import csrf_exempt
@@ -30,7 +30,8 @@ from django.core import serializers
 from apps.sales.views_SUNAT import send_bill_nubefact, send_receipt_nubefact, correlative_receipt
 from apps.sales.number_to_letters import numero_a_letras, numero_a_moneda
 from django.utils import timezone
-from django.db.models import Min, Sum, Max, Q, F, Prefetch, Subquery, OuterRef, Value, Window, Q, Count
+from django.db.models import Min, Sum, Max, Q, F, Prefetch, Subquery, OuterRef, Value, Window, Q, Count, FloatField, \
+    DecimalField, IntegerField
 from django.db.models.functions import Greatest
 from django.db.models.functions import (
     ExtractDay, ExtractMonth, ExtractQuarter, ExtractWeek,
@@ -5752,429 +5753,403 @@ def report_payments_by_client(request):
 
 
 def report_ball_all_mass(request):
-    products_in_ball = [1, 12, 2, 3]  # BALONES
-    products_in_ball_names = ['BALON DE 10 KG', 'BALON DE 15 KG', 'BALON DE 5KG', 'BALON DE 45 KG']  # BALONES
-    products_in_iron = [5, 11, 6, 7]  # FIERROS
-    products_in_iron_names = ['FIERRO DE 10 KG ', 'FIERRO DE 15KG', 'FIERRO DE 5 KG', 'FIERRO DE 45 KG']  # FIERROS
-    sum_ball_5 = 0
-    sum_ball_10 = 0
-    sum_ball_15 = 0
-    sum_ball_45 = 0
-    sum_iron_5 = 0
-    sum_iron_10 = 0
-    sum_iron_15 = 0
-    sum_iron_45 = 0
-    sum_ball_loan_5 = 0
-    sum_ball_loan_10 = 0
-    sum_ball_loan_15 = 0
-    sum_ball_loan_45 = 0
-    sum_route_void_5 = 0
-    sum_route_void_10 = 0
-    sum_route_void_15 = 0
-    sum_route_void_45 = 0
-    sum_route_filled_5 = 0
-    sum_route_filled_10 = 0
-    sum_route_filled_15 = 0
-    sum_route_filled_45 = 0
-    sum_car_void_5 = 0
-    sum_car_void_10 = 0
-    sum_car_void_15 = 0
-    sum_car_void_45 = 0
-    sum_car_filled_5 = 0
-    sum_car_filled_10 = 0
-    sum_car_filled_15 = 0
-    sum_car_filled_45 = 0
-    sum_total_ball_5 = 0
-    sum_total_ball_10 = 0
-    sum_total_ball_15 = 0
-    sum_total_ball_45 = 0
 
-    subsidiaries_dict = []
+    if request.method == 'GET':
 
-    subsidiaries = [1, 2, 3, 4, 5, 6, 7]
+        my_date = datetime.now()
+        formatdate = my_date.strftime("%Y-%m-%d")
+        return render(request, 'sales/report_ball_all_mass.html', {
+            'current_year': datetime.now().year,
+            'current_month': datetime.now().month,
+            'formatdate': formatdate,
+        })
+    elif request.method == 'POST':
 
-    balls = {}
+        start_date = str(request.POST.get('start-date'))
+        end_date = str(request.POST.get('end-date'))
 
-    # queryset = DistributionMobil.objects \
-    #     .filter(subsidiary__id__in=subsidiaries, status='F', distributiondetail__isnull=False) \
-    #     .values('pilot__id', 'subsidiary__id').annotate(max=Max('id'))
+        start_date_sin_timezone = datetime.strptime(start_date, '%Y-%m-%d')
+        end_date_sin_timezone = datetime.strptime(end_date, '%Y-%m-%d')
 
-    queryset = DistributionMobil.objects \
-        .filter(subsidiary__id__in=subsidiaries, distributiondetail__isnull=False) \
-        .values('truck__license_plate', 'subsidiary__id').annotate(max=Max('id'))
+        products_in_ball = [1, 12, 2, 3]  # BALONES
+        products_in_ball_names = ['BALON DE 10 KG', 'BALON DE 15 KG', 'BALON DE 5KG', 'BALON DE 45 KG']  # BALONES
+        products_in_iron = [5, 11, 6, 7]  # FIERROS
+        products_in_iron_names = ['FIERRO DE 10 KG ', 'FIERRO DE 15KG', 'FIERRO DE 5 KG', 'FIERRO DE 45 KG']  # FIERROS
+        sum_ball_5 = 0
+        sum_ball_10 = 0
+        sum_ball_15 = 0
+        sum_ball_45 = 0
+        sum_iron_5 = 0
+        sum_iron_10 = 0
+        sum_iron_15 = 0
+        sum_iron_45 = 0
+        sum_ball_loan_5 = 0
+        sum_ball_loan_10 = 0
+        sum_ball_loan_15 = 0
+        sum_ball_loan_45 = 0
+        sum_route_void_5 = 0
+        sum_route_void_10 = 0
+        sum_route_void_15 = 0
+        sum_route_void_45 = 0
+        sum_route_filled_5 = 0
+        sum_route_filled_10 = 0
+        sum_route_filled_15 = 0
+        sum_route_filled_45 = 0
+        sum_car_void_5 = 0
+        sum_car_void_10 = 0
+        sum_car_void_15 = 0
+        sum_car_void_45 = 0
+        sum_car_filled_5 = 0
+        sum_car_filled_10 = 0
+        sum_car_filled_15 = 0
+        sum_car_filled_45 = 0
+        sum_total_ball_5 = 0
+        sum_total_ball_10 = 0
+        sum_total_ball_15 = 0
+        sum_total_ball_45 = 0
 
-    print(queryset)
+        subsidiaries_dict = []
 
-    distribution_mobil_set = DistributionMobil.objects.filter(id__in=[q['max'] for q in queryset]).select_related(
-        'subsidiary').prefetch_related(
-        Prefetch(
-            'distributiondetail_set',
-            queryset=DistributionDetail.objects.filter(
-                Q(distribution_mobil__status='F', status='C') | Q(distribution_mobil__status='P', status='E'),
-                type__in=['L', 'V'], product__id__in=products_in_ball
-            ).select_related('product').only(
-                'id', 'type', 'distribution_mobil', 'quantity', 'product__id', 'product__name')
+        subsidiaries = [1, 2, 3, 4, 5, 6, 7]
+
+        balls = {}
+
+        # queryset = DistributionMobil.objects \
+        #     .filter(subsidiary__id__in=subsidiaries, status='F', distributiondetail__isnull=False) \
+        #     .values('pilot__id', 'subsidiary__id').annotate(max=Max('id'))
+
+        queryset = DistributionMobil.objects \
+            .filter(date_distribution__range=[start_date_sin_timezone, end_date_sin_timezone]) \
+            .filter(subsidiary__id__in=subsidiaries, distributiondetail__isnull=False) \
+            .values('truck__license_plate', 'subsidiary__id').annotate(max=Max('id'))
+
+        distribution_mobil_set = DistributionMobil.objects.filter(
+            date_distribution__range=[start_date_sin_timezone, end_date_sin_timezone]
+        ) .filter(id__in=[q['max'] for q in queryset]).select_related(
+            'subsidiary').prefetch_related(
+            Prefetch(
+                'distributiondetail_set',
+                queryset=DistributionDetail.objects.filter(
+                    Q(distribution_mobil__status='F', status='C') | Q(distribution_mobil__status='P', status='E'),
+                    type__in=['L', 'V'], product__id__in=products_in_ball
+                ).select_related('product').only(
+                    'id', 'type', 'distribution_mobil', 'quantity', 'product__id', 'product__name')
+            )
+        ).only('id', 'subsidiary__id', 'subsidiary__name')
+
+        balls_in_distribution = {}
+
+        for dist in distribution_mobil_set:
+            for d in dist.distributiondetail_set.all():
+
+                subsidiary_key = dist.subsidiary.id
+                if subsidiary_key in balls:
+                    subsidiary = balls[subsidiary_key]
+                    ball_dict = subsidiary.get('distributions')
+                else:
+                    ball_dict = {}
+                    balls[subsidiary_key] = {
+                        'subsidiary_id': dist.subsidiary.id,
+                        'subsidiary_name': dist.subsidiary.name,
+                        'distributions': ball_dict,
+                    }
+
+                if d.type == 'V':
+                    if d.product.id == 1:  # BALON DE 10
+                        sum_car_void_10 += d.quantity
+                    elif d.product.id == 12:  # BALON DE 15
+                        sum_car_void_15 += d.quantity
+                    elif d.product.id == 2:  # BALON DE 5
+                        sum_car_void_5 += d.quantity
+                    elif d.product.id == 3:  # BALON DE 45
+                        sum_car_void_45 += d.quantity
+                elif d.type == 'L':
+                    if d.product.id == 1:  # BALON DE 10
+                        sum_car_filled_10 += d.quantity
+                    elif d.product.id == 12:  # BALON DE 15
+                        sum_car_filled_15 += d.quantity
+                    elif d.product.id == 2:  # BALON DE 5
+                        sum_car_filled_5 += d.quantity
+                    elif d.product.id == 3:  # BALON DE 45
+                        sum_car_filled_45 += d.quantity
+                stock_l = 0
+                stock_v = 0
+                search_value = d.product.id
+                if search_value in ball_dict:
+                    product = ball_dict[search_value]
+                    if d.type == 'L':
+                        stock_l = product.get('distribution_ball_filled')
+                        ball_dict[search_value]['distribution_ball_filled'] = stock_l + d.quantity
+                    elif d.type == 'V':
+                        stock_v = product.get('distribution_ball_void')
+                        ball_dict[search_value]['distribution_ball_void'] = stock_v + d.quantity
+                else:
+                    if d.type == 'L':
+                        stock_l = d.quantity
+                    elif d.type == 'V':
+                        stock_v = d.quantity
+                    ball_dict[search_value] = {
+                        'product_id': d.product.id,
+                        'product_name_ball': d.product.name,
+                        'product_name_iron': '',
+                        'stock_iron': 0,
+                        'stock_ball': 0,
+                        'ball_loan': 0,
+                        'car_ball_filled': 0,
+                        'car_ball_void': 0,
+                        'distribution_ball_filled': stock_l,
+                        'distribution_ball_void': stock_v,
+                        'distribution_detail_id': d.id,
+                    }
+                balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
+
+        programming_set = Programming.objects.filter(
+            departure_date__range=[start_date_sin_timezone, end_date_sin_timezone]
+        ).filter(status='P').prefetch_related(
+            Prefetch(
+                'route_set',
+                queryset=Route.objects.filter(
+                    type='D', subsidiary__id__in=subsidiaries
+                ).select_related('subsidiary').only('id', 'programming__id', 'subsidiary__id', 'subsidiary__name')
+            ),
+            Prefetch(
+                'guide_set', queryset=Guide.objects.prefetch_related(
+                    # type__in = ('1', 'VACIO(S)'), ('2', 'LLENO(S)')
+                    Prefetch(
+                        'guidedetail_set',
+                        queryset=GuideDetail.objects.filter(
+                            type__in=['1', '2'], product__id__in=products_in_ball
+                        ).select_related('product').only(
+                            'id', 'guide__id', 'type', 'quantity', 'product__id', 'product__name'
+                        )
+                    )
+                ).only('id', 'programming')
+            ),
+        ).only('id')
+
+        balls_pending_arrival = {}
+        for prg in programming_set:
+
+            s = None
+
+            for r in prg.route_set.all():
+                s = r.subsidiary
+
+            if s is not None:
+
+                for g in prg.guide_set.all():
+
+                    for gd in g.guidedetail_set.all():
+                        subsidiary_key = s.id
+                        if subsidiary_key in balls:
+                            subsidiary = balls[subsidiary_key]
+                            ball_dict = subsidiary.get('distributions')
+                        else:
+                            ball_dict = {}
+                            balls[subsidiary_key] = {
+                                'subsidiary_id': s.id,
+                                'subsidiary_name': s.name,
+                                'distributions': ball_dict,
+                            }
+
+                        if gd.type == '1':
+                            if gd.product.id == 1:  # BALON DE 10
+                                sum_route_void_10 += gd.quantity
+                            elif gd.product.id == 12:  # BALON DE 15
+                                sum_route_void_15 += gd.quantity
+                            elif gd.product.id == 2:  # BALON DE 5
+                                sum_route_void_5 += gd.quantity
+                            elif gd.product.id == 3:  # BALON DE 45
+                                sum_route_void_45 += gd.quantity
+                        elif gd.type == '2':
+                            if gd.product.id == 1:  # BALON DE 10
+                                sum_route_filled_10 += gd.quantity
+                            elif gd.product.id == 12:  # BALON DE 15
+                                sum_route_filled_15 += gd.quantity
+                            elif gd.product.id == 2:  # BALON DE 5
+                                sum_route_filled_5 += gd.quantity
+                            elif gd.product.id == 3:  # BALON DE 45
+                                sum_route_filled_45 += gd.quantity
+                        stock_void = 0
+                        stock_filled = 0
+                        search_value = gd.product.id
+                        if search_value in ball_dict:
+                            product = ball_dict[search_value]
+                            if gd.type == '1':
+                                stock_void = product.get('car_ball_void')
+                                ball_dict[search_value]['car_ball_void'] = stock_void + gd.quantity
+                            elif gd.type == '2':
+                                stock_filled = product.get('car_ball_filled')
+                                ball_dict[search_value]['car_ball_filled'] = stock_filled + gd.quantity
+                        else:
+                            if gd.type == '1':
+                                stock_void = gd.quantity
+                            elif gd.type == '2':
+                                stock_filled = gd.quantity
+                            ball_dict[search_value] = {
+                                'product_id': gd.product.id,
+                                'product_name_ball': gd.product.name,
+                                'product_name_iron': '',
+                                'stock_iron': 0,
+                                'stock_ball': 0,
+                                'ball_loan': 0,
+                                'car_ball_filled': stock_filled,
+                                'car_ball_void': stock_void,
+                                'distribution_ball_filled': 0,
+                                'distribution_ball_void': 0,
+                                'type': gd.type,
+                            }
+                        balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
+
+        # kardex_in_iron = Kardex.objects.filter(
+        #     create_at__date__range=[start_date_sin_timezone, end_date_sin_timezone]
+        # ).filter(
+        #     product_store__subsidiary_store__category__in=['I', 'R'],
+        #     product_store__subsidiary_store__subsidiary__id__in=subsidiaries,
+        #     product_store__product__id__in=products_in_iron
+        # ).select_related('product_store__subsidiary_store__subsidiary', 'product_store__product').only(
+        #     'id', 'quantity', 'remaining_quantity',
+        #     'product_store__id', 'product_store__stock', 'product_store__product__id', 'product_store__product__name',
+        #     'product_store__subsidiary_store__subsidiary__id',
+        #     'product_store__subsidiary_store__subsidiary__name',
+        # )
+        # for ki in kardex_in_iron:
+        #     subsidiary_key = ki.product_store.subsidiary_store.subsidiary.id
+        #     if subsidiary_key in balls:
+        #         subsidiary = balls[subsidiary_key]
+        #         ball_dict = subsidiary.get('distributions')
+        #     else:
+        #         ball_dict = {}
+        #         balls[subsidiary_key] = {
+        #             'subsidiary_id': ki.product_store.subsidiary_store.subsidiary.id,
+        #             'subsidiary_name': ki.product_store.subsidiary_store.subsidiary.name,
+        #             'distributions': ball_dict,
+        #         }
+        #     if ki.product_store.product.id == 5:  # FIERRO DE 10
+        #         sum_iron_10 += ki.quantity
+        #     elif ki.product_store.product.id == 11:  # FIERRO DE 15
+        #         sum_iron_15 += ki.quantity
+        #     elif ki.product_store.product.id == 6:  # FIERRO DE 5
+        #         sum_iron_5 += ki.quantity
+        #     elif ki.product_store.product.id == 7:  # FIERRO DE 45
+        #         sum_iron_45 += ki.quantity
+        #
+        #     search_value = ki.product_store.product.id
+        #     product_name_ball = ''
+        #     if search_value == 5:  # BALON DE 10
+        #         search_value = 1
+        #         product_name_ball = 'BALON DE 10 KG'
+        #     elif search_value == 11:  # BALON DE 15
+        #         search_value = 12
+        #         product_name_ball = 'BALON DE 15 KG'
+        #     elif search_value == 6:  # BALON DE 5
+        #         search_value = 2
+        #         product_name_ball = 'BALON DE 5 KG'
+        #     elif search_value == 7:  # BALON DE 45
+        #         search_value = 3
+        #         product_name_ball = 'BALON DE 45 KG'
+        #
+        #     if search_value in ball_dict.keys():
+        #         product = ball_dict[search_value]
+        #         stock = product.get('stock_iron')
+        #         product_name_iron = product.get('product_name_iron')
+        #         ball_dict[search_value]['product_name_iron'] = ki.product_store.product.name
+        #         ball_dict[search_value]['stock_iron'] = stock + ki.quantity
+        #     else:
+        #         ball_dict[search_value] = {
+        #             'product_id': ki.product_store.product.id,
+        #             'product_name_ball': product_name_ball,
+        #             'product_name_iron': ki.product_store.product.name,
+        #             'stock_iron': ki.quantity,
+        #             'stock_ball': 0,
+        #             'ball_loan': 0,
+        #             'car_ball_filled': 0,
+        #             'car_ball_void': 0,
+        #             'distribution_ball_filled': 0,
+        #             'distribution_ball_void': 0,
+        #         }
+        #     balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
+
+        product_store_in_iron = ProductStore.objects.filter(
+            subsidiary_store__category__in=['I', 'R'],
+            subsidiary_store__subsidiary__id__in=subsidiaries,
+            product__id__in=products_in_iron
+        ).select_related('subsidiary_store__subsidiary', 'product').annotate(
+            initial_quantity=Subquery(
+                Kardex.objects.filter(
+                    product_store=OuterRef('id'),
+                    create_at__date__range=[start_date_sin_timezone, end_date_sin_timezone]
+                ).order_by('id', 'create_at').values('remaining_quantity')[:1]
+            ),
+            sum_entries=Subquery(
+                Kardex.objects.filter(
+                    product_store__id=OuterRef('id'), operation='E', create_at__date__range=[start_date_sin_timezone, end_date_sin_timezone]
+                ).values('product_store__id').annotate(
+                    sum_quantity_of_entry=Sum(F('quantity'))
+                ).values('sum_quantity_of_entry')[:1]
+            ),
+            sum_departures=Subquery(
+                Kardex.objects.filter(
+                    product_store__id=OuterRef('id'), operation='S', create_at__date__range=[start_date_sin_timezone, end_date_sin_timezone]
+                ).values('product_store__id').annotate(
+                    sum_quantity_of_departure=Sum(F('quantity'))
+                ).values('sum_quantity_of_departure')[:1]
+            ),
+            total_balance=Cast(Coalesce(F('initial_quantity') + F('sum_entries') - F('sum_departures'), Value(0)), output_field=IntegerField())
         )
-    ).only('id', 'subsidiary__id', 'subsidiary__name')
 
-    balls_in_distribution = {}
+        balls_in_irons = {}
+        for ps in product_store_in_iron:
 
-    for dist in distribution_mobil_set:
-        for d in dist.distributiondetail_set.all():
+            subsidiary_key = ps.subsidiary_store.subsidiary.id
 
-            subsidiary_key = dist.subsidiary.id
             if subsidiary_key in balls:
                 subsidiary = balls[subsidiary_key]
                 ball_dict = subsidiary.get('distributions')
             else:
                 ball_dict = {}
                 balls[subsidiary_key] = {
-                    'subsidiary_id': dist.subsidiary.id,
-                    'subsidiary_name': dist.subsidiary.name,
+                    'subsidiary_id': ps.subsidiary_store.subsidiary.id,
+                    'subsidiary_name': ps.subsidiary_store.subsidiary.name,
                     'distributions': ball_dict,
                 }
 
-            if d.type == 'V':
-                if d.product.id == 1:  # BALON DE 10
-                    sum_car_void_10 += d.quantity
-                elif d.product.id == 12:  # BALON DE 15
-                    sum_car_void_15 += d.quantity
-                elif d.product.id == 2:  # BALON DE 5
-                    sum_car_void_5 += d.quantity
-                elif d.product.id == 3:  # BALON DE 45
-                    sum_car_void_45 += d.quantity
-            elif d.type == 'L':
-                if d.product.id == 1:  # BALON DE 10
-                    sum_car_filled_10 += d.quantity
-                elif d.product.id == 12:  # BALON DE 15
-                    sum_car_filled_15 += d.quantity
-                elif d.product.id == 2:  # BALON DE 5
-                    sum_car_filled_5 += d.quantity
-                elif d.product.id == 3:  # BALON DE 45
-                    sum_car_filled_45 += d.quantity
-            stock_l = 0
-            stock_v = 0
-            search_value = d.product.id
-            if search_value in ball_dict:
+            if ps.product.id == 5:  # FIERRO DE 10
+                sum_iron_10 += ps.total_balance
+            elif ps.product.id == 11:  # FIERRO DE 15
+                sum_iron_15 += ps.total_balance
+            elif ps.product.id == 6:  # FIERRO DE 5
+                sum_iron_5 += ps.total_balance
+            elif ps.product.id == 7:  # FIERRO DE 45
+                sum_iron_45 += ps.total_balance
+
+            search_value = ps.product.id
+            product_name_ball = ''
+            if search_value == 5:  # BALON DE 10
+                search_value = 1
+                product_name_ball = 'BALON DE 10 KG'
+            elif search_value == 11:  # BALON DE 15
+                search_value = 12
+                product_name_ball = 'BALON DE 15 KG'
+            elif search_value == 6:  # BALON DE 5
+                search_value = 2
+                product_name_ball = 'BALON DE 5 KG'
+            elif search_value == 7:  # BALON DE 45
+                search_value = 3
+                product_name_ball = 'BALON DE 45 KG'
+
+            if search_value in ball_dict.keys():
                 product = ball_dict[search_value]
-                if d.type == 'L':
-                    stock_l = product.get('distribution_ball_filled')
-                    ball_dict[search_value]['distribution_ball_filled'] = stock_l + d.quantity
-                elif d.type == 'V':
-                    stock_v = product.get('distribution_ball_void')
-                    ball_dict[search_value]['distribution_ball_void'] = stock_v + d.quantity
+                stock = product.get('stock_iron')
+                product_name_iron = product.get('product_name_iron')
+                ball_dict[search_value]['product_name_iron'] = ps.product.name
+                ball_dict[search_value]['stock_iron'] = stock + ps.total_balance
             else:
-                if d.type == 'L':
-                    stock_l = d.quantity
-                elif d.type == 'V':
-                    stock_v = d.quantity
                 ball_dict[search_value] = {
-                    'product_id': d.product.id,
-                    'product_name_ball': d.product.name,
-                    'product_name_iron': '',
-                    'stock_iron': 0,
-                    'stock_ball': 0,
-                    'ball_loan': 0,
-                    'car_ball_filled': 0,
-                    'car_ball_void': 0,
-                    'distribution_ball_filled': stock_l,
-                    'distribution_ball_void': stock_v,
-                    'distribution_detail_id': d.id,
-                }
-            balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
-
-    programming_set = Programming.objects.filter(status='P').prefetch_related(
-        Prefetch(
-            'route_set',
-            queryset=Route.objects.filter(
-                type='D', subsidiary__id__in=subsidiaries
-            ).select_related('subsidiary').only('id', 'programming__id', 'subsidiary__id', 'subsidiary__name')
-        ),
-        Prefetch(
-            'guide_set', queryset=Guide.objects.prefetch_related(
-                # type__in = ('1', 'VACIO(S)'), ('2', 'LLENO(S)')
-                Prefetch(
-                    'guidedetail_set',
-                    queryset=GuideDetail.objects.filter(
-                        type__in=['1', '2'], product__id__in=products_in_ball
-                    ).select_related('product').only(
-                        'id', 'guide__id', 'type', 'quantity', 'product__id', 'product__name'
-                    )
-                )
-            ).only('id', 'programming')
-        ),
-    ).only('id')
-
-    balls_pending_arrival = {}
-    for prg in programming_set:
-
-        s = None
-
-        for r in prg.route_set.all():
-            s = r.subsidiary
-
-        if s is not None:
-
-            for g in prg.guide_set.all():
-
-                for gd in g.guidedetail_set.all():
-                    subsidiary_key = s.id
-                    if subsidiary_key in balls:
-                        subsidiary = balls[subsidiary_key]
-                        ball_dict = subsidiary.get('distributions')
-                    else:
-                        ball_dict = {}
-                        balls[subsidiary_key] = {
-                            'subsidiary_id': s.id,
-                            'subsidiary_name': s.name,
-                            'distributions': ball_dict,
-                        }
-
-                    if gd.type == '1':
-                        if gd.product.id == 1:  # BALON DE 10
-                            sum_route_void_10 += gd.quantity
-                        elif gd.product.id == 12:  # BALON DE 15
-                            sum_route_void_15 += gd.quantity
-                        elif gd.product.id == 2:  # BALON DE 5
-                            sum_route_void_5 += gd.quantity
-                        elif gd.product.id == 3:  # BALON DE 45
-                            sum_route_void_45 += gd.quantity
-                    elif gd.type == '2':
-                        if gd.product.id == 1:  # BALON DE 10
-                            sum_route_filled_10 += gd.quantity
-                        elif gd.product.id == 12:  # BALON DE 15
-                            sum_route_filled_15 += gd.quantity
-                        elif gd.product.id == 2:  # BALON DE 5
-                            sum_route_filled_5 += gd.quantity
-                        elif gd.product.id == 3:  # BALON DE 45
-                            sum_route_filled_45 += gd.quantity
-                    stock_void = 0
-                    stock_filled = 0
-                    search_value = gd.product.id
-                    if search_value in ball_dict:
-                        product = ball_dict[search_value]
-                        if gd.type == '1':
-                            stock_void = product.get('car_ball_void')
-                            ball_dict[search_value]['car_ball_void'] = stock_void + gd.quantity
-                        elif gd.type == '2':
-                            stock_filled = product.get('car_ball_filled')
-                            ball_dict[search_value]['car_ball_filled'] = stock_filled + gd.quantity
-                    else:
-                        if gd.type == '1':
-                            stock_void = gd.quantity
-                        elif gd.type == '2':
-                            stock_filled = gd.quantity
-                        ball_dict[search_value] = {
-                            'product_id': gd.product.id,
-                            'product_name_ball': gd.product.name,
-                            'product_name_iron': '',
-                            'stock_iron': 0,
-                            'stock_ball': 0,
-                            'ball_loan': 0,
-                            'car_ball_filled': stock_filled,
-                            'car_ball_void': stock_void,
-                            'distribution_ball_filled': 0,
-                            'distribution_ball_void': 0,
-                            'type': gd.type,
-                        }
-                    balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
-
-    product_store_in_iron = ProductStore.objects.filter(
-        subsidiary_store__category__in=['I', 'R'],
-        subsidiary_store__subsidiary__id__in=subsidiaries,
-        product__id__in=products_in_iron
-    ).select_related('subsidiary_store__subsidiary', 'product').only(
-        'id', 'stock', 'product__id', 'product__name',
-        'subsidiary_store__subsidiary__id',
-        'subsidiary_store__subsidiary__name',
-    )
-
-    balls_in_irons = {}
-    for ps in product_store_in_iron:
-
-        subsidiary_key = ps.subsidiary_store.subsidiary.id
-
-        if subsidiary_key in balls:
-            subsidiary = balls[subsidiary_key]
-            ball_dict = subsidiary.get('distributions')
-        else:
-            ball_dict = {}
-            balls[subsidiary_key] = {
-                'subsidiary_id': ps.subsidiary_store.subsidiary.id,
-                'subsidiary_name': ps.subsidiary_store.subsidiary.name,
-                'distributions': ball_dict,
-            }
-
-        if ps.product.id == 5:  # FIERRO DE 10
-            sum_iron_10 += ps.stock
-        elif ps.product.id == 11:  # FIERRO DE 15
-            sum_iron_15 += ps.stock
-        elif ps.product.id == 6:  # FIERRO DE 5
-            sum_iron_5 += ps.stock
-        elif ps.product.id == 7:  # FIERRO DE 45
-            sum_iron_45 += ps.stock
-
-        search_value = ps.product.id
-        product_name_ball = ''
-        if search_value == 5:  # BALON DE 10
-            search_value = 1
-            product_name_ball = 'BALON DE 10 KG'
-        elif search_value == 11:  # BALON DE 15
-            search_value = 12
-            product_name_ball = 'BALON DE 15 KG'
-        elif search_value == 6:  # BALON DE 5
-            search_value = 2
-            product_name_ball = 'BALON DE 5 KG'
-        elif search_value == 7:  # BALON DE 45
-            search_value = 3
-            product_name_ball = 'BALON DE 45 KG'
-
-        if search_value in ball_dict.keys():
-            product = ball_dict[search_value]
-            stock = product.get('stock_iron')
-            product_name_iron = product.get('product_name_iron')
-            ball_dict[search_value]['product_name_iron'] = ps.product.name
-            ball_dict[search_value]['stock_iron'] = stock + ps.stock
-        else:
-            ball_dict[search_value] = {
-                'product_id': ps.product.id,
-                'product_name_ball': product_name_ball,
-                'product_name_iron': ps.product.name,
-                'stock_iron': ps.stock,
-                'stock_ball': 0,
-                'ball_loan': 0,
-                'car_ball_filled': 0,
-                'car_ball_void': 0,
-                'distribution_ball_filled': 0,
-                'distribution_ball_void': 0,
-            }
-        balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
-
-    order_detail_set = OrderDetail.objects.filter(
-        order__subsidiary__id__in=subsidiaries, product__id__in=products_in_ball, unit__name='B',
-        order__type__in=['R', 'V'],
-    ).select_related('order__subsidiary', 'product').prefetch_related(
-        Prefetch('loanpayment_set', queryset=LoanPayment.objects.only('id', 'order_detail__id', 'quantity'))
-    ).only('id', 'quantity_sold', 'order__subsidiary__id', 'order__subsidiary__name', 'product__id', 'product__name', )
-
-    for od in order_detail_set:
-        subsidiary_key = od.order.subsidiary.id
-
-        if subsidiary_key in balls:
-            subsidiary = balls[subsidiary_key]
-            ball_dict = subsidiary.get('distributions')
-        else:
-            ball_dict = {}
-            balls[subsidiary_key] = {
-                'subsidiary_id': od.order.subsidiary.id,
-                'subsidiary_name': od.order.subsidiary.name,
-                'distributions': ball_dict,
-            }
-
-        loan_payment_set = od.loanpayment_set.all()
-        ball_loan = 0
-        if loan_payment_set.exists():
-            ball_loan_total = 0
-            ball_total = od.quantity_sold
-            for lp in loan_payment_set:
-                ball_loan_total = ball_loan_total + lp.quantity
-            ball_loan = ball_total - ball_loan_total
-        else:
-            ball_loan = od.quantity_sold
-
-        if od.product.id == 1:  # BALON DE 10
-            sum_ball_loan_10 += ball_loan
-        elif od.product.id == 12:  # BALON DE 15
-            sum_ball_loan_15 += ball_loan
-        elif od.product.id == 2:  # BALON DE 5
-            sum_ball_loan_5 += ball_loan
-        elif od.product.id == 3:  # BALON DE 45
-            sum_ball_loan_45 += ball_loan
-
-        search_value = od.product.id
-
-        if search_value in ball_dict:
-            product = ball_dict[search_value]
-            old_ball_loan = product.get('ball_loan')
-            ball_dict[search_value]['ball_loan'] = old_ball_loan + ball_loan
-        else:
-            ball_dict[search_value] = {
-                'product_id': od.product.id,
-                'product_name_ball': od.product.name,
-                'product_name_iron': '',
-                'stock_iron': 0,
-                'stock_ball': 0,
-                'ball_loan': ball_loan,
-                'car_ball_filled': 0,
-                'car_ball_void': 0,
-                'distribution_ball_filled': 0,
-                'distribution_ball_void': 0,
-            }
-        balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
-
-    product_store_in_ball = ProductStore.objects.filter(
-        subsidiary_store__category__in=['V', 'R', 'O'], subsidiary_store__subsidiary__id__in=subsidiaries,
-        product__id__in=products_in_ball
-    ).select_related('subsidiary_store__subsidiary', 'product').only(
-        'id', 'stock', 'product__id', 'product__name',
-        'subsidiary_store__subsidiary__id',
-        'subsidiary_store__subsidiary__name',
-    )
-
-    for ps in product_store_in_ball:
-
-        subsidiary_key = ps.subsidiary_store.subsidiary.id
-
-        if subsidiary_key in balls:
-            subsidiary = balls[subsidiary_key]
-            ball_dict = subsidiary.get('distributions')
-        else:
-            ball_dict = {}
-            balls[subsidiary_key] = {
-                'subsidiary_id': ps.subsidiary_store.subsidiary.id,
-                'subsidiary_name': ps.subsidiary_store.subsidiary.name,
-                'distributions': ball_dict,
-            }
-
-        search_value = ps.product.id
-        if ps.product.id == 1:  # BALON DE 10
-            sum_ball_10 += ps.stock
-        elif ps.product.id == 12:  # BALON DE 15
-            sum_ball_15 += ps.stock
-        elif ps.product.id == 2:  # BALON DE 5
-            sum_ball_5 += ps.stock
-        elif ps.product.id == 3:  # BALON DE 45
-            sum_ball_45 += ps.stock
-
-        if search_value in ball_dict:
-            product = ball_dict[search_value]
-            stock = product.get('stock_ball')
-            ball_dict[search_value]['stock_ball'] = stock + ps.stock
-        else:
-            ball_dict[search_value] = {
-                'product_id': ps.product.id,
-                'product_name_iron': '',
-                'product_name_ball': ps.product.name,
-                'stock_iron': 0,
-                'stock_ball': ps.stock,
-                'ball_loan': 0,
-                'car_ball_filled': 0,
-                'car_ball_void': 0,
-                'distribution_ball_void': 0,
-                'distribution_ball_filled': 0,
-            }
-        balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
-
-    balls_sorted = {}
-    for s in subsidiaries:
-        distributions_sorted = {}
-        for p in products_in_ball:
-            if p in balls[s]['distributions']:
-                distributions_sorted[p] = balls[s]['distributions'][p]
-            else:
-                distributions_sorted[p] = {
-                    'product_id': p,
-                    'stock_iron': 0,
+                    'product_id': ps.product.id,
+                    'product_name_ball': product_name_ball,
+                    'product_name_iron': ps.product.name,
+                    'stock_iron': ps.total_balance,
                     'stock_ball': 0,
                     'ball_loan': 0,
                     'car_ball_filled': 0,
@@ -6182,68 +6157,296 @@ def report_ball_all_mass(request):
                     'distribution_ball_filled': 0,
                     'distribution_ball_void': 0,
                 }
-        balls_sorted[s] = balls[s]
-        balls_sorted[s]['distributions'] = distributions_sorted
+            balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
 
-    sum_total_ball_filled_10 = sum_ball_10 + sum_route_filled_10 + sum_ball_loan_10 + sum_car_filled_10
-    sum_total_ball_filled_15 = sum_ball_15 + sum_route_filled_15 + sum_ball_loan_15 + sum_car_filled_15
-    sum_total_ball_filled_5 = sum_ball_5 + sum_route_filled_5 + sum_ball_loan_5 + sum_car_filled_5
-    sum_total_ball_filled_45 = sum_ball_45 + sum_route_filled_45 + sum_ball_loan_45 + sum_car_filled_45
+        order_detail_set = OrderDetail.objects.filter(
+            order__create_at__date__range=[start_date_sin_timezone, end_date_sin_timezone]
+        ).filter(
+            order__subsidiary__id__in=subsidiaries, product__id__in=products_in_ball, unit__name='B',
+            order__type__in=['R', 'V'],
+        ).select_related('order__subsidiary', 'product').prefetch_related(
+            Prefetch('loanpayment_set', queryset=LoanPayment.objects.only('id', 'order_detail__id', 'quantity'))
+        ).only('id', 'quantity_sold', 'order__subsidiary__id', 'order__subsidiary__name', 'product__id', 'product__name', )
 
-    sum_total_ball_void_10 = sum_iron_10 + sum_route_void_10 + sum_car_void_10
-    sum_total_ball_void_15 = sum_iron_15 + sum_route_void_15 + sum_car_void_15
-    sum_total_ball_void_5 = sum_iron_5 + sum_route_void_5 + sum_car_void_5
-    sum_total_ball_void_45 = sum_iron_45 + sum_route_void_45 + sum_car_void_45
+        for od in order_detail_set:
+            subsidiary_key = od.order.subsidiary.id
 
-    sum_total_ball_5 = sum_total_ball_filled_5 + sum_total_ball_void_5
-    sum_total_ball_10 = sum_total_ball_filled_10 + sum_total_ball_void_10
-    sum_total_ball_15 = sum_total_ball_filled_15 + sum_total_ball_void_15
-    sum_total_ball_45 = sum_total_ball_filled_45 + sum_total_ball_void_45
+            if subsidiary_key in balls:
+                subsidiary = balls[subsidiary_key]
+                ball_dict = subsidiary.get('distributions')
+            else:
+                ball_dict = {}
+                balls[subsidiary_key] = {
+                    'subsidiary_id': od.order.subsidiary.id,
+                    'subsidiary_name': od.order.subsidiary.name,
+                    'distributions': ball_dict,
+                }
 
-    return render(request, 'sales/report_ball_all_mass.html', {
-        'balls': balls_sorted,
-        'subsidiaries_dict': subsidiaries_dict,
-        'sum_ball_10': sum_ball_10,
-        'sum_ball_15': sum_ball_15,
-        'sum_ball_5': sum_ball_5,
-        'sum_ball_45': sum_ball_45,
-        'sum_ball_loan_5': sum_ball_loan_5,
-        'sum_ball_loan_10': sum_ball_loan_10,
-        'sum_ball_loan_15': sum_ball_loan_15,
-        'sum_ball_loan_45': sum_ball_loan_45,
-        'sum_iron_10': sum_iron_10,
-        'sum_iron_15': sum_iron_15,
-        'sum_iron_5': sum_iron_5,
-        'sum_iron_45': sum_iron_45,
-        'sum_route_void_5': sum_route_void_5,
-        'sum_route_void_10': sum_route_void_10,
-        'sum_route_void_15': sum_route_void_15,
-        'sum_route_void_45': sum_route_void_45,
-        'sum_route_filled_5': sum_route_filled_5,
-        'sum_route_filled_10': sum_route_filled_10,
-        'sum_route_filled_15': sum_route_filled_15,
-        'sum_route_filled_45': sum_route_filled_45,
-        'sum_car_void_5': sum_car_void_5,
-        'sum_car_void_10': sum_car_void_10,
-        'sum_car_void_15': sum_car_void_15,
-        'sum_car_void_45': sum_car_void_45,
-        'sum_car_filled_5': sum_car_filled_5,
-        'sum_car_filled_10': sum_car_filled_10,
-        'sum_car_filled_15': sum_car_filled_15,
-        'sum_car_filled_45': sum_car_filled_45,
-        'sum_total_ball_filled_10': sum_total_ball_filled_10,
-        'sum_total_ball_filled_15': sum_total_ball_filled_15,
-        'sum_total_ball_filled_5': sum_total_ball_filled_5,
-        'sum_total_ball_filled_45': sum_total_ball_filled_45,
-        'sum_total_ball_void_10': sum_total_ball_void_10,
-        'sum_total_ball_void_15': sum_total_ball_void_15,
-        'sum_total_ball_void_5': sum_total_ball_void_5,
-        'sum_total_ball_void_45': sum_total_ball_void_45,
-        'sum_total_ball_5': sum_total_ball_5,
-        'sum_total_ball_10': sum_total_ball_10,
-        'sum_total_ball_15': sum_total_ball_15,
-        'sum_total_ball_45': sum_total_ball_45,
-    })
+            loan_payment_set = od.loanpayment_set.all()
+            ball_loan = 0
+            if loan_payment_set.exists():
+                ball_loan_total = 0
+                ball_total = od.quantity_sold
+                for lp in loan_payment_set:
+                    ball_loan_total = ball_loan_total + lp.quantity
+                ball_loan = ball_total - ball_loan_total
+            else:
+                ball_loan = od.quantity_sold
+
+            if od.product.id == 1:  # BALON DE 10
+                sum_ball_loan_10 += ball_loan
+            elif od.product.id == 12:  # BALON DE 15
+                sum_ball_loan_15 += ball_loan
+            elif od.product.id == 2:  # BALON DE 5
+                sum_ball_loan_5 += ball_loan
+            elif od.product.id == 3:  # BALON DE 45
+                sum_ball_loan_45 += ball_loan
+
+            search_value = od.product.id
+
+            if search_value in ball_dict:
+                product = ball_dict[search_value]
+                old_ball_loan = product.get('ball_loan')
+                ball_dict[search_value]['ball_loan'] = old_ball_loan + ball_loan
+            else:
+                ball_dict[search_value] = {
+                    'product_id': od.product.id,
+                    'product_name_ball': od.product.name,
+                    'product_name_iron': '',
+                    'stock_iron': 0,
+                    'stock_ball': 0,
+                    'ball_loan': ball_loan,
+                    'car_ball_filled': 0,
+                    'car_ball_void': 0,
+                    'distribution_ball_filled': 0,
+                    'distribution_ball_void': 0,
+                }
+            balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
+
+        # kardex_in_ball = Kardex.objects.filter(
+        #     create_at__date__range=[start_date_sin_timezone, end_date_sin_timezone]
+        # ).filter(
+        #     product_store__subsidiary_store__category__in=['V', 'R', 'O'],
+        #     product_store__subsidiary_store__subsidiary__id__in=subsidiaries,
+        #     product_store__product__id__in=products_in_ball
+        # ).select_related('product_store__subsidiary_store__subsidiary', 'product_store__product').only(
+        #     'id', 'quantity', 'remaining_quantity',
+        #     'product_store__id', 'product_store__stock', 'product_store__product__id',
+        #     'product_store__product__name',
+        #     'product_store__subsidiary_store__subsidiary__id',
+        #     'product_store__subsidiary_store__subsidiary__name',
+        # )
+        #
+        # for kb in kardex_in_ball:
+        #     subsidiary_key = kb.product_store.subsidiary_store.subsidiary.id
+        #
+        #     if subsidiary_key in balls:
+        #         subsidiary = balls[subsidiary_key]
+        #         ball_dict = subsidiary.get('distributions')
+        #     else:
+        #         ball_dict = {}
+        #         balls[subsidiary_key] = {
+        #             'subsidiary_id': kb.product_store.subsidiary_store.subsidiary.id,
+        #             'subsidiary_name': kb.product_store.subsidiary_store.subsidiary.name,
+        #             'distributions': ball_dict,
+        #         }
+        #
+        #     search_value = kb.product_store.product.id
+        #     if kb.product_store.product.id == 1:  # BALON DE 10
+        #         sum_ball_10 += kb.quantity
+        #     elif kb.product_store.product.id == 12:  # BALON DE 15
+        #         sum_ball_15 += kb.quantity
+        #     elif kb.product_store.product.id == 2:  # BALON DE 5
+        #         sum_ball_5 += kb.quantity
+        #     elif kb.product_store.product.id == 3:  # BALON DE 45
+        #         sum_ball_45 += kb.quantity
+        #
+        #     if search_value in ball_dict:
+        #         product = ball_dict[search_value]
+        #         stock = product.get('stock_ball')
+        #         ball_dict[search_value]['stock_ball'] = stock + kb.quantity
+        #     else:
+        #         ball_dict[search_value] = {
+        #             'product_id': kb.product_store.product.id,
+        #             'product_name_iron': '',
+        #             'product_name_ball': kb.product_store.product.name,
+        #             'stock_iron': 0,
+        #             'stock_ball': kb.quantity,
+        #             'ball_loan': 0,
+        #             'car_ball_filled': 0,
+        #             'car_ball_void': 0,
+        #             'distribution_ball_void': 0,
+        #             'distribution_ball_filled': 0,
+        #         }
+        #     balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
+        # first_operation = Kardex.objects.filter(product_store__id=OuterRef('id')).annotate(id=Min('id'))
+        product_store_in_ball = ProductStore.objects.filter(
+            subsidiary_store__category__in=['V', 'R', 'O'], subsidiary_store__subsidiary__id__in=subsidiaries,
+            product__id__in=products_in_ball
+        ).select_related('subsidiary_store__subsidiary', 'product').annotate(
+            initial_quantity=Subquery(
+                Kardex.objects.filter(
+                    product_store=OuterRef('id'),
+                    create_at__date__range=[start_date_sin_timezone, end_date_sin_timezone]
+                ).order_by('id', 'create_at').values('remaining_quantity')[:1]
+            ),
+            sum_entries=Subquery(
+                Kardex.objects.filter(
+                    product_store__id=OuterRef('id'), operation='E', create_at__date__range=[start_date_sin_timezone, end_date_sin_timezone]
+                ).values('product_store__id').annotate(
+                    sum_quantity_of_entry=Sum(F('quantity'))
+                ).values('sum_quantity_of_entry')[:1]
+            ),
+            sum_departures=Subquery(
+                Kardex.objects.filter(
+                    product_store__id=OuterRef('id'), operation='S', create_at__date__range=[start_date_sin_timezone, end_date_sin_timezone]
+                ).values('product_store__id').annotate(
+                    sum_quantity_of_departure=Sum(F('quantity'))
+                ).values('sum_quantity_of_departure')[:1]
+            ),
+            total_balance=Cast(Coalesce(F('initial_quantity') + F('sum_entries') - F('sum_departures'), Value(0)), output_field=IntegerField())
+        )
+
+        # print(product_store_in_ball)
+
+        for ps in product_store_in_ball:
+
+            subsidiary_key = ps.subsidiary_store.subsidiary.id
+
+            if subsidiary_key in balls:
+                subsidiary = balls[subsidiary_key]
+                ball_dict = subsidiary.get('distributions')
+            else:
+                ball_dict = {}
+                balls[subsidiary_key] = {
+                    'subsidiary_id': ps.subsidiary_store.subsidiary.id,
+                    'subsidiary_name': ps.subsidiary_store.subsidiary.name,
+                    'distributions': ball_dict,
+                }
+
+            search_value = ps.product.id
+            if ps.product.id == 1:  # BALON DE 10
+                # sum_ball_10 += ps.stock
+                if ps.initial_quantity is not None:
+                    print(ps.initial_quantity)
+                    # sum_ball_10 += ps.initial_quantity
+                sum_ball_10 += ps.total_balance
+
+            elif ps.product.id == 12:  # BALON DE 15
+                # sum_ball_15 += ps.stock
+                sum_ball_15 += ps.total_balance
+            elif ps.product.id == 2:  # BALON DE 5
+                # sum_ball_5 += ps.stock
+                sum_ball_5 += ps.total_balance
+            elif ps.product.id == 3:  # BALON DE 45
+                # sum_ball_45 += ps.stock
+                sum_ball_45 += ps.total_balance
+
+            if search_value in ball_dict:
+                product = ball_dict[search_value]
+                stock = product.get('stock_ball')
+                # ball_dict[search_value]['stock_ball'] = stock + ps.stock
+                ball_dict[search_value]['stock_ball'] = stock + ps.total_balance
+            else:
+                ball_dict[search_value] = {
+                    'product_id': ps.product.id,
+                    'product_name_iron': '',
+                    'product_name_ball': ps.product.name,
+                    'stock_iron': 0,
+                    # 'stock_ball': ps.stock,
+                    'stock_ball': ps.total_balance,
+                    'ball_loan': 0,
+                    'car_ball_filled': 0,
+                    'car_ball_void': 0,
+                    'distribution_ball_void': 0,
+                    'distribution_ball_filled': 0,
+                }
+            balls[subsidiary_key]['distributions'][search_value] = ball_dict[search_value]
+
+        print(balls)
+
+        balls_sorted = {}
+        for s in subsidiaries:
+            distributions_sorted = {}
+            for p in products_in_ball:
+                if p in balls[s]['distributions']:
+                    distributions_sorted[p] = balls[s]['distributions'][p]
+                else:
+                    distributions_sorted[p] = {
+                        'product_id': p,
+                        'stock_iron': 0,
+                        'stock_ball': 0,
+                        'ball_loan': 0,
+                        'car_ball_filled': 0,
+                        'car_ball_void': 0,
+                        'distribution_ball_filled': 0,
+                        'distribution_ball_void': 0,
+                    }
+            balls_sorted[s] = balls[s]
+            balls_sorted[s]['distributions'] = distributions_sorted
+
+        sum_total_ball_filled_10 = sum_ball_10 + sum_route_filled_10 + sum_ball_loan_10 + sum_car_filled_10
+        sum_total_ball_filled_15 = sum_ball_15 + sum_route_filled_15 + sum_ball_loan_15 + sum_car_filled_15
+        sum_total_ball_filled_5 = sum_ball_5 + sum_route_filled_5 + sum_ball_loan_5 + sum_car_filled_5
+        sum_total_ball_filled_45 = sum_ball_45 + sum_route_filled_45 + sum_ball_loan_45 + sum_car_filled_45
+
+        sum_total_ball_void_10 = sum_iron_10 + sum_route_void_10 + sum_car_void_10
+        sum_total_ball_void_15 = sum_iron_15 + sum_route_void_15 + sum_car_void_15
+        sum_total_ball_void_5 = sum_iron_5 + sum_route_void_5 + sum_car_void_5
+        sum_total_ball_void_45 = sum_iron_45 + sum_route_void_45 + sum_car_void_45
+
+        sum_total_ball_5 = sum_total_ball_filled_5 + sum_total_ball_void_5
+        sum_total_ball_10 = sum_total_ball_filled_10 + sum_total_ball_void_10
+        sum_total_ball_15 = sum_total_ball_filled_15 + sum_total_ball_void_15
+        sum_total_ball_45 = sum_total_ball_filled_45 + sum_total_ball_void_45
+
+        tpl = loader.get_template('sales/report_ball_all_mass_grid_list.html')
+
+        context = ({
+            'balls': balls_sorted,
+            'subsidiaries_dict': subsidiaries_dict,
+            'sum_ball_10': sum_ball_10,
+            'sum_ball_15': sum_ball_15,
+            'sum_ball_5': sum_ball_5,
+            'sum_ball_45': sum_ball_45,
+            'sum_ball_loan_5': sum_ball_loan_5,
+            'sum_ball_loan_10': sum_ball_loan_10,
+            'sum_ball_loan_15': sum_ball_loan_15,
+            'sum_ball_loan_45': sum_ball_loan_45,
+            'sum_iron_10': sum_iron_10,
+            'sum_iron_15': sum_iron_15,
+            'sum_iron_5': sum_iron_5,
+            'sum_iron_45': sum_iron_45,
+            'sum_route_void_5': sum_route_void_5,
+            'sum_route_void_10': sum_route_void_10,
+            'sum_route_void_15': sum_route_void_15,
+            'sum_route_void_45': sum_route_void_45,
+            'sum_route_filled_5': sum_route_filled_5,
+            'sum_route_filled_10': sum_route_filled_10,
+            'sum_route_filled_15': sum_route_filled_15,
+            'sum_route_filled_45': sum_route_filled_45,
+            'sum_car_void_5': sum_car_void_5,
+            'sum_car_void_10': sum_car_void_10,
+            'sum_car_void_15': sum_car_void_15,
+            'sum_car_void_45': sum_car_void_45,
+            'sum_car_filled_5': sum_car_filled_5,
+            'sum_car_filled_10': sum_car_filled_10,
+            'sum_car_filled_15': sum_car_filled_15,
+            'sum_car_filled_45': sum_car_filled_45,
+            'sum_total_ball_filled_10': sum_total_ball_filled_10,
+            'sum_total_ball_filled_15': sum_total_ball_filled_15,
+            'sum_total_ball_filled_5': sum_total_ball_filled_5,
+            'sum_total_ball_filled_45': sum_total_ball_filled_45,
+            'sum_total_ball_void_10': sum_total_ball_void_10,
+            'sum_total_ball_void_15': sum_total_ball_void_15,
+            'sum_total_ball_void_5': sum_total_ball_void_5,
+            'sum_total_ball_void_45': sum_total_ball_void_45,
+            'sum_total_ball_5': sum_total_ball_5,
+            'sum_total_ball_10': sum_total_ball_10,
+            'sum_total_ball_15': sum_total_ball_15,
+            'sum_total_ball_45': sum_total_ball_45,
+        })
+        return JsonResponse({'grid': tpl.render(context)}, status=HTTPStatus.OK)
 
 
 def get_balls_in_car(distribution_detail_set=None, balls_in_car=None):
