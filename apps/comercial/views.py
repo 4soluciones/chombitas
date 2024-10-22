@@ -2355,7 +2355,7 @@ def get_monthly_sales_by_client(request):
         user_id = request.user.id
         user_obj = User.objects.get(id=user_id)
         subsidiary_obj = get_subsidiary_by_user(user_obj)
-        client_set = Client.objects.filter(clientassociate__subsidiary=subsidiary_obj).distinct()
+        client_set = Client.objects.filter(clientassociate__subsidiary=subsidiary_obj).distinct().order_by('names')
         my_date = datetime.now()
         formatdate = my_date.strftime("%Y-%m-%d")
         return render(request, 'comercial/monthly_distribution_by_client_list.html', {
@@ -2375,7 +2375,7 @@ def get_monthly_sales_by_client(request):
 
         order_set = Order.objects.filter(
             create_at__date__range=[start_date_sin_timezone.date(), end_date_sin_timezone.date()],
-            client__id=client_id, type='V'
+            client__id=client_id, type__in=['V', 'R']
         ).annotate(
             previous_order_id=Window(expression=Lag('id', default=0), order_by=(F('create_at').asc(), F('id').asc()))
         ).prefetch_related(
@@ -2403,7 +2403,7 @@ def get_monthly_sales_by_client(request):
             # order__distribution_mobil__date_distribution__year=year,
             order__create_at__date__range=[start_date_sin_timezone.date(),
                                                                  end_date_sin_timezone.date()],
-            order__client__id=client_id, order__type='V',
+            order__client__id=client_id, order__type__in=['V', 'R'],
             unit__name__in=['G', 'GBC']
         )
 
