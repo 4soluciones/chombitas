@@ -509,8 +509,8 @@ def print_programming_guide(request, pk=None, guide=None):
     canvas.setFont('Times-Bold', 9)
     canvas.drawString(ml + 90, mi + 350 - 105, 'YURA - AREQUIPA - AREQUIPA')
 
-    logo = "apps/dishes/static/assets/avatar/LOGOVJ.png"
-    glp = "apps/dishes/static/assets/avatar/VJglp20.png"
+    logo = "static/assets/avatar/LOGOVJ.png"
+    glp = "static/assets/avatar/VJglp20.png"
 
     canvas.drawImage(logo, ml, mi + 350 - 105, mask='auto', width=96/2, height=102/2)
     canvas.drawImage(glp, ml + 260, mi + 350 - 110, mask='auto', width=150/2.2, height=150/2.2)
