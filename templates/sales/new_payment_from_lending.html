@@ -890,11 +890,9 @@
         }
     });*/
 
-
     $('#loan-payment-form').submit(function (event) {
         event.preventDefault();
         let data = new FormData($('#loan-payment-form').get(0));
-
         let selected_value = $("input[name='radio']:checked").val();
         let _transaction_payment_type = $('#id_transaction_payment_type').val();
 
@@ -940,7 +938,6 @@
                         toastr.warning('valor por encima de lo prestado', 'Inconcebible')
                         return false;
                     }
-
                     {#if (_value_to_pay > _pay) {#}
                     {#    toastr.warning('valor por encima de la deuda', 'Inconcebible')#}
                     {#    return false;#}
@@ -949,8 +946,7 @@
                 }
             }
         }
-
-        $('#btn-save').attr("disabled", true);
+        document.getElementById('btn-save').disabled = true;
 
         $.ajax({
             url: '/sales/new_loan_payment/',
@@ -965,6 +961,7 @@
                     $('#modal-payment').modal('hide');
                     $('#table-order').html(response['grid']);
                     toastr.success(response['message'], '¡Bien hecho!');
+                    //document.getElementById('btn-save').disabled = false;
                 }
             },
             error: function (jqXhr, textStatus, xhr) {
@@ -973,7 +970,7 @@
                 }
             }
         });
-        $('#btn-save').removeAttr("disabled", false);
+        //$('#btn-save').removeAttr("disabled", false);
 
     });
 
