@@ -580,10 +580,10 @@ def total_cash_flow_spending(cashflow_set=None):
     return response
 
 
-def get_cash_flow(order=None, transactionpayment=None):
+def get_cash_flow(order=None, transactionpayment=None, total=0):
     response = None
     if transactionpayment.type == 'D' or transactionpayment.type == 'E':
-        for cf in order.cashflow_set.all():
+        for cf in order.cashflow_set.filter(total=total):
             if cf.type == 'D' or cf.type == 'E':
                 response = cf
                 break

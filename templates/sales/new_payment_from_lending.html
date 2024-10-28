@@ -15,7 +15,8 @@
                         pago
                     </th>
                     <th class="border-bottom-0 border-right align-middle text-center" style="width: 20%">Deuda</th>
-                    <th class="border-bottom-0 border-right align-middle text-right" style="width: 20%">Monto a pagar</th>
+                    <th class="border-bottom-0 border-right align-middle text-right" style="width: 20%">Monto a pagar
+                    </th>
                     <th class="border-bottom-0 border-right align-middle" style="width: 20%">Tipo de pago</th>
                     <th class="border-bottom-0 border-right align-middle" style="width: 20%">Fecha operación</th>
                 </tr>
@@ -226,33 +227,55 @@
                 <table class="table table-sm" id="distribution-funds" style="display: none">
                     <thead>
                     <tr class="text-uppercase font-weight-lighter">
-                        <th class="border-bottom-0 border-right align-middle">CONCEPTO</th>
-                        <th class="border-bottom-0 border-right align-middle code">DETALLE DE OPERACION</th>
-                        <th class="border-bottom-0 border-right align-middle code">MONTO DISPONIBLE</th>
-                        <th class="border-bottom-0 border-right align-middle voucher">MONTO A EXTRAER</th>
-                        <th class="border-bottom-0 border-right align-middle voucher">MONTO SOBRANTE</th>
+                        <th class="border-bottom-0 border-right align-middle" style="width: 10%">CONCEPTO</th>
+                        <th class="border-bottom-0 border-right align-middle code" style="width: 45%">DETALLE DE OPERACION</th>
+                        <th class="border-bottom-0 border-right align-middle code" style="width: 15%">MONTO DISPONIBLE</th>
+                        <th class="border-bottom-0 border-right align-middle voucher" style="width: 15%">MONTO A EXTRAER</th>
+                        <th class="border-bottom-0 border-right align-middle voucher" style="width: 15%">MONTO SOBRANTE</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr>
                         <td class="border-top-0 border-bottom border-right align-middle">DEPOSITOS</td>
                         <td class="border-top-0 border-bottom border-right align-middle">
+                            {% if order.type == 'R' %}
+                                <select id="cash-flow-deposit-id" name="cash-flow-deposit-id"
+                                        class="form-control form-control-sm" aria-describedby="depositedHelpBlock">
+                                    <option value="0">SELECCIONA</option>
+                                    {% for cf in cash_flow_of_distributions_with_deposits_set %}
+                                        {% if cf.type == "D" or cf.type == "E" %}
+                                            <option value="{{ cf.id }}"
+                                                    cash-flow-transaction-date="{{ cf.transaction_date|safe }}"
+                                                    cash-flow-missing="{{ cf.calculate_total_missing|safe }}"
+                                                    cash-flow-total="{{ cf.total|safe }}">{{ cf.description|upper }} {{ cf.transaction_date|date:"SHORT_DATE_FORMAT" }} {{ cf.total|floatformat:2|safe }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                                {#                        <small id="depositedHelpBlock" class="form-text text-muted">#}
+                                {#                          TOTAL DEPOSITADO: {{  detail.order.distribution_mobil.calculate_total_deposits|safe }}.#}
+                                {#                        </small>#}
 
-                            <select id="cash-flow-deposit-id" name="cash-flow-deposit-id"
-                                    class="form-control form-control-sm" aria-describedby="depositedHelpBlock">
-                                <option value="0">SELECCIONA</option>
-                                {% for cf in cash_flow_of_distributions_with_deposits_set %}
-                                    {% if cf.type == "D" or cf.type == "E" %}
-                                        <option value="{{ cf.id }}"
-                                                cash-flow-transaction-date="{{ cf.transaction_date|safe }}"
-                                                cash-flow-missing="{{ cf.calculate_total_missing|safe }}"
-                                                cash-flow-total="{{ cf.total|safe }}">{{ cf.description }} {{ cf.transaction_date|date:"SHORT_DATE_FORMAT" }} {{ cf.total|floatformat:2|safe }}</option>
-                                    {% endif %}
-                                {% endfor %}
-                            </select>
-                            {#                        <small id="depositedHelpBlock" class="form-text text-muted">#}
-                            {#                          TOTAL DEPOSITADO: {{  detail.order.distribution_mobil.calculate_total_deposits|safe }}.#}
-                            {#                        </small>#}
+                            {% elif order.type == 'V' %}
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <select id="select_truck" name="select_truck" aria-label=""
+                                                class="form-control form-control-sm"
+                                                aria-describedby="depositedHelpBlock">
+                                            <option value="0" selected disabled>Selecciona Placa..</option>
+                                            {% for t in truck_set %}
+                                                <option value="{{ t.id }}">{{ t.license_plate }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-8 select-truck">
+                                        <select id="cash-flow-deposit-id" name="cash-flow-deposit-id" aria-label=""
+                                                class="form-control form-control-sm truck-result"
+                                                aria-describedby="depositedHelpBlock">
+{#                                            <option value="0">Selecciona Deposito</option>#}
+                                        </select>
+                                    </div>
+                                </div>
+                            {% endif %}
                         </td>
                         <td class="border-top-0 border-bottom border-right align-middle">
                             <input
@@ -350,7 +373,9 @@
                     <tr class="text-uppercase font-weight-lighter">
                         <th class="border-bottom-0 border-right align-middle" style="width: 40%">SELECCIONE ENTIDAD</th>
                         <th class="border-bottom-0 border-right align-middle" style="width: 40%">SELECCIONE MONTO</th>
-                        <th class="border-bottom-0 border-right align-middle text-right" style="width: 20%">MONTO DISPONIBLE</th>
+                        <th class="border-bottom-0 border-right align-middle text-right" style="width: 20%">MONTO
+                            DISPONIBLE
+                        </th>
                     </tr>
                     </thead>
                     <tbody>
@@ -362,9 +387,11 @@
                                 <option selected disabled value="0">Seleccione</option>
                                 {% for c in cashes_all_set %}
                                     {% if c.accounting_account.code|slice:":3" == "101" %}
-                                        <option style="background-color: #ece5ef" value="{{ c.id }}">CAJA SOLES: {{ c.name }}</option>
+                                        <option style="background-color: #ece5ef" value="{{ c.id }}">CAJA
+                                            SOLES: {{ c.name }}</option>
                                     {% else %}
-                                        <option style="background-color: #eeefec" value="{{ c.id }}">ENTIDAD: {{ c.name }}</option>
+                                        <option style="background-color: #eeefec" value="{{ c.id }}">
+                                            ENTIDAD: {{ c.name }}</option>
                                     {% endif %}
                                 {% endfor %}
                             </select>
@@ -692,33 +719,33 @@
 
 
 
-   /* $('#id_transaction_payment_type2').change(function () {
+    /* $('#id_transaction_payment_type2').change(function () {
 
-        let type = $('#id_transaction_payment_type2').val();
-        if (type === 'E') {
-            $('#cash2').css('display', 'table');
-            $('#deposit2').css('display', 'none');
-            $('#id_cash').trigger('change');
-        } else {
-            if (type === 'D') {
-                $('#deposit2').css('display', 'table');
-                $('#cash2').css('display', 'none');
-            } else {
-                $('#deposit2').css('display', 'none');
-            }
-            $('#cash2').css('display', 'none');
-        }
+         let type = $('#id_transaction_payment_type2').val();
+         if (type === 'E') {
+             $('#cash2').css('display', 'table');
+             $('#deposit2').css('display', 'none');
+             $('#id_cash').trigger('change');
+         } else {
+             if (type === 'D') {
+                 $('#deposit2').css('display', 'table');
+                 $('#cash2').css('display', 'none');
+             } else {
+                 $('#deposit2').css('display', 'none');
+             }
+             $('#cash2').css('display', 'none');
+         }
 
-    });
+     });
 
-    $('#id_transaction_payment_type2').change(function () {
-        if ($(this).val() == 'D' || $(this).val() == 'V') {
-            $('#id_code_operation2').removeAttr('disabled').css('color', '#495057');
-        } else {
-            $('#id_code_operation2').attr('disabled', 'disabled').css('color', '#e9ecef');
-        }
-    });*/
-
+     $('#id_transaction_payment_type2').change(function () {
+         if ($(this).val() == 'D' || $(this).val() == 'V') {
+             $('#id_code_operation2').removeAttr('disabled').css('color', '#495057');
+         } else {
+             $('#id_code_operation2').attr('disabled', 'disabled').css('color', '#e9ecef');
+         }
+     });*/
+    $('#select_truck').select2();
 
     if ($("#radio1").is(':checked')) {
         $("#radio1").parent('div').parent('td').parent('tr').addClass('bg-light');
@@ -1059,7 +1086,7 @@
                         amortizable_amount.append('<option selected disabled value="0">Seleccione</option>');
                         $.each(response.amortizable_set, function (index, item) {
                             let formattedAmount = parseFloat(item.total.replace(/,/g, '')).toFixed(2);
-                            amortizable_amount.append('<option value="' + item.id + '" amount="' + formattedAmount + '">' + item.date + ' - ' + item.description + ' - ' + 'S/ ' +  item.total + '</option>');
+                            amortizable_amount.append('<option value="' + item.id + '" amount="' + formattedAmount + '">' + item.date + ' - ' + item.description + ' - ' + 'S/ ' + item.total + '</option>');
                         });
                     }
                 },
@@ -1102,37 +1129,80 @@
     });
 
     $("#id_loan_payment").on('input', function () {
-    if ($('#id_transaction_payment_type').val() === 'FA') {
-        const amount_amortizable_static = parseFloat($('#amortizable_amount_id option:selected').attr('amount'));
+        if ($('#id_transaction_payment_type').val() === 'FA') {
+            const amount_amortizable_static = parseFloat($('#amortizable_amount_id option:selected').attr('amount'));
 
-        let _pay_amount = parseFloat($("#id_loan_payment").val());
-        if (isNaN(_pay_amount) || _pay_amount === 0) {
-            toastr.warning("LOS VALORES DEBEN SER NUMERICOS o MAYORES QUE CERO", 'Error');
-            $("#id_loan_payment").val(' ');
-            $('#total_amount_amortizable').val(amount_amortizable_static.toFixed(2));
+            let _pay_amount = parseFloat($("#id_loan_payment").val());
+            if (isNaN(_pay_amount) || _pay_amount === 0) {
+                toastr.warning("LOS VALORES DEBEN SER NUMERICOS o MAYORES QUE CERO", 'Error');
+                $("#id_loan_payment").val(' ');
+                $('#total_amount_amortizable').val(amount_amortizable_static.toFixed(2));
+                return false;
+            }
+            if (isNaN(amount_amortizable_static)) {
+                toastr.warning("PRIMERO SELECCIONE UNA ENTIDAD Y MONTO", 'Error');
+                $("#id_loan_payment").val(' ');
+                return false;
+            }
+
+            let new_amount_amortizable = amount_amortizable_static - _pay_amount;
+
+            //console.log("amount_amortizable_static", amount_amortizable_static)
+            //console.log("_pay_amount", _pay_amount)
+
+            if (Number(new_amount_amortizable) < 0) {
+                toastr.warning("EL MONTO A PAGAR NO PUEDE SUPERAR AL MONTO DISPONIBLE", 'Error de Datos');
+                $("#id_loan_payment").val(' ');
+                $('#total_amount_amortizable').val(amount_amortizable_static.toFixed(2));
+                return false;
+            }
+
+            $('#total_amount_amortizable').val(new_amount_amortizable.toFixed(2));
+        }
+    });
+
+    $("#select_truck").change(function () {
+
+        let truck = $(this).val();
+        let select = $(this).closest('.row').find('div.select-truck select.truck-result');
+
+        if (truck === undefined || truck === '0') {
+            toastr.warning("SELECCIONE UNA PLACA DE UN REPARTIDOR PRIMERO", 'Error de Datos');
             return false;
         }
-        if (isNaN(amount_amortizable_static)) {
-            toastr.warning("PRIMERO SELECCIONE UNA ENTIDAD Y MONTO", 'Error');
-            $("#id_loan_payment").val(' ');
-            return false;
-        }
+        select.empty();
+        $.ajax({
+            url: '/sales/get_pay_by_truck/',
+            async: true,
+            dataType: 'json',
+            type: 'GET',
+            data: {'truck_id': truck},
+            contentType: 'application/json;charset=UTF-8',
+            headers: {"X-CSRFToken": '{{ csrf_token }}'},
+            success: function (response, textStatus, xhr) {
+                if (xhr.status === 200) {
+                    select.append(new Option('Seleccione una deposito', '0'));
+                    $.each(response.cash_flow_of_distributions_with_deposits_set, function (index, item) {
+                        if (item.type === 'D' || item.type === 'E') {
+                            let option = new Option(`${item.description} ${item.transaction_date} ${item.total}`, item.id);
+                            $(option).attr({
+                                'cash-flow-transaction-date': item.transaction_date,
+                                'cash-flow-missing': item.calculate_total_missing,
+                                'cash-flow-total': item.total
+                            });
+                            select.append(option);
+                        }
+                    });
 
-        let new_amount_amortizable = amount_amortizable_static - _pay_amount;
+                }
+            },
+            fail: function (response) {
+                toastr.error("Error. ", '¡Inconcebible!');
+            }
+        });
 
-        //console.log("amount_amortizable_static", amount_amortizable_static)
-        //console.log("_pay_amount", _pay_amount)
 
-        if (Number(new_amount_amortizable) < 0){
-            toastr.warning("EL MONTO A PAGAR NO PUEDE SUPERAR AL MONTO DISPONIBLE", 'Error de Datos');
-            $("#id_loan_payment").val(' ');
-            $('#total_amount_amortizable').val(amount_amortizable_static.toFixed(2));
-            return false;
-        }
-
-        $('#total_amount_amortizable').val(new_amount_amortizable.toFixed(2));
-    }
-});
+    });
 
 
 </script>

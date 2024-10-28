@@ -2861,7 +2861,7 @@ def order_list(request):
         # clients = Client.objects.filter(clientassociate__subsidiary=subsidiary_obj)
         client_set = Client.objects.filter(
             order__isnull=False, order__subsidiary=subsidiary_obj, order__type__in=['V', 'R']
-        ).distinct('id').values('id', 'names')
+        ).distinct('names').values('id', 'names').order_by('names')
 
         return render(request, 'sales/account_status_list.html', {
             'client_set': client_set,
@@ -3060,7 +3060,7 @@ def get_dict_orders(client_obj=None, is_pdf=False, start_date=None, end_date=Non
                         if transaction_payment is not None and transaction_payment.cash_flow is not None:
                             _cash_flow = transaction_payment.cash_flow
                         else:
-                            _cash_flow = get_cash_flow(order=o, transactionpayment=transaction_payment)
+                            _cash_flow = get_cash_flow(order=o, transactionpayment=transaction_payment, total=t.payment)
                         _payment_type = transaction_payment.get_type_display()
                         _number_of_vouchers = transaction_payment.number_of_vouchers
 
@@ -3249,23 +3249,26 @@ def get_order_detail_for_pay(request):
                     ), decimal.Decimal(0.00)
                 ),
                 total_cash_flow=F('total') - F('total_subtracted')
-            ).filter(total_cash_flow__gt=0)
-        else:
-            cash_flow_of_distributions_with_deposits_set = CashFlow.objects.filter(
-                distribution_mobil__truck=order_obj.truck, type__in=['D', 'E']
-            ).annotate(
-                total_subtracted=Coalesce(
-                    Subquery(
-                        TransactionPayment.objects.filter(
-                            cash_flow_id=OuterRef('id'), type='PFD'
-                        ).values('cash_flow_id').annotate(
-                            total_payment=Coalesce(Sum('payment'), decimal.Decimal(0.00))
-                        ).values('total_payment')[:1],
-                        output_field=models.DecimalField()
-                    ), decimal.Decimal(0.00)
-                ),
-                total_cash_flow=F('total') - F('total_subtracted')
-            ).filter(total_cash_flow__gt=0)
+            ).filter(total_cash_flow__gt=0).order_by('transaction_date')
+        # else:
+        #     cash_flow_of_distributions_with_deposits_set = CashFlow.objects.filter(
+        #         distribution_mobil__truck=order_obj.truck, type__in=['D', 'E']
+        #     ).annotate(
+        #         total_subtracted=Coalesce(
+        #             Subquery(
+        #                 TransactionPayment.objects.filter(
+        #                     cash_flow_id=OuterRef('id'), type='PFD'
+        #                 ).values('cash_flow_id').annotate(
+        #                     total_payment=Coalesce(Sum('payment'), decimal.Decimal(0.00))
+        #                 ).values('total_payment')[:1],
+        #                 output_field=models.DecimalField()
+        #             ), decimal.Decimal(0.00)
+        #         ),
+        #         total_cash_flow=F('total') - F('total_subtracted')
+        #     ).filter(total_cash_flow__gt=0).order_by('transaction_date')
+
+        # print(cash_flow_of_distributions_with_deposits_set)
+        # print(cash_flow_of_distributions_with_deposits_set.query)
 
         tpl = loader.get_template('sales/new_payment_from_lending.html')
         context = ({
@@ -3278,11 +3281,50 @@ def get_order_detail_for_pay(request):
             'date': formatdate,
             'start_date': start_date,
             'end_date': end_date,
+            'truck_set': Truck.objects.all(),
             'cash_flow_of_distributions_with_deposits_set': cash_flow_of_distributions_with_deposits_set,
         })
 
         return JsonResponse({
             'grid': tpl.render(context, request),
+        }, status=HTTPStatus.OK)
+
+
+def get_pay_by_truck(request):
+    if request.method == 'GET':
+        truck_id = request.GET.get('truck_id', '')
+        cash_flow_of_distributions_with_deposits_set = CashFlow.objects.filter(
+            distribution_mobil__truck__id=truck_id, type__in=['D', 'E']
+        ).annotate(
+            total_subtracted=Coalesce(
+                Subquery(
+                    TransactionPayment.objects.filter(
+                        cash_flow_id=OuterRef('id'), type='PFD'
+                    ).values('cash_flow_id').annotate(
+                        total_payment=Coalesce(Sum('payment'), decimal.Decimal(0.00))
+                    ).values('total_payment')[:1],
+                    output_field=models.DecimalField()
+                ), decimal.Decimal(0.00)
+            ),
+            total_cash_flow=F('total') - F('total_subtracted')
+        ).filter(total_cash_flow__gt=0).order_by('transaction_date')
+
+        # Construir la respuesta como una lista de diccionarios
+        cash_flow_of_distributions = [
+            {
+                'id': item.id,
+                'description': item.description,
+                'transaction_date': item.transaction_date.strftime("%d/%m/%Y"),
+                'calculate_total_missing': item.calculate_total_missing(),
+                'total': str(round(item.total, 2)),
+                'type': item.type
+            }
+            for item in cash_flow_of_distributions_with_deposits_set
+        ]
+
+        return JsonResponse({
+            'success': True,
+            'cash_flow_of_distributions_with_deposits_set': cash_flow_of_distributions,
         }, status=HTTPStatus.OK)
 
 

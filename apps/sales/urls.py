@@ -102,6 +102,7 @@ urlpatterns = [
     path('get_expenses/', login_required(get_expenses), name='get_expenses'),
     path('get_outgo/', login_required(get_outgo), name='get_outgo'),
     path('new_expense/', login_required(new_expense), name='new_expense'),
+    path('get_pay_by_truck/', login_required(get_pay_by_truck), name='get_pay_by_truck'),
 
     # GENERADOR DE BOLETAS
     path('generate_receipt/', login_required(generate_receipt), name='generate_receipt'),
