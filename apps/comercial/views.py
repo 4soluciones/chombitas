@@ -4257,3 +4257,60 @@ def distribution_category(request):
             'grid': tpl.render(context)
         }, status=HTTPStatus.OK)
     return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)
+
+
+def fixed_balls_distribution(request):
+    if request.method == 'GET':
+        start_date = '2024-01-03'
+        end_date = '2024-10-31'
+        # distribution_detail_set = DistributionDetail.objects.filter(
+        #     distribution_mobil__truck__id=16,
+        #     distribution_mobil__date_distribution__range=[start_date, end_date]).order_by('distribution_mobil_id')
+
+        # distribution_detail_set = DistributionDetail.objects.filter(
+        #     distribution_mobil__truck__id=16,
+        #     distribution_mobil__date_distribution__range=[start_date, end_date]).order_by('distribution_mobil_id')
+
+        distribution_mobil_set = DistributionMobil.objects.filter(truck__id=16, date_distribution__range=[start_date, end_date])
+
+        for d in distribution_mobil_set:
+            distribution_detail = d.distributiondetail_set.filter(
+                status='C',
+                type='L',
+                product_id=2,
+                unit_id=6
+            ).first()
+
+            if distribution_detail:
+                distribution_detail.quantity += decimal.Decimal(3.00)
+                distribution_detail.save()
+            else:
+                DistributionDetail.objects.create(
+                    status='C',
+                    type='L',
+                    quantity=decimal.Decimal(3.00),
+                    distribution_mobil=d,
+                    product_id=2,
+                    unit_id=6
+                )
+        # for d in distribution_detail_set:
+        #     distribution_mobil = d.distribution_mobil
+        #     if d.status == 'C' and d.type == 'L' and d.quantity == decimal.Decimal(
+        #             3.00) and d.distribution_mobil == distribution_mobil and d.product_id == 2 and d.unit_id == 6:
+        #         d.delete()
+            # if d.status == 'C' and d.type == 'L' and d.distribution_mobil == distribution_mobil and d.product_id == 2 and d.unit_id == 6:
+            #     quantity = decimal.Decimal(3.00)
+            #     new_quantity = d.quantity + quantity
+            #     d.quantity = new_quantity
+            #     d.save()
+            # else:
+            #     DistributionDetail.objects.create(status='C',
+            #                                       type='L',
+            #                                       quantity=decimal.Decimal(3.00),
+            #                                       distribution_mobil=distribution_mobil,
+            #                                       product_id=2,
+            #                                       unit_id=6)
+
+        return JsonResponse({
+            'success': True,
+        }, status=HTTPStatus.OK)

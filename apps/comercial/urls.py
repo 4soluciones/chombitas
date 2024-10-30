@@ -128,5 +128,6 @@ urlpatterns = [
 
     path('get_distribution_summary/', login_required(get_distribution_summary), name='get_distribution_summary'),
     path('get_monthly_sales_by_client/', login_required(get_monthly_sales_by_client), name='get_monthly_sales_by_client'),
+    path('fixed_balls_distribution/', login_required(fixed_balls_distribution), name='fixed_balls_distribution'),
 
 ]

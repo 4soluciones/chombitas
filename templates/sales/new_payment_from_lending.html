@@ -1086,7 +1086,7 @@
                         amortizable_amount.append('<option selected disabled value="0">Seleccione</option>');
                         $.each(response.amortizable_set, function (index, item) {
                             let formattedAmount = parseFloat(item.total.replace(/,/g, '')).toFixed(2);
-                            amortizable_amount.append('<option value="' + item.id + '" amount="' + formattedAmount + '">' + item.date + ' - ' + item.description + ' - ' + 'S/ ' + item.total + '</option>');
+                            amortizable_amount.append('<option value="' + item.id + '" amount="' + formattedAmount + '">' + item.date + ' - ' + item.description.toUpperCase() + ' - ' + 'S/ ' + item.total + '</option>');
                         });
                     }
                 },

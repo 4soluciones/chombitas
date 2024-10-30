@@ -2099,12 +2099,28 @@ def get_amortizable_amount_by_cash(request):
         cash_obj = Cash.objects.get(id=cash_id)
         amortizable_set = CashFlow.objects.filter(cash=cash_obj, amortizable_amount=True, total__gt=0)
         # loan_payment_set = LoanPayment.objects.filter(cash_flow=)
-        amortizable_list = [
-            {'id': a.id,
-             'date': a.transaction_date.strftime("%d/%m/%Y"),
-             'description': a.description,
-             'total': '{:,}'.format(round(a.total, 2))
-             } for a in amortizable_set]
+        amortizable_list = []
+        for a in amortizable_set:
+            total_price = LoanPayment.objects.filter(cash_flow=a).aggregate(total=Sum('price'))['total']
+            total_consumed = total_price if total_price is not None else 0
+            if decimal.Decimal(a.total) - decimal.Decimal(total_consumed) != 0:
+                item = {
+                    'id': a.id,
+                    'date': a.transaction_date.strftime("%d/%m/%Y"),
+                    'description': a.description,
+                    'total': '{:,}'.format(round(a.total, 2))
+                }
+                amortizable_list.append(item)
+
+        # amortizable_list = [
+        #     total_price = LoanPayment.objects.filter(cash_flow=a).aggregate(total=Sum('price'))['total']
+        #     {
+        #          'id': a.id,
+        #          'date': a.transaction_date.strftime("%d/%m/%Y"),
+        #          'description': a.description,
+        #          'total': '{:,}'.format(round(a.total, 2))
+        #
+        #      } for a in amortizable_set]
 
         return JsonResponse({'amortizable_set': amortizable_list}, status=HTTPStatus.OK)
     return JsonResponse({'message': 'Error de peticion.'}, status=HTTPStatus.BAD_REQUEST)
