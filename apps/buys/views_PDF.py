@@ -137,8 +137,8 @@ class OutputPrintRequirement(Flowable):
         canvas.saveState()
         canvas.setLineWidth(1)
         canvas.setFillColor(white)
-        glp = "apps/dishes/static/assets/avatar/VJglp20.png"
-        wave = "apps/dishes/static/assets/avatar/wave-transparent-background.png"
+        glp = "static/assets/avatar/VJglp20.png"
+        wave = "static/assets/avatar/wave-transparent-background.png"
         canvas.drawImage(glp, 0 - 0, 520, mask='auto', width=150 / 2.2, height=150 / 2.2)
         canvas.drawImage(wave, 0 - 50, 0 - 220, mask='auto', width=980 / 1.5, height=128 / 1.5)
         canvas.line(80 - 0, 17, 80 - 0 + 150, 17)
