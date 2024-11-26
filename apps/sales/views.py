@@ -4309,6 +4309,10 @@ def get_stock_product_store(request):
                         output_field=DecimalField()
                     ))
                 )
+                detail_dbc = OrderDetail.objects.filter(order__distribution_mobil__truck=truck_obj,
+                                                       order__type='R', unit_id=9, product=p)
+                total_gbc = detail_dbc.aggregate(
+                    sum_gbc=Coalesce(Sum('quantity_sold'), decimal.Decimal(0))).get('sum_gbc')
                 total_loanpayment = LoanPayment.objects.filter(
                     order_detail__order__distribution_mobil__truck=truck_obj,
                     distribution_mobil__isnull=True,
@@ -4317,9 +4321,10 @@ def get_stock_product_store(request):
                     total_quantity=Coalesce(Sum('quantity'), decimal.Decimal(0))
                 ).get('total_quantity')
                 v = total_loanpayment or decimal.Decimal(0)
+                gbc = total_gbc or decimal.Decimal(0)
                 s = aggregated_data.get('s') or decimal.Decimal(0)
                 e = aggregated_data.get('e') or decimal.Decimal(0)
-                t = s - e - v
+                t = s - e - v - gbc
                 details_list = DistributionDetail.objects.filter(status='C', distribution_mobil=distribution_mobil_obj,
                                                                  product__id=p.id).aggregate(
                     irons_filled=Sum(Case(
