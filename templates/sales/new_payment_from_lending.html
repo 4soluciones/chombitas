@@ -241,7 +241,7 @@
                             {% if order.type == 'R' %}
                                 <select id="cash-flow-deposit-id" name="cash-flow-deposit-id"
                                         class="form-control form-control-sm" aria-describedby="depositedHelpBlock">
-                                    <option value="0">SELECCIONA</option>
+                                    <option selected disabled value="0">Seleccione...</option>
                                     {% for cf in cash_flow_of_distributions_with_deposits_set %}
                                         {% if cf.type == "D" or cf.type == "E" %}
                                             <option value="{{ cf.id }}"
