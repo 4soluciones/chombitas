@@ -241,13 +241,13 @@
                             {% if order.type == 'R' %}
                                 <select id="cash-flow-deposit-id" name="cash-flow-deposit-id"
                                         class="form-control form-control-sm" aria-describedby="depositedHelpBlock">
-                                    <option value="0">SELECCIONA</option>
+                                    <option selected disabled value="0">Seleccione...</option>
                                     {% for cf in cash_flow_of_distributions_with_deposits_set %}
                                         {% if cf.type == "D" or cf.type == "E" %}
                                             <option value="{{ cf.id }}"
                                                     cash-flow-transaction-date="{{ cf.transaction_date|safe }}"
                                                     cash-flow-missing="{{ cf.calculate_total_missing|safe }}"
-                                                    cash-flow-total="{{ cf.total|safe }}">{{ cf.description|upper }} {{ cf.transaction_date|date:"SHORT_DATE_FORMAT" }} {{ cf.total|floatformat:2|safe }}</option>
+                                                    cash-flow-total="{{ cf.total|safe }}">{{ cf.description|upper }} {{ cf.transaction_date|date:"SHORT_DATE_FORMAT" }} {{ cf.total|floatformat:2|safe }} | {{ cf.distribution_mobil.truck }}</option>
                                         {% endif %}
                                     {% endfor %}
                                 </select>
@@ -746,6 +746,7 @@
          }
      });*/
     $('#select_truck').select2();
+    $('#cash-flow-deposit-id').select2();
 
     if ($("#radio1").is(':checked')) {
         $("#radio1").parent('div').parent('td').parent('tr').addClass('bg-light');
