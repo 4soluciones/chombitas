@@ -4295,36 +4295,57 @@ def get_stock_product_store(request):
                 'count': 4
             }
             for p in products:
-                aggregated_data = DistributionDetail.objects.filter(
-                    distribution_mobil__truck=truck_obj,
-                    type__in=['V', 'L'],
-                    distribution_mobil__status='F'
-                ).aggregate(
-                    s=Sum(Case(
-                        When(status__in=['E', 'A'], product__id=p.id, then=Coalesce('quantity', Value(0))),
-                        output_field=DecimalField()
-                    )),
-                    e=Sum(Case(
-                        When(status__in=['D', 'C'], product__id=p.id, then=Coalesce('quantity', Value(0))),
-                        output_field=DecimalField()
-                    ))
-                )
-                detail_dbc = OrderDetail.objects.filter(order__distribution_mobil__truck=truck_obj,
-                                                       order__type='R', unit_id=9, product=p)
-                total_gbc = detail_dbc.aggregate(
-                    sum_gbc=Coalesce(Sum('quantity_sold'), decimal.Decimal(0))).get('sum_gbc')
-                total_loanpayment = LoanPayment.objects.filter(
+                # aggregated_data = DistributionDetail.objects.filter(
+                #     distribution_mobil__truck=truck_obj,
+                #     type__in=['V', 'L'],
+                #     distribution_mobil__status='F'
+                # ).aggregate(
+                #     s=Sum(Case(
+                #         When(status__in=['E', 'A'], product__id=p.id, then=Coalesce('quantity', Value(0))),
+                #         output_field=DecimalField()
+                #     )),
+                #     e=Sum(Case(
+                #         When(status__in=['D', 'C'], product__id=p.id, then=Coalesce('quantity', Value(0))),
+                #         output_field=DecimalField()
+                #     )),
+                #     a=Sum(Case(
+                #         When(status__in=['A'], product__id=p.id, then=Coalesce('quantity', Value(0))),
+                #         output_field=DecimalField()
+                #     )),
+                # )
+                # detail_dbc = OrderDetail.objects.filter(order__distribution_mobil__truck=truck_obj,
+                #                                        order__type='R', unit_id=9, product=p)
+                # total_gbc = detail_dbc.aggregate(
+                #     sum_gbc=Coalesce(Sum('quantity_sold'), decimal.Decimal(0))).get('sum_gbc')
+                # total_loanpayment = LoanPayment.objects.filter(
+                #     order_detail__order__distribution_mobil__truck=truck_obj,
+                #     distribution_mobil__isnull=True,
+                #     product__id=p.id
+                # ).aggregate(
+                #     total_quantity=Coalesce(Sum('quantity'), decimal.Decimal(0))
+                # ).get('total_quantity')
+                # v = total_loanpayment or decimal.Decimal(0)
+                # gbc = total_gbc or decimal.Decimal(0)
+                # a = aggregated_data.get('a') or decimal.Decimal(0)
+                # s = aggregated_data.get('s') or decimal.Decimal(0)
+                # e = aggregated_data.get('e') or decimal.Decimal(0)
+                # t = s - e - v - gbc
+                # ------------------------------------------------------------------------------------------------------
+                detail_b = OrderDetail.objects.filter(order__distribution_mobil__truck=truck_obj,
+                                                        order__type='R', unit_id=4, product=p)
+                total_b = detail_b.aggregate(
+                    sum_b=Coalesce(Sum('quantity_sold'), decimal.Decimal(0))).get('sum_b')
+                borrowed = total_b or decimal.Decimal(0)
+
+                total_recovered = LoanPayment.objects.filter(
                     order_detail__order__distribution_mobil__truck=truck_obj,
-                    distribution_mobil__isnull=True,
                     product__id=p.id
                 ).aggregate(
                     total_quantity=Coalesce(Sum('quantity'), decimal.Decimal(0))
                 ).get('total_quantity')
-                v = total_loanpayment or decimal.Decimal(0)
-                gbc = total_gbc or decimal.Decimal(0)
-                s = aggregated_data.get('s') or decimal.Decimal(0)
-                e = aggregated_data.get('e') or decimal.Decimal(0)
-                t = s - e - v - gbc
+                recovered = total_recovered or decimal.Decimal(0)
+                total_borrowed = borrowed - recovered
+                # ------------------------------------------------------------------------------------------------------
                 details_list = DistributionDetail.objects.filter(status='C', distribution_mobil=distribution_mobil_obj,
                                                                  product__id=p.id).aggregate(
                     irons_filled=Sum(Case(
@@ -4343,7 +4364,7 @@ def get_stock_product_store(request):
                     'product': p.name,
                     'quantity': t,
                     'numbers': {
-                        'quantity_irons_loaned': t,
+                        'quantity_irons_loaned': total_borrowed,
                         'quantity_irons_filled_car': irons_filled,
                         'quantity_empty_irons_car': irons_empty,
                     }
@@ -4351,16 +4372,16 @@ def get_stock_product_store(request):
                 new.get('distribution').append(details_mobil)
                 if p.id == 1:
                     tid['B10'] = tid['B10'] + irons_filled
-                    fid['F10'] = fid['F10'] + irons_empty + t
+                    fid['F10'] = fid['F10'] + irons_empty + total_borrowed
                 elif p.id == 2:
                     tid['B5'] = tid['B5'] + irons_filled
-                    fid['F5'] = fid['F5'] + irons_empty + t
+                    fid['F5'] = fid['F5'] + irons_empty + total_borrowed
                 elif p.id == 3:
                     tid['B45'] = tid['B45'] + irons_filled
-                    fid['F45'] = fid['F45'] + irons_empty + t
+                    fid['F45'] = fid['F45'] + irons_empty + total_borrowed
                 elif p.id == 12:
                     tid['B15'] = tid['B15'] + irons_filled
-                    fid['F15'] = fid['F15'] + irons_empty + t
+                    fid['F15'] = fid['F15'] + irons_empty + total_borrowed
             distribution_dictionary.append(new)
 
     return render(request, 'sales/report_stock_product_subsidiary.html', {
