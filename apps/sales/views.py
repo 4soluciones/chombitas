@@ -3237,8 +3237,8 @@ def get_order_detail_for_pay(request):
         if order_obj.distribution_mobil is not None:
             cash_flow_of_distributions_with_deposits_set = CashFlow.objects.filter(
                 distribution_mobil__isnull=False,
-                distribution_mobil__truck=order_obj.distribution_mobil.truck,
-                distribution_mobil__truck__subsidiary=subsidiary_obj,
+                # distribution_mobil__truck=order_obj.distribution_mobil.truck,
+                # distribution_mobil__truck__subsidiary=subsidiary_obj,
                 type__in=['D', 'E']
             ).annotate(
                 total_subtracted=Coalesce(
