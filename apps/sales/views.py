@@ -3625,7 +3625,9 @@ def new_loan_payment(request):
 
                     elif transaction_payment_type == 'PFD':
                         cash_flow_expense_id = int(request.POST.get('cash-flow-expense-id'))
-                        cash_flow_deposit_id = int(request.POST.get('cash-flow-deposit-id'))
+                        cash_flow_deposit_id = ''
+                        if request.POST.get('cash-flow-deposit-id'):
+                            cash_flow_deposit_id = int(request.POST.get('cash-flow-deposit-id'))
                         str_total_expense_to_subtract = str(request.POST.get('total_expense_to_subtract')).strip()
                         str_total_deposit_to_subtract = str(request.POST.get('total_deposit_to_subtract')).strip()
                         total_expense_to_subtract = 0
