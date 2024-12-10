@@ -166,9 +166,17 @@
                 },
             });
         }
-        $('#id_date_distribution').change(function () {
+        /*$('#id_date_distribution').change(function () {
             getDistributionList();
+        });*/
+
+        $('#id_date_distribution').on('blur', function () {
+            if ($(this).val()) {
+                getDistributionList();
+            }
         });
+
+
 
         $(document).on('click', '.btn-client-advancement', function () {
             let search = $(this).attr('pk');
@@ -256,7 +264,7 @@
             });
         }
     });
-       $('#id_date_distribution').trigger('change');
+       //$('#id_date_distribution').trigger('change');
 
     </script>
 {% endblock extrajs %}
