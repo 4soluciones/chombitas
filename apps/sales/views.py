@@ -3732,7 +3732,7 @@ def new_loan_payment(request):
                             operation_date=_operation_date
                         )
                         loan_payment_obj.save()
-                        if detail_obj.order.type == 'V':
+                        if detail_obj.order.type == 'V' or detail_obj.order.type == 'R':
                             if detail_obj.unit.name == 'B':
                                 product_supply_obj = get_iron_man(detail_obj.product.id)
                                 subsidiary_store_supply_obj = SubsidiaryStore.objects.get(
