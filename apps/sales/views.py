@@ -3736,7 +3736,7 @@ def new_loan_payment(request):
                             if detail_obj.unit.name == 'B':
                                 product_supply_obj = get_iron_man(detail_obj.product.id)
                                 subsidiary_store_supply_obj = SubsidiaryStore.objects.get(
-                                    subsidiary=detail_obj.order.subsidiary_store.subsidiary, category='I')
+                                    subsidiary=subsidiary_obj, category='I')
                                 try:
                                     product_store_supply_obj = ProductStore.objects.get(product=product_supply_obj,
                                                                                         subsidiary_store=subsidiary_store_supply_obj)
