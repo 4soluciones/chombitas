@@ -66,28 +66,28 @@
                     </tr>
                 </table>
                 <div class="card card-personal">
-{#                    <div class="card-header"></div>#}
+                    {#                    <div class="card-header"></div>#}
                     <div class="card-body p-2">
                         <table id="id_distribution_output"
-                           class="table table-sm table-striped align-content-center table-bordered response mb-0"
-                           cellspacing="0" style="width: 100%">
+                               class="table table-sm table-striped align-content-center table-bordered response mb-0"
+                               cellspacing="0" style="width: 100%">
 
-                        <thead>
-                        <tr class="text-center  text-white bg-primary">
-                            <th style="width: 3%">#</th>
-                            <th style="width: 24%">Producto</th>
-                            <th style="width: 17%">Tipo</th>
-                            <th style="width: 15%">Cantidad</th>
-                            <th style="width: 8%">Carro</th>
-                            <th style="width: 15%">Unidad</th>
-                            <th style="width: 10%">Stock</th>
-                            <th style="width: 8%">Borrar</th>
-                        </tr>
-                        </thead>
-                        <tbody id="details">
+                            <thead>
+                            <tr class="text-center  text-white bg-primary">
+                                <th style="width: 3%">#</th>
+                                <th style="width: 24%">Producto</th>
+                                <th style="width: 17%">Tipo</th>
+                                <th style="width: 15%">Cantidad</th>
+                                <th style="width: 8%">Carro</th>
+                                <th style="width: 15%">Unidad</th>
+                                <th style="width: 10%">Stock</th>
+                                <th style="width: 8%">Borrar</th>
+                            </tr>
+                            </thead>
+                            <tbody id="details">
 
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div><!-- modal-body -->
@@ -143,8 +143,26 @@
             {% endfor %}
         ];
 
+
+    function validateRows(product, type) {
+        let flag = false;
+
+        $('#details tr').each(function () {
+            let productRow = $(this).attr('product');
+            let typeRow = $(this).attr('type');
+
+            if (productRow === product && typeRow === type) {
+                flag = true;
+                return false;
+            }
+        });
+
+        return flag;
+    }
+
+
     function AddRow_Details() {
-        console.log('AddRow_Details');
+
         let options = '<option value="0">seleccione</option>';
         let type_options = '<option value="0">seleccione</option>';
 
@@ -154,7 +172,6 @@
         for (let i = 0; i < unitList.length; i++) {
             type_options = type_options + '<option value="' + unitList[i][0] + '">' + unitList[i][1] + '</option>'
         }
-
 
         $('#details').append(
             '<tr product="0" type="L" status="E">' +
@@ -203,7 +220,7 @@
         $("#id_product").val(0);
         $("#id_unit").empty();
 
-    };
+    }
     $(document).on('keyup change', '#details tr td.item-type select', function () {
         let type = $(this).val();
         let tr = $(this).parent('td.item-type').parent('tr')
@@ -212,12 +229,18 @@
         let _td_unit = tr.find('td.item-unit');
         let _td_delete = tr.find('td.item-delete button');
         let _stock_total = tr.find('td.item-stock');
-
         tr.attr('product', 0);
         _td_delete.attr('onclick', 'deleteItem(0)');
         _td_unit.text('');
         _td_unit.attr('unit', 0);
         _stock_total.text('');
+
+        // Validar si ya existe la fila
+        if (validateRows(product, type)) {
+            toastr.error('EL PRODUCTO CON ESE TIPO YA SE ENCUENTRAN AGREGADOS', "ERROR DE INGRESO");
+            $(this).val("0");
+            return;
+        }
         if (type !== "0" && parseInt(product) > 0) {
             $.ajax({
                 url: '/comercial/get_stock_unit_by_product_type/',
@@ -240,7 +263,6 @@
                     tr.find('td.item-product select option[value="' + product + '"]').attr('selected', 'selected');
                     _stock_total.text(parseFloat(stock).toFixed(2));
                     tr.find('td.item-quantity input').val(0);
-
                 },
                 error: function (jqXhr, textStatus, xhr) {
                     if (jqXhr.status === 500) {
@@ -256,6 +278,7 @@
                 }
             });
         }
+
     });
     $(document).on('change', '#details tr td.item-product select', function () {
         let value = $(this)
