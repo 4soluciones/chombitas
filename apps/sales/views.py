@@ -3240,6 +3240,10 @@ def get_order_detail_for_pay(request):
                 # distribution_mobil__truck=order_obj.distribution_mobil.truck,
                 distribution_mobil__truck__subsidiary=subsidiary_obj,
                 type__in=['D', 'E']
+            ).select_related('distribution_mobil', 'distribution_mobil__truck').prefetch_related(
+                Prefetch(
+                    'transactionpayment_set', queryset=TransactionPayment.objects.select_related('loan_payment')
+                )
             ).annotate(
                 total_subtracted=Coalesce(
                     Subquery(
