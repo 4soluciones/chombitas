@@ -622,7 +622,7 @@ def print_programming_guide(request, pk=None, guide=None):
     canvas.roundRect(ml, mi + 0 - 25, 536, 90, 4, stroke=1, fill=1)
     # canvas.roundRect(ml, mi + 0 - 12, 536, 77, 4, stroke=1, fill=1)
 
-    canvas.line(ml, mi + 0 - 20, ml + 536, mi + 0 - 20)  # fixed
+    # canvas.line(ml, mi + 0 - 20, ml + 536, mi + 0 - 20)  # fixed
     canvas.line(ml, mi + 0 - 10, ml + 536, mi + 0 - 10)
     canvas.line(ml, mi + 0 + 0, ml + 536, mi + 0 + 0)
     canvas.line(ml, mi + 0 + 10, ml + 536, mi + 0 + 10)
@@ -637,10 +637,10 @@ def print_programming_guide(request, pk=None, guide=None):
     # canvas.line(ml, mi + 0 + 36, ml + 536, mi + 0 + 36)
     # canvas.line(ml, mi + 0 + 48, ml + 536, mi + 0 + 48)
 
-    canvas.line(ml + 50, mi - 20, ml + 50, mi + 0 + 65)  # vertical
-    canvas.line(ml + 50 + 280, mi - 20, ml + 50 + 280, mi + 0 + 65)  # vertical
-    canvas.line(ml + 50 + 280 + 70, mi - 20, ml + 50 + 280 + 70, mi + 0 + 65)  # vertical
-    canvas.line(ml + 50 + 280 + 70 + 70, mi - 20, ml + 50 + 280 + 70 + 70, mi + 0 + 65)  # vertical
+    canvas.line(ml + 50, mi - 10, ml + 50, mi + 0 + 65)  # vertical
+    canvas.line(ml + 50 + 280, mi - 10, ml + 50 + 280, mi + 0 + 65)  # vertical
+    canvas.line(ml + 50 + 280 + 70, mi - 10, ml + 50 + 280 + 70, mi + 0 + 65)  # vertical
+    canvas.line(ml + 50 + 280 + 70 + 70, mi - 10, ml + 50 + 280 + 70 + 70, mi + 0 + 65)  # vertical
 
     canvas.roundRect(ml, mi + 0 - 60, 100, 30, 4, stroke=1, fill=1)
     canvas.roundRect(ml + 100 + 3, mi + 0 - 60, 433, 30, 4, stroke=1, fill=1)
@@ -761,24 +761,26 @@ def print_programming_guide(request, pk=None, guide=None):
     canvas.drawString(ml + 6 + 0 + 50 + 280 + 70, mi + 0 - 11 + 3, unit_measure6)
     canvas.drawString(ml + 6 + 0 + 50 + 280 + 70 + 70, mi + 0 - 11 + 3, weight6)
 
+    canvas.drawString(ml + 6 + 15, mi + 0 - 24 + 3, "OBERVACIÓN: {}".format(guide_obj.observation))
+
     item7 = ''
     description7 = ''
     quantity7 = ''
     unit_measure7 = ''
     weight7 = ''
 
-    if guide_obj.guidedetail_set.count() > 6:
-        item7 = str(guide_obj.guidedetail_set.all()[6].id)
-        description7 = str(guide_obj.guidedetail_set.all()[6].product.name)
-        quantity7 = str(guide_obj.guidedetail_set.all()[6].quantity)
-        unit_measure7 = str(guide_obj.guidedetail_set.all()[6].unit_measure.description)
-        weight7 = str(guide_obj.guidedetail_set.all()[6].weight)
-
-    canvas.drawString(ml + 6 + 15, mi + 0 - 21 + 3, item7)
-    canvas.drawString(ml + 6 + 100 + 50, mi + 0 - 21 + 3, description7)
-    canvas.drawString(ml + 6 + 0 + 50 + 280, mi + 0 - 21 + 3, quantity7)
-    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70, mi + 0 - 21 + 3, unit_measure7)
-    canvas.drawString(ml + 6 + 0 + 50 + 280 + 70 + 70, mi + 0 - 21 + 3, weight7)
+    # if guide_obj.guidedetail_set.count() > 6:
+    #     item7 = str(guide_obj.guidedetail_set.all()[6].id)
+    #     description7 = str(guide_obj.guidedetail_set.all()[6].product.name)
+    #     quantity7 = str(guide_obj.guidedetail_set.all()[6].quantity)
+    #     unit_measure7 = str(guide_obj.guidedetail_set.all()[6].unit_measure.description)
+    #     weight7 = str(guide_obj.guidedetail_set.all()[6].weight)
+    #
+    # canvas.drawString(ml + 6 + 15, mi + 0 - 21 + 3, item7)
+    # canvas.drawString(ml + 6 + 100 + 50, mi + 0 - 21 + 3, description7)
+    # canvas.drawString(ml + 6 + 0 + 50 + 280, mi + 0 - 21 + 3, quantity7)
+    # canvas.drawString(ml + 6 + 0 + 50 + 280 + 70, mi + 0 - 21 + 3, unit_measure7)
+    # canvas.drawString(ml + 6 + 0 + 50 + 280 + 70 + 70, mi + 0 - 21 + 3, weight7)
 
     canvas.drawString(ml + 100 + 3 + 6, mi + 0 - 70 + 6 + 20, 'MOTIVO DEL')
     canvas.drawString(ml + 100 + 3 + 6, mi + 0 - 70 + 6 + 10, 'TRASLADO')
@@ -882,9 +884,9 @@ def print_programming_guide(request, pk=None, guide=None):
     canvas.showPage()
     canvas.save()
     r = HttpResponse(content_type='application/pdf')
-    r['Content-Disposition'] = 'attachment; filename="owners_and_vehicles_update.pdf"'
-    r['Content-Disposition'] = 'attachment; filename="guia_de_remision[{} - {}].pdf"'.format(
-        guide_obj.serial, guide_obj.code)
+    # r['Content-Disposition'] = 'attachment; filename="owners_and_vehicles_update.pdf"'
+    # r['Content-Disposition'] = 'attachment; filename="guia_de_remision[{} - {}].pdf"'.format(
+    #     guide_obj.serial, guide_obj.code)
     r.write(buffer.getvalue())
     buffer.close()
     return r

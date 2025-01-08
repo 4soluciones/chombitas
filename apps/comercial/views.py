@@ -497,6 +497,7 @@ def create_guide(request):
         minimal_cost = float(data_guides["Minimal_cost"])
         programming = int(data_guides["Programming"])
         programming_obj = Programming.objects.get(pk=programming)
+        observation = str(data_guides["Observation"])
 
         new_guide = {
             'serial': serial,
@@ -504,6 +505,7 @@ def create_guide(request):
             'minimal_cost': minimal_cost,
             'user': user_obj,
             'programming': programming_obj,
+            'observation': observation
         }
         guide_obj = Guide.objects.create(**new_guide)
         guide_obj.save()

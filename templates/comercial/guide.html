@@ -169,6 +169,11 @@
                             <button type="button" id="btn-exit" class="btn btn-primary btn-block">Salir</button>
                         </td>
                     </tr>
+                    <tr>
+                        <td class="">Observacion:</td>
+                        <td colspan="5"><input type="text" class="form-control" id="id_observation" name="observation"
+                                            placeholder="..."></td>
+                    </tr>
 
                 </table>
 
@@ -388,6 +393,7 @@
                 "Minimal_cost": $('#id_minimal_cost').val(),
                 "Client": $('#id_client').val(),
                 "Programming": $('#programmingLabel').attr('programming'),
+                "Observation": $('#id_observation').val(),
 
             };
             // Recorre cada detalle de producto (son 2 arrays) each -> recorre
