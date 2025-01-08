@@ -884,9 +884,9 @@ def print_programming_guide(request, pk=None, guide=None):
     canvas.showPage()
     canvas.save()
     r = HttpResponse(content_type='application/pdf')
-    # r['Content-Disposition'] = 'attachment; filename="owners_and_vehicles_update.pdf"'
-    # r['Content-Disposition'] = 'attachment; filename="guia_de_remision[{} - {}].pdf"'.format(
-    #     guide_obj.serial, guide_obj.code)
+    r['Content-Disposition'] = 'attachment; filename="owners_and_vehicles_update.pdf"'
+    r['Content-Disposition'] = 'attachment; filename="guia_de_remision[{} - {}].pdf"'.format(
+        guide_obj.serial, guide_obj.code)
     r.write(buffer.getvalue())
     buffer.close()
     return r
