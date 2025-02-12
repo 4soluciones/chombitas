@@ -704,9 +704,11 @@
         $(document).on('change', '#id_transaction_payment_type2', function () {
             //$('#id_transaction_payment_type2').change(function () {
 
-            let type = $(this).val();
-
-            if (type === 'E') {
+            //let type = $(this).val();
+            const type = $(this).val();
+            const sections = ['#cash2', '#deposit2', '#distribution-funds-return'];
+            $(sections.join(', ')).hide();
+            /*if (type === 'E') {
                 $('#cash2').css('display', 'table');
                 $('#deposit2').css('display', 'none');
                 $('#id_cash').trigger('change');
@@ -715,13 +717,30 @@
                 $('#cash2').css('display', 'none');
             } else {
                 $('#cash2, #deposit2').css('display', 'none');
+            }*/
+            switch (type) {
+                case 'E':
+                    $('#cash2').show();
+                    $('#id_cash_efectivo2').trigger('change');
+                    break;
+                case 'D':
+                    $('#deposit2').show();
+                    break;
+                case 'PFD':
+                    $('#distribution-funds-return').show();
+                    break;
             }
 
-            if (type === 'D' || type === 'V') {
+            /*if (type === 'D' || type === 'V') {
                 $('#id_code_operation2').removeAttr('disabled').css('color', '#495057');
             } else {
                 $('#id_code_operation2').attr('disabled', 'disabled').css('color', '#e9ecef');
-            }
+            }*/
+             // Habilitar o deshabilitar el campo de código de operación según el tipo
+            const isCodeEnabled = (type === 'D' || type === 'V');
+            $('#id_code_operation2').prop('disabled', !isCodeEnabled)
+                .css('color', isCodeEnabled ? '#495057' : '#e9ecef');
+
         });
 
 

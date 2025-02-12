@@ -3772,7 +3772,11 @@ def new_loan_payment(request):
                         quantity = val
                         if len(request.POST.get('loan_payment2', '')) > 0:
                             val2 = decimal.Decimal(request.POST.get('loan_payment2'))
-                            if 0 < val2 <= detail_obj.multiply():
+                            if 0 < val2 <= detail_obj.multiply() or val2 > 0 and val2 > detail_obj.multiply():
+                                if val2 > 0 and val2 > detail_obj.multiply():
+                                    new_price_unit = val2 / quantity
+                                    detail_obj.price_unit = new_price_unit
+                                    detail_obj.save()
                                 transaction_payment_type = str(
                                     request.POST.get('transaction_payment_type2'))
                                 code_operation = str(request.POST.get('code_operation2'))
@@ -3870,6 +3874,63 @@ def new_loan_payment(request):
                                     )
                                     transaction_payment_obj.save()
 
+                                elif transaction_payment_type == 'PFD':
+                                    loan_quantity_return = decimal.Decimal(request.POST.get('loan_quantity2'))
+                                    cash_flow_expense_id = int(request.POST.get('cash-flow-expense-id-return'))
+                                    cash_flow_deposit_id = ''
+                                    if request.POST.get('cash-flow-deposit-id-return'):
+                                        cash_flow_deposit_id = int(request.POST.get('cash-flow-deposit-id-return'))
+                                    str_total_expense_to_subtract = str(request.POST.get('total_expense_to_subtract_return')).strip()
+                                    str_total_deposit_to_subtract = str(request.POST.get('total_deposit_to_subtract_return')).strip()
+                                    number_of_vouchers = decimal.Decimal(request.POST.get('number_of_vouchers', '0'))
+                                    total_expense_to_subtract = 0
+                                    total_deposit_to_subtract = 0
+                                    if str_total_expense_to_subtract != '':
+                                        total_expense_to_subtract = decimal.Decimal(str_total_expense_to_subtract)
+                                    if str_total_deposit_to_subtract != '':
+                                        total_deposit_to_subtract = decimal.Decimal(str_total_deposit_to_subtract)
+
+                                    if total_expense_to_subtract > 0 and cash_flow_expense_id > 0:
+                                        cash_flow_expense_obj = CashFlow.objects.get(id=cash_flow_expense_id)
+                                        loan_payment_obj = LoanPayment(
+                                            quantity=loan_quantity_return,
+                                            price=detail_obj.price_unit,
+                                            product=detail_obj.product,
+                                            order_detail=detail_obj,
+                                            operation_date=_operation_date
+                                        )
+                                        loan_payment_obj.save()
+
+                                        transaction_payment_obj = TransactionPayment(
+                                            payment=total_expense_to_subtract,
+                                            number_of_vouchers=number_of_vouchers,
+                                            type=transaction_payment_type,
+                                            operation_code=cash_flow_expense_obj.operation_code,
+                                            loan_payment=loan_payment_obj,
+                                            cash_flow=cash_flow_expense_obj
+                                        )
+                                        transaction_payment_obj.save()
+
+                                    if total_deposit_to_subtract > 0 and cash_flow_deposit_id > 0:
+                                        cash_flow_deposit_obj = CashFlow.objects.get(id=cash_flow_deposit_id)
+                                        loan_payment_obj = LoanPayment(
+                                            quantity=loan_quantity_return,
+                                            price=detail_obj.price_unit,
+                                            product=detail_obj.product,
+                                            order_detail=detail_obj,
+                                            operation_date=_operation_date
+                                        )
+                                        loan_payment_obj.save()
+
+                                        transaction_payment_obj = TransactionPayment(
+                                            payment=total_deposit_to_subtract,
+                                            number_of_vouchers=number_of_vouchers,
+                                            type=transaction_payment_type,
+                                            operation_code=cash_flow_deposit_obj.operation_code,
+                                            loan_payment=loan_payment_obj,
+                                            cash_flow=cash_flow_deposit_obj
+                                        )
+                                        transaction_payment_obj.save()
         return JsonResponse({
             'message': 'Cambios guardados con exito.',
             'grid': get_dict_orders(client_obj=detail_obj.order.client, is_pdf=False, start_date=start_date,
