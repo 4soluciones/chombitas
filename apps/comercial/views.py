@@ -1019,9 +1019,9 @@ def create_output_transfer(request):
             )
             new_guide_detail_obj.save()
 
-            if motive != 4:
-                product_store_obj = ProductStore.objects.get(id=product_store_id)
-                kardex_ouput(product_store_obj.id, quantity_request, guide_detail_obj=new_guide_detail_obj)
+            # if motive != 4:
+            product_store_obj = ProductStore.objects.get(id=product_store_id)
+            kardex_ouput(product_store_obj.id, quantity_request, guide_detail_obj=new_guide_detail_obj)
 
         return JsonResponse({
             'message': 'La operación se Realizo correctamente.',
