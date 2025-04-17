@@ -26,9 +26,14 @@
                     <label class="my-1 mr-2" for="id-truck">PLACA :</label>
                     <select class="custom-select my-1 mr-sm-2" id="id-truck" name="truck" required>
                         <option value="" disabled selected>SELECCIONE...</option>
-                        {% for t in truck_set %}
-                            <option value="{{ t.pk }}">{{ t.license_plate }} -> {{ t.get_pilot }}
-                                ({{ t.distributionmobil_set.count }})
+{#                        {% for t in truck_set %}#}
+{#                            <option value="{{ t.pk }}">{{ t.license_plate }} -> {{ t.get_pilot }}#}
+{#                                ({{ t.distributionmobil_set.count }})#}
+{#                            </option>#}
+{#                        {% endfor %}#}
+                        {% for t in distribution_truck_pilot_set %}
+                            <option value="{{ t.truck }}_{{ t.pilot }}">
+                                {{ t.truck__license_plate }} -> {{ t.pilot__names }} {{ t.pilot__paternal_last_name }} {{ t.pilot__maternal_last_name }}
                             </option>
                         {% endfor %}
                     </select>
@@ -109,6 +114,7 @@
             event.preventDefault();
             let _data = new FormData($('#search-form').get(0));
             $("#btn-search").attr("disabled", "true");
+            $('#distribution-grid-list').empty();
             $.ajax({
                 url: '/comercial/get_monthly_distribution_by_licence_plate/',
                 type: "POST",
@@ -121,7 +127,7 @@
                         $('#distribution-grid-list').html(response.grid);
                         toastr.info(response['message'], '¡Bien hecho!');
                     }else{
-                        toastr.info(response['error'], '¡Atencion!');
+                        toastr.warning(response['error'], '¡Atencion!');
                     }
                 },
                 error: function (jqXhr, textStatus, xhr) {

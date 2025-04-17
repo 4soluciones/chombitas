@@ -2064,10 +2064,11 @@ def get_spanish_month_names():
     return month_names
 
 
-def get_previous_balls_recovered_in_distribution(selected_datetime=None, truck_id=None, product__id=None):
+def get_previous_balls_recovered_in_distribution(selected_datetime=None, truck_id=None, pilot_id=None, product__id=None):
     q3 = DistributionDetail.objects.filter(
         distribution_mobil__date_distribution__lt=selected_datetime.date(),
         distribution_mobil__truck__id=truck_id,
+        distribution_mobil__pilot__id=pilot_id,
         status='R',
         type='V',
         product__id=product__id
@@ -2082,10 +2083,11 @@ def get_previous_balls_recovered_in_distribution(selected_datetime=None, truck_i
     return sum_quantity_recovered_b
 
 
-def get_previous_balls_payed_in_plant(selected_datetime=None, truck_id=None, product__id=None):
+def get_previous_balls_payed_in_plant(selected_datetime=None, truck_id=None, pilot_id=None, product__id=None):
     q2 = LoanPayment.objects.filter(
         order_detail__order__distribution_mobil__date_distribution__lt=selected_datetime.date(),
         order_detail__order__distribution_mobil__truck__id=truck_id,
+        order_detail__order__distribution_mobil__pilot__id=pilot_id,
         order_detail__unit__name__in=['B'],
         product__id=product__id,
         distribution_mobil__isnull=False
@@ -2102,10 +2104,11 @@ def get_previous_balls_payed_in_plant(selected_datetime=None, truck_id=None, pro
     return sum_price_payed_b
 
 
-def get_previous_balls_recovered_in_plant(selected_datetime=None, truck_id=None, product__id=None):
+def get_previous_balls_recovered_in_plant(selected_datetime=None, truck_id=None, pilot_id=None, product__id=None):
     q2 = LoanPayment.objects.filter(
         order_detail__order__distribution_mobil__date_distribution__lt=selected_datetime.date(),
         order_detail__order__distribution_mobil__truck__id=truck_id,
+        order_detail__order__distribution_mobil__pilot__id=pilot_id,
         order_detail__unit__name__in=['B'],
         product__id=product__id,
         distribution_mobil__isnull=True
@@ -2120,10 +2123,11 @@ def get_previous_balls_recovered_in_plant(selected_datetime=None, truck_id=None,
     return sum_quantity_recovered_b
 
 
-def get_previous_debt_for_borrowed_balls(selected_datetime=None, truck_id=None, product__id=None):
+def get_previous_debt_for_borrowed_balls(selected_datetime=None, truck_id=None, pilot_id=None, product__id=None):
     q = OrderDetail.objects.filter(
         order__distribution_mobil__date_distribution__lt=selected_datetime.date(),
         order__distribution_mobil__truck__id=truck_id,
+        order__distribution_mobil__pilot__id=pilot_id,
         unit__name__in=['B'],
         product__id=product__id
     ).values('product__id').annotate(sum_quantity_sold_b=Sum(F('quantity_sold'))).values(
@@ -2191,12 +2195,12 @@ def get_ball_payed_in_plant(product_id=None, distribution_mobil_id=None):
     return quantity_payed_in_plant_b
 
 
-def get_previous_debt_for_in_the_car_balls(distribution_mobil_set=None, truck_id=None, product__id=None, type_id=None):
+def get_previous_debt_for_in_the_car_balls(distribution_mobil_set=None, truck_id=None, pilot_id=None, product__id=None, type_id=None):
     remaining_in_the_car_bg = 0
 
     if distribution_mobil_set.exists():
         last_distribution_set = DistributionMobil.objects.filter(
-            id__lte=distribution_mobil_set[0].id, truck__id=truck_id
+            id__lte=distribution_mobil_set[0].id, truck__id=truck_id, pilot__id=pilot_id
         ).annotate(
             previous_distribution_id=Window(expression=Lag('id', default=0), order_by=('date_distribution', 'id'))
         ).order_by('date_distribution', 'id')
@@ -2669,6 +2673,14 @@ def get_monthly_distribution_by_licence_plate(request):
     if request.method == 'GET':
         truck_set = Truck.objects.filter(distributionmobil__isnull=False).distinct('license_plate').order_by(
             'license_plate')
+
+        distribution_truck_pilot = DistributionMobil.objects.filter(
+            truck__isnull=False,
+            pilot__isnull=False
+        ).values(
+            'truck', 'truck__license_plate', 'pilot', 'pilot__names', 'pilot__paternal_last_name', 'pilot__maternal_last_name'
+        ).distinct().order_by('truck__license_plate', 'pilot')
+
         my_date = datetime.now()
         formatdate = my_date.strftime("%Y-%m-%d")
         return render(request, 'comercial/monthly_distribution_by_licence_plate_list.html', {
@@ -2677,10 +2689,14 @@ def get_monthly_distribution_by_licence_plate(request):
             'current_month': datetime.now().month,
             'year_set': get_consecutive_years(),
             'formatdate': formatdate,
-            'truck_set': truck_set
+            'truck_set': truck_set,
+            'distribution_truck_pilot_set': distribution_truck_pilot
         })
     elif request.method == 'POST':
-        truck_id = int(request.POST.get('truck'))
+        truck_pilot_value = request.POST.get('truck')
+        truck_id_str, pilot_id_str = truck_pilot_value.split('_')
+        truck_id = int(truck_id_str)
+        pilot_id = int(pilot_id_str)
         # month = int(request.POST.get('month'))
         # year = int(request.POST.get('year'))
         start_date = str(request.POST.get('start-date'))
@@ -2696,61 +2712,62 @@ def get_monthly_distribution_by_licence_plate(request):
         # selected_datetime = datetime(year, month, 1)
 
         previous_debt_for_borrowed_balls_b10 = get_previous_debt_for_borrowed_balls(
-            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=1)
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, pilot_id=pilot_id, product__id=1)
         previous_debt_for_borrowed_balls_b5 = get_previous_debt_for_borrowed_balls(
-            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=2)
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, pilot_id=pilot_id, product__id=2)
         previous_debt_for_borrowed_balls_b45 = get_previous_debt_for_borrowed_balls(
-            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=3)
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, pilot_id=pilot_id, product__id=3)
         previous_debt_for_borrowed_balls_b15 = get_previous_debt_for_borrowed_balls(
-            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=12)
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, pilot_id=pilot_id, product__id=12)
 
         previous_balls_recovered_in_distribution_b10 = get_previous_balls_recovered_in_distribution(
-            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=1)
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, pilot_id=pilot_id, product__id=1)
         previous_balls_recovered_in_distribution_b5 = get_previous_balls_recovered_in_distribution(
-            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=2)
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, pilot_id=pilot_id, product__id=2)
         previous_balls_recovered_in_distribution_b45 = get_previous_balls_recovered_in_distribution(
-            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=3)
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, pilot_id=pilot_id, product__id=3)
         previous_balls_recovered_in_distribution_b15 = get_previous_balls_recovered_in_distribution(
-            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=12)
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, pilot_id=pilot_id, product__id=12)
 
         previous_balls_recovered_in_plant_b10 = get_previous_balls_recovered_in_plant(
-            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=1)
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, pilot_id=pilot_id, product__id=1)
         previous_balls_recovered_in_plant_b5 = get_previous_balls_recovered_in_plant(
-            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=2)
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, pilot_id=pilot_id, product__id=2)
         previous_balls_recovered_in_plant_b45 = get_previous_balls_recovered_in_plant(
-            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=3)
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, pilot_id=pilot_id, product__id=3)
         previous_balls_recovered_in_plant_b15 = get_previous_balls_recovered_in_plant(
-            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=12)
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, pilot_id=pilot_id, product__id=12)
 
         previous_balls_payed_in_plant_b10 = get_previous_balls_payed_in_plant(
-            selected_datetime=start_date_sin_timezone, truck_id=truck_id, product__id=1)
+            selected_datetime=start_date_sin_timezone, truck_id=truck_id, pilot_id=pilot_id, product__id=1)
 
         distribution_mobil_set = DistributionMobil.objects.filter(
             # date_distribution__month=month,
             # date_distribution__year=year,
             date_distribution__range=[start_date_sin_timezone.date(), end_date_sin_timezone.date()],
-            truck__id=truck_id,
+            truck__id=truck_id, pilot__id=pilot_id
         ).annotate(
             previous_distribution_id=Window(expression=Lag('id', default=0),
                                             order_by=(F('date_distribution').asc(), F('id').asc()))
         ).order_by('date_distribution', 'id').distinct('date_distribution', 'id')
+
         remaining_in_the_car_bg10 = get_previous_debt_for_in_the_car_balls(
-            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=1, type_id='L')
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, pilot_id=pilot_id, product__id=1, type_id='L')
         remaining_in_the_car_bg5 = get_previous_debt_for_in_the_car_balls(
-            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=2, type_id='L')
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, pilot_id=pilot_id, product__id=2, type_id='L')
         remaining_in_the_car_bg45 = get_previous_debt_for_in_the_car_balls(
-            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=3, type_id='L')
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, pilot_id=pilot_id, product__id=3, type_id='L')
         remaining_in_the_car_bg15 = get_previous_debt_for_in_the_car_balls(
-            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=12, type_id='L')
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, pilot_id=pilot_id, product__id=12, type_id='L')
 
         remaining_in_the_car_b10 = get_previous_debt_for_in_the_car_balls(
-            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=1, type_id='V')
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, pilot_id=pilot_id, product__id=1, type_id='V')
         remaining_in_the_car_b5 = get_previous_debt_for_in_the_car_balls(
-            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=2, type_id='V')
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, pilot_id=pilot_id, product__id=2, type_id='V')
         remaining_in_the_car_b45 = get_previous_debt_for_in_the_car_balls(
-            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=3, type_id='V')
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, pilot_id=pilot_id, product__id=3, type_id='V')
         remaining_in_the_car_b15 = get_previous_debt_for_in_the_car_balls(
-            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, product__id=12, type_id='V')
+            distribution_mobil_set=distribution_mobil_set, truck_id=truck_id, pilot_id=pilot_id, product__id=12, type_id='V')
 
         remaining_borrowed_b10 = int(previous_debt_for_borrowed_balls_b10) - int(
             previous_balls_recovered_in_distribution_b10) - int(previous_balls_recovered_in_plant_b10)
@@ -2790,6 +2807,7 @@ def get_monthly_distribution_by_licence_plate(request):
             order__distribution_mobil__date_distribution__range=[start_date_sin_timezone.date(),
                                                                  end_date_sin_timezone.date()],
             order__distribution_mobil__truck__id=truck_id,
+            order__distribution_mobil__pilot__id=pilot_id,
             unit__name__in=['G', 'GBC']
         )
 
