@@ -1,3 +1,4 @@
+
 <fieldset>
     <legend class="h5">DETALLES DE DISTRIBUCION {{ distribution_id }}</legend>
     <table class="table table-sm table-bordered">
@@ -23,6 +24,37 @@
         </tbody>
     </table>
 </fieldset>
+{% if kardex_set %}
+<fieldset>
+<legend class="h5">KARDEX</legend>
+     <table class="table table-sm table-bordered">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">PROD</th>
+            <th scope="col">CANT</th>
+            <th scope="col">UND</th>
+            <th scope="col">OPE</th>
+            <th scope="col">DET DIS ID</th>
+            <th scope="col">FECHA</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for d in kardex_set %}
+            <tr>
+                <th scope="row">{{ d.id }}</th>
+                <td>{{ d.distribution_detail.product.name }}</td>
+                <td>{{ d.quantity|safe }}</td>
+                <td>{{ d.distribution_detail.unit.name }}</td>
+                <td>{{ d.get_operation_display|upper }}</td>
+                <td>{{ d.distribution_detail.id }}</td>
+                <td>{{ d.create_at|date:"SHORT_DATE_FORMAT" }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</fieldset>
+{% endif %}
 {% if order_detail_set %}
 <fieldset>
     <legend class="h5">BALONES VENDIDOS</legend>
@@ -33,8 +65,10 @@
             <th scope="col">PROD</th>
             <th scope="col">CANT</th>
             <th scope="col">UND</th>
+            <th scope="col">PRECIO</th>
             <th scope="col">VENTA ID</th>
             <th scope="col">VENTA FECHA</th>
+            <th scope="col">CLIENTE</th>
         </tr>
         </thead>
         <tbody>
@@ -44,8 +78,10 @@
                 <td>{{ d.product.name }}</td>
                 <td>{{ d.quantity_sold|safe }}</td>
                 <td>{{ d.unit.name }}</td>
+                <td>{{ d.price_unit|floatformat:2|safe }}</td>
                 <td>{{ d.order.id }}</td>
-                <td>{{ d.order.create_at }}</td>
+                <td>{{ d.order.create_at|date:"SHORT_DATE_FORMAT" }}</td>
+                <td>{{ d.order.client.names }}</td>
             </tr>
         {% endfor %}
         </tbody>
@@ -72,7 +108,7 @@
                 <th scope="row">{{ d.id }}</th>
                 <td>{{ d.product.name }}</td>
                 <td>{{ d.quantity|safe }}</td>
-                <td>{{ d.price|safe }}</td>
+                <td>{{ d.price|floatformat:2|safe }}</td>
                 <td>{{ d.order_detail.id }}</td>
             </tr>
         {% endfor %}
@@ -93,6 +129,11 @@
             <th scope="col">CANT</th>
             <th scope="col">PRE</th>
             <th scope="col">DET VENTA ID</th>
+            <th scope="col">TIPO</th>
+            <th scope="col">CASH FLOW ID</th>
+            <th scope="col">DIS ID</th>
+            <th scope="col">TRAN ID</th>
+            <th scope="col">TRAN CASH FLOW ID</th>
         </tr>
         </thead>
         <tbody>
@@ -101,8 +142,13 @@
                 <th scope="row">{{ d.id }}</th>
                 <td>{{ d.product.name }}</td>
                 <td>{{ d.quantity|safe }}</td>
-                <td>{{ d.price|safe }}</td>
+                <td>{{ d.price|floatformat:2|safe }}</td>
                 <td>{{ d.order_detail.id }}</td>
+                <td>{{ d.get_type_display }}</td>
+                <td>{{ d.cash_flow }}</td>
+                <td>{{ d.distribution_mobil }}</td>
+                <td>{{ d.transactionpayment_set.last.payment }}</td>
+                <td>{{ d.transactionpayment_set.last.cash_flow }}</td>
             </tr>
         {% endfor %}
         </tbody>

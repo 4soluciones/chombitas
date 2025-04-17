@@ -8,10 +8,28 @@
         padding: 0;
         line-height: 0.9;
     }
+
+    .table-container {
+    max-height: 100vh; /* Ajusta este valor según la altura deseada */
+    overflow-y: auto;
+    border: 1px solid #dee2e6; /* Opcional: bordes para el contenedor */
+}
+
+.table-container table {
+    {#width: 100%;#}
+    {#border-collapse: collapse;#}
+    {#table-layout: fixed;#}
+}
+
+.table-container thead {
+    position: sticky;
+    top: 0;
+    background-color: white; /* Fondo blanco para el encabezado */
+    z-index: 1; /* Asegura que el encabezado quede sobre el cuerpo */
+}
 </style>
 
-
-
+<div class="table-container">
 <table class="table table-sm table-bordered" id="excel-data-grid">
     <thead>
     <tr>
@@ -332,6 +350,7 @@
 
     </tbody>
 </table>
+</div>
 <script>
 
     $('table#excel-data-grid tbody tr').each(function (i){
