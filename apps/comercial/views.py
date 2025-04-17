@@ -873,7 +873,8 @@ def get_distribution_summary(request):
     if request.method == 'GET':
         pk = request.GET.get('pk', '')
         # distribution_mobil_obj = DistributionMobil.objects.get(id=int(pk))
-        distribution_detail_set = DistributionDetail.objects.filter(distribution_mobil_id=int(pk)).select_related('unit', 'product').order_by('id')
+        distribution_detail_set = DistributionDetail.objects.filter(distribution_mobil_id=int(pk)).select_related(
+            'unit', 'product').order_by('id')
         order_detail_set = OrderDetail.objects.filter(order__distribution_mobil_id=int(pk))
         recovery_set = LoanPayment.objects.filter(distribution_mobil_id=int(pk))
         payed_set = LoanPayment.objects.filter(order_detail__order__distribution_mobil_id=int(pk))
@@ -2176,7 +2177,8 @@ def get_ball_payed_in_plant(product_id=None, distribution_mobil_id=None):
         order_detail__order__distribution_mobil__id=distribution_mobil_id,
         order_detail__unit__name__in=['B'],
         product__id=product_id,
-        distribution_mobil__isnull=False
+        distribution_mobil__isnull=False,
+        transactionpayment__isnull=False  # AQUI SE AGREGO ESTO PARA QUE NO APARECIERAN LOS VENDIDOS PAGADOS
     ).values('product__id').annotate(sum_quantity_payed_in_plant_b=Sum(F('quantity'))).values(
         'sum_quantity_payed_in_plant_b'
     )
@@ -2404,7 +2406,7 @@ def get_monthly_sales_by_client(request):
             # order__distribution_mobil__date_distribution__month=month,
             # order__distribution_mobil__date_distribution__year=year,
             order__create_at__date__range=[start_date_sin_timezone.date(),
-                                                                 end_date_sin_timezone.date()],
+                                           end_date_sin_timezone.date()],
             order__client__id=client_id, order__type__in=['V', 'R'],
             unit__name__in=['G', 'GBC']
         )
@@ -2434,37 +2436,46 @@ def get_monthly_sales_by_client(request):
                 'date': '',
                 'ids': [],
                 'B5': {
-                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0, 'quantity_changed': 0,
+                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
+                    'quantity_changed': 0,
                     'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
-                    'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b5}, 'total_sales': 0, 'total_b': 0,'total_payed_b': 0,
+                    'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b5}, 'total_sales': 0,
+                    'total_b': 0, 'total_payed_b': 0,
                     'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
                     'advanced_b': 0, 'payed_in_plant_b': 0, 'remaining_borrowed_b': 0
                 },
                 'B10': {
-                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0, 'quantity_changed': 0,
+                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
+                    'quantity_changed': 0,
                     'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
-                    'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b10}, 'total_sales': 0, 'total_b': 0,'total_payed_b': 0,
+                    'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b10}, 'total_sales': 0,
+                    'total_b': 0, 'total_payed_b': 0,
                     'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
                     'advanced_b': 0, 'payed_in_plant_b': 0, 'remaining_borrowed_b': 0
                 },
                 'B45': {
-                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0, 'quantity_changed': 0,
+                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
+                    'quantity_changed': 0,
                     'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
-                    'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b45}, 'total_sales': 0, 'total_b': 0,'total_payed_b': 0,
+                    'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b45}, 'total_sales': 0,
+                    'total_b': 0, 'total_payed_b': 0,
                     'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
                     'advanced_b': 0, 'payed_in_plant_b': 0, 'remaining_borrowed_b': 0
                 },
                 'B15': {
-                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0, 'quantity_changed': 0,
+                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
+                    'quantity_changed': 0,
                     'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
-                    'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b15}, 'total_sales': 0, 'total_b': 0,'total_payed_b': 0,
+                    'prices': {h: {'quantity': 0, 'price': 0, 'subtotal': 0} for h in header_b15}, 'total_sales': 0,
+                    'total_b': 0, 'total_payed_b': 0,
                     'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
                     'advanced_b': 0, 'payed_in_plant_b': 0, 'remaining_borrowed_b': 0
                 },
                 'B3': {
-                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0, 'quantity_changed': 0,
+                    'extracted_bg': 0, 'returned_b': 0, 'ruined_returned_bg': 0, 'quantity_sold_g': 0,
+                    'quantity_changed': 0,
                     'quantity_sold_b': 0, 'quantity_sold': 0, 'in_the_car_bg': 0, 'in_the_car_b': 0,
-                    'prices': {}, 'total_sales': 0, 'total_b': 0,'total_payed_b': 0,
+                    'prices': {}, 'total_sales': 0, 'total_b': 0, 'total_payed_b': 0,
                     'remaining_in_the_car_bg': 0, 'recovered_b': 0, 'recovered_in_plant_b': 0,
                     'advanced_b': 0, 'payed_in_plant_b': 0, 'remaining_borrowed_b': 0
                 },
@@ -2641,7 +2652,6 @@ def get_monthly_sales_by_client(request):
             'header_b5': header_b5,
             'header_b45': header_b45,
             'header_b15': header_b15,
-
 
         })
         if order_set:
@@ -2898,7 +2908,8 @@ def get_monthly_distribution_by_licence_plate(request):
 
             if quantity_payed_in_plant_b10 > 0:
                 distribution_obj["B10"]["payed_in_plant_b"] += int(quantity_payed_in_plant_b10)
-                distribution_obj["B10"]["remaining_borrowed_b"] = remaining_borrowed_b10 - int(quantity_payed_in_plant_b10)
+                distribution_obj["B10"]["remaining_borrowed_b"] = remaining_borrowed_b10 - int(
+                    quantity_payed_in_plant_b10)
                 remaining_borrowed_b10 -= int(quantity_payed_in_plant_b10)
 
             if quantity_payed_in_plant_b5 > 0:
@@ -2908,12 +2919,14 @@ def get_monthly_distribution_by_licence_plate(request):
 
             if quantity_payed_in_plant_b45 > 0:
                 distribution_obj["B45"]["payed_in_plant_b"] += int(quantity_payed_in_plant_b45)
-                distribution_obj["B45"]["remaining_borrowed_b"] = remaining_borrowed_b45 - int(quantity_payed_in_plant_b45)
+                distribution_obj["B45"]["remaining_borrowed_b"] = remaining_borrowed_b45 - int(
+                    quantity_payed_in_plant_b45)
                 remaining_borrowed_b45 -= int(quantity_payed_in_plant_b45)
 
             if quantity_payed_in_plant_b15 > 0:
                 distribution_obj["B15"]["payed_in_plant_b"] += int(quantity_payed_in_plant_b15)
-                distribution_obj["B15"]["remaining_borrowed_b"] = remaining_borrowed_b15 - int(quantity_payed_in_plant_b15)
+                distribution_obj["B15"]["remaining_borrowed_b"] = remaining_borrowed_b15 - int(
+                    quantity_payed_in_plant_b15)
                 remaining_borrowed_b15 -= int(quantity_payed_in_plant_b15)
 
             for detail in distribution.distributiondetail_set.all():
@@ -4273,7 +4286,8 @@ def fixed_balls_distribution(request):
         #     distribution_mobil__truck__id=16,
         #     distribution_mobil__date_distribution__range=[start_date, end_date]).order_by('distribution_mobil_id')
 
-        distribution_mobil_set = DistributionMobil.objects.filter(truck__id=16, date_distribution__range=[start_date, end_date])
+        distribution_mobil_set = DistributionMobil.objects.filter(truck__id=16,
+                                                                  date_distribution__range=[start_date, end_date])
 
         for d in distribution_mobil_set:
             distribution_detail = d.distributiondetail_set.filter(
@@ -4300,18 +4314,18 @@ def fixed_balls_distribution(request):
         #     if d.status == 'C' and d.type == 'L' and d.quantity == decimal.Decimal(
         #             3.00) and d.distribution_mobil == distribution_mobil and d.product_id == 2 and d.unit_id == 6:
         #         d.delete()
-            # if d.status == 'C' and d.type == 'L' and d.distribution_mobil == distribution_mobil and d.product_id == 2 and d.unit_id == 6:
-            #     quantity = decimal.Decimal(3.00)
-            #     new_quantity = d.quantity + quantity
-            #     d.quantity = new_quantity
-            #     d.save()
-            # else:
-            #     DistributionDetail.objects.create(status='C',
-            #                                       type='L',
-            #                                       quantity=decimal.Decimal(3.00),
-            #                                       distribution_mobil=distribution_mobil,
-            #                                       product_id=2,
-            #                                       unit_id=6)
+        # if d.status == 'C' and d.type == 'L' and d.distribution_mobil == distribution_mobil and d.product_id == 2 and d.unit_id == 6:
+        #     quantity = decimal.Decimal(3.00)
+        #     new_quantity = d.quantity + quantity
+        #     d.quantity = new_quantity
+        #     d.save()
+        # else:
+        #     DistributionDetail.objects.create(status='C',
+        #                                       type='L',
+        #                                       quantity=decimal.Decimal(3.00),
+        #                                       distribution_mobil=distribution_mobil,
+        #                                       product_id=2,
+        #                                       unit_id=6)
 
         return JsonResponse({
             'success': True,
