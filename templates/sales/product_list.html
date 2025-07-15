@@ -162,6 +162,29 @@ coronasoft.dev | Productos
             }
         });
     });
+    
+    $(document).on('click', '.get-kardex-valorizado-glp', function () {
+        var search = $(this).attr('pk');
+        $.ajax({
+            url: '/sales/get_kardex_valorizado_glp/',
+            dataType: 'json',
+            type: 'GET',
+            data: {'pk': search},
+            success: function (response) {
+                console.log(response);
+                if(response.success){
+                    $('#show-kardex').html(response.form);
+                    $('#show-kardex').modal('show');
+                } else {
+                    toastr.error(response.error, '¡Error!');
+                }
+            },
+            fail: function (response) {
+                console.log(response);
+                toastr.error('Error al cargar el Kardex valorizado', '¡Error!');
+            }
+        });
+    });
     $(document).on('click', '.get-product-detail', function () {
         var search = $(this).attr('pk');
         $.ajax({

@@ -21,6 +21,8 @@ urlpatterns = [
     path('new_quantity_on_hand/', new_quantity_on_hand, name='new_quantity_on_hand'),
 
     path('get_kardex_by_product/', get_kardex_by_product, name='get_kardex_by_product'),
+    path('get_kardex_valorizado_glp/', get_kardex_valorizado_glp, name='get_kardex_valorizado_glp'),
+    path('get_list_kardex_valorizado_glp/', get_list_kardex_valorizado_glp, name='get_list_kardex_valorizado_glp'),
     path('get_list_kardex/', get_list_kardex, name='get_list_kardex'),
     path('get_readjust_inventory/', get_readjust_inventory, name='get_readjust_inventory'),
 

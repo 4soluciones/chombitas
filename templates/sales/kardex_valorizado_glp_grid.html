@@ -1,0 +1,247 @@
+{% if inventories %}
+
+<div class="card mb-3">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0">KARDEX VALORIZADO - PRODUCTO GLP</h6>
+        <small>Período: {{ start_date }} al {{ end_date }} | Almacén: {{ subsidiary_store.name }}</small>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped" style="font-size: 0.9em;">
+        <thead>
+            <tr>
+                <th scope="col" style="text-transform: uppercase;" colspan="4" class="bg-primary text-center text-white h6">Descripción</th>
+                <th scope="col" style="text-transform: uppercase;" colspan="3" class="bg-secondary text-center text-white h6">Entradas</th>
+                <th scope="col" style="text-transform: uppercase;" colspan="3" class="bg-success text-center text-white h6">Salidas</th>
+                <th scope="col" style="text-transform: uppercase;" colspan="3" class="bg-danger text-white text-center h6">Saldo</th>
+                <th scope="col" style="text-transform: uppercase;" class="bg-light text-dark text-center h6">Acciones</th>
+            </tr>
+            <tr>
+                <th scope="col" style="text-transform: uppercase;" class="align-middle text-center table-primary text-dark" width="5%">ID</th>
+                <th scope="col" style="text-transform: uppercase;" class="align-middle text-center table-primary text-dark" width="8%">Fecha</th>
+                <th scope="col" style="text-transform: uppercase;" class="align-middle text-center table-primary text-dark" width="8%">Tipo</th>
+                <th scope="col" style="text-transform: uppercase;" class="align-middle text-center table-primary text-dark" width="12%">Referencia</th>
+
+                <th scope="col" style="text-transform: uppercase;" class="align-middle text-center table-secondary text-dark" width="8%">Cantidad</th>
+                <th scope="col" style="text-transform: uppercase;" class="align-middle text-center table-secondary text-dark" width="8%">P.Unit.</th>
+                <th scope="col" style="text-transform: uppercase;" class="align-middle text-center table-secondary text-dark" width="10%">Total S/.</th>
+
+                <th scope="col" style="text-transform: uppercase;" class="align-middle text-center table-success text-dark" width="8%">Cantidad</th>
+                <th scope="col" style="text-transform: uppercase;" class="align-middle text-center table-success text-dark" width="8%">P.Unit.</th>
+                <th scope="col" style="text-transform: uppercase;" class="align-middle text-center table-success text-dark" width="10%">Total S/.</th>
+
+                <th scope="col" style="text-transform: uppercase;" class="align-middle text-center table-danger text-dark" width="8%">Cant.Rest.</th>
+                <th scope="col" style="text-transform: uppercase;" class="align-middle text-center table-danger text-dark" width="8%">P.Unit.Rest.</th>
+                <th scope="col" style="text-transform: uppercase;" class="align-middle text-center table-danger text-dark" width="10%">Total Rest.S/.</th>
+                <th scope="col" style="text-transform: uppercase;" class="align-middle text-center table-light text-dark" width="5%">Acciones</th>
+            </tr>
+        </thead>
+            <tbody>
+            {% for kardex in inventories %}
+                <tr class="detail">
+
+                                    <td class="align-middle text-center font-weight-bold" >{{ kardex.id }}</td>
+                <td class="align-middle text-center" >{{ kardex.create_at|date:"d/m/Y" }}</td>
+                <td class="align-middle text-center" >
+                    <span class="badge {% if kardex.operation == 'E' %}badge-success{% else %}badge-danger{% endif %}">
+                        {{ kardex.get_operation_display }}
+                    </span>
+                </td>
+                <td class="align-middle text-center" >
+                    {% if kardex.programming_invoice %}
+                        <span class="badge badge-danger">PI:{{ kardex.programming_invoice.id }}</span>
+                    {% elif kardex.requirement_detail.id %}
+                        <span class="badge badge-primary">RD:{{ kardex.requirement_detail.id }}</span>
+                    {% elif kardex.purchase_detail.id %}
+                        <span class="badge badge-success">COMPRA:{{ kardex.purchase_detail.id }}</span>
+                    {% elif kardex.manufacture_detail.id %}
+                        <span class="badge badge-info">PROD:{{ kardex.manufacture_detail.id }}</span>
+                    {% elif kardex.manufacture_recipe.id %}
+                        <span class="badge badge-info">REC:{{ kardex.manufacture_recipe.id }}</span>
+                    {% elif kardex.order_detail.id %}
+                        <span class="badge badge-success">VENTA:{{ kardex.order_detail.id }}</span>
+                    {% elif kardex.distribution_detail.id %}
+                        <span class="badge badge-primary">DIST:{{ kardex.distribution_detail.id }}</span>
+                    {% elif kardex.loan_payment.id %}
+                        <span class="badge badge-warning">RET:{{ kardex.loan_payment.id }}</span>
+                    {% elif kardex.ball_change.id %}
+                        <span class="badge badge-info">CAMB:{{ kardex.ball_change.id }}</span>
+                    {% elif kardex.guide_detail.id %}
+                        <span class="badge badge-secondary">GUIA:{{ kardex.guide_detail.id }}</span>
+                    {% elif kardex.advance_detail.id %}
+                        <span class="badge badge-primary">ADEL:{{ kardex.advance_detail.id }}</span>
+                    {% endif %}
+                </td>
+
+                <td class="align-middle text-center" >
+                    {% if kardex.operation == 'E' %}
+                        <span class="badge badge-success font-weight-bold">{{ kardex.quantity|floatformat:2 }}</span>
+                        {% if product.id == 4 %}<br><small class="text-muted">({{kardex.conversion_mml_g|floatformat:2}}gl)</small>{% endif %}
+                    {% else %}<span class="text-muted">-</span>{% endif %}
+                </td>
+                <td class="align-middle text-right" >
+                    {% if kardex.operation == 'E' %}{{ kardex.price_unit|floatformat:2 }}{% else %}<span class="text-muted">-</span>{% endif %}
+                </td>
+                <td class="align-middle text-right font-weight-bold" >
+                    {% if kardex.operation == 'E' %}
+                        <span class="text-success">S/ {{ kardex.price_total|floatformat:2 }}</span>
+                    {% else %}<span class="text-muted">-</span>{% endif %}
+                </td>
+
+                <td class="align-middle text-center" >
+                    {% if kardex.operation == 'S' %}
+                        <span class="badge badge-danger font-weight-bold">{{ kardex.quantity|floatformat:2 }}</span>
+                        {% if product.id == 4 %}<br><small class="text-muted">({{kardex.conversion_mml_g|floatformat:2}}gl)</small>{% endif %}
+                    {% else %}<span class="text-muted">-</span>{% endif %}
+                </td>
+                <td class="align-middle text-right" >
+                    {% if kardex.operation == 'S' %}{{ kardex.price_unit|floatformat:2 }}{% else %}<span class="text-muted">-</span>{% endif %}
+                </td>
+                <td class="align-middle text-right font-weight-bold" >
+                    {% if kardex.operation == 'S' %}
+                        <span class="text-danger">S/ {{ kardex.price_total|floatformat:2 }}</span>
+                    {% else %}<span class="text-muted">-</span>{% endif %}
+                </td>
+
+                <td class="align-middle text-center" >
+                    <span class="badge badge-primary font-weight-bold">{{ kardex.remaining_quantity|floatformat:2 }}</span>
+                    {% if product.id == 4 %}<br><small class="text-muted">({{kardex.conversion_mml_g_remainig|floatformat:2}}gl)</small>{% endif %}
+                </td>
+                <td class="align-middle text-right" >{{ kardex.remaining_price|floatformat:2 }}</td>
+                <td class="align-middle text-right font-weight-bold" >
+                    <span class="text-primary">S/ {{ kardex.remaining_price_total|floatformat:2 }}</span>
+                </td>
+                <td class="align-middle text-center">
+                    {% if user_obj.id == 5 %}
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm"
+                                data-toggle="collapse"
+                                data-target="#collapseInventoryCard{{ kardex.id }}"
+                                aria-expanded="false"
+                                aria-controls="collapseInventoryCard{{ kardex.id }}"
+                                onclick="changeText(this);"
+                                title="Editar registro"
+                        ><i class="fas fa-edit"></i></button>
+                    {% else %}
+                        <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+
+            </tr>
+            
+            {% if user_obj.id == 5 %}
+            <tr class="collapse" id="collapseInventoryCard{{ kardex.id }}">
+                <td colspan="14">
+                    <div class="card">
+                        <div class="card-body p-2">
+                            <form class="readjust-inventory-form" action="" method="POST">
+                                <input type="hidden" name="inventory-id" value="{{ kardex.id }}" />
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-1">
+                                            <label for="inventory-type-operation-{{ kardex.id }}" class="small">Tipo</label>
+                                            <select class="form-control form-control-sm" id="inventory-type-operation-{{ kardex.id }}">
+                                                <option value="E">ENTRADA</option>
+                                                <option value="S">SALIDA</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-1">
+                                            <label for="inventory-current-quantity-{{ kardex.id }}" class="small">Cant actual</label>
+                                            <input type="text"
+                                                   class="form-control form-control-sm"
+                                                   inputmode="decimal"
+                                                   id="inventory-current-quantity-{{ kardex.id }}"
+                                                   name="inventory-current-quantity"
+                                                   value="{{ kardex.quantity|safe }}"
+                                                   readonly />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-1">
+                                            <label for="inventory-new-quantity-{{ kardex.id }}" class="small">Cant nueva</label>
+                                            <input type="text"
+                                                   class="form-control form-control-sm font-weight-bold"
+                                                   inputmode="decimal"
+                                                   id="inventory-new-quantity-{{ kardex.id }}"
+                                                   name="inventory-new-quantity"
+                                                   onclick="this.select();"
+                                                   value="{{ kardex.quantity|safe }}" />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-1">
+                                            <label class="small">&nbsp;</label>
+                                            <button type="button"
+                                                    class="btn btn-success btn-block btn-sm save-inventory" pk="{{ kardex.id }}"
+                                            ><i class="fas fa-save"></i> Guardar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+
+    </tbody>
+</table>
+</div>
+
+<!-- Resumen valorizado -->
+<div class="card mt-3">
+    <div class="card-header bg-info text-white">
+        <h6 class="mb-0"><i class="fas fa-chart-pie"></i> RESUMEN VALORIZADO</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h6><i class="fas fa-arrow-down"></i> Total Entradas</h6>
+                        <h4>S/ {{ total_entradas|floatformat:2 }}</h4>
+                        <small>Valor monetario</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body text-center">
+                        <h6><i class="fas fa-arrow-up"></i> Total Salidas</h6>
+                        <h4>S/ {{ total_salidas|floatformat:2 }}</h4>
+                        <small>Valor monetario</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h6><i class="fas fa-balance-scale"></i> Saldo Final</h6>
+                        <h4>S/ {{ saldo_final|floatformat:2 }}</h4>
+                        <small>Valor en inventario</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <h6><i class="fas fa-boxes"></i> Stock Final</h6>
+                        <h4>{{ stock_final|floatformat:2 }} kg</h4>
+                        <small>Cantidad física</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+    <div class="alert alert-info">
+        <h5>No hay registros de Kardex valorizado para el período seleccionado.</h5>
+        <p>Por favor, verifica las fechas y el almacén seleccionado.</p>
+    </div>
+{% endif %} 

@@ -124,6 +124,10 @@
                                 <i class="fas fa-sync-alt"></i> Inventario inicial (Cantidad a la mano)</a>
                             <a class="dropdown-item get-kardex" pk="{{ product.id }}">
                                 <i class="fas fa-sync-alt"></i> Ver kardex</a>
+                            {% if product.id == 4 %}
+                            <a class="dropdown-item get-kardex-valorizado-glp" pk="{{ product.id }}">
+                                <i class="fas fa-chart-line"></i> Kardex Valorizado GLP</a>
+                            {% endif %}
                             <a class="dropdown-item get-product-detail" pk="{{ product.id }}">
                                 <i class="fas fa-sync-alt"></i> Ver presentaciones</a>
                             <a href="{% url 'sales:product_print_one' product.id %}" target="print"

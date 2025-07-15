@@ -358,6 +358,160 @@ def get_kardex_by_product(request):
         })
 
 
+def get_kardex_valorizado_glp(request):
+    """
+    Función para obtener el Kardex valorizado específicamente para el producto GLP (ID 4)
+    """
+    data = dict()
+    mydate = datetime.now()
+    formatdate = mydate.strftime("%Y-%m-%d")
+    
+    if request.method == 'GET':
+        pk = request.GET.get('pk', '')
+        
+        # Verificar que sea el producto GLP (ID 4)
+        if pk != '4':
+            data['error'] = "Esta funcionalidad es específica para el producto GLP!"
+            response = JsonResponse(data)
+            response.status_code = HTTPStatus.BAD_REQUEST
+            return response
+            
+        try:
+            product = Product.objects.get(id=pk)
+        except Product.DoesNotExist:
+            data['error'] = "Producto GLP no existe!"
+            response = JsonResponse(data)
+            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+            return response
+            
+        subsidiaries = Subsidiary.objects.all()
+        subsidiaries_stores = SubsidiaryStore.objects.filter(category='G')  # Solo almacenes GLP
+        
+        # Obtener detalles del producto
+        basic_product_detail = ProductDetail.objects.filter(
+            product=product, quantity_minimum=1)
+        
+        t = loader.get_template('sales/kardex_valorizado_glp.html')
+        c = ({
+            'product': product,
+            'subsidiaries': subsidiaries,
+            'basic_product_detail': basic_product_detail,
+            'subsidiaries_stores': subsidiaries_stores,
+            'date_now': formatdate,
+        })
+
+        return JsonResponse({
+            'success': True,
+            'form': t.render(c, request),
+        })
+
+
+def get_list_kardex_valorizado_glp(request):
+    """
+    Función para obtener la lista del Kardex valorizado del producto GLP
+    """
+    data = dict()
+    if request.method == 'GET':
+        user_id = request.user.id
+        user_obj = User.objects.get(pk=int(user_id))
+        pk = request.GET.get('pk', '')
+        pk_subsidiary_store = request.GET.get('subsidiary_store', '')
+        start_date = request.GET.get('start_date', '')
+        end_date = request.GET.get('end_date', '')
+
+        # Verificar que sea el producto GLP (ID 4)
+        if pk != '4':
+            data['error'] = "Esta funcionalidad es específica para el producto GLP!"
+            response = JsonResponse(data)
+            response.status_code = HTTPStatus.BAD_REQUEST
+            return response
+
+        try:
+            product = Product.objects.get(id=pk)
+        except Product.DoesNotExist:
+            data['error'] = "Producto GLP no existe!"
+            response = JsonResponse(data)
+            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+            return response
+
+        subsidiary_store = SubsidiaryStore.objects.get(id=pk_subsidiary_store)
+
+        try:
+            product_store = ProductStore.objects.filter(
+                product_id=product.id).filter(subsidiary_store_id=subsidiary_store.id)
+
+        except ProductStore.DoesNotExist:
+            data['error'] = "Almacén producto no existe!"
+            response = JsonResponse(data)
+            response.status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+            return response
+
+        inventories = None
+        total_entradas = 0
+        total_salidas = 0
+        saldo_final = 0
+        stock_final = 0
+        
+        if product_store.count() > 0:
+            inventories = Kardex.objects.filter(
+                product_store=product_store[0], create_at__date__range=[start_date, end_date]
+            ).select_related(
+                'product_store__product',
+                'programming_invoice__requirement_buys__subsidiary',
+                'requirement_detail',
+                'purchase_detail',
+                'manufacture_detail',
+                'manufacture_recipe',
+                'order_detail__order',
+                'distribution_detail__distribution_mobil__truck',
+                'loan_payment',
+                'ball_change',
+                'guide_detail__guide__programming__truck',
+                'guide_detail__guide__guide_motive',
+                'advance_detail__client_advancement__client',
+            ).prefetch_related(
+                Prefetch('programming_invoice__kardex_set',
+                         queryset=Kardex.objects.select_related('product_store__subsidiary_store')),
+            ).order_by('id')
+            
+            # Calcular totales
+            if inventories.exists():
+                # Total entradas
+                total_entradas = inventories.filter(operation='E').aggregate(
+                    total=Sum('price_total')
+                )['total'] or 0
+                
+                # Total salidas
+                total_salidas = inventories.filter(operation='S').aggregate(
+                    total=Sum('price_total')
+                )['total'] or 0
+                
+                # Saldo final (último registro)
+                ultimo_kardex = inventories.last()
+                if ultimo_kardex:
+                    saldo_final = ultimo_kardex.remaining_price_total
+                    stock_final = ultimo_kardex.remaining_quantity
+
+        t = loader.get_template('sales/kardex_valorizado_glp_grid.html')
+        c = ({
+            'product': product, 
+            'inventories': inventories, 
+            'user_obj': user_obj,
+            'start_date': start_date,
+            'end_date': end_date,
+            'subsidiary_store': subsidiary_store,
+            'total_entradas': total_entradas,
+            'total_salidas': total_salidas,
+            'saldo_final': saldo_final,
+            'stock_final': stock_final
+        })
+
+        return JsonResponse({
+            'success': True,
+            'form': t.render(c),
+        })
+
+
 def get_list_kardex(request):
     data = dict()
     if request.method == 'GET':
