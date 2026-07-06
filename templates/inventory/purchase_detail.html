@@ -1,0 +1,365 @@
+{% extends 'home.html' %}
+{% load static operations %}
+
+{% block title %}V&J GAS | Compra {{ purchase.document_display }}{% endblock title %}
+
+{% block body %}
+<link rel="stylesheet" href="{% static 'css/glp-purchase.css' %}">
+
+<div class="container-fluid glp-purchase-detail py-4 px-lg-4">
+
+    <div class="glp-detail-toolbar">
+        <a href="{% url 'inventory:glp_purchase_list' %}" class="glp-btn-back mb-0">
+            <i class="fas fa-arrow-left mr-1"></i> Volver al listado
+        </a>
+        <div class="d-flex align-items-center flex-wrap">
+            <span class="glp-status glp-status-{{ purchase.get_status_display_class }} mr-2">{{ purchase.get_status_display }}</span>
+        </div>
+    </div>
+
+    <div class="glp-operator-doc mb-4">
+        <div class="glp-operator-doc-title">FACTURA GLP</div>
+        <div class="glp-operator-doc-header">
+            <div class="glp-operator-header-grid">
+                <div class="glp-operator-supplier">
+                    <div class="supplier-name">{{ purchase.supplier.business_name|default:purchase.supplier.name }}</div>
+                    <div class="glp-operator-chips">
+                        {% if purchase.supplier.ruc %}
+                        <div class="glp-operator-ruc-inline">
+                            <span class="lbl">RUC</span>
+                            <span class="val">{{ purchase.supplier.ruc }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="glp-doc-info-chip teal mb-0">
+                            <i class="fas fa-hashtag"></i>
+                            <span>N° SCOP factura</span>
+                            <strong>{{ purchase.scop_number|default:"—" }}</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-lg-right">
+                    <div class="glp-operator-doc-number">{{ purchase.document_display }}</div>
+                </div>
+            </div>
+            <div class="glp-operator-meta">
+                <div><span class="meta-lbl">Cliente</span><span class="meta-val">{{ glp_client_name }}</span></div>
+                <div><span class="meta-lbl">Fecha</span><span class="meta-val">{{ purchase.issue_date|date:"d/m/Y" }}</span></div>
+                <div><span class="meta-lbl">Moneda</span><span class="meta-val">{{ purchase.currency }}</span></div>
+                <div><span class="meta-lbl">Producto</span><span class="meta-val">{% if main_item %}{{ main_item.product.name }}{% else %}GLP{% endif %}</span></div>
+            </div>
+        </div>
+    </div>
+
+    {% if purchase.status == 'InvoiceRegistered' or purchase.status == 'DetailRegistered' or purchase.status == 'ParticipantsRegistered' %}
+    <div class="glp-panel mb-4" id="panel-detail">
+        <div class="glp-panel-head flame">
+            <i class="fas fa-list mr-2"></i>Detalle de factura
+        </div>
+        <div class="glp-panel-body">
+            <div class="custom-control custom-switch mb-3">
+                <input type="checkbox" class="custom-control-input" id="chk-participants"
+                    {% if purchase.uses_participants %}checked{% endif %}>
+                <label class="custom-control-label" for="chk-participants">Registrar participantes (sub-empresas)</label>
+            </div>
+
+            <div id="section-simple" {% if purchase.uses_participants %}style="display:none"{% endif %}>
+                <div class="row align-items-end">
+                    <div class="col-md-3 form-group">
+                        <label class="glp-form-label">Cantidad KG *</label>
+                        <input type="text" id="det-qty" class="form-control glp-form-control det-amt text-right"
+                               value="{% if main_item %}{{ main_item.quantity|format_amount_dot:3 }}{% else %}{{ default_qty_kg|floatformat:0 }}{% endif %}" data-dec="3">
+                    </div>
+                    <div class="col-md-3 form-group">
+                        <label class="glp-form-label">Importe total (con IGV) *</label>
+                        <input type="text" id="det-total" class="form-control glp-form-control det-amt text-right"
+                               value="{% if purchase.total %}{{ purchase.total|format_amount_dot:2 }}{% endif %}" data-dec="2">
+                    </div>
+                    <div class="col-md-3 form-group">
+                        <label class="glp-form-label">IGV (opcional)</label>
+                        <input type="text" id="det-igv" class="form-control glp-form-control det-amt text-right"
+                               value="{% if purchase.igv %}{{ purchase.igv|format_amount_dot:2 }}{% endif %}" data-dec="2">
+                    </div>
+                    <div class="col-md-3 form-group">
+                        <button type="button" class="btn glp-btn-primary btn-block" id="btn-calc-prices">
+                            <i class="fas fa-calculator mr-1"></i> Calcular precios
+                        </button>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-4">
+                        <div class="glp-sidebar-stat">
+                            <span>Precio unit. sin IGV</span>
+                            <span class="val" id="det-unit-excl">{% if main_item %}{{ main_item.unit_price|format_amount_dot:6 }}{% else %}—{% endif %}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="glp-sidebar-stat">
+                            <span>Precio unit. con IGV</span>
+                            <span class="val" id="det-unit-incl">{% if main_item %}{{ main_item.unit_price_incl_igv|format_amount_dot:6 }}{% else %}—{% endif %}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="glp-sidebar-stat">
+                            <span>Subtotal sin IGV</span>
+                            <span class="val" id="det-subtotal">{% if purchase.subtotal %}{{ purchase.subtotal|format_amount_dot:2 }}{% else %}—{% endif %}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-participants" {% if not purchase.uses_participants %}style="display:none"{% endif %}>
+                <div class="table-responsive">
+                    <table class="table table-sm glp-doc-table" id="participants-table">
+                        <thead>
+                            <tr>
+                                <th>RUC</th>
+                                <th>Empresa</th>
+                                <th class="text-right">Cant. T0</th>
+                                <th class="text-right">Valor venta</th>
+                                <th class="text-right">ISC</th>
+                                <th class="text-right">IGV</th>
+                                <th class="text-right">Otros</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="participants-body">
+                        {% for p in participants %}
+                            <tr>
+                                <td><input type="text" class="form-control form-control-sm p-ruc" value="{{ p.tax_id }}"></td>
+                                <td><input type="text" class="form-control form-control-sm p-name" value="{{ p.company_name }}"></td>
+                                <td><input type="text" class="form-control form-control-sm p-qty text-right" value="{{ p.quantity|format_tons:3 }}"></td>
+                                <td><input type="text" class="form-control form-control-sm p-sub text-right" value="{{ p.subtotal|format_amount_dot:2 }}"></td>
+                                <td><input type="text" class="form-control form-control-sm p-isc text-right" value="{{ p.isc|format_amount_dot:2 }}"></td>
+                                <td><input type="text" class="form-control form-control-sm p-igv text-right" value="{{ p.igv|format_amount_dot:2 }}"></td>
+                                <td><input type="text" class="form-control form-control-sm p-fise text-right" value="{{ p.fise|format_amount_dot:2 }}"></td>
+                                <td><button type="button" class="btn btn-danger btn-sm p-del"><i class="fas fa-trash"></i></button></td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm" id="btn-add-participant">
+                    <i class="fas fa-plus mr-1"></i> Agregar participante
+                </button>
+            </div>
+
+            {% if purchase.status != 'Completed' and purchase.status != 'Cancelled' %}
+            <div class="mt-3 text-right">
+                <button type="button" class="btn glp-btn-primary" id="btn-save-detail">
+                    <i class="fas fa-save mr-1"></i> Guardar detalle
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% elif participants %}
+    <div class="glp-operator-doc mb-4">
+        <div class="glp-operator-table-wrap">
+            <table class="glp-doc-table glp-doc-table-readonly">
+                <thead>
+                    <tr>
+                        <th>RUC</th><th>Empresa</th>
+                        <th class="text-right">Cant. KG</th>
+                        <th class="text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for p in participants %}
+                    <tr>
+                        <td>{{ p.tax_id|default:"—" }}</td>
+                        <td>{{ p.company_name }}</td>
+                        <td class="text-right">{{ p.quantity|format_amount_dot:3 }}</td>
+                        <td class="text-right">{{ p.total|format_amount_dot:2 }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% elif main_item %}
+    <div class="glp-panel mb-4">
+        <div class="glp-panel-body">
+            <div class="row">
+                <div class="col-md-3 glp-sidebar-stat"><span>Cantidad KG</span><span class="val">{{ main_item.quantity|format_amount_dot:3 }}</span></div>
+                <div class="col-md-3 glp-sidebar-stat"><span>Precio sin IGV</span><span class="val">{{ main_item.unit_price|format_amount_dot:6 }}</span></div>
+                <div class="col-md-3 glp-sidebar-stat"><span>Precio con IGV</span><span class="val">{{ main_item.unit_price_incl_igv|format_amount_dot:6 }}</span></div>
+                <div class="col-md-3 glp-sidebar-stat"><span>Total</span><span class="val">{{ purchase.total|format_amount_dot:2 }}</span></div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="glp-panel mb-4">
+                <div class="glp-panel-head"><i class="fas fa-truck mr-2"></i>Programaciones</div>
+                <div class="glp-panel-body p-0">
+                    {% if programmings %}
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Placa</th><th>SCOP traslado</th><th class="text-right">KG programados</th><th>Fecha</th><th>Estado</th></tr></thead>
+                        <tbody>
+                        {% for prog in programmings %}
+                            {% for line in prog.lines.all %}
+                                {% if line.purchase_id == purchase.id %}
+                            <tr>
+                                <td><span class="glp-plate-badge">{{ prog.truck.license_plate }}</span></td>
+                                <td class="font-weight-bold">{{ prog.transfer_scop_number }}</td>
+                                <td class="text-right">{{ line.quantity_kg|format_amount_dot:3 }}</td>
+                                <td>{{ prog.programming_date|date:"d/m/Y" }}</td>
+                                <td>{{ prog.get_status_display }}</td>
+                            </tr>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="px-3 py-2 border-top small">
+                        <span class="text-muted">Saldo sin programar:</span>
+                        <strong>{{ purchase.qty_available_for_programming|format_amount_dot:3 }} KG</strong>
+                        <span class="text-muted ml-3">En viajes pendientes:</span>
+                        <strong>{{ purchase.qty_pending_programming|format_amount_dot:3 }} KG</strong>
+                    </div>
+                    {% else %}
+                    <div class="p-3 text-muted text-center">Sin programaciones — use el botón del listado</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="glp-panel mb-4">
+                <div class="glp-panel-head flame"><i class="fas fa-warehouse mr-2"></i>Guías / ingresos almacén</div>
+                <div class="glp-panel-body p-0">
+                    {% if receipts %}
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Fecha</th><th>Guía</th><th class="text-right">KG</th><th>Almacén</th><th>Kardex</th></tr></thead>
+                        <tbody>
+                        {% for r in receipts %}
+                            <tr>
+                                <td>{{ r.receipt_date|date:"d/m/Y" }}</td>
+                                <td>{{ r.guide_series }}-{{ r.guide_number }}</td>
+                                <td class="text-right">{{ r.net_weight|format_amount_dot:3 }}</td>
+                                <td>{{ r.warehouse.name }}</td>
+                                <td>{% if r.ledger_posted %}<span class="text-success">Sí</span>{% else %}<span class="text-warning">No</span>{% endif %}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="p-3 text-muted text-center">Sin ingresos — use Asignar almacén en el listado</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="purchase-id" value="{{ purchase.id }}">
+<input type="hidden" id="product-id" value="{{ product.id }}">
+{% endblock body %}
+
+{% block extrajs %}
+<script>
+    window.GLP_PARTICIPANT_SUPPLIERS = {{ participant_suppliers_json|safe }};
+    window.GLP_URLS = { saveDetail: '{% url "inventory:save_purchase_detail" %}', csrf: '{{ csrf_token }}' };
+</script>
+<script src="{% static 'js/glp-number.js' %}"></script>
+<script>
+(function () {
+    const fmt = window.GlpNumber.fmt;
+    const parseNum = window.GlpNumber.parse;
+    const PURCHASE_ID = parseInt($('#purchase-id').val(), 10);
+    const PRODUCT_ID = parseInt($('#product-id').val(), 10);
+    const IGV_RATE = 0.18;
+
+    $('.det-amt').each(function () {
+        const $el = $(this), dec = parseInt($el.data('dec'), 10) || 2;
+        $el.on('focus', function () { $el.val(parseNum($el.val())); this.select(); });
+        $el.on('blur', function () {
+            const r = parseNum($el.val());
+            $el.val(r === '' || isNaN(parseFloat(r)) ? '' : fmt(r, dec));
+        });
+    });
+
+    $('#chk-participants').on('change', function () {
+        const on = $(this).is(':checked');
+        $('#section-simple').toggle(!on);
+        $('#section-participants').toggle(on);
+    });
+
+    function calcPrices() {
+        const qty = parseFloat(parseNum($('#det-qty').val())) || 0;
+        let total = parseFloat(parseNum($('#det-total').val())) || 0;
+        let igv = parseFloat(parseNum($('#det-igv').val()));
+        if (isNaN(igv) || igv === 0) igv = total * IGV_RATE / (1 + IGV_RATE);
+        const subtotal = total - igv;
+        if (qty > 0) {
+            $('#det-unit-excl').text(fmt(subtotal / qty, 6));
+            $('#det-unit-incl').text(fmt(total / qty, 6));
+            $('#det-subtotal').text(fmt(subtotal, 2));
+            if (!$('#det-igv').val()) $('#det-igv').val(fmt(igv, 2));
+        }
+    }
+    $('#btn-calc-prices').on('click', calcPrices);
+    $('#det-qty, #det-total').on('blur', calcPrices);
+
+    $('#btn-add-participant').on('click', function () {
+        $('#participants-body').append(
+            '<tr><td><input type="text" class="form-control form-control-sm p-ruc"></td>' +
+            '<td><input type="text" class="form-control form-control-sm p-name"></td>' +
+            '<td><input type="text" class="form-control form-control-sm p-qty text-right"></td>' +
+            '<td><input type="text" class="form-control form-control-sm p-sub text-right"></td>' +
+            '<td><input type="text" class="form-control form-control-sm p-isc text-right" value="0.00"></td>' +
+            '<td><input type="text" class="form-control form-control-sm p-igv text-right"></td>' +
+            '<td><input type="text" class="form-control form-control-sm p-fise text-right" value="0.00"></td>' +
+            '<td><button type="button" class="btn btn-danger btn-sm p-del"><i class="fas fa-trash"></i></button></td></tr>'
+        );
+    });
+    $(document).on('click', '.p-del', function () { $(this).closest('tr').remove(); });
+
+    $('#btn-save-detail').on('click', function () {
+        const usesParticipants = $('#chk-participants').is(':checked');
+        let payload = { purchase_id: PURCHASE_ID, product_id: PRODUCT_ID, participants: usesParticipants };
+        if (usesParticipants) {
+            const rows = [];
+            $('#participants-body tr').each(function () {
+                const name = $(this).find('.p-name').val().trim();
+                if (!name) return;
+                rows.push({
+                    company_name: name,
+                    tax_id: $(this).find('.p-ruc').val(),
+                    quantity: parseNum($(this).find('.p-qty').val()) || '0',
+                    quantity_unit: 'T0',
+                    subtotal: parseNum($(this).find('.p-sub').val()) || '0',
+                    isc: parseNum($(this).find('.p-isc').val()) || '0',
+                    igv: parseNum($(this).find('.p-igv').val()) || '0',
+                    fise: parseNum($(this).find('.p-fise').val()) || '0',
+                });
+            });
+            if (!rows.length) { toastr.warning('Agregue participantes'); return; }
+            payload.participants = rows;
+        } else {
+            payload.detail = {
+                quantity: parseNum($('#det-qty').val()) || '0',
+                total: parseNum($('#det-total').val()) || '0',
+                igv: parseNum($('#det-igv').val()) || '',
+            };
+        }
+        const $btn = $(this);
+        $btn.prop('disabled', true);
+        $.ajax({
+            url: window.GLP_URLS.saveDetail,
+            type: 'POST',
+            contentType: 'application/json',
+            headers: { 'X-CSRFToken': window.GLP_URLS.csrf },
+            data: JSON.stringify(payload),
+            success: function (r) {
+                toastr.success(r.message);
+                location.reload();
+            },
+            error: function (xhr) { toastr.error(xhr.responseJSON?.error || 'Error'); },
+            complete: function () { $btn.prop('disabled', false); }
+        });
+    });
+})();
+</script>
+{% endblock extrajs %}

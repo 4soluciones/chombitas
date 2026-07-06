@@ -1,0 +1,238 @@
+<div class="modal-dialog modal-dialog-centered modal-xl glp-modal-shell" role="document">
+    <div class="modal-content glp-modal-content border-0">
+
+        <div class="glp-modal-header glp-modal-header-navy">
+            <div class="d-flex align-items-center">
+                <div class="glp-modal-header-icon"><i class="fas fa-warehouse"></i></div>
+                <div>
+                    <h5 class="modal-title text-white mb-0">Asignar almacén — Guía de traslado</h5>
+                    <p class="glp-modal-header-sub mb-0">Ingreso al kardex: costo unitario sin IGV + gastos de traslado</p>
+                </div>
+            </div>
+            <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+        </div>
+
+        <form class="modal-body glp-modal-body" autocomplete="off" onsubmit="return false;">
+
+            <div class="glp-modal-section">
+                <div class="glp-modal-section-head">
+                    <span class="glp-modal-step">1</span>
+                    <div>
+                        <strong>Programación del viaje</strong>
+                        <small>Placa + SCOP traslado que agrupa las facturas</small>
+                    </div>
+                </div>
+                <div class="glp-form-sheet">
+                    <div class="glp-form-row mb-0">
+                        <div class="glp-field glp-span-6">
+                            <label class="glp-form-label">Programación *</label>
+                            <select id="wh-programming" class="form-control glp-form-control">
+                                <option value="">— Seleccione SCOP traslado —</option>
+                                {% for prog in programmings_pending %}
+                                    <option value="{{ prog.id }}"
+                                        data-truck="{{ prog.truck.license_plate }}"
+                                        data-scop="{{ prog.transfer_scop_number }}"
+                                        data-count="{{ prog.lines.count }}"
+                                        data-total="{{ prog.total_quantity_kg }}">
+                                        SCOP {{ prog.transfer_scop_number }} · {{ prog.truck.license_plate }}
+                                        · {{ prog.total_quantity_kg|floatformat:3 }} KG · {{ prog.lines.count }} fact.
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="glp-field glp-span-3">
+                            <label class="glp-form-label">Placa</label>
+                            <input type="text" id="wh-truck" class="form-control glp-form-control text-uppercase glp-readonly-field" readonly>
+                        </div>
+                        <div class="glp-field glp-span-3 mb-0">
+                            <label class="glp-form-label">SCOP traslado</label>
+                            <input type="text" id="wh-scop-transfer" class="form-control glp-form-control glp-readonly-field" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glp-modal-section">
+                <div class="glp-modal-section-head">
+                    <span class="glp-modal-step">2</span>
+                    <div class="flex-grow-1 d-flex flex-wrap align-items-baseline justify-content-between">
+                        <div>
+                            <strong>Facturas incluidas en esta guía</strong>
+                            <small class="d-block">El costo del kardex se calcula por KG programado</small>
+                        </div>
+                        <span class="glp-wh-prog-badge d-none" id="wh-prog-badge">
+                            <i class="fas fa-truck-loading mr-1"></i> Programado: <strong id="wh-programmed-kg">0.000</strong> KG
+                        </span>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm glp-modal-table mb-0" id="wh-invoices-table">
+                        <thead>
+                            <tr>
+                                <th>Comprobante</th>
+                                <th>SCOP factura</th>
+                                <th>Proveedor</th>
+                                <th class="text-right">KG prog.</th>
+                                <th class="text-right">Precio base</th>
+                                <th class="text-right">Costo kardex</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wh-invoices-body">
+                            <tr><td colspan="6" class="text-center text-muted py-3">Seleccione una programación</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="glp-modal-section">
+                <div class="glp-modal-section-head">
+                    <span class="glp-modal-step">3</span>
+                    <div>
+                        <strong>Destino y guía de remisión</strong>
+                        <small>Almacén, fecha de llegada y numeración del comprobante</small>
+                    </div>
+                </div>
+                <div class="glp-form-sheet">
+                    <div class="glp-form-row">
+                        <div class="glp-field glp-span-4">
+                            <label class="glp-form-label">Almacén destino *</label>
+                            <select id="wh-warehouse" class="form-control glp-form-control">
+                                <option value="">— Seleccione —</option>
+                                {% for ss in subsidiaries_stores %}
+                                    <option value="{{ ss.id }}">{{ ss.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="glp-field glp-span-4">
+                            <label class="glp-form-label">Fecha llegada *</label>
+                            <input type="datetime-local" id="wh-date" class="form-control glp-form-control">
+                        </div>
+                        <div class="glp-field glp-span-4">
+                            <label class="glp-form-label">Destino</label>
+                            <input type="text" id="wh-destination" class="form-control glp-form-control" placeholder="Opcional" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="glp-form-row glp-form-row-comprobante mb-0">
+                        <div class="glp-field glp-span-2">
+                            <label class="glp-form-label">Guía — Serie *</label>
+                            <input type="text" id="wh-guide-series" class="form-control glp-form-control text-uppercase text-center" placeholder="T001" autocomplete="off">
+                        </div>
+                        <div class="glp-field glp-span-3">
+                            <label class="glp-form-label">Guía — N° *</label>
+                            <input type="text" id="wh-guide-number" class="form-control glp-form-control text-center" placeholder="00001234" autocomplete="off">
+                        </div>
+                        <div class="glp-field glp-span-7 d-flex align-items-end mb-0">
+                            <div class="glp-doc-preview w-100" id="wh-guide-preview">TXXX-00000000</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glp-modal-section mb-0">
+                <div class="glp-modal-section-head">
+                    <span class="glp-modal-step">4</span>
+                    <div>
+                        <strong>Gastos de traslado</strong>
+                        <small>Combustible, peajes, viáticos, sueldos y otros — se suman al costo del kardex</small>
+                    </div>
+                </div>
+
+                <div class="glp-form-sheet glp-wh-exp-form">
+                    <div class="glp-form-row">
+                        <div class="glp-field glp-span-3">
+                            <label class="glp-form-label">Tipo *</label>
+                            <select id="wh-exp-type" class="form-control glp-form-control" autocomplete="off">
+                                {% for val, label in expense_type_choices %}
+                                    <option value="{{ val }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="glp-field glp-span-3">
+                            <label class="glp-form-label">N° documento</label>
+                            <input type="text" id="wh-exp-invoice" class="form-control glp-form-control" placeholder="Opcional" autocomplete="off">
+                        </div>
+                        <div class="glp-field glp-span-3">
+                            <label class="glp-form-label">Fecha</label>
+                            <input type="date" id="wh-exp-date" class="form-control glp-form-control" value="{{ date_now }}" autocomplete="off">
+                        </div>
+                        <div class="glp-field glp-span-3 mb-0">
+                            <label class="glp-form-label">Monto (S/) *</label>
+                            <input type="text" inputmode="decimal" id="wh-exp-amount" class="form-control glp-form-control wh-amt text-right" data-dec="2" placeholder="0.00" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="glp-form-row glp-wh-exp-add-row mb-0 align-items-end">
+                        <div class="glp-field glp-span-9 mb-0">
+                            <label class="glp-form-label">Descripción</label>
+                            <input type="text" id="wh-exp-desc" class="form-control glp-form-control" placeholder="Detalle del gasto (opcional)" autocomplete="off">
+                        </div>
+                        <div class="glp-field glp-span-3 mb-0">
+                            <button type="button" id="wh-exp-add" class="btn glp-btn-primary btn-block">
+                                <i class="fas fa-plus mr-1"></i> Agregar gasto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive mt-2">
+                    <table class="table table-sm glp-modal-table glp-wh-exp-table mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width:36px">#</th>
+                                <th>Tipo</th>
+                                <th>Documento</th>
+                                <th>Fecha</th>
+                                <th class="text-right">Monto (S/)</th>
+                                <th>Descripción</th>
+                                <th style="width:44px"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="wh-exp-rows">
+                            <tr class="wh-exp-empty"><td colspan="7" class="text-center text-muted py-3">Sin gastos registrados — el costo usará solo el valor de la factura</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="glp-wh-landed-summary mt-3" id="wh-landed-summary">
+                    <div class="glp-wh-ls-title">
+                        <i class="fas fa-calculator mr-1"></i> Cálculo del costo unitario (promedio ponderado del lote)
+                    </div>
+                    <div class="glp-wh-ls-grid">
+                        <div class="glp-wh-ls-item">
+                            <span class="glp-wh-ls-label">Valor de compra</span>
+                            <span class="glp-wh-ls-value" id="wh-ls-purchase">S/ 0.00</span>
+                        </div>
+                        <div class="glp-wh-ls-op">+</div>
+                        <div class="glp-wh-ls-item">
+                            <span class="glp-wh-ls-label">Total gastos</span>
+                            <span class="glp-wh-ls-value glp-wh-ls-expense" id="wh-ls-expense">S/ 0.00</span>
+                        </div>
+                        <div class="glp-wh-ls-op">=</div>
+                        <div class="glp-wh-ls-item">
+                            <span class="glp-wh-ls-label">Costo total</span>
+                            <span class="glp-wh-ls-value" id="wh-ls-total">S/ 0.00</span>
+                        </div>
+                        <div class="glp-wh-ls-op">÷</div>
+                        <div class="glp-wh-ls-item">
+                            <span class="glp-wh-ls-label">KG recibidos</span>
+                            <span class="glp-wh-ls-value" id="wh-ls-kg">0.000</span>
+                        </div>
+                        <div class="glp-wh-ls-op">=</div>
+                        <div class="glp-wh-ls-item glp-wh-ls-final">
+                            <span class="glp-wh-ls-label">Costo unitario</span>
+                            <span class="glp-wh-ls-value" id="wh-ls-unit">S/ 0.0000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+
+        <div class="modal-footer glp-modal-footer">
+            <button type="button" class="btn glp-btn-back" data-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn glp-btn-primary" id="btn-save-warehouse">
+                <i class="fas fa-warehouse mr-1"></i> Confirmar ingreso al kardex
+            </button>
+        </div>
+
+    </div>
+</div>

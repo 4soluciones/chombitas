@@ -125,7 +125,7 @@
                             <a class="dropdown-item get-kardex" pk="{{ product.id }}">
                                 <i class="fas fa-sync-alt"></i> Ver kardex</a>
                             {% if product.id == 4 %}
-                            <a class="dropdown-item get-kardex-valorizado-glp" pk="{{ product.id }}">
+                            <a class="dropdown-item" href="{% url 'inventory:kardex_valorizado_glp' %}">
                                 <i class="fas fa-chart-line"></i> Kardex Valorizado GLP</a>
                             {% endif %}
                             <a class="dropdown-item get-product-detail" pk="{{ product.id }}">

@@ -50,3 +50,43 @@ def replace_round_separator(value):
         formatted_value = '{:,.{}f}'.format(rounded_value, 3 if int(decimal_str[2]) > 0 else 2).replace(',', 'X').replace('.', ',').replace('X', '.')
         return formatted_value
     return value
+
+
+@register.filter(name='format_amount_dot')
+def format_amount_dot(value, decimals='2'):
+    """Miles con coma y decimales con punto: 1,234.56"""
+    if value is None or value == '':
+        return '—'
+    try:
+        dec = int(decimals) if str(decimals).strip().isdigit() else 2
+        val = float(value)
+        return f'{val:,.{dec}f}'
+    except (TypeError, ValueError):
+        return value
+
+
+@register.filter(name='format_tons')
+def format_tons(value, decimals='3'):
+    """Cantidad almacenada en KG → toneladas (T0) para mostrar."""
+    if value is None or value == '':
+        return '—'
+    try:
+        dec = int(decimals) if str(decimals).strip().isdigit() else 3
+        val = float(value) / 1000.0
+        return f'{val:,.{dec}f}'
+    except (TypeError, ValueError):
+        return value
+
+
+@register.filter(name='format_amount')
+def format_amount(value, decimals='2'):
+    """Formato peruano: miles con punto y decimales con coma."""
+    if value is None or value == '':
+        return '—'
+    try:
+        dec = int(decimals) if str(decimals).strip().isdigit() else 2
+        val = float(value)
+        formatted = f'{val:,.{dec}f}'
+        return formatted.replace(',', 'X').replace('.', ',').replace('X', '.')
+    except (TypeError, ValueError):
+        return value

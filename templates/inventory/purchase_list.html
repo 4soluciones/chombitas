@@ -1,0 +1,124 @@
+{% extends 'home.html' %}
+{% load static %}
+
+{% block title %}V&J GAS | Compras GLP{% endblock title %}
+
+{% block body %}
+<link rel="stylesheet" href="{% static 'css/glp-purchase.css' %}">
+
+<div class="container-fluid mb-2 mt-2 text-center">
+    <button type="button" onclick="showGlpModal('get_glp_purchase_invoice_modal')" class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-file-invoice"></i> &nbsp; NUEVA FACTURA
+    </button>
+    <button type="button" onclick="showGlpModal('get_glp_purchase_programming_modal')" class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-truck"></i> &nbsp; REGISTRAR PROGRAMACIÓN
+    </button>
+    <button type="button" onclick="showGlpModal('get_glp_purchase_warehouse_modal')" class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-warehouse"></i> &nbsp; ASIGNAR ALMACÉN
+    </button>
+</div>
+
+<div class="container-fluid glp-purchase-page py-3 px-lg-4">
+    <div class="row glp-kpi-row mb-3">
+        <div class="col-6 col-lg-3 mb-2">
+            <div class="glp-kpi">
+                <div class="glp-kpi-icon navy"><i class="fas fa-file-invoice"></i></div>
+                <div>
+                    <div class="glp-kpi-value" id="stat-total">{{ stats.total }}</div>
+                    <div class="glp-kpi-label">Total facturas</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3 mb-2">
+            <div class="glp-kpi">
+                <div class="glp-kpi-icon blue"><i class="fas fa-list"></i></div>
+                <div>
+                    <div class="glp-kpi-value" id="stat-pending-detail">{{ stats.pending_detail }}</div>
+                    <div class="glp-kpi-label">Pend. detalle</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3 mb-2">
+            <div class="glp-kpi">
+                <div class="glp-kpi-icon flame"><i class="fas fa-shipping-fast"></i></div>
+                <div>
+                    <div class="glp-kpi-value" id="stat-pending-transfer">{{ stats.pending_transfer }}</div>
+                    <div class="glp-kpi-label">En traslado</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3 mb-2">
+            <div class="glp-kpi">
+                <div class="glp-kpi-icon teal"><i class="fas fa-check-circle"></i></div>
+                <div>
+                    <div class="glp-kpi-value" id="stat-completed">{{ stats.completed }}</div>
+                    <div class="glp-kpi-label">Completadas</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="glp-filter-bar mb-3">
+        <form id="form-purchase-filter" class="row align-items-end">
+            <div class="col-md-2 form-group mb-md-0">
+                <label class="glp-filter-label">Estado</label>
+                <select class="form-control form-control-sm" id="filter-status">
+                    <option value="">Todos</option>
+                    {% for val, label in status_choices %}
+                        <option value="{{ val }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 form-group mb-md-0">
+                <label class="glp-filter-label">Desde</label>
+                <input type="date" class="form-control form-control-sm" id="filter-start" value="{{ date_now }}">
+            </div>
+            <div class="col-md-2 form-group mb-md-0">
+                <label class="glp-filter-label">Hasta</label>
+                <input type="date" class="form-control form-control-sm" id="filter-end" value="{{ date_now }}">
+            </div>
+            <div class="col-md-4 form-group mb-md-0">
+                <label class="glp-filter-label">Buscar</label>
+                <input type="text" class="form-control form-control-sm" id="filter-search" placeholder="Serie, N°, SCOP, proveedor...">
+            </div>
+            <div class="col-md-2 form-group mb-md-0">
+                <button type="button" id="btn-filter" class="glp-btn-search">
+                    <i class="fas fa-search mr-1"></i> Consultar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div id="purchase-grid-list">
+        {% include "inventory/purchase_grid.html" %}
+    </div>
+</div>
+
+<div class="modal fade bd-example-modal-lg" id="add-modal" tabindex="-1" role="dialog" aria-hidden="true"></div>
+{% endblock body %}
+
+{% block extrajs %}
+<script>
+    window.GLP_PARTICIPANT_SUPPLIERS = {{ participant_suppliers_json|safe }};
+    window.GLP_DATE_NOW = '{{ date_now }}';
+    window.GLP_DEFAULT_QTY = {{ default_qty_kg }};
+    window.GLP_URLS = {
+        invoiceModal: '{% url "inventory:get_glp_purchase_invoice_modal" %}',
+        programmingModal: '{% url "inventory:get_glp_purchase_programming_modal" %}',
+        warehouseModal: '{% url "inventory:get_glp_purchase_warehouse_modal" %}',
+        expenseModal: '{% url "inventory:get_glp_purchase_expense_modal" %}',
+        list: '{% url "inventory:get_glp_purchase_list" %}',
+        saveHeader: '{% url "inventory:save_purchase_header" %}',
+        saveDetail: '{% url "inventory:save_purchase_detail" %}',
+        saveProgramming: '{% url "inventory:save_purchase_programming" %}',
+        saveExpense: '{% url "inventory:save_purchase_travel_expense" %}',
+        saveTransfer: '{% url "inventory:save_purchase_transfer" %}',
+        programmingDetail: '{% url "inventory:get_glp_programming_detail" 0 %}'.replace('/0/', '/'),
+        summaryModal: '{% url "inventory:get_glp_purchase_summary_modal" %}',
+        csrf: '{{ csrf_token }}',
+        openOnLoad: {% if request.GET.new %}true{% else %}false{% endif %},
+    };
+</script>
+<script src="{% static 'js/glp-number.js' %}"></script>
+<script src="{% static 'js/glp-purchase-flow.js' %}"></script>
+{% endblock extrajs %}

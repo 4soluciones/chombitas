@@ -1,0 +1,152 @@
+{% load operations %}
+{% if rows %}
+
+<div class="card glp-card mb-3">
+    <div class="card-header glp-card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-table mr-2"></i> Kardex Valorizado </span>
+        <small class="text-white-50">{{ start_date }} — {{ end_date }} | {{ subsidiary_store.name }}</small>
+    </div>
+</div>
+
+<div class="table-responsive glp-kardex-table-wrap">
+    <table class="table table-bordered table-sm glp-kardex-table mb-0">
+        <thead>
+            <tr class="glp-thead-meta">
+                <th colspan="8" class="text-center bg-dark text-white">DESCRIPCIÓN DEL MOVIMIENTO</th>
+                <th colspan="3" class="text-center bg-success text-white">INGRESOS</th>
+                <th colspan="3" class="text-center bg-danger text-white">SALIDAS</th>
+                <th colspan="3" class="text-center bg-primary text-white">SALDOS</th>
+                <th colspan="3" class="text-center bg-secondary text-white">REFERENCIA</th>
+            </tr>
+            <tr class="glp-thead-cols">
+                <th>#</th>
+                <th>Producto</th>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Oper.</th>
+                <th>Doc.</th>
+                <th>Serie</th>
+                <th>Número</th>
+                <th class="bg-light-success">Cant.</th>
+                <th class="bg-light-success">C.U.</th>
+                <th class="bg-light-success">C.Total</th>
+                <th class="bg-light-danger">Cant.</th>
+                <th class="bg-light-danger">C.U.</th>
+                <th class="bg-light-danger">C.Total</th>
+                <th class="bg-light-primary">Cant.</th>
+                <th class="bg-light-primary">C.U.</th>
+                <th class="bg-light-primary">C.Total</th>
+                <th>RUC</th>
+                <th>Descripción</th>
+                <th>Det.</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr class="{% if row.operation == 'E' or row.operation == 'C' %}glp-row-entry{% elif row.operation == 'S' %}glp-row-exit{% endif %}">
+                <td class="text-center font-weight-bold">{{ row.id }}</td>
+                <td>
+                    <span class="d-block font-weight-bold">{{ row.product_name }}</span>
+                    <small class="text-muted">{{ row.product_code }}</small>
+                </td>
+                <td class="text-center text-nowrap">{{ row.date|date:"d/m/Y H:i" }}</td>
+                <td class="text-center">
+                    <span class="badge badge-pill glp-badge-type glp-type-{{ row.movement_type|lower }}">
+                        {{ row.movement_type_label }}
+                    </span>
+                </td>
+                <td class="text-center"><span class="badge badge-secondary">{{ row.operation_sunat }}</span></td>
+                <td class="text-center"><span class="badge badge-info">{{ row.doc_type }}</span></td>
+                <td class="text-center">{{ row.serial|default:"—" }}</td>
+                <td class="text-center text-nowrap">
+                    {% if row.document_number_end %}
+                        {{ row.serial }}-{{ row.document_number }} … {{ row.serial }}-{{ row.document_number_end }}
+                    {% else %}
+                        {{ row.document_number|default:"—" }}
+                    {% endif %}
+                </td>
+                <td class="text-right glp-num-cell">
+                    {% if row.qty_in %}<strong class="text-success">{{ row.qty_in|format_amount:3 }}</strong>{% else %}—{% endif %}
+                </td>
+                <td class="text-right glp-num-cell">
+                    {% if row.qty_in %}{{ row.unit_cost_in|format_amount:6 }}{% else %}—{% endif %}
+                </td>
+                <td class="text-right glp-num-cell">
+                    {% if row.qty_in %}<strong>S/ {{ row.total_in|format_amount:2 }}</strong>{% else %}—{% endif %}
+                </td>
+                <td class="text-right glp-num-cell">
+                    {% if row.qty_out %}<strong class="text-danger">{{ row.qty_out|format_amount:3 }}</strong>{% else %}—{% endif %}
+                </td>
+                <td class="text-right glp-num-cell">
+                    {% if row.qty_out %}{{ row.unit_cost_out|format_amount:6 }}{% else %}—{% endif %}
+                </td>
+                <td class="text-right glp-num-cell">
+                    {% if row.qty_out %}<strong>S/ {{ row.total_out|format_amount:2 }}</strong>{% else %}—{% endif %}
+                </td>
+                <td class="text-right glp-num-cell"><strong>{{ row.balance_qty|format_amount:3 }}</strong></td>
+                <td class="text-right glp-num-cell">{{ row.balance_unit_cost|format_amount:6 }}</td>
+                <td class="text-right glp-num-cell"><strong class="text-primary">S/ {{ row.balance_total|format_amount:2 }}</strong></td>
+                <td class="text-center small">{{ row.partner_ruc|default:"—" }}</td>
+                <td class="small">{{ row.description|default:"—" }}</td>
+                <td class="text-center">
+                    <button type="button"
+                            class="btn btn-sm glp-kardex-detail-btn"
+                            data-detail-b64="{{ row.detail_json }}"
+                            title="Ver detalle del movimiento">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="glp-tfoot-totals font-weight-bold">
+                <td colspan="8" class="text-right">TOTALES DEL PERÍODO:</td>
+                <td class="text-right text-success glp-num-cell">{{ total_entradas_qty|format_amount:3 }}</td>
+                <td></td>
+                <td class="text-right text-success glp-num-cell">S/ {{ total_entradas|format_amount:2 }}</td>
+                <td class="text-right text-danger glp-num-cell">{{ total_salidas_qty|format_amount:3 }}</td>
+                <td></td>
+                <td class="text-right text-danger glp-num-cell">S/ {{ total_salidas|format_amount:2 }}</td>
+                <td class="text-right text-primary glp-num-cell">{{ stock_final|format_amount:3 }}</td>
+                <td></td>
+                <td class="text-right text-primary glp-num-cell">S/ {{ saldo_final|format_amount:2 }}</td>
+                <td colspan="3"></td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<style>
+    .glp-kardex-table-wrap { border-radius: 10px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+    .glp-kardex-table { font-size: .78rem; background: #fff; }
+    .glp-num-cell { font-variant-numeric: tabular-nums; }
+    .glp-row-entry { background: rgba(46,204,113,.04); }
+    .glp-row-exit { background: rgba(231,76,60,.04); }
+    .glp-tfoot-totals { background: #f0f4f8; }
+    .glp-badge-type { font-size: .65rem; font-weight: 600; }
+    .glp-type-purchase { background: #1b7a4e; color: #fff; }
+    .glp-type-sale { background: #c0392b; color: #fff; }
+    .glp-type-transfer { background: #1a5f8a; color: #fff; }
+    .glp-type-adjustment { background: #6c757d; color: #fff; }
+    .glp-kardex-detail-btn {
+        width: 28px; height: 28px; padding: 0; border-radius: 8px;
+        border: 1px solid #dde3ea; background: #fff; color: #0d3b66;
+        line-height: 1; transition: all .2s ease;
+    }
+    .glp-kardex-detail-btn:hover {
+        background: #0d3b66; color: #fff; border-color: #0d3b66;
+        box-shadow: 0 2px 8px rgba(13,59,102,.25);
+    }
+    .glp-kardex-detail-btn i { font-size: .72rem; }
+</style>
+
+{% else %}
+<div class="card glp-card">
+    <div class="card-body text-center py-5 text-muted">
+        <i class="fas fa-inbox fa-3x mb-3 d-block" style="opacity:.3"></i>
+        <h5>Sin movimientos en el período seleccionado</h5>
+        <p class="mb-0">Seleccione almacén GLP, consulte el período y registre compras o salidas en InventoryLedger.</p>
+    </div>
+</div>
+{% endif %}

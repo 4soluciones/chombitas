@@ -1,0 +1,354 @@
+<div class="modal-dialog modal-dialog-centered modal-xl glp-modal-shell" role="document">
+
+    <div class="modal-content glp-modal-content border-0">
+
+        <div class="glp-modal-header glp-modal-header-teal">
+
+            <div class="d-flex align-items-center">
+
+                <div class="glp-modal-header-icon"><i class="fas fa-file-invoice"></i></div>
+
+                <div>
+
+                    <h5 class="modal-title text-white mb-0">Nueva factura GLP</h5>
+
+                    <p class="glp-modal-header-sub mb-0">Comprobante + detalle en un solo paso</p>
+
+                </div>
+
+            </div>
+
+            <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+
+        </div>
+
+
+
+        <div class="modal-body glp-modal-body">
+
+            <input type="hidden" id="inv-product-id" value="{{ product.id }}">
+
+
+
+            <div class="glp-modal-section">
+
+                <div class="glp-modal-section-head">
+
+                    <span class="glp-modal-step">1</span>
+
+                    <div class="flex-grow-1">
+
+                        <strong>Datos del comprobante</strong>
+
+                        <small>Proveedor, SCOP, numeración y condiciones</small>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="glp-form-sheet">
+
+                    <div class="glp-form-row">
+
+                        <div class="glp-field glp-span-6">
+
+                            <label class="glp-form-label">Proveedor *</label>
+
+                            <select id="inv-supplier" class="form-control glp-form-control">
+
+                                <option value="">— Seleccione proveedor GLP —</option>
+
+                                {% for s in suppliers %}
+
+                                    <option value="{{ s.id }}">{{ s.business_name|default:s.name }}</option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+                        <div class="glp-field glp-span-3">
+
+                            <label class="glp-form-label">N° SCOP factura *</label>
+
+                            <input type="text" id="inv-scop" class="form-control glp-form-control text-uppercase glp-scop-input" placeholder="SCOP operador">
+
+                        </div>
+
+                        <div class="glp-field glp-span-3">
+
+                            <label class="glp-form-label">Fecha emisión *</label>
+
+                            <input type="date" id="inv-date" class="form-control glp-form-control" value="{{ date_now }}">
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="glp-form-row glp-form-row-comprobante">
+
+                        <div class="glp-field glp-span-2">
+
+                            <label class="glp-form-label">Serie *</label>
+
+                            <input type="text" id="inv-series" class="form-control glp-form-control text-uppercase text-center" placeholder="F110">
+
+                        </div>
+
+                        <div class="glp-field glp-span-3">
+
+                            <label class="glp-form-label">N° comprobante *</label>
+
+                            <input type="text" id="inv-number" class="form-control glp-form-control text-center" placeholder="00017472">
+
+                        </div>
+
+                        <div class="glp-field glp-span-7 d-flex align-items-end">
+
+                            <div class="glp-doc-preview w-100" id="inv-doc-preview">FXXX-00000000</div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="glp-form-row mb-0">
+
+                        <div class="glp-field glp-span-2">
+
+                            <label class="glp-form-label">Moneda</label>
+
+                            <select id="inv-currency" class="form-control glp-form-control">
+
+                                <option value="PEN">Soles (PEN)</option>
+
+                                <option value="USD">Dólares (USD)</option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="glp-field glp-span-2" id="inv-exchange-wrap" style="display:none;">
+
+                            <label class="glp-form-label">Tipo de cambio *</label>
+
+                            <input type="text" id="inv-exchange" class="form-control glp-form-control inv-amt text-right" data-dec="4" placeholder="Ej. 3.7500">
+
+                        </div>
+
+                        <div class="glp-field glp-span-2 inv-cond-payment">
+
+                            <label class="glp-form-label">Condición de pago</label>
+
+                            <select id="inv-payment" class="form-control glp-form-control">
+
+                                <option value="Cash">Contado</option>
+
+                                <option value="Credit">Crédito</option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="glp-field glp-span-3 inv-terminal-field">
+
+                            <label class="glp-form-label">Terminal / Planta</label>
+
+                            <input type="text" id="inv-terminal" class="form-control glp-form-control" placeholder="Opcional">
+
+                        </div>
+
+                        <div class="glp-field glp-span-3 mb-0">
+
+                            <label class="glp-form-label">Orden de venta</label>
+
+                            <input type="text" id="inv-sales-order" class="form-control glp-form-control" placeholder="Opcional">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="glp-modal-section mb-0">
+
+                <div class="glp-modal-section-head">
+
+                    <span class="glp-modal-step">2</span>
+
+                    <div class="flex-grow-1">
+
+                        <strong>Detalle GLP — {{ product.name }}</strong>
+
+                        <small class="d-block">Importes en <span id="inv-detail-currency-label">PEN</span> — precios calculados automáticamente</small>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="glp-detail-panel">
+
+                    <div class="row glp-detail-line-main align-items-end">
+
+                        <div class="col-lg-3 col-md-6 form-group">
+
+                            <label class="glp-form-label">Cantidad KG *</label>
+
+                            <input type="text" id="inv-qty" class="form-control glp-form-control inv-calc inv-amt text-right"
+
+                                   value="{{ default_qty_kg|floatformat:0 }}" data-dec="3">
+
+                        </div>
+
+                        <div class="col-lg-3 col-md-6 form-group">
+
+                            <label class="glp-form-label">Precio unit. sin IGV (<span class="inv-curr-suffix">PEN</span>)</label>
+
+                            <div class="glp-calc-field text-right" id="inv-unit-excl">—</div>
+
+                        </div>
+
+                        <div class="col-lg-3 col-md-6 form-group">
+
+                            <label class="glp-form-label">Precio unit. con IGV (<span class="inv-curr-suffix">PEN</span>)</label>
+
+                            <div class="glp-calc-field text-right glp-calc-highlight" id="inv-unit-incl">—</div>
+
+                        </div>
+
+                        <div class="col-lg-3 col-md-6 form-group">
+
+                            <label class="glp-form-label">Subtotal sin IGV (<span class="inv-curr-suffix">PEN</span>)</label>
+
+                            <div class="glp-calc-field text-right" id="inv-subtotal">—</div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="glp-detail-line-totals">
+
+                        <div class="row justify-content-end">
+
+                            <div class="col-lg-5 col-md-7">
+
+                                <div class="glp-totals-box">
+
+                                    <div class="form-group row align-items-center mb-2">
+
+                                        <label class="col-5 glp-form-label text-right mb-0">IGV (<span class="inv-curr-suffix">PEN</span>)</label>
+
+                                        <div class="col-7">
+
+                                            <input type="text" id="inv-igv" class="form-control glp-form-control inv-calc inv-amt text-right" data-dec="2" placeholder="Auto 18%">
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="form-group row align-items-center mb-0">
+
+                                        <label class="col-5 glp-form-label text-right mb-0 font-weight-bold">Importe total (<span class="inv-curr-suffix">PEN</span>) *</label>
+
+                                        <div class="col-7">
+
+                                            <input type="text" id="inv-total" class="form-control glp-form-control inv-calc inv-amt text-right glp-total-input" data-dec="2">
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="glp-pen-equiv d-none" id="inv-pen-equiv">
+
+                        <div class="glp-pen-equiv-head">
+
+                            <i class="fas fa-calculator mr-1"></i> Equivalente en soles (tipo de cambio × importes USD)
+
+                        </div>
+
+                        <div class="row text-center">
+
+                            <div class="col-3">
+
+                                <span class="glp-pen-equiv-lbl">Precio unit. sin IGV</span>
+
+                                <div class="glp-pen-equiv-val" id="inv-unit-excl-pen">—</div>
+
+                            </div>
+
+                            <div class="col-3">
+
+                                <span class="glp-pen-equiv-lbl">Precio unit. con IGV</span>
+
+                                <div class="glp-pen-equiv-val glp-pen-equiv-highlight" id="inv-unit-incl-pen">—</div>
+
+                            </div>
+
+                            <div class="col-3">
+
+                                <span class="glp-pen-equiv-lbl">Subtotal</span>
+
+                                <div class="glp-pen-equiv-val" id="inv-subtotal-pen">—</div>
+
+                            </div>
+
+                            <div class="col-3">
+
+                                <span class="glp-pen-equiv-lbl">Importe total</span>
+
+                                <div class="glp-pen-equiv-val glp-pen-equiv-total" id="inv-total-pen">—</div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="modal-footer glp-modal-footer">
+
+            <button type="button" class="btn glp-btn-back" data-dismiss="modal">Cancelar</button>
+
+            <button type="button" class="btn glp-btn-primary" id="btn-save-invoice-header">
+
+                <i class="fas fa-save mr-1"></i> Guardar factura
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+

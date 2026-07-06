@@ -1,0 +1,116 @@
+{% load operations %}
+<div class="modal-dialog modal-dialog-centered modal-lg glp-modal-shell" role="document">
+    <div class="modal-content glp-modal-content border-0">
+        <div class="glp-modal-header glp-modal-header-navy">
+            <div class="d-flex align-items-center">
+                <div class="glp-modal-header-icon"><i class="fas fa-eye"></i></div>
+                <div>
+                    <h5 class="modal-title text-white mb-0">Resumen — {{ purchase.document_display }}</h5>
+                    <p class="glp-modal-header-sub mb-0">{{ purchase.supplier.business_name|default:purchase.supplier.name }}</p>
+                </div>
+            </div>
+            <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+        </div>
+
+        <div class="modal-body glp-modal-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="glp-summary-card">
+                        <div class="glp-summary-row"><span>SCOP factura</span><strong>{{ purchase.scop_number|default:"—" }}</strong></div>
+                        <div class="glp-summary-row"><span>Emisión</span><strong>{{ purchase.issue_date|date:"d/m/Y" }}</strong></div>
+                        <div class="glp-summary-row"><span>Estado</span>
+                            <span class="glp-status glp-status-{{ purchase.get_status_display_class }}">{{ purchase.get_status_display }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="glp-summary-card highlight">
+                        {% if main_item %}
+                        <div class="glp-summary-row"><span>KG facturados</span><strong>{{ main_item.quantity|format_amount_dot:3 }}</strong></div>
+                        <div class="glp-summary-row"><span>Precio unit. (sin IGV)</span>
+                            <strong>{{ main_item.unit_price|format_amount_dot:6 }}</strong>
+                        </div>
+                        <div class="glp-summary-row"><span>Valor unit. (con IGV)</span>
+                            <strong>{{ main_item.unit_price_incl_igv|format_amount_dot:6 }}</strong>
+                        </div>
+                        {% endif %}
+                        <div class="glp-summary-row"><span>Subtotal</span><strong>{{ purchase.subtotal|format_amount_dot:2 }}</strong></div>
+                        <div class="glp-summary-row"><span>IGV</span><strong>{{ purchase.igv|format_amount_dot:2 }}</strong></div>
+                        <div class="glp-summary-row glp-summary-total"><span>Importe total</span>
+                            <strong>{{ purchase.currency }} {{ purchase.total|format_amount_dot:2 }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glp-summary-metrics row text-center mb-3">
+                <div class="col-4">
+                    <div class="glp-metric-box">
+                        <div class="metric-val">{{ purchase.qty_available_for_programming|format_amount_dot:3 }}</div>
+                        <div class="metric-lbl">KG pendientes</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="glp-metric-box">
+                        <div class="metric-val">{{ purchase.qty_pending_programming|format_amount_dot:3 }}</div>
+                        <div class="metric-lbl">KG en viajes</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="glp-metric-box">
+                        <div class="metric-val">{{ purchase.received_qty_total|format_amount_dot:3 }}</div>
+                        <div class="metric-lbl">KG recibidos</div>
+                    </div>
+                </div>
+            </div>
+
+            {% if programmings %}
+            <div class="glp-modal-section">
+                <strong class="d-block mb-2"><i class="fas fa-truck mr-1"></i> Programaciones</strong>
+                <table class="table table-sm glp-modal-table mb-0">
+                    <thead><tr><th>Placa</th><th>SCOP</th><th class="text-right">KG</th><th>Estado</th></tr></thead>
+                    <tbody>
+                    {% for prog in programmings %}
+                        {% for line in prog.lines.all %}
+                            {% if line.purchase_id == purchase.id %}
+                        <tr>
+                            <td><span class="glp-plate-badge">{{ prog.truck.license_plate }}</span></td>
+                            <td>{{ prog.transfer_scop_number }}</td>
+                            <td class="text-right">{{ line.quantity_kg|format_amount_dot:3 }}</td>
+                            <td>{{ prog.get_status_display }}</td>
+                        </tr>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            {% if receipts %}
+            <div class="glp-modal-section mb-0">
+                <strong class="d-block mb-2"><i class="fas fa-warehouse mr-1"></i> Ingresos almacén</strong>
+                <table class="table table-sm glp-modal-table mb-0">
+                    <thead><tr><th>Guía</th><th class="text-right">KG</th><th>Almacén</th></tr></thead>
+                    <tbody>
+                    {% for r in receipts %}
+                        <tr>
+                            <td>{{ r.guide_series }}-{{ r.guide_number }}</td>
+                            <td class="text-right">{{ r.net_weight|format_amount_dot:3 }}</td>
+                            <td>{{ r.warehouse.name }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="modal-footer glp-modal-footer">
+            <button type="button" class="btn glp-btn-back" data-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="showGlpModal('get_glp_purchase_programming_modal')">
+                <i class="fas fa-truck"></i> Programar traslado
+            </button>
+        </div>
+    </div>
+</div>

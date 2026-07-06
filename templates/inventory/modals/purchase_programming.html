@@ -1,0 +1,143 @@
+<div class="modal-dialog modal-dialog-centered modal-xl glp-modal-shell" role="document">
+    <div class="modal-content glp-modal-content border-0">
+        <div class="glp-modal-header glp-modal-header-flame">
+            <div class="d-flex align-items-center">
+                <div class="glp-modal-header-icon"><i class="fas fa-route"></i></div>
+                <div>
+                    <h5 class="modal-title text-white mb-0">Programar traslado parcial</h5>
+                    <p class="glp-modal-header-sub mb-0">Indique cuántos KG lleva este tracto de cada factura — el saldo queda para otros viajes</p>
+                </div>
+            </div>
+            <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+        </div>
+
+        <div class="modal-body glp-modal-body">
+            <script type="application/json" id="prog-purchases-data">{{ purchases_available_json|safe }}</script>
+
+            <div class="glp-modal-section">
+                <div class="glp-modal-section-head">
+                    <span class="glp-modal-step">1</span>
+                    <div>
+                        <strong>Tracto y SCOP de este viaje</strong>
+                        <small>Un SCOP = una placa = un viaje</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-5 form-group mb-md-0">
+                        <label class="glp-form-label">Placa tracto *</label>
+                        <select id="prog-truck" class="form-control glp-form-control">
+                            <option value="">— Seleccione —</option>
+                            {% for truck in trucks %}
+                                <option value="{{ truck.id }}">{{ truck.license_plate }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 form-group mb-md-0">
+                        <label class="glp-form-label">N° SCOP traslado *</label>
+                        <input type="text" id="prog-scop" class="form-control glp-form-control text-uppercase">
+                    </div>
+                    <div class="col-md-3 form-group mb-md-0">
+                        <label class="glp-form-label">Fecha</label>
+                        <input type="date" id="prog-date" class="form-control glp-form-control" value="{{ date_now }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="glp-modal-section">
+                <div class="glp-modal-section-head">
+                    <span class="glp-modal-step">2</span>
+                    <div>
+                        <strong>Cantidades por factura</strong>
+                        <small>Ej.: 23,000 KG de una factura de 94,000 — el resto va en otro tracto/SCOP</small>
+                    </div>
+                </div>
+                <div class="row align-items-end glp-prog-add-row">
+                    <div class="col-md-5 form-group">
+                        <label class="glp-form-label">Factura</label>
+                        <select id="prog-purchase-select" class="form-control glp-form-control">
+                            <option value="">— Seleccione factura —</option>
+                        </select>
+                        <small class="text-muted" id="prog-available-hint"></small>
+                    </div>
+                    <div class="col-md-3 form-group">
+                        <label class="glp-form-label">KG a transportar *</label>
+                        <input type="text" id="prog-qty" class="form-control glp-form-control prog-amt text-right" data-dec="3" placeholder="Ej. 23000">
+                    </div>
+                    <div class="col-md-2 form-group">
+                        <button type="button" class="btn btn-outline-secondary btn-block btn-sm" id="prog-use-all">Todo el saldo</button>
+                    </div>
+                    <div class="col-md-2 form-group">
+                        <button type="button" class="btn glp-btn-primary btn-block" id="prog-add-line">
+                            <i class="fas fa-plus"></i> Agregar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive mt-2">
+                    <table class="table table-sm glp-modal-table mb-0" id="prog-lines-table">
+                        <thead>
+                            <tr>
+                                <th>Factura</th>
+                                <th>SCOP fact.</th>
+                                <th class="text-right">KG este viaje</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="prog-lines-body">
+                            <tr id="prog-lines-empty"><td colspan="4" class="text-center text-muted py-3">Agregue facturas y cantidades para este viaje</td></tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="glp-prog-total-row">
+                                <td colspan="2" class="text-right font-weight-bold">Total KG del viaje:</td>
+                                <td class="text-right font-weight-bold glp-prog-total-kg" id="prog-total-kg">0.000</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="glp-modal-section mb-0">
+                <div class="glp-modal-section-head">
+                    <span class="glp-modal-step glp-modal-step-muted">●</span>
+                    <div><strong>Viajes programados (pendientes)</strong></div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm glp-modal-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Placa</th>
+                                <th>SCOP</th>
+                                <th>Detalle (factura → KG)</th>
+                                <th class="text-right">Total KG</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for prog in programmings %}
+                            <tr>
+                                <td><span class="glp-plate-badge">{{ prog.truck.license_plate }}</span></td>
+                                <td class="font-weight-bold">{{ prog.transfer_scop_number }}</td>
+                                <td>
+                                    {% for line in prog.lines.all %}
+                                        <span class="glp-doc-chip">{{ line.purchase.document_display }} → {{ line.quantity_kg|floatformat:3 }} KG</span>
+                                    {% empty %}—{% endfor %}
+                                </td>
+                                <td class="text-right font-weight-bold">{{ prog.total_quantity_kg|floatformat:3 }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted py-3">Sin programaciones pendientes</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer glp-modal-footer">
+            <button type="button" class="btn glp-btn-back" data-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn glp-btn-primary" id="btn-save-programming">
+                <i class="fas fa-truck mr-1"></i> Guardar programación
+            </button>
+        </div>
+    </div>
+</div>

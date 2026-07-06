@@ -1,0 +1,109 @@
+<div class="modal-dialog modal-dialog-centered modal-lg glp-modal-shell" role="document">
+    <div class="modal-content glp-modal-content border-0">
+        <div class="glp-modal-header glp-modal-header-navy">
+            <div class="d-flex align-items-center">
+                <div class="glp-modal-header-icon"><i class="fas fa-receipt"></i></div>
+                <div>
+                    <h5 class="modal-title text-white mb-0">Gastos de viaje</h5>
+                    <p class="glp-modal-header-sub mb-0">Documentos que afectan el costo unitario del kardex</p>
+                </div>
+            </div>
+            <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+        </div>
+
+        <div class="modal-body glp-modal-body">
+            <div class="glp-modal-section">
+                <div class="row align-items-end">
+                    <div class="col-md-6 form-group">
+                        <label class="glp-form-label">Programación (SCOP traslado) *</label>
+                        <select class="form-control glp-form-control" id="exp-programming">
+                            <option value="">— Seleccione —</option>
+                            {% for prog in programmings %}
+                                <option value="{{ prog.id }}"
+                                    data-truck="{{ prog.truck.license_plate }}"
+                                    data-scop="{{ prog.transfer_scop_number }}">
+                                    SCOP {{ prog.transfer_scop_number }} · {{ prog.truck.license_plate }}
+                                    · {{ prog.lines.count }} fact.
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 form-group">
+                        <label class="glp-form-label">Placa</label>
+                        <input type="text" class="form-control glp-form-control glp-readonly-field" id="exp-truck" readonly>
+                    </div>
+                    <div class="col-md-3 form-group">
+                        <label class="glp-form-label">SCOP traslado</label>
+                        <input type="text" class="form-control glp-form-control glp-readonly-field" id="exp-scop" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glp-modal-section">
+                <div class="glp-modal-section-head">
+                    <span class="glp-modal-step">+</span>
+                    <div><strong>Agregar documento de gasto</strong></div>
+                </div>
+                <div class="row align-items-end">
+                    <div class="col-md-3 form-group">
+                        <label class="glp-form-label">Tipo *</label>
+                        <select class="form-control glp-form-control" id="exp-type">
+                            {% for val, label in expense_type_choices %}
+                                <option value="{{ val }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 form-group">
+                        <label class="glp-form-label">N° documento</label>
+                        <input type="text" class="form-control glp-form-control" id="exp-invoice">
+                    </div>
+                    <div class="col-md-2 form-group">
+                        <label class="glp-form-label">Fecha</label>
+                        <input type="date" class="form-control glp-form-control" id="exp-date" value="{{ date_now }}">
+                    </div>
+                    <div class="col-md-2 form-group">
+                        <label class="glp-form-label">Monto *</label>
+                        <input type="text" class="form-control glp-form-control exp-amt text-right" id="exp-amount" data-dec="2">
+                    </div>
+                    <div class="col-md-2 form-group">
+                        <button type="button" id="exp-add-row" class="btn glp-btn-primary btn-block">
+                            <i class="fas fa-plus"></i> Agregar
+                        </button>
+                    </div>
+                    <div class="col-md-8 form-group mb-0">
+                        <label class="glp-form-label">Descripción</label>
+                        <input type="text" class="form-control glp-form-control" id="exp-desc">
+                    </div>
+                    <div class="col-md-4 form-group mb-0">
+                        <label class="glp-form-label">Cantidad</label>
+                        <input type="text" class="form-control glp-form-control exp-amt text-right" id="exp-qty" data-dec="3">
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm glp-modal-table mb-0" id="exp-detail-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Documento</th>
+                            <th>Fecha</th>
+                            <th class="text-right">Monto</th>
+                            <th>Descripción</th>
+                            <th>Tipo</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="exp-rows"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="modal-footer glp-modal-footer">
+            <button type="button" class="btn glp-btn-back" data-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn glp-btn-primary" id="btn-save-expenses">
+                <i class="fas fa-save mr-1"></i> Guardar gastos
+            </button>
+        </div>
+    </div>
+</div>

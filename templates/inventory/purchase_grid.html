@@ -1,0 +1,82 @@
+{% load operations %}
+<div class="glp-panel glp-table-wrap">
+    {% if purchases %}
+    <div class="table-responsive">
+    <table class="glp-table glp-table-compact" id="purchase-data-grid">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Comprobante</th>
+                <th>N° SCOP</th>
+                <th>Proveedor</th>
+                <th>Emisión</th>
+                <th class="text-right">KG fact.</th>
+                <th class="text-right">Precio unit.</th>
+                <th class="text-right">Valor unit.</th>
+                <th class="text-right">Total fact.</th>
+                <th class="text-right glp-th-cost">Compra S/</th>
+                <th class="text-right glp-th-cost">Gastos S/</th>
+                <th class="text-right glp-th-cost">Costo total S/</th>
+                <th class="text-right glp-th-cost">Costo/kg</th>
+                <th class="text-right">KG pend.</th>
+                <th class="text-right">KG rec.</th>
+                <th>Estado</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in purchases %}
+            {% with item=p.items.first %}
+            <tr>
+                <td><span class="text-muted">{{ p.id }}</span></td>
+                <td class="glp-doc-cell">{{ p.document_display }}</td>
+                <td class="text-nowrap">{{ p.scop_number|default:"—" }}</td>
+                <td class="glp-supplier-cell">
+                    {{ p.supplier.business_name|default:p.supplier.name|truncatechars:24 }}
+                </td>
+                <td class="text-nowrap">{{ p.issue_date|date:"d/m/Y" }}</td>
+                <td class="num">{{ p.invoiced_qty_total|format_amount_dot:3 }}</td>
+                <td class="num text-muted">
+                    {% if item %}{{ item.unit_price|format_amount_dot:6 }}{% else %}—{% endif %}
+                </td>
+                <td class="num">
+                    {% if item %}{{ item.unit_price_incl_igv|format_amount_dot:6 }}{% else %}—{% endif %}
+                </td>
+                <td class="num font-weight-bold">{{ p.total|format_amount_dot:2 }}</td>
+                <td class="num glp-td-cost">{{ p.purchase_value_pen|format_amount_dot:2 }}</td>
+                <td class="num glp-td-cost {% if p.travel_expenses_pen > 0 %}text-info{% endif %}">
+                    {% if p.travel_expenses_pen > 0 %}{{ p.travel_expenses_pen|format_amount_dot:2 }}{% else %}—{% endif %}
+                </td>
+                <td class="num glp-td-cost font-weight-bold">{{ p.landed_total_pen|format_amount_dot:2 }}</td>
+                <td class="num glp-td-cost font-weight-bold text-primary">
+                    {% if p.landed_cost_per_kg > 0 %}{{ p.landed_cost_per_kg|format_amount_dot:4 }}{% else %}—{% endif %}
+                </td>
+                <td class="num {% if p.qty_available_for_programming > 0 %}text-warning font-weight-bold{% endif %}">
+                    {{ p.qty_available_for_programming|format_amount_dot:3 }}
+                </td>
+                <td class="num">{{ p.received_qty_total|format_amount_dot:3 }}</td>
+                <td>
+                    <span class="glp-status glp-status-{{ p.get_status_display_class }}">{{ p.get_status_display }}</span>
+                </td>
+                <td class="text-nowrap">
+                    <button type="button" class="glp-btn-action btn-purchase-summary" data-pk="{{ p.id }}">
+                        <i class="fas fa-eye mr-1"></i>Ver
+                    </button>
+                </td>
+            </tr>
+            {% endwith %}
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div class="glp-empty-state">
+        <i class="fas fa-inbox"></i>
+        <h5 class="font-weight-bold text-secondary">Sin compras en el período</h5>
+        <p class="mb-3">Registre una nueva factura GLP para comenzar.</p>
+        <button type="button" class="btn glp-btn-hero btn-sm" onclick="showGlpModal('get_glp_purchase_invoice_modal')">
+            <i class="fas fa-plus"></i> Nueva factura
+        </button>
+    </div>
+    {% endif %}
+</div>
