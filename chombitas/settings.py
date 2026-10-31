@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'apps.sales',
     'apps.buys',
     'apps.accounting',
+    'apps.inventory',
     'import_export',
     'rest_framework',
 
@@ -90,9 +91,9 @@ IMPORT_EXPORT_USE_TRANSACTIONS = True
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'vjgas',
+        'NAME': 'vjgas2',
         'USER': 'postgres',
-        'PASSWORD': 'italo',
+        'PASSWORD': 'postgres',
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -134,17 +135,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 # URL para usar cuando se hace referencia a archivos estáticos ubicados en STATIC_ROOT.
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 # URL que maneja los medios servidos MEDIA_ROOT, utilizados para administrar archivos almacenados
 MEDIA_URL = '/media/'
 # Este ajuste define los lugares adicionales de staticfiles en la aplicación
-# STATICFILES_DIRS = (BASE_DIR, 'static')
+STATICFILES_DIRS = (BASE_DIR, 'static')
 
 # La ruta absoluta al directorio donde collectstaticrecopilará archivos estáticos para su implementación
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-]
+# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, "static"),
+# ]
 
 # Ruta absoluta del sistema de archivos al directorio que contendrá los archivos cargados por el usuario .
 MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles/')

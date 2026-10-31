@@ -350,6 +350,7 @@ class InventoryLedger(models.Model):
     MOVEMENT_TYPE_CHOICES = (
         ('Purchase', 'Compra'),
         ('Sale', 'Venta'),
+        ('Return', 'Devolución'),
         ('Transfer', 'Traspaso'),
         ('Adjustment', 'Ajuste'),
     )
@@ -412,11 +413,13 @@ class GlpKardexDocument(models.Model):
         ('00', 'Sin documento'),
         ('01', 'Factura'),
         ('03', 'Boleta'),
+        ('07', 'Nota de crédito'),
         ('16', 'Saldo inicial'),
     )
     OPERATION_SUNAT_CHOICES = (
         ('01', 'Venta / Salida'),
         ('02', 'Compra / Entrada'),
+        ('05', 'Devolución recibida'),
         ('16', 'Saldo inicial'),
     )
 

@@ -5,6 +5,7 @@ from apps.inventory.views import (
     kardex_valorizado_glp_page,
     get_kardex_valorizado_glp,
     get_list_kardex_valorizado_glp,
+    export_kardex_valorizado_glp_excel,
     save_glp_kardex_salida_factura,
     save_glp_kardex_salida_boleta,
 )
@@ -31,6 +32,7 @@ urlpatterns = [
     path('kardex_valorizado_glp/', login_required(kardex_valorizado_glp_page), name='kardex_valorizado_glp'),
     path('get_kardex_valorizado_glp/', get_kardex_valorizado_glp, name='get_kardex_valorizado_glp'),
     path('get_list_kardex_valorizado_glp/', get_list_kardex_valorizado_glp, name='get_list_kardex_valorizado_glp'),
+    path('kardex_valorizado_glp_excel/', login_required(export_kardex_valorizado_glp_excel), name='kardex_valorizado_glp_excel'),
     path('save_glp_kardex_salida_factura/', login_required(save_glp_kardex_salida_factura), name='save_glp_kardex_salida_factura'),
     path('save_glp_kardex_salida_boleta/', login_required(save_glp_kardex_salida_boleta), name='save_glp_kardex_salida_boleta'),
 

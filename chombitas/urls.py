@@ -34,6 +34,7 @@ urlpatterns = [
     path('sales/', include(('apps.sales.urls', 'sales'))),
     path('buys/', include(('apps.buys.urls', 'buys'))),
     path('accounting/', include(('apps.accounting.urls', 'accounting'))),
+    path('inventory/', include(('apps.inventory.urls', 'inventory'))),
 
     path('', login_required(Home.as_view()), name='dashboard'),
     path('accounts/login/', Login.as_view(), name='login'),

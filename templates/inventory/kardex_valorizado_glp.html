@@ -53,26 +53,14 @@
             <form id="form-kardex-filter" class="row align-items-end">
                 {% csrf_token %}
                 <input type="hidden" id="product-id" value="{{ product.id }}">
-                <div class="col-md-3 form-group">
+                <input type="hidden" id="id_subsidiary_store" value="{{ subsidiary_store.id }}">
+                <div class="col-md-2 form-group">
                     <label class="small font-weight-bold">Sede</label>
-                    <select class="form-control form-control-sm" id="id_subsidiary">
-                        <option value="">— Seleccione —</option>
-                        {% for s in subsidiaries %}
-                            <option value="{{ s.id }}" {% if subsidiary.id == s.id %}selected{% endif %}>{{ s.name }}</option>
-                        {% endfor %}
-                    </select>
+                    <input type="text" class="form-control form-control-sm glp-fixed-field" value="{{ subsidiary.name }}" readonly>
                 </div>
-                <div class="col-md-3 form-group">
+                <div class="col-md-2 form-group">
                     <label class="small font-weight-bold">Almacén GLP</label>
-                    <select class="form-control form-control-sm" id="id_subsidiary_store" required>
-                        <option value="">— Seleccione —</option>
-                        {% for ss in subsidiaries_stores %}
-                            <option value="{{ ss.id }}" data-chained="{{ ss.subsidiary.id }}"
-                                    {% if subsidiary_store and subsidiary_store.id == ss.id %}selected{% endif %}>
-                                {{ ss.name }}
-                            </option>
-                        {% endfor %}
-                    </select>
+                    <input type="text" class="form-control form-control-sm glp-fixed-field" value="{{ subsidiary_store.name }}" readonly>
                 </div>
                 <div class="col-md-2 form-group">
                     <label class="small font-weight-bold">Desde</label>
@@ -82,9 +70,12 @@
                     <label class="small font-weight-bold">Hasta</label>
                     <input type="date" class="form-control form-control-sm" id="id_date_final" value="{{ date_now }}">
                 </div>
-                <div class="col-md-2 form-group">
-                    <button type="button" id="btn-search" class="btn btn-glp-primary btn-block btn-sm">
+                <div class="col-md-4 form-group d-flex">
+                    <button type="button" id="btn-search" class="btn btn-glp-primary btn-sm flex-fill mr-2">
                         <i class="fas fa-search"></i> Consultar
+                    </button>
+                    <button type="button" id="btn-excel" class="btn btn-glp-excel btn-sm flex-fill">
+                        <i class="fas fa-file-excel"></i> Descargar Excel
                     </button>
                 </div>
             </form>
@@ -120,6 +111,14 @@
         {% include "inventory/kardex_valorizado_glp_grid.html" %}
     </div>
 
+</div>
+
+<div id="glp-kardex-loader" class="glp-loader" aria-hidden="true">
+    <div class="glp-loader-card">
+        <div class="glp-loader-ring" aria-hidden="true"></div>
+        <p id="glp-loader-title" class="glp-loader-title">Consultando kardex</p>
+        <p id="glp-loader-sub" class="glp-loader-sub">Sicuani · Pluspetrol</p>
+    </div>
 </div>
 
 <!-- Modal: Salida Factura -->
@@ -491,8 +490,23 @@
         });
     }
 
-    $("#id_subsidiary_store").chained("#id_subsidiary");
     initAmountInputs(document);
+
+    function showGlpLoader(title, subtitle) {
+        $('#glp-loader-title').text(title || 'Consultando kardex');
+        $('#glp-loader-sub').text(subtitle || 'Sicuani · Pluspetrol');
+        $('#glp-kardex-loader').addClass('is-on').attr('aria-hidden', 'false');
+    }
+
+    function hideGlpLoader() {
+        $('#glp-kardex-loader').removeClass('is-on').attr('aria-hidden', 'true');
+    }
+
+    function formatDatePE(iso) {
+        if (!iso || iso.indexOf('-') < 0) return iso || '';
+        const parts = iso.split('-');
+        return parts[2] + '/' + parts[1] + '/' + parts[0];
+    }
 
     $('#pw-item-qty, #pw-item-price, #pw-item-igv, #pw-item-isc, #pw-item-fise').on('input', updateItemPreview);
     $('.pw-weight').on('input', updateNetWeight);
@@ -504,7 +518,7 @@
 
     function requireStore() {
         if (!getStoreId()) {
-            toastr.warning('Seleccione un almacén GLP antes de registrar movimientos', 'Atención');
+            toastr.warning('No se encontró el almacén Pluspetrol', 'Atención');
             return false;
         }
         return true;
@@ -537,6 +551,7 @@
         Sale: { cls: 'sale', icon: 'fa-file-invoice-dollar', header: 'glp-modal-header-exit' },
         Transfer: { cls: 'transfer', icon: 'fa-truck', header: 'glp-modal-header-entry' },
         Adjustment: { cls: 'adjustment', icon: 'fa-sliders-h', header: 'glp-modal-header-detail' },
+        Return: { cls: 'return', icon: 'fa-undo', header: 'glp-modal-header-entry' },
     };
 
     function openKardexDetailModal(data) {
@@ -600,12 +615,13 @@
     function searchList() {
         const storeId = getStoreId();
         if (!storeId) {
-            toastr.warning('Seleccione un almacén GLP', 'Atención');
+            toastr.warning('No se encontró el almacén Pluspetrol', 'Atención');
             return;
         }
         const start = $('#id_date_initial').val();
         const end = $('#id_date_final').val();
-        $('#header-period').text(start + ' al ' + end);
+        $('#header-period').text(formatDatePE(start) + ' al ' + formatDatePE(end));
+        showGlpLoader('Consultando kardex', 'Sicuani · Pluspetrol');
 
         $.ajax({
             url: '{% url "inventory:get_list_kardex_valorizado_glp" %}',
@@ -623,11 +639,49 @@
             },
             error: function (xhr) {
                 toastr.error(xhr.responseJSON?.error || 'Error al consultar kardex', 'Error');
-            }
+            },
+            complete: hideGlpLoader
         });
     }
 
+    function downloadExcel() {
+        const start = $('#id_date_initial').val();
+        const end = $('#id_date_final').val();
+        if (!start || !end || start > end) {
+            toastr.warning('Indique un rango de fechas válido', 'Atención');
+            return;
+        }
+        showGlpLoader('Preparando Excel', formatDatePE(start) + ' al ' + formatDatePE(end));
+        const params = new URLSearchParams({ start_date: start, end_date: end });
+        fetch('{% url "inventory:kardex_valorizado_glp_excel" %}?' + params.toString(), { credentials: 'same-origin' })
+            .then(function (response) {
+                const kind = response.headers.get('Content-Type') || '';
+                if (!response.ok || kind.indexOf('spreadsheet') === -1) {
+                    return response.json().then(function (body) {
+                        throw new Error(body.error || 'No se pudo generar el Excel');
+                    });
+                }
+                const match = /filename="([^"]+)"/.exec(response.headers.get('Content-Disposition') || '');
+                const filename = match ? match[1] : 'Kardex_GLP.xlsx';
+                return response.blob().then(function (blob) { return { blob: blob, filename: filename }; });
+            })
+            .then(function (file) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(file.blob);
+                link.download = file.filename;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                URL.revokeObjectURL(link.href);
+            })
+            .catch(function (err) {
+                toastr.error(err.message || 'No se pudo descargar el Excel', 'Error');
+            })
+            .then(hideGlpLoader);
+    }
+
     $('#btn-search').on('click', searchList);
+    $('#btn-excel').on('click', downloadExcel);
 
     function appendStoreToForm(form) {
         if (!requireStore()) return false;
@@ -648,6 +702,7 @@
 
     function submitGlpForm(form, url, modalId, successTitle) {
         if (!appendStoreToForm(form)) return;
+        showGlpLoader('Registrando salida', 'Sicuani · Pluspetrol');
         $.ajax({
             url: url,
             type: 'POST',
@@ -658,6 +713,7 @@
                 searchList();
             },
             error: function (xhr) {
+                hideGlpLoader();
                 toastr.error(xhr.responseJSON?.error || 'Error al registrar', 'Error');
             }
         });
@@ -673,9 +729,7 @@
         submitGlpForm($(this), '{% url "inventory:save_glp_kardex_salida_boleta" %}', '#modal-glp-salida-boleta', 'Bloque registrado');
     });
 
-    {% if subsidiary_store %}
     $(document).ready(searchList);
-    {% endif %}
 </script>
 
 <style>
@@ -703,6 +757,28 @@
     .btn-glp-danger:hover { background: #e74c3c; color: #fff; }
     .btn-outline-danger { border-color: #c0392b; color: #c0392b; }
     .btn-outline-danger:hover { background: #c0392b; color: #fff; }
+    .btn-glp-excel { background: #1b7a4e; color: #fff; border: none; }
+    .btn-glp-excel:hover { background: #14633e; color: #fff; }
+    .glp-fixed-field { background: #f4f7fb; color: #0d3b66; font-weight: 600; cursor: default; }
+    .glp-loader {
+        position: fixed; inset: 0; z-index: 2000; display: none;
+        align-items: center; justify-content: center;
+        background: rgba(13, 27, 42, 0.45);
+    }
+    .glp-loader.is-on { display: flex; }
+    .glp-loader-card {
+        width: 280px; background: #fff; border-radius: 16px;
+        padding: 2rem 1.5rem 1.6rem; text-align: center;
+        box-shadow: 0 16px 40px rgba(13, 59, 102, 0.2);
+    }
+    .glp-loader-ring {
+        width: 46px; height: 46px; margin: 0 auto 1rem;
+        border-radius: 50%; border: 3px solid #e6edf5;
+        border-top-color: #0d3b66; animation: glp-spin 0.8s linear infinite;
+    }
+    .glp-loader-title { margin: 0; font-weight: 700; color: #0d3b66; font-size: .95rem; }
+    .glp-loader-sub { margin: .35rem 0 0; color: #6c7a89; font-size: .78rem; letter-spacing: .04em; }
+    @keyframes glp-spin { to { transform: rotate(360deg); } }
 
     /* ── Modales premium ── */
     .glp-modal-wrap .modal-dialog.modal-xl { max-width: 960px; }

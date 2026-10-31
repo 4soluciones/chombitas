@@ -12,6 +12,8 @@ from apps.inventory.models import (
 from apps.sales.models import Product, ProductStore
 
 GLP_PRODUCT_ID = 4
+GLP_SUBSIDIARY_ID = 1  # SICUANI
+GLP_WAREHOUSE_ID = 14  # PLUSPETROL, único almacén categoría G del kardex
 GLP_TON_TO_KG = decimal.Decimal('1000')
 GLP_DEFAULT_QTY_KG = decimal.Decimal('94000')
 IGV_RATE = decimal.Decimal('0.18')
